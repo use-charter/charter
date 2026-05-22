@@ -1,0 +1,22 @@
+version: "2"
+
+run:
+  go: "1.26"
+  tests: true
+  timeout: 5m
+
+linters:
+  default: standard
+  enable:
+    - gosec
+    - misspell
+  exclusions:
+    generated: strict
+    rules:
+      - path: "_test\\.go"
+        linters:
+          - gosec
+
+formatters:
+  enable:
+    - gofumpt

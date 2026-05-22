@@ -1,0 +1,7 @@
+projects:
+  root: "."
+  cmd: "cmd"
+  action: "action"
+  cloud: "cloud"
+  docs: "docs"
+  web: "web"

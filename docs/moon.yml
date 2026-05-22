@@ -1,0 +1,7 @@
+id: "docs"
+
+tasks:
+  lint:
+    script: "rg -n \"TODO\\(docs\\)|TODO\\(spec\\)\" . || true"
+    inputs:
+      - "**/*.md"

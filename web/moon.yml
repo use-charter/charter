@@ -1,0 +1,7 @@
+id: "web"
+
+tasks:
+  lint:
+    command: "test -f README.md"
+    inputs:
+      - "README.md"

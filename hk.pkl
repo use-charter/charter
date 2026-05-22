@@ -1,0 +1,36 @@
+amends "package://github.com/jdx/hk/releases/download/v1.44.2/hk@1.44.2#/Config.pkl"
+
+fail_fast = true
+jobs = 0
+
+hooks {
+    ["pre-commit"] {
+        steps {
+            ["lint"] {
+                check = "moon run :lint"
+            }
+            ["docs"] {
+                check = "moon run :docs"
+            }
+        }
+    }
+
+    ["commit-msg"] {
+        steps {
+            ["conventional-commit"] {
+                check = "hk util check-conventional-commit {{commit_msg_file}}"
+            }
+        }
+    }
+
+    ["pre-push"] {
+        steps {
+            ["test"] {
+                check = "moon run :test"
+            }
+            ["security"] {
+                check = "moon run :security"
+            }
+        }
+    }
+}
