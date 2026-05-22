@@ -1,0 +1,2 @@
+ceiling_paths = ["{{ env.HOME }}"]
+ignored_config_paths = ["{{ env.HOME }}/.config/mise/config.toml"]

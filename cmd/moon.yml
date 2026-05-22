@@ -1,0 +1,11 @@
+language: "go"
+
+tasks:
+  build:
+    script: "mkdir -p ../dist && go build -o ../dist/charter ./charter"
+    inputs:
+      - "charter/**/*.go"
+  test:
+    command: "go test -race ./..."
+    inputs:
+      - "charter/**/*.go"

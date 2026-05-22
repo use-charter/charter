@@ -1,0 +1,28 @@
+name: actions-security
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  workflow-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3.6.3
+        with:
+          version: 2026.5.12
+          install: true
+          install_args: --locked
+          cache: true
+      - name: Run actionlint
+        run: mise x -- moon run :actionlint
+      - name: Run zizmor
+        run: mise x -- moon run :zizmor

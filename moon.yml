@@ -1,0 +1,69 @@
+fileGroups:
+  goSources:
+    - "cmd/**/*.go"
+    - "internal/**/*.go"
+    - "go.mod"
+    - "go.sum"
+  docsSources:
+    - "*.md"
+    - ".github/**/*.md"
+    - "docs/**/*.md"
+    - "decisions/**/*.md"
+    - "rfcs/**/*.md"
+    - "playbooks/**/*.md"
+    - "runbooks/**/*.md"
+    - "specs/**/*.md"
+  workflowSources:
+    - ".github/workflows/*.yml"
+
+tasks:
+  check:
+    command: "true"
+    deps:
+      - "lint"
+      - "vet"
+      - "test"
+      - "build"
+      - "docs"
+      - "security"
+      - "eval"
+      - "actionlint"
+      - "zizmor"
+  test:
+    command: "go test -race ./..."
+    inputs:
+      - "@globs(goSources)"
+  vet:
+    command: "go vet ./..."
+    inputs:
+      - "@globs(goSources)"
+  lint:
+    script: "gofumpt -l cmd internal && golangci-lint run ./..."
+    inputs:
+      - "@globs(goSources)"
+  build:
+    script: "mkdir -p dist && go build -o dist/charter ./cmd/charter"
+    inputs:
+      - "@globs(goSources)"
+  docs:
+    script: "rg -n \"TODO\\(docs\\)|TODO\\(spec\\)\" .github *.md decisions rfcs playbooks runbooks specs docs || true"
+    inputs:
+      - "@globs(docsSources)"
+  security:
+    script: "gitleaks git --config .gitleaks.toml . --redact --no-banner && gitleaks dir --config .gitleaks.toml . --redact --no-banner && govulncheck ./... && osv-scanner scan source -r ."
+    inputs:
+      - "@globs(goSources)"
+      - "@globs(docsSources)"
+      - ".gitleaks.toml"
+      - ".mise.toml"
+      - "mise.lock"
+  eval:
+    command: "test -f evals/README.md"
+  actionlint:
+    command: "actionlint .github/workflows/*.yml"
+    inputs:
+      - "@globs(workflowSources)"
+  zizmor:
+    command: "zizmor .github/workflows"
+    inputs:
+      - "@globs(workflowSources)"

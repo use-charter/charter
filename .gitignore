@@ -1,0 +1,44 @@
+# OS
+.DS_Store
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+secrets/
+
+# Go
+bin/
+dist/
+coverage/
+*.coverprofile
+
+# Tool caches and local state
+.moon/cache/
+.moon/docker/
+.mise.local.toml
+.cache/
+.tmp/
+tmp/
+.charter/
+*.charter-session
+.claude/local/
+.cursor/cache/
+.hk/
+
+# Editors
+.idea/
+.vscode/
+
+# Local artifacts
+*.log
+
+# Charter generated artifacts
+.charter/backups/
+.charter/fix-log.jsonl
+
+# Keep committed tool and repo contracts
+!.mise.toml
+!mise.lock
+!moon.yml
+!hk.pkl

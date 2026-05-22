@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charter v1 Manual Audit Checklist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #07101f;
+    --surface:  #0d1b2e;
+    --surface2: #112239;
+    --border: rgba(255,255,255,.07);
+    --border-strong: rgba(255,255,255,.12);
+    --font-brand: "Space Grotesk", system-ui, sans-serif;
+    --font-sans:  "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-code:  "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --green: #4ade80;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --teal: #5eead4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background:
+      radial-gradient(ellipse at 8% 0%,  rgba(94,234,212,.05) 0%, transparent 52%),
+      radial-gradient(ellipse at 92% 6%,  rgba(167,139,250,.05) 0%, transparent 52%),
+      var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    padding: 40px 28px;
+    max-width: 1320px;
+    margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+
+  /* ── Page header ─────────────────────────────────────────── */
+  .page-header { margin-bottom: 28px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+  .page-header-top {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px;
+  }
+  .charter-badge {
+    display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+    background: rgba(96,165,250,.1); border: 1px solid rgba(96,165,250,.22);
+    border-radius: 20px; padding: 4px 13px; font-size: .71rem;
+    font-weight: 600; color: var(--blue); letter-spacing: .05em; text-transform: uppercase;
+  }
+  h1 { font-family: var(--font-brand); font-size: 1.75rem; font-weight: 700; letter-spacing: -.03em; margin-bottom: 5px; color: #eef5ff; }
+  .subtitle { color: var(--muted); font-size: .87rem; line-height: 1.5; font-family: var(--font-sans); }
+
+  .sot-banner {
+    background: rgba(139,92,246,.07); border: 1px solid rgba(139,92,246,.22);
+    border-left: 3px solid var(--purple); border-radius: 8px;
+    padding: 10px 15px; font-size: .81rem; color: #c4b5fd;
+    margin-bottom: 14px; line-height: 1.65;
+  }
+  .sot-banner strong { color: #ddd8fe; }
+  .sot-banner code { font-size: .77rem; }
+
+  .meta { display: flex; gap: 7px; flex-wrap: wrap; }
+  .meta-item {
+    font-size: .76rem; color: var(--muted);
+    background: rgba(255,255,255,.04); border: 1px solid var(--border);
+    border-radius: 20px; padding: 3px 11px;
+  }
+  .meta-item strong { color: var(--text); }
+  .meta-item code { font-size: .73rem; color: var(--teal); }
+
+  /* ── Section labels ──────────────────────────────────────── */
+  .section-label {
+    font-size: .68rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--muted);
+    margin-bottom: 8px; margin-top: 24px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label:first-child { margin-top: 0; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── Repo header ─────────────────────────────────────────── */
+  .repo-header {
+    background: var(--surface); border: 1px solid var(--border-strong);
+    border-radius: 10px; padding: 14px 20px; margin-bottom: 20px;
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+  }
+  .repo-header label { font-size: .79rem; color: var(--muted); white-space: nowrap; font-weight: 500; }
+  .repo-header input {
+    background: rgba(255,255,255,.05); border: 1px solid var(--border);
+    border-radius: 7px; color: var(--text); font-size: .87rem;
+    padding: 6px 11px; flex: 1; min-width: 180px; font-family: inherit;
+    transition: border-color .15s, background .15s;
+  }
+  .repo-header input:focus { outline: none; border-color: rgba(96,165,250,.5); background: rgba(255,255,255,.07); }
+  /* ── Score box ───────────────────────────────────────────── */
+  .score-box {
+    background: var(--surface); border: 1px solid var(--border-strong);
+    border-radius: 12px; padding: 20px 24px; margin-bottom: 20px;
+  }
+  .score-formula { width: 100%; }
+  .score-formula h3 {
+    font-size: .7rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .09em; color: var(--muted); margin-bottom: 14px;
+  }
+  .score-steps { display: flex; flex-direction: column; gap: 4px; }
+  .score-step { display: flex; gap: 14px; align-items: flex-start; }
+  .step-num {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(96,165,250,.12); border: 1px solid rgba(96,165,250,.28);
+    color: var(--blue); font-size: .75rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .step-body { flex: 1; }
+  .step-title { font-size: .85rem; font-weight: 600; color: var(--text); margin-bottom: 9px; }
+  .step-note { font-size: .76rem; color: var(--muted); margin-top: 8px; font-style: italic; }
+  .step-arrow { font-size: .73rem; color: var(--muted); padding: 5px 0 5px 40px; letter-spacing: .03em; }
+
+  .sev-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+  .sev-pill {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--pc); border: 1px solid var(--bc); border-radius: 7px; padding: 6px 13px;
+  }
+  .pill-label { font-size: .79rem; font-weight: 600; color: var(--tc); }
+  .pill-pts { font-size: .79rem; color: var(--tc); opacity: .8; }
+
+  .cap-pills { display: flex; flex-direction: column; gap: 6px; }
+  .cap-pill {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    background: var(--pc); border: 1px solid var(--bc); border-radius: 7px; padding: 7px 13px;
+  }
+  .cap-trigger { font-size: .8rem; color: var(--tc); }
+  .cap-ceil {
+    font-size: .78rem; font-weight: 700; color: var(--tc);
+    background: rgba(0,0,0,.25); border-radius: 5px;
+    padding: 2px 9px; white-space: nowrap; font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  /* ── Controls bar (connects flush to table top) ──────────── */
+  .controls {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    padding: 12px 16px; background: var(--surface2);
+    border: 1px solid var(--border-strong); border-bottom: none;
+    border-radius: 12px 12px 0 0;
+  }
+  .controls label { font-size: .77rem; color: var(--muted); font-weight: 500; }
+  .controls-divider { width: 1px; height: 20px; background: var(--border-strong); margin: 0 2px; }
+  input[type="text"] {
+    background: rgba(255,255,255,.05); border: 1px solid var(--border);
+    border-radius: 7px; color: var(--text); font-size: .81rem;
+    padding: 6px 12px; width: 200px; font-family: inherit;
+    transition: border-color .15s, background .15s;
+  }
+  input[type="text"]:focus { outline: none; border-color: rgba(96,165,250,.5); background: rgba(255,255,255,.07); }
+  input[type="text"]::placeholder { color: var(--muted); }
+  select {
+    background: rgba(255,255,255,.05); border: 1px solid var(--border);
+    border-radius: 7px; color: var(--text); font-size: .81rem; padding: 6px 10px; font-family: inherit;
+  }
+  select option { background: #1e293b; }
+  button {
+    background: rgba(96,165,250,.1); border: 1px solid rgba(96,165,250,.24);
+    border-radius: 7px; color: var(--blue); font-size: .8rem;
+    padding: 6px 14px; cursor: pointer; transition: background .15s;
+    font-family: inherit; font-weight: 500;
+  }
+  button:hover { background: rgba(96,165,250,.2); }
+  button.danger { background: rgba(248,113,113,.09); border-color: rgba(248,113,113,.28); color: var(--red); }
+  button.danger:hover { background: rgba(248,113,113,.18); }
+
+  /* Global focus-visible rings */
+  button:focus-visible, input:focus-visible, select:focus-visible,
+  textarea:focus-visible, .cd-btn:focus-visible {
+    outline: 2px solid rgba(96,165,250,.65); outline-offset: 2px; border-radius: 6px;
+  }
+
+  /* ── Table (flush connects to controls above, summary below) */
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--border-strong); border-radius: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  thead tr { background: var(--surface2); }
+  th {
+    position: sticky; top: 0; z-index: 10; background: var(--surface2);
+    text-align: left; padding: 10px 12px; color: var(--muted); font-weight: 600;
+    font-size: .71rem; text-transform: uppercase; letter-spacing: .07em;
+    border-bottom: 2px solid var(--border-strong); white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid rgba(255,255,255,.045); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,.035); }
+  tbody tr.filtered-out { display: none; }
+  td { padding: 11px 12px; vertical-align: top; }
+
+  .rule-id {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: .77rem; color: var(--teal); white-space: nowrap; font-weight: 600;
+    background: rgba(94,234,212,.07); border: 1px solid rgba(94,234,212,.16);
+    border-radius: 5px; padding: 2px 7px; display: inline-block;
+  }
+  .rule-name { font-weight: 600; font-size: .87rem; color: var(--text); }
+  .rule-desc { color: var(--muted); font-size: .79rem; margin-top: 3px; line-height: 1.45; }
+
+  .sev { display: inline-block; font-size: .69rem; font-weight: 700; padding: 2px 8px; border-radius: 5px; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+  .sev-blocker { background: rgba(220,38,38,.15); color: #fca5a5; border: 1px solid rgba(220,38,38,.3); }
+  .sev-high    { background: rgba(234,88,12,.15);  color: #fdba74; border: 1px solid rgba(234,88,12,.3); }
+  .sev-medium  { background: rgba(202,138,4,.15);  color: #fde68a; border: 1px solid rgba(202,138,4,.3); }
+  .sev-low     { background: rgba(22,163,74,.15);  color: #86efac; border: 1px solid rgba(22,163,74,.3); }
+
+  .evidence-cell { min-width: 150px; font-size: .79rem; color: var(--muted); line-height: 1.5; }
+  .fp-cell { min-width: 130px; font-size: .79rem; color: var(--muted); line-height: 1.5; }
+  .fp-cell strong { color: var(--yellow); }
+  .fix-cell { min-width: 150px; font-size: .79rem; color: var(--muted); line-height: 1.5; }
+
+  .status-cell { min-width: 120px; }
+  .notes-input {
+    width: 100%; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 6px; color: var(--text); font-size: .77rem; padding: 5px 8px;
+    resize: vertical; min-height: 36px; font-family: inherit; min-width: 120px; line-height: 1.5;
+  }
+  .notes-input:focus {
+    outline: 2px solid rgba(96,165,250,.55); outline-offset: -1px; border-color: transparent;
+  }
+
+  /* ── Summary bar (flush connects to table bottom) ────────── */
+  .summary-bar {
+    display: flex; align-items: stretch; gap: 0;
+    background: var(--surface); border: 1px solid var(--border-strong);
+    border-top: 2px solid var(--border-strong); border-radius: 0 0 12px 12px;
+    overflow: hidden; margin-bottom: 32px;
+  }
+  .sum-counts {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    padding: 13px 20px; flex: 1; align-items: center;
+  }
+  .sum-item { font-size: .83rem; }
+  .sum-label { color: var(--muted); margin-right: 4px; font-weight: 500; }
+  .sum-score-block {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; padding: 14px 26px;
+    border-left: 1px solid var(--border-strong);
+    background: rgba(0,0,0,.15); min-width: 120px;
+  }
+  .sum-score-label { font-size: .69rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .sum-score { font-size: 1.85rem; font-weight: 700; line-height: 1; letter-spacing: -.03em; }
+
+  /* ── Footer ──────────────────────────────────────────────── */
+  footer {
+    font-size: .73rem; color: var(--muted); text-align: center;
+    padding: 14px 0; border-top: 1px solid var(--border); line-height: 1.9;
+  }
+
+  /* ── Custom dropdown ─────────────────────────────────────── */
+  .cd { position: relative; width: 100%; }
+  .cd-btn {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    width: 100%; padding: 6px 10px; font-size: .77rem;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 6px; color: var(--muted); cursor: pointer;
+    font-family: inherit; line-height: 1.4; white-space: nowrap;
+    transition: background .12s, border-color .12s;
+  }
+  .cd-btn:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.2); }
+  .cd-btn svg { flex-shrink: 0; opacity: .5; transition: transform .15s; }
+  .cd-btn.open svg { transform: rotate(180deg); }
+  .cd-btn.s-pass { background: rgba(74,222,128,.08);  border-color: rgba(74,222,128,.3);  color: #4ade80; }
+  .cd-btn.s-fail { background: rgba(248,113,113,.08); border-color: rgba(248,113,113,.3); color: #f87171; }
+  .cd-btn.s-fp   { background: rgba(251,191,36,.08);  border-color: rgba(251,191,36,.3);  color: #fbbf24; }
+  .cd-btn.s-na   { background: rgba(148,163,184,.06); border-color: rgba(148,163,184,.2); color: var(--muted); }
+  .cd-menu {
+    display: none; position: absolute; top: calc(100% + 4px); left: 0;
+    min-width: 100%; z-index: 999;
+    background: #1a2d45; border: 1px solid rgba(255,255,255,.16);
+    border-radius: 8px; box-shadow: 0 12px 32px rgba(0,0,0,.55);
+    overflow: hidden;
+  }
+  .cd-menu.open { display: block; }
+  .cd-opt {
+    padding: 8px 13px; font-size: .79rem; color: var(--text);
+    cursor: pointer; white-space: nowrap;
+  }
+  .cd-opt:hover { background: rgba(255,255,255,.07); }
+  .cd-opt.active { color: var(--blue); background: rgba(96,165,250,.09); font-weight: 500; }
+  .filter-cd { width: 155px; }
+
+  /* ── Date picker calendar ────────────────────────────────── */
+  .cd-cal { min-width: 242px; padding: 10px 10px 8px; }
+  .cal-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .cal-nav-btn {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    padding: 3px 9px; border-radius: 5px; font-size: 1.05rem; line-height: 1;
+    font-family: inherit; transition: background .12s, color .12s;
+  }
+  .cal-nav-btn:hover { background: rgba(255,255,255,.08); color: var(--text); }
+  .cal-month-label { font-size: .81rem; font-weight: 600; color: var(--text); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 2px; }
+  .cal-dow {
+    text-align: center; font-size: .63rem; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
+    padding: 3px 0 5px;
+  }
+  .cal-day {
+    text-align: center; font-size: .78rem; padding: 5px 2px;
+    border-radius: 5px; cursor: pointer; color: var(--text);
+    border: 1px solid transparent;
+    transition: background .1s, color .1s;
+  }
+  .cal-day:hover { background: rgba(255,255,255,.09); }
+  .cal-day.out { color: rgba(148,163,184,.28); cursor: default; pointer-events: none; }
+  .cal-day.today { color: var(--teal); font-weight: 700; }
+  .cal-day.selected {
+    background: rgba(96,165,250,.18); color: #93c5fd;
+    font-weight: 600; border-color: rgba(96,165,250,.38);
+  }
+  .cal-day.selected:hover { background: rgba(96,165,250,.26); }
+
+  /* ══════════════════════════════════════════════════════════
+     UI Polish — 2026 design system alignment
+     ══════════════════════════════════════════════════════════ */
+
+  /* Text selection — branded teal */
+  ::selection { background: rgba(93,202,165,.22); color: #d6f5ec; }
+
+  /* Body / global scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.18); }
+  html { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.1) transparent; }
+
+  /* Headings — Space Grotesk */
+  h1 { line-height: 1.18; }
+  h2, h3 { font-family: var(--font-brand); }
+
+  /* Page header — tighter, more premium */
+  .page-header {
+    margin-bottom: 28px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Charter badge — Space Grotesk tracking */
+  .charter-badge {
+    font-family: var(--font-brand);
+    letter-spacing: .06em;
+  }
+
+  /* Meta pills — IBM Plex Sans, sharper */
+  .meta-item {
+    font-family: var(--font-sans);
+    letter-spacing: .01em;
+  }
+  .meta-item code {
+    font-family: var(--font-code);
+    font-size: .73rem;
+  }
+
+  /* Inline code — consistent Charter teal chip */
+  code:not([class]) {
+    font-family: var(--font-code);
+    font-size: .82em;
+    background: rgba(94,234,212,.07);
+    border: 1px solid rgba(94,234,212,.14);
+    color: rgba(94,234,212,.88);
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: .01em;
+    white-space: nowrap;
+  }
+
+  /* Rule ID chips — IBM Plex Mono */
+  .rule-id { font-family: var(--font-code); }
+
+  /* Cap ceiling mono — IBM Plex Mono */
+  .cap-ceil { font-family: var(--font-code); letter-spacing: .01em; }
+
+  /* Score box — deeper shadow */
+  .score-box {
+    box-shadow: 0 8px 32px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .score-formula h3 { font-family: var(--font-brand); }
+
+  /* Rule name — Space Grotesk */
+  .rule-name { font-family: var(--font-brand); letter-spacing: -.01em; }
+
+  /* Table header — sharper */
+  th {
+    font-family: var(--font-brand);
+    letter-spacing: .07em;
+  }
+
+  /* Table row hover — slightly warmer */
+  tbody tr:hover { background: rgba(94,234,212,.028); }
+
+  /* Links */
+  a { color: rgba(94,234,212,.75); text-decoration: none; transition: color .14s; }
+  a:hover { color: #a5f3fc; }
+
+  /* Section labels — Space Grotesk */
+  .section-label { font-family: var(--font-brand); }
+
+  /* Controls — IBM Plex Sans inherited */
+  .controls label { font-family: var(--font-sans); }
+  input[type="text"], .cd-btn { font-family: var(--font-sans); }
+
+  /* Score summary — Space Grotesk for numbers */
+  .sum-score { font-family: var(--font-brand); letter-spacing: -.04em; }
+  .sum-score-label { font-family: var(--font-brand); }
+
+  /* Footer — smaller, more refined */
+  footer { font-family: var(--font-sans); letter-spacing: .01em; }
+
+  /* Page header top — add subtle top accent line */
+  .page-header { position: relative; }
+  .page-header::before {
+    content: '';
+    display: block;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(93,202,165,.45) 20%, rgba(167,139,250,.45) 70%, transparent 100%);
+    margin-bottom: 22px;
+  }
+
+  /* Repo header — subtle inset highlight */
+  .repo-header {
+    box-shadow: 0 4px 20px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
+  /* SOT banner — tighter border glow */
+  .sot-banner {
+    box-shadow: 0 0 0 1px rgba(139,92,246,.12), 0 4px 16px rgba(0,0,0,.2);
+  }
+
+  /* Focus rings — Charter teal */
+  :focus-visible {
+    outline: 2px solid rgba(93,202,165,.6);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  button:focus-visible, input:focus-visible, select:focus-visible,
+  textarea:focus-visible, .cd-btn:focus-visible {
+    outline: 2px solid rgba(93,202,165,.6);
+    outline-offset: 2px;
+  }
+
+  /* ── Screen reader only (visually hidden) ── */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  /* ── Skip link (keyboard accessibility) ── */
+  .skip-link {
+    position: fixed; top: -80px; left: 16px; z-index: 9999;
+    background: var(--teal); color: #07101f; font-weight: 700; font-size: .85rem;
+    padding: 8px 18px; border-radius: 0 0 10px 10px; text-decoration: none;
+    transition: top .15s; box-shadow: 0 4px 16px rgba(0,0,0,.4);
+    font-family: var(--font-brand);
+  }
+  .skip-link:focus { top: 0; outline: none; }
+
+  /* ── Prose / description readability ── */
+  .rule-desc { max-width: 55ch; }
+  .subtitle { max-width: 80ch; }
+
+  /* ── Empty state for filtered table ── */
+  .no-results-row td {
+    text-align: center;
+    padding: 40px 20px;
+    color: rgba(148,163,184,.45);
+    font-size: .87rem;
+    font-style: italic;
+  }
+  .no-results-row { display: none; }
+  .no-results-row.visible { display: table-row; }
+
+  /* ── Summary bar — ARIA live region visual cue ── */
+  .sum-counts { transition: opacity .15s; }
+
+  /* ── Controls search — better affordance ── */
+  input[type="text"]:focus-visible {
+    outline: 2px solid rgba(93,202,165,.6);
+    outline-offset: 2px;
+  }
+
+  /* ── Section-label — better contrast ── */
+  .section-label {
+    color: rgba(148,163,184,.72);
+    font-weight: 700;
+  }
+
+  /* ── Rule description muted text — slight boost ── */
+  .rule-desc, .evidence-cell, .fp-cell, .fix-cell {
+    color: rgba(148,163,184,.88);
+  }
+
+  /* ── Severity badge min touch target ── */
+  .sev { min-height: 22px; line-height: 1.6; }
+
+  @media print {
+    body { background: white; color: #1a1a1a; padding: 16px; font-family: sans-serif; }
+    button, .controls { display: none; }
+    .page-header, .score-box, .repo-header, .sot-banner { border: 1px solid #ddd; background: #fafafa; color: #333; border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+    .section-label { color: #888; }
+    .rule-id { color: #0d6efd; background: #e8f0fe; border: none; }
+    .muted, .rule-desc, .fp-cell, .fix-cell, .evidence-cell { color: #555; }
+    th, td { color: #1a1a1a; }
+    .summary-bar { border: 1px solid #ddd; border-radius: 6px; }
+    .sum-score-block { border-left: 1px solid #ddd; }
+    textarea { border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<main id="main-content" role="main">
+
+<div class="page-header">
+  <div class="page-header-top">
+    <div>
+      <h1>Charter v1 Manual Audit Checklist</h1>
+      <p class="subtitle">12 core rules + 3 governance rules &nbsp;·&nbsp; founder dogfooding tool &nbsp;·&nbsp; pre-launch FP calibration &nbsp;·&nbsp; "Top 10 Real Findings" data source &nbsp;·&nbsp; <span style="color:#a78bfa;font-weight:600">Hosted Audit — Phase 2 product (free to use locally in Phase 1)</span></p>
+    </div>
+    <span class="charter-badge">v1 &middot; 12+3 rules</span>
+  </div>
+  <div class="sot-banner">
+    <strong>Source of truth.</strong> <code>charter-architecture-2026</code> is the canonical source for Charter product behavior, command surface, transports, output formats, and roadmap. This checklist is the v1 audit companion for rule review and founder dogfooding. Its rule IDs, severities, scoring behavior, and guidance must match the architecture doc exactly. If this checklist conflicts with the architecture doc, update this checklist to match the architecture source.
+  </div>
+  <div style="background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.22);border-left:3px solid #a78bfa;border-radius:8px;padding:10px 15px;font-size:.81rem;color:#c4b5fd;margin-bottom:14px;line-height:1.65">
+    <strong style="color:#ddd8fe">Hosted Audit (Phase 2 product).</strong> In Phase 1, this checklist runs locally in the browser using localStorage — free, no backend required. The Hosted Audit paid product adds server-side session persistence, shareable URLs, PDF/CSV export stamped with auditor name + date + org, and team review mode. It ships in Phase 2, after Phase 1 validation signals confirm adoption. Use this checklist freely in Phase 1 for founder dogfooding and pre-launch FP calibration. See §9 Monetization in the architecture doc.
+  </div>
+  <div class="meta">
+    <div class="meta-item"><strong>Version:</strong> v1 launch set</div>
+    <div class="meta-item"><strong>Rules:</strong> 12 core + 3 governance</div>
+    <div class="meta-item"><strong>Primary command:</strong> <code>charter doctor</code></div>
+    <div class="meta-item"><strong>MCP server:</strong> <code>charter serve</code> (Phase 1.5 / v1.1)</div>
+    <div class="meta-item"><strong>Init scaffold:</strong> <code>charter init</code></div>
+    <div class="meta-item"><strong>Safe auto-fix:</strong> <code>charter fix</code></div>
+    <div class="meta-item"><strong>Scan engine:</strong> Gitleaks v8.30.1 (secrets) + Charter rule engine (agent config)</div>
+    <div class="meta-item"><strong>Agent formats covered:</strong> AGENTS.md · CLAUDE.md · .cursor/rules · .windsurfrules · .github/copilot-instructions.md · opencode.md · codex.md · DESIGN.md · SKILL.md</div>
+    <div class="meta-item"><strong>MCP config locations:</strong> .mcp.json · .mcp.yml · .cursor/mcp.json · .claude/settings.json · claude_desktop_config.json · cline_mcp_settings.json · *.pkl</div>
+    <div class="meta-item"><strong>Toolchain files (AE-ENV-001):</strong> mise.toml (recommended) · go.mod · .nvmrc · bunfig.toml · pyproject.toml · rust-toolchain.toml · .swift-version · gradle-wrapper.properties · .ruby-version · .tool-versions (asdf) · devcontainer.json · flake.nix</div>
+    <div class="meta-item"><strong>Hook managers (AE-ENV-001):</strong> hk (hk.pkl, preferred) · husky (.husky/) · lefthook (lefthook.yml) · pre-commit (.pre-commit-config.yaml) · simple-git-hooks · lint-staged · overcommit (.overcommit.yml) · cargo-husky</div>
+    <div class="meta-item"><strong>Suppression syntax:</strong> <code># charter:ignore AE-RULE-NNN reason="…"</code></div>
+    <div class="meta-item"><strong>Suppression TTL:</strong> 90 days default (configurable; <code>permanent</code> reserved for Phase 2 Cloud — requires <code>ApprovedBy</code> field; without it Charter treats as 90-day)</div>
+  </div>
+</div>
+
+<p class="section-label">Audit Session</p>
+
+<div class="repo-header">
+  <label for="repoName">Repo:</label>
+  <input type="text" id="repoName" placeholder="e.g. acme-corp/payments-service" />
+  <label for="auditorName">Auditor:</label>
+  <input type="text" id="auditorName" placeholder="Your name" style="max-width:180px" />
+  <label>Date:</label>
+  <div class="cd" id="auditDateCd" data-value="" style="width:158px">
+    <button class="cd-btn" type="button" id="auditDateBtn" onclick="toggleCal()" aria-haspopup="true" aria-expanded="false" aria-label="Select audit date">
+      <span class="cd-label" id="auditDateLabel">Select date</span>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </button>
+    <div class="cd-menu cd-cal" id="calPanel" role="dialog" aria-label="Date picker">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" type="button" onclick="stepCal(-1);event.stopPropagation()" aria-label="Previous month">&#8249;</button>
+        <span class="cal-month-label" id="calMonthLabel"></span>
+        <button class="cal-nav-btn" type="button" onclick="stepCal(1);event.stopPropagation()" aria-label="Next month">&#8250;</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
+  <label>Visibility:</label>
+  <div class="cd" id="repoVisibility" data-value="private" style="width:140px">
+    <button class="cd-btn" type="button" onclick="toggleCd(this)" aria-haspopup="listbox" aria-expanded="false" aria-label="Repository visibility">
+      <span class="cd-label">Private</span>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="cd-menu" role="listbox" aria-label="Visibility options">
+      <div class="cd-opt active" data-value="private" role="option" aria-selected="true">Private</div>
+      <div class="cd-opt" data-value="public" role="option" aria-selected="false">Public / OSS</div>
+    </div>
+  </div>
+</div>
+
+<p class="section-label">Scoring Reference</p>
+<div class="score-box">
+
+  <!-- Step 1: deductions -->
+  <div class="score-formula">
+    <h3>How the score is calculated</h3>
+    <div class="score-steps">
+      <div class="score-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Start at 100, subtract for every failing rule</div>
+          <div class="sev-pills">
+            <div class="sev-pill" style="--pc:rgba(220,38,38,.18);--bc:rgba(220,38,38,.4);--tc:#fca5a5">
+              <span class="pill-label">Blocker</span><span class="pill-pts">−20 pts each</span>
+            </div>
+            <div class="sev-pill" style="--pc:rgba(234,88,12,.15);--bc:rgba(234,88,12,.35);--tc:#fdba74">
+              <span class="pill-label">High</span><span class="pill-pts">−10 pts each</span>
+            </div>
+            <div class="sev-pill" style="--pc:rgba(202,138,4,.15);--bc:rgba(202,138,4,.35);--tc:#fde68a">
+              <span class="pill-label">Medium</span><span class="pill-pts">−4 pts each</span>
+            </div>
+            <div class="sev-pill" style="--pc:rgba(22,163,74,.15);--bc:rgba(22,163,74,.3);--tc:#86efac">
+              <span class="pill-label">Low</span><span class="pill-pts">−1 pt each</span>
+            </div>
+          </div>
+          <div class="step-note">Score floors at 0 — it can never go negative.</div>
+        </div>
+      </div>
+
+      <div class="step-arrow">↓ then apply hard ceilings</div>
+
+      <div class="score-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Apply the lowest applicable hard ceiling</div>
+          <div class="cap-pills">
+            <div class="cap-pill" style="--pc:rgba(220,38,38,.1);--bc:rgba(220,38,38,.3);--tc:#fca5a5">
+              <span class="cap-trigger">Any Blocker present</span>
+              <span class="cap-ceil">max score: 59</span>
+            </div>
+            <div class="cap-pill" style="--pc:rgba(220,38,38,.1);--bc:rgba(220,38,38,.3);--tc:#fca5a5">
+              <span class="cap-trigger">Raw secret (AE-SEC-001/002)</span>
+              <span class="cap-ceil">max score: 49</span>
+            </div>
+            <div class="cap-pill" style="--pc:rgba(202,138,4,.1);--bc:rgba(202,138,4,.3);--tc:#fde68a">
+              <span class="cap-trigger">Any rule unscanned / unknown</span>
+              <span class="cap-ceil">max score: 79</span>
+            </div>
+          </div>
+          <div class="step-note">If multiple ceilings apply, the <em>lowest</em> one wins.</div>
+          <div class="step-note" style="margin-top:8px;color:var(--muted)">⚠ <strong style="color:var(--text)">AE-SUPPRESS-003</strong> is informational — failing it does <em>not</em> deduct points or affect the score. All other rules follow the formula above.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="section-label">Rules Checklist</p>
+<div class="controls">
+  <label>Filter severity:</label>
+  <div class="cd filter-cd" id="filterSev" data-value="all">
+    <button class="cd-btn" type="button" onclick="toggleCd(this)" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter by severity">
+      <span class="cd-label">All severities</span>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="cd-menu" role="listbox" aria-label="Severity options">
+      <div class="cd-opt active" data-value="all" role="option" aria-selected="true">All severities</div>
+      <div class="cd-opt" data-value="blocker" role="option" aria-selected="false">Blocker</div>
+      <div class="cd-opt" data-value="high" role="option" aria-selected="false">High</div>
+      <div class="cd-opt" data-value="medium" role="option" aria-selected="false">Medium</div>
+      <div class="cd-opt" data-value="low" role="option" aria-selected="false">Low</div>
+    </div>
+  </div>
+  <label>Filter status:</label>
+  <div class="cd filter-cd" id="filterStatus" data-value="all">
+    <button class="cd-btn" type="button" onclick="toggleCd(this)" aria-haspopup="listbox" aria-expanded="false" aria-label="Filter by status">
+      <span class="cd-label">All statuses</span>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="cd-menu" role="listbox" aria-label="Status options">
+      <div class="cd-opt active" data-value="all" role="option" aria-selected="true">All statuses</div>
+      <div class="cd-opt" data-value="pending" role="option" aria-selected="false">Pending</div>
+      <div class="cd-opt" data-value="fail" role="option" aria-selected="false">Fail</div>
+      <div class="cd-opt" data-value="pass" role="option" aria-selected="false">Pass</div>
+      <div class="cd-opt" data-value="fp" role="option" aria-selected="false">False Positive</div>
+      <div class="cd-opt" data-value="na" role="option" aria-selected="false">N/A</div>
+    </div>
+  </div>
+  <span class="controls-divider" aria-hidden="true"></span>
+  <input type="text" id="searchBox" placeholder="Search rules…" oninput="applyFilter()" aria-label="Search rules by ID or name" />
+  <button onclick="resetAll()" class="danger" aria-label="Reset all checklist entries and notes">Reset all</button>
+  <button onclick="window.print()" aria-label="Print or save as PDF">Print / PDF</button>
+</div>
+
+<div class="tbl-wrap" role="region" aria-label="Charter rules checklist">
+<table id="checklist" aria-label="Charter v1 rule audit table">
+  <caption class="sr-only">Charter v1 rules: 12 core + 3 governance. Use filters above to narrow by severity or status.</caption>
+  <thead>
+    <tr>
+      <th scope="col">Rule ID</th>
+      <th scope="col">Rule</th>
+      <th scope="col">Sev</th>
+      <th scope="col">What to Check</th>
+      <th scope="col" class="evidence-cell">Evidence to Record</th>
+      <th scope="col" class="fp-cell">FP Notes</th>
+      <th scope="col" class="fix-cell">Recommended Fix</th>
+      <th scope="col" class="status-cell">Status</th>
+      <th scope="col" style="min-width:130px">Auditor Notes</th>
+    </tr>
+  </thead>
+  <tbody id="ruleRows"></tbody>
+</table>
+</div>
+
+<div class="summary-bar" id="summaryBar" aria-live="polite" aria-atomic="true" aria-label="Audit score summary">
+  <div class="sum-counts">
+    <span class="sum-item"><span class="sum-label">Blockers:</span><strong id="sBlocker" style="color:#fca5a5">0</strong></span>
+    <span class="sum-item"><span class="sum-label">Highs:</span><strong id="sHigh" style="color:#fdba74">0</strong></span>
+    <span class="sum-item"><span class="sum-label">Mediums:</span><strong id="sMedium" style="color:#fde68a">0</strong></span>
+    <span class="sum-item"><span class="sum-label">Lows:</span><strong id="sLow" style="color:#86efac">0</strong></span>
+    <span class="sum-item"><span class="sum-label">False Positives:</span><strong id="sFP" style="color:var(--yellow)">0</strong></span>
+    <span class="sum-item"><span class="sum-label">Pending:</span><strong id="sPending" style="color:var(--muted)">15</strong></span>
+  </div>
+  <div class="sum-score-block">
+    <span class="sum-score-label">Charter Score</span>
+    <span class="sum-score" id="scoreDisplay" style="color:var(--green)">100</span>
+  </div>
+</div>
+
+<footer>
+  Charter v1 Rule Set — audit companion aligned to the canonical charter-architecture source<br>
+  AE-CTX-001 · AE-CTX-002 · AE-SEC-001 · AE-SEC-002 · AE-MCP-001 · AE-MCP-002 · AE-MCP-003 · AE-CC-001 · AE-CC-002 · AE-ENV-001 · AE-CTX-004 · AE-CI-002 · AE-SUPPRESS-001 · AE-SUPPRESS-002 · AE-SUPPRESS-003<br>
+  <span style="font-size:.69rem;opacity:.65">V1 core surface: <code>charter init</code> · <code>charter doctor</code> · <code>charter report</code> · <code>charter fix</code> · <code>charter suppress</code> · <code>charter version</code> · v1 output formats: text / JSON / Markdown / SARIF · Phase 1.5 / v1.1 adds <code>charter serve</code> (MCP server, STDIO, 4 tools: charter_doctor / charter_fix / charter_score / charter_explain), <code>--for-agent</code>, <code>--format toon</code>, and <code>--format json-compact</code> · MCP catalog: static v1 embedded, ~20–30 curated servers, founder-maintained CVE advisories Phase 1 (48h SLA) · community-contributed catalog PRs + automated advisory monitoring Phase 2</span><br>
+  <span style="font-size:.69rem;opacity:.65">Suppression syntax: <code># charter:ignore AE-RULE-NNN reason="…"</code> · Reason required · Default TTL: 90 days · Permanent requires ApprovedBy · Confidence tiers: High / Medium / Low emitted on all findings · SARIF 2.1.0 output (<code>--format sarif</code>) for GitHub Code Scanning upload</span><br>
+  <span style="font-size:.69rem;opacity:.55">OWASP MCP Top 10 v1 coverage: MCP01 (SEC-001/002) · MCP02 (CC-002) · MCP04 (MCP-001 HIGH for unpinned/outdated · MCP-001 BLOCKER for catalog CVE advisory match — AE-MCP-008 reserved post-v1 for independent CVE suppression) · MCP05 (CC-001) · MCP07 (MCP-003) · MCP09 (MCP-002) · partial MCP10 (CC-002) — MCP03 Tool Poisoning: post-v1 backlog candidate (reserved AE-MCP-006) — Phase 2 gaps: MCP06 Intent Flow Subversion · MCP08 Audit Gaps (Phase 2 session logger)</span>
+</footer>
+
+<script>
+const RULES = [
+  {
+    id: "AE-CTX-001",
+    name: "AGENTS.md Missing or Empty",
+    sev: "blocker",
+    check: "Does the repo root contain an agent context file? Charter recognises all nine formats — check for any of: <code>AGENTS.md</code>, <code>CLAUDE.md</code>, <code>.cursor/rules</code>, <code>.windsurfrules</code>, <code>.github/copilot-instructions.md</code>, <code>opencode.md</code>, <code>codex.md</code>, <code>DESIGN.md</code> (Google Labs standard), <code>SKILL.md</code> (agentskills.io). Is the file non-empty and does it contain meaningful content — at minimum: project summary, tech stack, directories safe for agent edits, off-limits paths, and a verification command (e.g., <code>charter doctor</code>)? Also check: is the file within a reasonable token budget (≤ 600 tokens recommended; configurable via <code>charter.yaml → rules.AE-CTX-001.token_budget</code>; files over budget risk being partially ignored by agents)?",
+    evidence: "File path and format detected. Note if empty or stub-only. Quote the first 2–3 substantive lines. Note the approximate token count if it appears large.",
+    fp: "<strong>FP Risk: Very Low.</strong> A file must exist and contain meaningful content. An empty placeholder, a single-line README copy, or a file with only TODO comments still fails. A repo that uses DESIGN.md or SKILL.md instead of AGENTS.md passes if the file meets the content requirements.",
+    fix: "Run <code>charter init</code> to scaffold AGENTS.md from a template matched to your detected tech stack. Minimum content: project summary, tech stack, directories safe for agent edits, off-limits paths, and the command agents should run to verify their changes (<code>charter doctor</code>). If you also use <code>charter serve</code>, add a note in AGENTS.md so agents know Charter is available as an MCP tool.",
+  },
+  {
+    id: "AE-CTX-002",
+    name: "Agent Context Stale",
+    sev: "medium",
+    check: "If an agent context file exists, is its content consistent with the actual repo state? Compare: (1) stated tech stack vs. language toolchain files — <code>mise.toml</code> (polyglot tool manager, recommended), <code>go.mod</code> (Go), <code>package.json</code>/<code>bunfig.toml</code> (JS/TS), <code>pyproject.toml</code>/<code>.python-version</code> (Python), <code>rust-toolchain.toml</code>/<code>Cargo.toml</code> (Rust), <code>.swift-version</code> (Swift), <code>gradle-wrapper.properties</code> (Kotlin/JVM), <code>.ruby-version</code> (Ruby), <code>.tool-versions</code> (asdf); (2) stated off-limits paths vs. current directory structure; (3) stated test/verify command vs. current CI config; (4) stated hook tooling vs. the repo's committed hook config — check all supported managers: <code>hk.pkl</code> (hk, preferred for Go/JS), <code>.husky/</code> (husky), <code>lefthook.yml</code>/<code>lefthook.toml</code> (lefthook), <code>.pre-commit-config.yaml</code> (pre-commit), <code>simple-git-hooks</code> key in package.json, <code>.lintstagedrc</code> (lint-staged), <code>.overcommit.yml</code> (overcommit), <code>.cargo-husky/hooks/</code> (cargo-husky) — if a hook manager is active, AGENTS.md should reference it so agents know pre-commit checks will run on their commits; (5) stated MCP tools vs. <code>.mcp.json</code> — if <code>charter serve</code> is configured, AGENTS.md should mention it.",
+    evidence: "Last-modified date of the agent context file. List any specific factual mismatches found (e.g., 'AGENTS.md says Node 18, mise.toml pins Bun 1.3.13' or 'AGENTS.md does not mention charter serve but .mcp.json configures it').",
+    fp: "<strong>FP Risk: Medium.</strong> A stale date alone is not enough — focus on factual contradictions between the doc and the repo. Stable repos with slow-moving stacks may have old-dated but accurate docs.",
+    fix: "Update the agent context file to match current stack. Add a <code>Last reviewed: YYYY-MM-DD</code> line at the top. Add a CI lint step that warns when the context file hasn't changed in 90+ days while the repo has active commits (<code>charter doctor</code> emits AE-CTX-002 at Medium severity when staleness is detected).",
+  },
+  {
+    id: "AE-SEC-001",
+    name: "Raw Secret in Tracked File",
+    sev: "blocker",
+    check: "Scan all tracked files for raw credential patterns: API keys (sk-*, ghp_*, AKIA*, xoxb-*), private keys (BEGIN RSA/EC/PRIVATE KEY), bearer tokens, connection strings with passwords, and high-entropy strings in config files. Focus on: .env committed to git, AGENTS.md, shell scripts, CI yamls, JSON config. <strong>Scan engine:</strong> Charter uses Gitleaks v8.30.1 under the hood for history and working-tree scanning, then applies its own agent-config-specific patterns on top (AGENTS.md, MCP config files, hk.pkl). Gitleaks covers git history; Charter adds the agent-visible file surface. A finding from Gitleaks is always High-confidence; a Charter-layer finding uses Confidence tiers.",
+    evidence: "File path + line number. <strong>Never record the actual secret value.</strong> Record only the pattern matched (e.g., 'OPENAI_API_KEY=sk-… found at .env:3'). Note whether the file is in .gitignore.",
+    fp: "<strong>FP Risk: Medium — use Confidence tiers.</strong> <strong>High-confidence (mark Fail):</strong> exact recognized prefix + correct format length (sk-…T3BlbkFJ, ghp_…, AKIA[A-Z0-9]{16}, xoxb-…). <strong>Medium-confidence (note but verify):</strong> high entropy string matching a known prefix but wrong length, or entropy-only match without a recognizable prefix. Output as 'likely credential — verify manually.' <strong>Low-confidence (note for review, do not block):</strong> suspicious env var assignment without a recognizable pattern. Common FPs: test fixtures with clearly fake keys, documentation code blocks, commented-out placeholders. Only mark Fail for High-confidence matches. Entropy alone without a recognizable prefix is at most Medium-confidence.",
+    fix: "Revoke the exposed credential immediately. Remove from git history (git-filter-repo or BFG). Add the file to .gitignore. Switch to environment variable injection or a secrets manager. <em>Covers OWASP MCP01 — Token Mismanagement &amp; Secret Exposure.</em>",
+  },
+  {
+    id: "AE-SEC-002",
+    name: "Raw Secret in MCP/Agent Config",
+    sev: "blocker",
+    check: "Check all MCP config files for secrets embedded directly in: env object values, command args arrays, headers objects, or any string value that matches a credential pattern or has high entropy (≥ 4.0 bits/char over 20+ chars). MCP config locations to scan: <code>.mcp.json</code>, <code>.mcp.yml</code>, <code>.cursor/mcp.json</code>, <code>.claude/settings.json</code>, <code>claude_desktop_config.json</code>, <code>cline_mcp_settings.json</code>, <code>*.pkl</code> (MCP Pkl configs). Also check <code>hk.pkl</code> if it passes environment variables or tokens to hook commands.",
+    evidence: "Config file path + key path (e.g., 'servers.filesystem.env.API_KEY at .mcp.json'). Evidence.Snippet must be <code>[REDACTED]</code> — never the raw value.",
+    fp: "<strong>FP Risk: Medium — use Confidence tiers.</strong> Environment variable <em>references</em> (<code>\"${MY_API_KEY}\"</code>, <code>\"$MY_KEY\"</code>) are safe injection patterns — never flag these. <strong>High-confidence (Fail):</strong> literal value matching a recognized credential prefix at correct length. <strong>Medium-confidence (verify):</strong> high-entropy literal string (≥4.0 bits/char, ≥20 chars) in a semantically sensitive key (env, args, headers). <strong>Low-confidence (note only):</strong> high-entropy string in tool name or server description. Do not block on Low-confidence.",
+    fix: "Remove the literal secret from the MCP config. Instead reference the value via the host environment: <code>\"env\": { \"API_KEY\": \"${MY_API_KEY}\" }</code>. Use a secrets manager to inject values at runtime. If suppressing: <code># charter:ignore AE-SEC-002 reason=\"test credential — zero real-world access, rotated monthly\"</code>. Suppressions expire in 90 days by default. <em>Covers OWASP MCP01 — Token Mismanagement &amp; Secret Exposure.</em>",
+  },
+  {
+    id: "AE-MCP-001",
+    name: "MCP Server Unpinned or Vulnerable",
+    sev: "high",
+    check: "For every MCP server configured in any MCP config file, check two things: (1) <strong>Version pinning</strong> — is the package version pinned to a specific release? Scan all MCP config locations: <code>.mcp.json</code>, <code>.mcp.yml</code>, <code>.cursor/mcp.json</code>, <code>.claude/settings.json</code>, <code>claude_desktop_config.json</code>, <code>cline_mcp_settings.json</code>, <code>*.pkl</code>. Flag: version absent entirely, version set to <code>latest</code>, version set to a semver range (^1.0, ~2.1, >=3), or git source using a branch name rather than a full 40-char commit SHA — these fire as <strong>HIGH</strong>. (2) <strong>CVE advisory check</strong> — for servers that ARE pinned, cross-reference the pinned version against Charter's embedded MCP catalog (<code>catalog/v1/*.yaml</code>) advisory entries. If the catalog has an <code>advisories[]</code> entry whose affected version range includes the pinned version, this finding <strong>escalates to BLOCKER</strong>. A properly pinned server running a CVE-affected version is more dangerous than an unpinned server, because the team believes it is safe.",
+    evidence: "Config file path, server name, and the version string — whether unpinned (e.g., <code>\"latest\"</code>) or pinned but advisory-matched (e.g., <code>\"1.0.2\"</code> with catalog advisory CVE-2025-XXXXX affecting ≤1.0.3). Note severity: HIGH for unpinned/outdated, BLOCKER for advisory match. Cross-reference the catalog's <code>stable_version</code> field to confirm the recommended upgrade target.",
+    fp: "<strong>FP Risk: Low.</strong> A server pinned to an exact semver (e.g., @1.2.3) or a full 40-char git SHA is safe for the unpinned check. Semver ranges (^, ~, >=) are genuinely risky for supply chain reasons. For the CVE escalation: a finding only fires if the catalog has an explicit advisory entry for that server and version range — not speculative. <strong>Mark N/A if the repo has no MCP config files at all</strong> — this rule only applies to repos with active MCP server configuration. Note: <code>charter serve</code> is a local STDIO server with no package version — it is always safe and never flagged by this rule.",
+    fix: "For unpinned servers: pin to exact version: <code>\"@modelcontextprotocol/server-filesystem\": \"1.0.4\"</code>. For git sources, pin to a full commit SHA. Run <code>npm install --save-exact</code> or <code>bun add --exact</code> and commit the lockfile. For CVE-affected versions (BLOCKER): upgrade immediately to the catalog's <code>stable_version</code>. Run <code>charter fix AE-MCP-001</code> for an auto-generated upgrade diff. Check <code>charter catalog show &lt;id&gt;</code> for advisory details and recommended version. <em>Covers OWASP MCP04 — Supply Chain Attacks &amp; Dependency Tampering.</em>",
+  },
+  {
+    id: "AE-MCP-002",
+    name: "MCP Server Unknown or Untrusted URL",
+    sev: "high",
+    check: "For remote MCP servers (HTTP/HTTPS/SSE type), check whether the server URL appears in Charter's embedded static MCP catalog (<code>catalog/v1/*.yaml</code>, embedded in the binary) or in a team allowlist (<code>charter.yaml → mcp.trustedRemotes</code>). Flag any remote URL that is not in either source. Also flag servers sourced from git URLs at unknown organizations or accounts. Note: STDIO-type servers (like <code>charter serve</code>) are local by definition and are never flagged by this rule.",
+    evidence: "Server name and remote URL. Note whether the URL matches a catalog entry or a local allowlist. If the server is from a known vendor not yet in Charter's catalog, note it for catalog contribution.",
+    fp: "<strong>FP Risk: Medium.</strong> A remote URL from a well-known vendor (Anthropic, GitHub, Stripe, Cloudflare) that isn't in Charter's embedded catalog yet is a FP risk — file a catalog contribution. Mark as FP with a note if the server is from a verifiably trusted organization. <code>charter serve</code> (STDIO transport, local) is always safe — never flag it. <strong>Mark N/A if the repo has no MCP config files at all.</strong>",
+    fix: "Add trusted remote URLs to <code>charter.yaml → mcp.trustedRemotes</code>. Or switch to a local/npm-installed equivalent of the server. For unknown origins, audit the server's tool list before adding it. <em>Covers OWASP MCP09 — Shadow MCP Servers.</em>",
+  },
+  {
+    id: "AE-MCP-003",
+    name: "Remote MCP Server Lacks Auth Metadata",
+    sev: "high",
+    check: "For remote MCP servers that require authentication (servers with type: 'http' or 'sse'), check whether the config includes an authorization block with OAuth 2.1 / PKCE metadata. A server that accepts user credentials without a documented auth flow is a trust gap. Per MCP spec 2025-11-25, remote servers should declare their auth requirements.",
+    evidence: "Server name, type, and URL. Note whether an auth/authorization block exists in the config. Note if the server is listed as 'public/unauthenticated' in its own docs.",
+    fp: "<strong>FP Risk: High.</strong> Many legitimate read-only remote servers don't require auth. If the server is genuinely public and read-only (e.g., a public docs search server), mark N/A with a note. Only flag if the server clearly handles sensitive data or user-specific state without an auth declaration. <strong>Mark N/A if the repo has no MCP config files at all</strong> — this rule only applies to repos with active MCP server configuration.",
+    fix: "Add an authorization block to the server config per MCP spec: specify authorizationUrl, tokenUrl, and scopes. Or switch to an npm-installed local server that doesn't require remote auth. <em>Covers OWASP MCP07 — Insufficient Authentication &amp; Authorization.</em>",
+  },
+  {
+    id: "AE-CC-001",
+    name: "Dangerous Command in Agent Config",
+    sev: "blocker",
+    check: "Check all agent hook configurations for dangerous shell patterns: shell injection sequences (<code>;</code>, <code>&amp;&amp;</code>, <code>||</code>, <code>$(...)</code>, backtick), destructive commands (<code>rm -rf</code>, <code>git reset --hard</code>, <code>truncate</code>, <code>dd</code>), or privilege escalation (<code>sudo</code>, <code>chmod 777</code>, <code>chown -R</code>). Hook config locations to check: <code>.claude/settings.json</code> (hooks block), <code>.cursor/rules</code> (tool-use config), Codex hook definitions, <strong>and <code>hk.pkl</code></strong> — hk is the modern Git hook manager (used by Charter itself); check its <code>pre-commit</code>, <code>pre-push</code>, and <code>commit-msg</code> hook definitions for any open-ended shell patterns that could be weaponized by prompt injection.",
+    evidence: "Config file path and the specific hook type + dangerous command found. Quote the minimal relevant snippet.",
+    fp: "<strong>FP Risk: Low.</strong> Hook scripts that use <code>&&</code> for command chaining in a controlled, single-purpose command (e.g., <code>cd app && npm test</code>) are generally safe. Flag patterns that are open-ended or could be exploited by prompt injection — not every use of shell operators.",
+    fix: "Replace open-ended shell patterns with explicit, scoped commands. Use array-form command execution where possible to avoid shell expansion. Review every hook against the principle: 'if an agent were prompt-injected, could this hook be weaponized?' <em>Covers OWASP MCP05 — Command Injection.</em>",
+  },
+  {
+    id: "AE-CC-002",
+    name: "Overly Broad Agent Edit Scope",
+    sev: "high",
+    check: "Does any agent context file explicitly restrict what directories, file types, or operations the agent may perform? Check all formats: <code>AGENTS.md</code>, <code>CLAUDE.md</code>, <code>.cursor/rules</code>, <code>.windsurfrules</code>, <code>.github/copilot-instructions.md</code>, <code>opencode.md</code>, <code>codex.md</code>. Flag: no off-limits paths defined, edit scope covers the entire repo root without exclusions, infrastructure or secrets paths are not explicitly excluded.",
+    evidence: "Note what scope definition exists (or doesn't). Quote the relevant permission/scope block. Flag specific dangerous paths that are not excluded (e.g., .github/workflows/, terraform/, db/migrations/, secrets/).",
+    fp: "<strong>FP Risk: Medium.</strong> A small single-purpose repo with no sensitive paths may legitimately have broad scope. Focus on repos where broad scope creates real risk: infra code, migration scripts, CI pipeline definitions, credential files.",
+    fix: "Add an explicit 'Off-limits for agents' section to AGENTS.md listing at minimum: <code>.github/workflows/</code>, <code>terraform/</code> or <code>infra/</code>, <code>db/migrations/</code>, <code>.env*</code>, <code>secrets/</code>. Consider using <code>allowed_paths</code> in CLAUDE.md to hard-restrict what charter doctor reports on. <em>Covers OWASP MCP02 — Permissioning Failures.</em>",
+  },
+  {
+    id: "AE-ENV-001",
+    name: "Reproducibility Missing",
+    sev: "medium",
+    check: `Does the repo have a machine-readable specification of the development toolchain that agents (and CI) can use to reproduce a known-good environment?
+
+<strong>Step 1 — Toolchain declaration.</strong> Check for any of the following (one is sufficient):
+<ul style="margin:.4rem 0 .6rem;padding-left:1.1rem;font-size:.82rem;line-height:1.7">
+  <li><strong>Polyglot tool managers (recommended — one file covers all runtimes):</strong> <code>mise.toml</code> / <code>.mise.toml</code> · <code>.tool-versions</code> (asdf-compatible) · <code>devcontainer.json</code> / <code>.devcontainer/**</code> · <code>flake.nix</code> + <code>flake.lock</code></li>
+  <li><strong>Go:</strong> <code>go.mod</code> with a <code>go</code> directive and/or <code>toolchain</code> line (Go 1.21+) · <code>.go-version</code></li>
+  <li><strong>JavaScript / TypeScript:</strong> <code>.nvmrc</code> · <code>.node-version</code> · <code>package.json</code> <code>engines.node</code> or <code>volta</code> field · <code>bunfig.toml</code> (Bun projects)</li>
+  <li><strong>Python:</strong> <code>pyproject.toml</code> with <code>requires-python</code> · <code>.python-version</code> · <code>uv.toml</code> / <code>.python-version</code> (uv/pyenv)</li>
+  <li><strong>Rust:</strong> <code>rust-toolchain.toml</code> or <code>rust-toolchain</code> (channel + targets + components)</li>
+  <li><strong>Swift:</strong> <code>.swift-version</code> · <code>Package.swift</code> swift-tools-version comment</li>
+  <li><strong>Kotlin / JVM:</strong> <code>gradle/wrapper/gradle-wrapper.properties</code> (<code>distributionUrl</code> pins Gradle version) · <code>.java-version</code> · <code>jvmToolchain</code> in <code>build.gradle.kts</code></li>
+  <li><strong>Ruby:</strong> <code>.ruby-version</code> · <code>Gemfile</code> with <code>ruby</code> declaration</li>
+</ul>
+
+<strong>Step 2 — Lockfile committed.</strong> Without a lockfile, dependency resolution is non-deterministic even with a pinned runtime. Check per language:
+<ul style="margin:.4rem 0 .6rem;padding-left:1.1rem;font-size:.82rem;line-height:1.7">
+  <li><strong>Go:</strong> <code>go.sum</code></li>
+  <li><strong>JS/TS (npm):</strong> <code>package-lock.json</code> · <strong>(yarn):</strong> <code>yarn.lock</code> · <strong>(pnpm):</strong> <code>pnpm-lock.yaml</code> · <strong>(Bun):</strong> <code>bun.lock</code> / <code>bun.lockb</code></li>
+  <li><strong>Python (pip):</strong> <code>requirements.txt</code> pinned · <strong>(poetry):</strong> <code>poetry.lock</code> · <strong>(uv):</strong> <code>uv.lock</code></li>
+  <li><strong>Rust:</strong> <code>Cargo.lock</code> (always commit for binaries; optional for libraries)</li>
+  <li><strong>Swift (SPM):</strong> <code>Package.resolved</code></li>
+  <li><strong>Kotlin/Gradle:</strong> Gradle dependency verification file (<code>gradle/verification-metadata.xml</code>) or pinned <code>libs.versions.toml</code></li>
+  <li><strong>Ruby:</strong> <code>Gemfile.lock</code></li>
+</ul>
+
+<strong>Step 3 — Committed hook configuration.</strong> Consistent pre-commit behavior is part of reproducibility — if an agent's commits bypass hooks, quality gates silently disappear. Any one of the following satisfies this check:
+<ul style="margin:.4rem 0 .6rem;padding-left:1.1rem;font-size:.82rem;line-height:1.7">
+  <li><strong>hk</strong> — <code>hk.pkl</code> committed (preferred for Go/JS stacks using Pkl config)</li>
+  <li><strong>husky</strong> — <code>.husky/</code> directory committed with ≥1 hook file (JS/TS ecosystem standard)</li>
+  <li><strong>lefthook</strong> — <code>lefthook.yml</code> or <code>lefthook.toml</code> committed (polyglot-friendly, fast)</li>
+  <li><strong>pre-commit</strong> — <code>.pre-commit-config.yaml</code> committed (Python-heavy or polyglot projects)</li>
+  <li><strong>simple-git-hooks</strong> — <code>package.json</code> <code>simple-git-hooks</code> key present (lightweight JS alternative to husky)</li>
+  <li><strong>lint-staged</strong> — <code>.lintstagedrc</code> or <code>package.json</code> <code>lint-staged</code> key (commonly paired with husky / simple-git-hooks)</li>
+  <li><strong>overcommit</strong> — <code>.overcommit.yml</code> committed (Ruby projects)</li>
+  <li><strong>cargo-husky</strong> — <code>.cargo-husky/hooks/</code> committed (Rust projects)</li>
+</ul>
+<strong>Mark this check as pass if any one toolchain declaration + any one lockfile (where applicable) + any one hook config is committed.</strong>`,
+    evidence: "List which reproducibility signals are present or absent. Note: (a) detected language(s) and which toolchain file covers each (e.g., 'Go → go.mod toolchain go1.26.3; Node → .nvmrc 22.x; Python → pyproject.toml requires-python >=3.12'); (b) whether each lockfile is committed and matches CI; (c) which hook manager is in use and whether its config file is committed. Note any language whose runtime version is completely undeclared.",
+    fp: "<strong>FP Risk: Low.</strong> A repo with no build system or no external dependencies may genuinely need no lockfile. Only flag if there are clear dependencies (e.g., <code>go.mod</code> without <code>go.sum</code>, <code>package.json</code> without lockfile, <code>Cargo.toml</code> binary without <code>Cargo.lock</code>). Hook config absence is only a finding if the repo has evidence of hooks in use (<code>.git/hooks/</code> is populated, or hook install instructions exist in README/AGENTS.md) but the config file is missing or gitignored. For polyglot repos, partial coverage is acceptable — flag only languages that have active dependencies and no toolchain declaration.",
+    fix: `Pin runtimes per language and commit the lockfile:
+<ul style="margin:.4rem 0 .6rem;padding-left:1.1rem;font-size:.82rem;line-height:1.7">
+  <li><strong>Go:</strong> ensure <code>go.mod</code> has a <code>go</code> directive + <code>toolchain</code> line; commit <code>go.sum</code>. Optionally add to <code>mise.toml</code>: <code>[tools] go = "1.26.3"</code></li>
+  <li><strong>JS/TS:</strong> add <code>.nvmrc</code> or <code>package.json</code> <code>volta</code> field; commit the lockfile; for Bun add <code>bunfig.toml</code> with <code>[run] bun = "1.x.x"</code></li>
+  <li><strong>Python:</strong> add <code>requires-python = ">=3.12"</code> to <code>pyproject.toml</code> and commit <code>uv.lock</code> / <code>poetry.lock</code>; add <code>.python-version</code> for pyenv/mise users</li>
+  <li><strong>Rust:</strong> add <code>rust-toolchain.toml</code> with <code>channel = "1.82.0"</code> and <code>components</code>; commit <code>Cargo.lock</code> for binaries</li>
+  <li><strong>Swift:</strong> add <code>.swift-version</code>; commit <code>Package.resolved</code></li>
+  <li><strong>Kotlin/JVM:</strong> pin Gradle in <code>gradle-wrapper.properties</code> + commit <code>libs.versions.toml</code>; add <code>.java-version</code> for toolchain auto-provisioning</li>
+  <li><strong>Ruby:</strong> add <code>.ruby-version</code> and commit <code>Gemfile.lock</code></li>
+  <li><strong>Polyglot:</strong> use <code>mise.toml</code> to pin all runtimes in one file — supports Go, Node, Python, Ruby, Java, Rust, Swift and 100+ others</li>
+</ul>
+Add a committed hook config:
+<ul style="margin:.4rem 0 .6rem;padding-left:1.1rem;font-size:.82rem;line-height:1.7">
+  <li><strong>hk (Go/Pkl stacks):</strong> commit <code>hk.pkl</code>, run <code>hk install</code></li>
+  <li><strong>husky (JS/TS):</strong> commit <code>.husky/pre-commit</code>, run <code>npm run prepare</code> or <code>npx husky install</code></li>
+  <li><strong>lefthook (polyglot / Go):</strong> commit <code>lefthook.yml</code>, run <code>lefthook install</code></li>
+  <li><strong>pre-commit (Python / polyglot):</strong> commit <code>.pre-commit-config.yaml</code>, run <code>pre-commit install</code></li>
+  <li><strong>simple-git-hooks (minimal JS):</strong> add <code>simple-git-hooks</code> key to <code>package.json</code>, run <code>npx simple-git-hooks</code></li>
+  <li><strong>overcommit (Ruby):</strong> commit <code>.overcommit.yml</code>, run <code>overcommit --install</code></li>
+  <li><strong>cargo-husky (Rust):</strong> commit hook scripts to <code>.cargo-husky/hooks/</code>, add <code>cargo-husky</code> as dev-dependency</li>
+</ul>
+Reference the setup commands in AGENTS.md so agents know how to bootstrap the environment. Run <code>charter fix AE-ENV-001</code> — Charter detects the primary language and creates the appropriate toolchain file if absent.`,
+  },
+  {
+    id: "AE-CTX-004",
+    name: ".gitignore Missing Agent Artifact Patterns",
+    sev: "medium",
+    check: "Does .gitignore exclude local agent session artifacts that should never be committed? Check for these patterns: <code>.charter/</code> (Charter local audit sessions), <code>*.charter-session</code> files, <code>.claude/local/</code> (local Claude Code settings), <code>.cursor/cache/</code> (Cursor local cache), agent scratch/temp directories. Also check for <code>.hk/</code> or any hk local state that shouldn't be committed — <code>hk.pkl</code> itself should be committed (it's shared team config), but any generated hook cache files should not be. Also verify that agent artifact directories aren't already tracked in git using <code>git ls-files | grep -E '\\.(charter|claude/local|cursor/cache)'</code>.",
+    evidence: "Quote the relevant .gitignore lines if present (or note their absence). Note any agent artifact files that are already tracked in git.",
+    fp: "<strong>FP Risk: Medium.</strong> Some .cursor/ and .claude/ subdirs are intentionally committed team config (<code>.cursor/rules</code>, <code>.claude/settings.json</code>, <code>hk.pkl</code>). Only flag if local/personal session data or caches are tracked — not shared team config.",
+    fix: "Add to .gitignore: <code>.charter/</code>, <code>*.charter-session</code>, <code>.claude/local/</code>, <code>.cursor/cache/</code>. Keep committed: <code>.cursor/rules</code>, <code>.claude/settings.json</code>, <code>hk.pkl</code>, <code>.mcp.json</code>. Run <code>git rm --cached &lt;path&gt;</code> on any accidentally tracked agent artifacts.",
+  },
+  {
+    id: "AE-CI-002",
+    name: "Charter Action Missing",
+    sev: "low",
+    check: "Is there a GitHub Actions workflow file that runs <code>charter doctor</code> (or uses the Charter GitHub Action) on pull requests? Check .github/workflows/ for any charter-related steps. Verify all of the following: (1) <code>charter doctor --format sarif</code> output is uploaded to GitHub Code Scanning via <code>github/codeql-action/upload-sarif@v4</code> — SARIF upload is the expected CI artifact for score history and PR annotations; (2) <code>actionlint</code> v1.7.12 runs on all workflow files for syntax and logic validation; (3) <code>zizmor</code> v1.24.1 runs on workflow files for supply-chain security analysis; (4) no third-party actions are pinned to a mutable tag instead of a full commit SHA; (5) optionally, <code>.mcp.json</code> (or <code>.claude/settings.json</code>) includes a <code>charter</code> entry pointing to <code>charter serve</code> (STDIO transport) — this lets AI agents in the repo invoke <code>charter_doctor</code> and <code>charter_score</code> directly without a subprocess call.",
+    evidence: "Note the workflow file and job name if found. Note the <code>threshold</code> setting. Note whether SARIF upload step is present and wired to Code Scanning. Note whether actionlint v1.7.12 and zizmor v1.24.1 steps exist. List any unpinned third-party actions (tag-pinned rather than SHA-pinned). Note whether a <code>charter serve</code> MCP entry exists in any MCP config file.",
+    fp: "<strong>FP Risk: Very Low.</strong> The missing CI check is expected for most repos before Charter adoption — this is the entry-point finding, not a warning sign. Mark N/A only if the repo has no agent-related config at all and Charter isn't relevant. actionlint/zizmor absence is a real finding, not a false positive — both are fast, free, and widely adopted in 2026 GitHub Actions workflows. SARIF upload absence is a genuine gap: without it, score history and PR annotations are lost.",
+    fix: "Create <code>.github/workflows/charter.yaml</code> using the Charter GitHub Action: <code>uses: use-charter/charter-action@v1</code> with <code>threshold: 80</code> and SARIF upload enabled. Minimal workflow: <pre>- uses: use-charter/charter-action@v1\n  with: { threshold: 80, sarif: true }\n- uses: github/codeql-action/upload-sarif@v4\n  with: { sarif_file: charter.sarif }</pre> Add actionlint and zizmor steps to the same workflow or a dedicated <code>lint-workflows.yaml</code>. Pin all third-party actions to full commit SHAs. Optionally add <code>charter serve</code> as an MCP entry in <code>.mcp.json</code> so AI agents in CI can call <code>charter_doctor</code> and <code>charter_fix</code> natively. Run <code>charter fix AE-CI-002</code> for a scaffolded workflow file.",
+  },
+  // ── Governance rules (3) ─────────────────────────────────────────────────
+  // These rules fire on Charter's own suppression system, not on repo state.
+  // AE-SUPPRESS-003 is informational and does NOT reduce the Charter Score.
+  // AE-SUPPRESS-001 and AE-SUPPRESS-002 are MEDIUM/HIGH and do reduce the score.
+  {
+    id: "AE-SUPPRESS-001",
+    name: "Suppression Missing Required Reason",
+    sev: "medium",
+    check: "Scan all suppression comments in the repo for bare <code># charter:ignore AE-RULE-NNN</code> entries that lack a <code>reason=\"…\"</code> field. Every suppression must include a human-readable reason string explaining why the finding is being suppressed. A suppression without a reason is itself a finding — Charter emits <code>AE-SUPPRESS-001 MEDIUM</code> and the suppression is still honored, but the missing reason is flagged.",
+    evidence: "List every suppression comment that lacks a reason field: file path, line number, and rule being suppressed. If all suppressions have reasons, note that explicitly.",
+    fp: "<strong>FP Risk: Very Low.</strong> The syntax is unambiguous: <code># charter:ignore AE-SEC-001 reason=\"test fixture\"</code> is valid; <code># charter:ignore AE-SEC-001</code> (no reason) always fails. There are no edge cases — either the reason field is present or it isn't.",
+    fix: "Add a reason string to every bare suppression: <code># charter:ignore AE-RULE-NNN reason=\"describe why this is safe to suppress here\"</code>. Reasons should be meaningful — 'false positive' alone is not acceptable. State the actual context (e.g., 'test fixture — fake credential with zero real-world access, rotated in CI').",
+  },
+  {
+    id: "AE-SUPPRESS-002",
+    name: "Permanent Suppression Without Approver",
+    sev: "high",
+    check: "Scan all suppression comments (<code># charter:ignore AE-RULE-NNN reason=&quot;…&quot;</code>) and any <code>.charter-suppress.yml</code> file for entries that set <code>ExpiresAt: permanent</code> (or equivalent). For each permanent suppression found, check whether a non-empty <code>ApprovedBy</code> field is present containing a valid GitHub handle. A permanent suppression without an <code>ApprovedBy</code> value is treated by Charter as a 90-day suppression on the next scan — the finding is not actually suppressed long-term.",
+    evidence: "List each permanent suppression entry: file path or suppression key, rule suppressed, and whether <code>ApprovedBy</code> is present. If absent, note that Charter will re-fire the original finding on the next scan.",
+    fp: "<strong>FP Risk: Low.</strong> Permanent suppressions are intentionally rare and require explicit opt-in. A <code>permanent</code> entry without <code>ApprovedBy</code> is a genuine governance gap — the repo owner intended a permanent waiver but it won't be honored. Only mark N/A if the repo has no suppression entries at all.",
+    fix: "For each permanent suppression missing <code>ApprovedBy</code>: either add <code>ApprovedBy: github-handle</code> after a security/founder review, or convert to a 90-day TTL suppression. <strong>Permanent suppressions require Phase 2 Cloud</strong> to be fully enforced at the org level. In v1, enforce as a manual gate: no permanent suppression ships without a documented approver. Syntax: <code># charter:ignore AE-SEC-001 reason=&quot;test fixture&quot; expires=permanent approved-by=tashfiqul-islam</code>.",
+  },
+  {
+    id: "AE-SUPPRESS-003",
+    name: "High Suppression Rate",
+    sev: "medium",
+    check: "Count the total number of active suppression entries for this repo (all <code># charter:ignore</code> comments + any suppression file entries). Compare to the total number of findings Charter emitted on the most recent scan. If suppressed findings exceed 30% of total findings, flag this. This finding does <strong>not</strong> reduce the Charter Score — it is an informational signal that the suppression log deserves a review. A high suppression rate suggests either systematic false positives (fix the rule) or systematic risk acceptance (needs governance).",
+    evidence: "Total finding count vs. suppressed count from the most recent charter doctor output. Suppression rate = suppressed ÷ (findings + suppressed) × 100. Note the top 2–3 rules being suppressed and whether the suppressions have reasons.",
+    fp: "<strong>FP Risk: Medium.</strong> A brand-new repo migrating to Charter may legitimately have many suppressions during the initial calibration period. Mark FP if the repo is clearly in a transition state (Charter installed within the last 30 days, most suppressions dated within the same window). Otherwise, a persistent high suppression rate after 30 days is a genuine governance signal.",
+    fix: "Review the suppression log in bulk. For suppressions covering the same rule across many files: consider whether the rule needs a repo-level exception in <code>charter.yaml → rules.ignore</code> (instead of per-line suppression) or whether the rule's FP rate for this codebase pattern warrants a false-positive report. For suppressions that have grown stale: check expiry dates and remove expired ones. This finding does not affect the Charter Score.",
+  }
+];
+
+function sevClass(s) { return 'sev sev-' + s; }
+
+// ── Date picker ───────────────────────────────────────────
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOWS   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+let calState = { year: 0, month: 0 };
+
+function setDateValue(dateStr) {
+  if (!dateStr) return;
+  const cd = document.getElementById('auditDateCd');
+  cd.dataset.value = dateStr;
+  const [y, m, d] = dateStr.split('-');
+  document.getElementById('auditDateLabel').textContent =
+    MONTHS[parseInt(m, 10) - 1] + ' ' + parseInt(d, 10) + ', ' + y;
+}
+
+function toggleCal() {
+  const panel  = document.getElementById('calPanel');
+  const btn    = document.getElementById('auditDateBtn');
+  const isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.cd-menu.open').forEach(m => {
+    m.classList.remove('open');
+    const b = m.previousElementSibling;
+    if (b && b.classList.contains('cd-btn')) {
+      b.classList.remove('open'); b.setAttribute('aria-expanded', 'false');
+    }
+  });
+  if (!isOpen) {
+    const val = document.getElementById('auditDateCd').dataset.value;
+    const ref = val ? new Date(val + 'T00:00:00') : new Date();
+    calState = { year: ref.getFullYear(), month: ref.getMonth() };
+    renderCal();
+    panel.classList.add('open');
+    btn.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function stepCal(dir) {
+  calState.month += dir;
+  if (calState.month < 0)  { calState.month = 11; calState.year--; }
+  if (calState.month > 11) { calState.month = 0;  calState.year++; }
+  renderCal();
+}
+
+function renderCal() {
+  document.getElementById('calMonthLabel').textContent = MONTHS[calState.month] + ' ' + calState.year;
+  const grid       = document.getElementById('calGrid');
+  const selectedVal = document.getElementById('auditDateCd').dataset.value;
+  const todayStr   = new Date().toISOString().split('T')[0];
+  const firstDow   = new Date(calState.year, calState.month, 1).getDay();
+  const daysInMon  = new Date(calState.year, calState.month + 1, 0).getDate();
+  const daysInPrev = new Date(calState.year, calState.month,     0).getDate();
+
+  let html = DOWS.map(d => `<div class="cal-dow">${d}</div>`).join('');
+
+  for (let i = firstDow - 1; i >= 0; i--)
+    html += `<div class="cal-day out">${daysInPrev - i}</div>`;
+
+  for (let d = 1; d <= daysInMon; d++) {
+    const mm  = String(calState.month + 1).padStart(2, '0');
+    const dd  = String(d).padStart(2, '0');
+    const ds  = `${calState.year}-${mm}-${dd}`;
+    let   cls = 'cal-day';
+    if (ds === todayStr)    cls += ' today';
+    if (ds === selectedVal) cls += ' selected';
+    html += `<div class="${cls}" data-date="${ds}" onclick="pickDate('${ds}');event.stopPropagation()">${d}</div>`;
+  }
+
+  const trailing = (firstDow + daysInMon) % 7;
+  for (let d = 1; d <= (trailing === 0 ? 0 : 7 - trailing); d++)
+    html += `<div class="cal-day out">${d}</div>`;
+
+  grid.innerHTML = html;
+}
+
+function pickDate(dateStr) {
+  setDateValue(dateStr);
+  const panel = document.getElementById('calPanel');
+  const btn   = document.getElementById('auditDateBtn');
+  panel.classList.remove('open');
+  btn.classList.remove('open');
+  btn.setAttribute('aria-expanded', 'false');
+  saveState();
+}
+// ─────────────────────────────────────────────────────────
+
+function renderRows() {
+  const tbody = document.getElementById('ruleRows');
+  tbody.innerHTML = '';
+  RULES.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.dataset.idx = i;
+    tr.dataset.sev = r.sev;
+    tr.dataset.status = 'pending';
+    tr.innerHTML = `
+      <td><span class="rule-id">${r.id}</span></td>
+      <td><div class="rule-name">${r.name}</div></td>
+      <td><span class="${sevClass(r.sev)}">${r.sev}</span></td>
+      <td><div style="font-size:.8rem;line-height:1.5">${r.check}</div></td>
+      <td class="evidence-cell">${r.evidence}</td>
+      <td class="fp-cell">${r.fp}</td>
+      <td class="fix-cell">${r.fix}</td>
+      <td class="status-cell">
+        <div class="cd" data-value="pending" data-idx="${i}">
+          <button class="cd-btn" type="button" onclick="toggleCd(this)" aria-haspopup="listbox" aria-expanded="false" aria-label="Set status for ${r.id}">
+            <span class="cd-label">Pending</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="cd-menu" role="listbox">
+            <div class="cd-opt active" data-value="pending" role="option" aria-selected="true">Pending</div>
+            <div class="cd-opt" data-value="pass" role="option" aria-selected="false">Pass</div>
+            <div class="cd-opt" data-value="fail" role="option" aria-selected="false">Fail</div>
+            <div class="cd-opt" data-value="fp" role="option" aria-selected="false">False Positive</div>
+            <div class="cd-opt" data-value="na" role="option" aria-selected="false">N/A</div>
+          </div>
+        </div>
+      </td>
+      <td><textarea class="notes-input" placeholder="File, line, detail…" rows="2" oninput="saveState()"></textarea></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  updateSummary();
+}
+
+const STATUS_LABELS = { pending:'Pending', pass:'Pass', fail:'Fail', fp:'False Positive', na:'N/A', private:'Private', public:'Public / OSS' };
+
+function toggleCd(btn) {
+  const menu = btn.nextElementSibling;
+  const isOpen = menu.classList.contains('open');
+  document.querySelectorAll('.cd-menu.open').forEach(m => {
+    m.classList.remove('open');
+    const b = m.previousElementSibling;
+    b.classList.remove('open');
+    b.setAttribute('aria-expanded', 'false');
+  });
+  if (!isOpen) {
+    menu.classList.add('open');
+    btn.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function setCdValue(cd, value) {
+  cd.dataset.value = value;
+  const btn = cd.querySelector('.cd-btn');
+  btn.querySelector('.cd-label').textContent = STATUS_LABELS[value] || value;
+  btn.className = 'cd-btn' + (value !== 'pending' ? ' s-' + value : '');
+  btn.setAttribute('aria-expanded', 'false');
+  cd.querySelectorAll('.cd-opt').forEach(o => {
+    const selected = o.dataset.value === value;
+    o.classList.toggle('active', selected);
+    o.setAttribute('aria-selected', selected ? 'true' : 'false');
+  });
+  const tr = cd.closest('tr');
+  if (tr) tr.dataset.status = value;
+}
+
+document.addEventListener('click', e => {
+  const opt = e.target.closest('.cd-opt');
+  if (opt) {
+    const cd = opt.closest('.cd');
+    setCdValue(cd, opt.dataset.value);
+    cd.querySelector('.cd-menu').classList.remove('open');
+    cd.querySelector('.cd-btn').classList.remove('open');
+    if (cd.classList.contains('filter-cd')) { applyFilter(); } else { updateSummary(); saveState(); }
+    return;
+  }
+  if (!e.target.closest('.cd')) {
+    document.querySelectorAll('.cd-menu.open').forEach(m => {
+      m.classList.remove('open');
+      m.previousElementSibling.classList.remove('open');
+    });
+  }
+});
+
+function updateSummary() {
+  const rows = document.querySelectorAll('#ruleRows tr');
+  let c = {blocker:0,high:0,medium:0,low:0,fp:0,pending:0};
+  // AE-SUPPRESS-003 is informational — does not affect Charter Score (per rule definition)
+  const NO_SCORE_IMPACT = new Set(['AE-SUPPRESS-003']);
+  rows.forEach(tr => {
+    const s = tr.dataset.status, sev = tr.dataset.sev;
+    const rule = RULES[parseInt(tr.dataset.idx)];
+    const noScore = rule && NO_SCORE_IMPACT.has(rule.id);
+    if (s === 'fail' && !noScore) c[sev] = (c[sev]||0)+1;
+    else if (s === 'fp') c.fp++;
+    else if (s === 'pending') c.pending++;
+  });
+  document.getElementById('sBlocker').textContent = c.blocker;
+  document.getElementById('sHigh').textContent = c.high;
+  document.getElementById('sMedium').textContent = c.medium;
+  document.getElementById('sLow').textContent = c.low;
+  document.getElementById('sFP').textContent = c.fp;
+  document.getElementById('sPending').textContent = c.pending;
+
+  let base = Math.max(0, 100 - c.blocker*20 - c.high*10 - c.medium*4 - c.low*1);
+  let cap = 100;
+  // Unscanned (pending) rules → cap at 79
+  if (c.pending > 0) cap = Math.min(cap, 79);
+  // Any Blocker → cap at 59
+  if (c.blocker > 0) cap = Math.min(cap, 59);
+  // 49-cap applies specifically to raw-secret rules — matched by ID, not array position
+  const RAW_SECRET_RULES = new Set(['AE-SEC-001', 'AE-SEC-002']);
+  document.querySelectorAll('#ruleRows tr').forEach(tr => {
+    const rule = RULES[parseInt(tr.dataset.idx)];
+    if (rule && RAW_SECRET_RULES.has(rule.id) && tr.dataset.status === 'fail') {
+      cap = Math.min(cap, 49);
+    }
+  });
+  const score = Math.min(base, cap);
+  const sd = document.getElementById('scoreDisplay');
+  sd.textContent = score;
+  sd.style.color = score >= 80 ? 'var(--green)' : score >= 60 ? 'var(--yellow)' : 'var(--red)';
+}
+
+function applyFilter() {
+  const sev = document.getElementById('filterSev').dataset.value || 'all';
+  const status = document.getElementById('filterStatus').dataset.value || 'all';
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  document.querySelectorAll('#ruleRows tr').forEach(tr => {
+    const r = RULES[parseInt(tr.dataset.idx)];
+    const ok = (sev==='all'||tr.dataset.sev===sev)
+      && (status==='all'||(status==='pending'?tr.dataset.status==='pending':tr.dataset.status===status))
+      && (!q||r.id.toLowerCase().includes(q)||r.name.toLowerCase().includes(q)||r.check.toLowerCase().includes(q));
+    tr.classList.toggle('filtered-out', !ok);
+  });
+}
+
+function resetAll() {
+  if (!confirm('Reset all statuses and notes?')) return;
+  document.querySelectorAll('#ruleRows tr').forEach(tr => {
+    const cd = tr.querySelector('.cd');
+    if (cd) setCdValue(cd, 'pending');
+    const ta = tr.querySelector('textarea');
+    if (ta) ta.value = '';
+  });
+  ['repoName','auditorName'].forEach(id => document.getElementById(id).value='');
+  const dateCd = document.getElementById('auditDateCd');
+  dateCd.dataset.value = '';
+  document.getElementById('auditDateLabel').textContent = 'Select date';
+  setCdValue(document.getElementById('repoVisibility'), 'private');
+  updateSummary();
+  try { localStorage.removeItem('charterAudit'); } catch(e){}
+}
+
+function saveState() {
+  const rows = document.querySelectorAll('#ruleRows tr');
+  const data = [];
+  rows.forEach(tr => { const cd=tr.querySelector('.cd'); data.push({s:cd?cd.dataset.value:'pending', n:(tr.querySelector('textarea')||{}).value||''}); });
+  try {
+    localStorage.setItem('charterAudit', JSON.stringify({
+      repo: document.getElementById('repoName').value,
+      auditor: document.getElementById('auditorName').value,
+      date: document.getElementById('auditDateCd').dataset.value,
+      vis: document.getElementById('repoVisibility').dataset.value,
+      rows: data
+    }));
+  } catch(e){}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('charterAudit');
+    if (!raw) return;
+    const st = JSON.parse(raw);
+    if (st.repo) document.getElementById('repoName').value = st.repo;
+    if (st.auditor) document.getElementById('auditorName').value = st.auditor;
+    if (st.date) setDateValue(st.date);
+    if (st.vis) setCdValue(document.getElementById('repoVisibility'), st.vis);
+    if (st.rows) {
+      const rows = document.querySelectorAll('#ruleRows tr');
+      st.rows.forEach((d,i) => {
+        if (!rows[i]) return;
+        const cd = rows[i].querySelector('.cd');
+        if (cd) setCdValue(cd, d.s||'pending');
+        const ta = rows[i].querySelector('textarea');
+        if (ta && d.n) ta.value = d.n;
+      });
+    }
+    updateSummary();
+  } catch(e){}
+}
+
+['repoName','auditorName'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', saveState);
+  el.addEventListener('change', saveState);
+});
+
+setDateValue(new Date().toISOString().split('T')[0]);
+renderRows();
+loadState();
+</script>
+
+<script>
+/* ── Accessibility: empty state row, scope cleanup ── */
+(function(){
+  // Add empty-state row that shows when all rows are filtered out
+  var tbody = document.getElementById('ruleRows');
+  if (tbody) {
+    var emptyRow = document.createElement('tr');
+    emptyRow.id = 'emptyStateRow';
+    emptyRow.className = 'no-results-row';
+    var td = document.createElement('td');
+    td.setAttribute('colspan', '9');
+    td.innerHTML = 'No rules match your current filters. <button onclick="resetAll()" style="background:none;border:none;color:rgba(93,202,165,.8);cursor:pointer;font-size:inherit;font-family:inherit;text-decoration:underline;padding:0">Clear filters</button> to see all 15 rules.';
+    emptyRow.appendChild(td);
+    tbody.appendChild(emptyRow);
+  }
+
+  // Watch for filter changes and toggle empty state
+  var observer = new MutationObserver(function(){
+    if (!tbody) return;
+    var visibleRows = tbody.querySelectorAll('tr:not(.filtered-out):not(#emptyStateRow)');
+    var emptyEl = document.getElementById('emptyStateRow');
+    if (emptyEl) {
+      if (visibleRows.length === 0) {
+        emptyEl.classList.add('visible');
+      } else {
+        emptyEl.classList.remove('visible');
+      }
+    }
+  });
+  if (tbody) observer.observe(tbody, { attributes: true, subtree: true, attributeFilter: ['class'] });
+
+  // Add role="search" to the controls region
+  var controls = document.querySelector('.controls');
+  if (controls) controls.setAttribute('role', 'search');
+  var searchBox = document.getElementById('searchBox');
+  if (searchBox) searchBox.setAttribute('autocomplete', 'off');
+})();
+</script>
+</main>
+</body>
+</html>
