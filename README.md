@@ -49,7 +49,7 @@ All repo automation should route through the same task family:
 
 GitHub-level repo health features stay split by capability:
 
-- committed here: Renovate config and Scorecard workflow
+- committed here: Renovate config and a disabled Scorecard workflow stub for future public/org enablement
 - outside source control and should be enabled where supported: CodeQL default setup, required checks, branch protection, private vulnerability reporting
 
 ## Repo Map

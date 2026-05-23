@@ -1,34 +1,20 @@
-name: scorecard
+name: scorecard-disabled
 
 on:
-  push:
-    branches: ["main"]
-  schedule:
-    - cron: "0 6 * * 1"
   workflow_dispatch:
+
+# Scorecard stays disabled while the repository is a private personal repo.
+# Re-enable when the repo is public or when a private-repo token strategy is
+# intentionally adopted.
 
 permissions:
   contents: read
 
 jobs:
-  scorecard:
+  disabled:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: read
-      security-events: write
-      id-token: write
     steps:
-      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
-        with:
-          persist-credentials: false
-      - name: Run OpenSSF Scorecard
-        uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a # v2.4.3
-        with:
-          results_file: results.sarif
-          results_format: sarif
-          publish_results: true
-      - name: Upload Scorecard SARIF
-        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
-        with:
-          sarif_file: results.sarif
+      - name: Scorecard intentionally disabled
+        run: |
+          echo "Scorecard is disabled for the current private personal repo setup."
+          echo "Re-enable when the repository is public or when a dedicated private-repo token strategy is adopted."
