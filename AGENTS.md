@@ -63,44 +63,18 @@ Last reviewed: 2026-05-23
 <claude-mem-context>
 # Memory Context
 
-# [charter] recent context, 2026-05-23 1:51am GMT+6
+# [charter] recent context, 2026-05-23 2:14am GMT+6
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (19,771t read) | 430,174t work | 95% savings
+Stats: 50 obs (20,004t read) | 323,722t work | 94% savings
 
 ### May 21, 2026
 S476 Understand Charter project HTML and MD docs thoroughly, check consistency, then plan pre-Phase-0 repo bootstrap with interactive architectural decisions (May 21 at 6:26 AM)
 S477 Charter Pre-Phase-0 AI Readiness Bootstrap — Initial repo reconnaissance before writing all bootstrap files (May 21 at 6:30 AM)
 ### May 23, 2026
-1648 1:21a 🔵 Charter Repo Tool Stack Confirmed from .mise.toml
-1649 " 🔵 Charter Moonrepo Task Definitions Confirmed
-1650 " 🔵 Charter Phase 0 Milestone Structure Fully Documented in Architecture Doc
-1651 " 🔵 Charter Repo Hard Constraints and AI-Readiness Contract Confirmed in AGENTS.md
-1652 " 🔵 Charter Security Posture and Standards Targets Confirmed
-1654 1:22a 🔵 context7-mcp MCP Tool Unavailable Due to Transport Deserialization Error
-1655 " 🔵 Charter Repo Full File Tree Enumerated — Pre-Phase-0 Scaffold Complete
-1656 1:23a 🔵 Charter Go Source is Minimal Bootstrap Placeholder — No Domain Logic Exists Yet
-1657 " 🔵 golangci-lint v2 Config Uses Standard Linters + gosec + misspell with gofumpt Formatter
-1658 " 🔵 hk.pkl Hook Config Confirmed — Pre-commit Runs Lint+Docs, Pre-push Runs Test+Security
-1659 " 🔵 .gitignore Includes Charter-Specific Artifact Paths and Tool Cache Exceptions
-1660 1:27a 🔵 Context7 MCP Tool Fails with Deserialization Error on resolve-library-id
-1661 1:31a ⚖️ Charter Phase 0 Foundation Plan Approved for Implementation
-1662 " ⚖️ Charter Go Architecture Rules Locked for Phase 0
-1663 " ⚖️ Quality Gate Stack Finalized: :check Umbrella with Explicit :vet Addition
-1664 1:32a 🔵 scorecard.yml Workflow Is a Stub Running :docs Instead of OpenSSF Scorecard
-1665 " 🔵 Architecture Doc Uses repo: Task Prefix; Repo Implementation Uses Root : Tasks
-1666 " 🔵 Charter Repo Companion Docs and CI Templates Already Present
-1667 " 🔵 All Five GitHub Workflows Confirmed Pinned with Correct SHA and mise-action Version
-1668 1:33a 🔵 Charter Uses Multi-Layer AI Agent Instruction Architecture
-1669 " 🔵 Rule Spec Schema Requires 11 Fields Including Traceability to ADRs and Evals
-1670 1:35a 🔵 ossf/scorecard-action Latest Release Is v2.4.3 at SHA 4eaacf05
-1671 " 🔵 github/codeql-action Latest v3 Release Is v3.36.0, Latest v4 Is v4.36.0
-1672 1:36a 🟣 OSV Scanner v2.3.5 Pinned and Wired into :security Gate
-1673 " 🟣 Explicit :vet Gate Added to Moon Task Graph
-1674 " 🟣 Renovate Configuration Added with Patch Automerge and Pinned Action Digests
 1675 1:37a 🟣 scorecard.yml Workflow Replaced with Real OpenSSF Scorecard Implementation
 1676 " 🔵 govulncheck Has Known Incompatibility with Go 1.26.3 (golang/go#77670)
 1677 1:38a ✅ Architecture Doc Reconciled: repo:* Task Naming Replaced with Root :* Tasks
@@ -125,6 +99,32 @@ S477 Charter Pre-Phase-0 AI Readiness Bootstrap — Initial repo reconnaissance 
 1696 " ✅ Phase Labels Updated to "Phase 0 Foundation Complete" and ADR-0010 Clarified
 1697 " 🟣 Phase 0 Final Gate: moon run :check Passes Clean After All Closure Updates
 1698 1:45a 🔵 Final moon.yml Phase 0 Task Graph Confirmed: 10 Tasks with File Group Inputs
+1699 1:52a 🔵 Charter Project Security Tooling Documentation Verified Present
+1700 1:53a 🔵 renovate.json Implementation Confirmed Matching Architecture Spec
+1701 " 🔴 Gitleaks moon.yml Security Task Fixed: --exit-code 0 Suppression Removed
+1702 " 🟣 .gitleaks.toml Created to Extend Default Ruleset
+1703 " ✅ Architecture Doc and Supporting Docs Aligned on Admin-Side vs Source-Controlled Controls
+1704 1:54a 🔵 Architecture Doc Patch Failed — Earlier write_file Calls Were No-ops
+1705 " 🔵 Architecture Doc Sections T0.3.1–T0.3.3 Still Contain Stale Content
+1706 " 🔴 Architecture Doc T0.3.1–T0.3.3 Sections Successfully Updated on Retry
+1707 1:55a 🔵 HTML Export and Audit Checklist Contain Stale Security Content Requiring Separate Updates
+1708 1:57a ✅ HTML Export and Audit Checklist Fully Synced with Markdown Architecture Doc
+1709 " 🔵 Post-Patch Verification Confirms All Stale Security Terms Removed Across Full Repo
+1710 " 🔴 moon.yml Security Task: Gitleaks Explicitly Loads .gitleaks.toml Config + Cache Inputs Expanded
+1711 1:58a ✅ HTML Workflow Code Examples Updated to Match Actual Committed Workflows
+1712 " 🔴 Final Docs Audit Clean; Single Remaining setup-go@v5 is Phase 1 Code Example Only
+1713 " 🔵 Final setup-go@v5 at HTML Line 5679 Confirmed Present but Patch Match Failed
+1714 1:59a 🟣 moon run :check Passes All 10 Quality Gates After Documentation and Config Fixes
+1715 " ✅ Charter Repository Documentation and Security Configuration Alignment Complete
+1716 " 🔵 Charter Repository Has No Git Commits — All Files Are Untracked (Pre-Initial-Commit)
+1717 " 🔵 Initial Commit Failed: GPG Signing Requires TTY Not Available in Subprocess Context
+1718 2:00a 🔵 git index.lock Error Is Transient — Lock File Does Not Exist
+1719 " 🟣 Charter Phase 0 Foundation Committed to git — Initial Commit e8b8921
+1720 2:01a 🔵 moon run --force Flag Discovered; Post-Commit Security Scan Passes Against Real Git History
+1721 2:06a 🔵 Charter Project Phase 0 Completion Check – Only AGENTS.md Modified
+1722 2:07a 🟣 Charter Phase 0 Foundation Committed – 99 Files, 10,939 Lines
+1723 " 🔵 Charter Phase 0 – All Moon Check Tasks Pass Clean
+1724 " 🔵 AGENTS.md Has Pending Unstaged Changes After Phase 0 Commit
 
-Access 430k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 324k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
