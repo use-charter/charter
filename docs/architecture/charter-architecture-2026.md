@@ -612,7 +612,7 @@ osv-scanner   = "2.3.5"
 
 ### M0.3 — CI Security & Quality Gates
 
-*actionlint · zizmor · govulncheck · OSV-Scanner · Gitleaks · Scorecard · Renovate · moon run :check*
+*actionlint · zizmor · govulncheck · OSV-Scanner · Gitleaks · Renovate · moon run :check*
 
 
 #### T0.3.1 Actions Security: actionlint + zizmor `⚡ AI`
@@ -653,20 +653,19 @@ osv-scanner   = "2.3.5"
 
 #### T0.3.3 Repo Health: Scorecard + CodeQL + Renovate `⚡ AI`
 
-**User story:** As a maintainer, I want OpenSSF Scorecard v2 and Renovate configuration committed in the repository, with CodeQL default analysis documented as an admin-side control, so that repo health is measurable from source control and GitHub-native security can be enabled without drifting from repo policy.
+**User story:** As a maintainer, I want Renovate configuration committed in the repository, with Scorecard and CodeQL documented as admin-side or visibility-dependent controls, so that repo health is measurable from source control without pretending private personal repo features are active when they are not.
 
 **Given:** Charter's GitHub repository with CI configured  
 **When:** repo workflows and config are committed, and GitHub-native security settings are enabled where supported  
-**Then:** Scorecard can run from source control, Renovate can consume the committed config once its app is installed, and maintainers have exact instructions for enabling CodeQL default setup and branch protection without hidden manual repo drift  
+**Then:** Renovate can consume the committed config once its app is installed, and maintainers have exact instructions for enabling or re-enabling Scorecard, CodeQL default setup, and branch protection when repository visibility or hosting plan makes them available  
 
 **Happy Path:**
-- OpenSSF Scorecard v2 runs weekly via .github/workflows/scorecard.yml ; results published to GitHub Security tab; target score ≥ 7.0 (Charter's own AE-CI-002 rule enforces this threshold)
-- Scorecard checks enabled: Branch-Protection, CI-Tests, Code-Review, Dangerous-Workflow, Dependency-Update-Tool, License, Maintained, Pinned-Dependencies, SAST, Security-Policy, Token-Permissions, Vulnerabilities
+- Scorecard stays disabled in the private personal repo baseline because the default Actions token cannot complete the required GraphQL queries there; keep a source-controlled stub so future public/org enablement is explicit and reviewable
 - CodeQL default setup is preferred over a custom workflow when the repository is public or GitHub Code Security is enabled; this remains an admin-side setting because it is not source-controlled by default
 - Renovate config ( renovate.json ) uses config:recommended base plus GitHub Action digest pinning; patch updates may automerge with passing CI; minor and major updates require manual review
 - Renovate groups Go dependency updates by module; groups GitHub Actions updates separately
 - Renovate runs on a schedule (daily 02:00 UTC) to avoid PR spam during business hours
-- SECURITY.md at repo root documents the vulnerability disclosure process (required for Scorecard "Security-Policy" check)
+- SECURITY.md at repo root documents the vulnerability disclosure process for future Scorecard or public-repo hardening
 - Branch protection, required checks, and private vulnerability reporting remain admin-side hardening steps and should be enabled where the hosting plan supports them
 
 
