@@ -38,7 +38,7 @@ tmp/
 .charter/fix-log.jsonl
 
 # Keep committed tool and repo contracts
-!.mise.toml
+!mise.toml
 !mise.lock
 !moon.yml
 !hk.pkl

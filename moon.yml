@@ -71,7 +71,7 @@ tasks:
       - "@globs(goSources)"
       - "@globs(docsSources)"
       - ".gitleaks.toml"
-      - ".mise.toml"
+      - "mise.toml"
       - "mise.lock"
   eval:
     command: "bun"

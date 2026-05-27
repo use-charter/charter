@@ -61,7 +61,7 @@ Example shape:
 code: AE-REPRO-001
 summary: Missing pinned toolchain version
 remediation: Add explicit versions to the bootstrap toolchain config before enabling CI gates.
-evidence: [".mise.toml: govulncheck uses an unpinned selector"]
+evidence: ["mise.toml: govulncheck uses an unpinned selector"]
 ```
 
 Every user-facing rule or command error should be backed by pass/fail examples in `specs/`.
