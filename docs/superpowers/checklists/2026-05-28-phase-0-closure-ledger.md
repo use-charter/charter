@@ -6,7 +6,7 @@
 - Gate 1: Complete
 - Gate 2: Complete
 - Gate 3: Complete
-- Gate 4: Not started
+- Gate 4: Complete
 
 ## Hard Rules
 
@@ -70,3 +70,9 @@
 - CLI output principles are documented in `docs/superpowers/checklists/2026-05-28-cli-quality-principles.md`.
 - `TESTING.md`, `testdata/README.md`, and `evals/README.md` now point to the same proof standard.
 - The first five Phase 1 rule specs now include evidence expectations, edge cases, and remediation shape instead of only summary bullets.
+
+## Gate 4 Evidence
+
+- `docs/superpowers/checklists/2026-05-28-phase-1-admission.md` names the exact first Phase 1 slice.
+- README and AGENTS now reflect repo-executable Phase 0 closure and point at the first implementation slice.
+- The scorecard reaches the agreed post-closure category targets with evidence from Gates 0-3.

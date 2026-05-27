@@ -6,10 +6,17 @@ This repository is intentionally bootstrapped as an AI-ready Go monorepo before 
 
 ## Current State
 
-- Phase: Phase 0 foundation complete; product implementation not started
+- Phase: Phase 0 repo-executable closure complete; first Phase 1 slice ready
 - Product authority: [`docs/architecture/charter-architecture-2026.md`](./docs/architecture/charter-architecture-2026.md)
 - Module path: `go.charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
+
+First Phase 1 slice start point:
+
+- repository resolver
+- file inventory scanner
+- finding model and score engine
+- first simple rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`
 
 Documentation authority ladder:
 
