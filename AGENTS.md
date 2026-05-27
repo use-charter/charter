@@ -10,6 +10,8 @@ Last reviewed: 2026-05-28
 - Current CLI: bootstrap placeholder only
 - First Phase 1 slice start point is defined in `docs/internal/superpowers/checklists/2026-05-28-phase-1-admission.md`
 
+This file is the root operating contract for agents. Keep it universal, compact, and routing-first.
+
 ## Core Principles
 
 - Think before coding. State assumptions, surface ambiguity, and ask when the repo or request is unclear.
@@ -43,6 +45,7 @@ Last reviewed: 2026-05-28
 - Before changing tools, SDKs, CI actions, APIs, MCP, schemas, or frameworks: inspect local manifests and lockfiles, fetch latest official docs, then inspect relevant installed skills or tool docs.
 - If latest-docs lookup is unavailable, stop and report reduced confidence.
 - Prefer repo evidence over memory.
+- Prefer pointers to deeper docs over duplicating process detail here.
 - Bootstrap keeps tracked MCP config absent until a pinned, reviewed integration exists.
 - No LLM calls in Charter core.
 - No silent mutation. Diff-first fixes only.
@@ -64,6 +67,7 @@ Last reviewed: 2026-05-28
 - Public Go API deferred until a stable external integration surface exists.
 - Contract-first for APIs and schemas.
 - ADR before irreversible architecture changes. RFC before cross-cutting changes.
+- Read the relevant ADR or RFC before changing package boundaries, trust model, config loading, or release posture.
 - `charter fix` must always diff before apply; never silent mutation.
 
 ## Repo Flow
@@ -75,6 +79,8 @@ Last reviewed: 2026-05-28
 - Pre-push runs `moon run :test` and `moon run :security`
 
 ## Context Loading
+
+Use progressive disclosure. Load only the deeper docs relevant to the current task.
 
 - `CONTEXT_MAP.md`: load map
 - `ARCHITECTURE.md`: module layout, slices, error contracts
