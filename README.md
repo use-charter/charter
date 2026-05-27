@@ -6,7 +6,7 @@ This repository is intentionally bootstrapped as an AI-ready Go monorepo before 
 
 ## Current State
 
-- Phase: Phase 0 repo-executable closure complete; first Phase 1 slice ready
+- Phase: Phase 0 repo-executable closure complete; Phase 1 implementation not started
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
 - Module path: `go.charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
