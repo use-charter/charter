@@ -2,6 +2,14 @@
 
 Use this directory for the product authority, supporting maps, and architecture records that explain how the repo should evolve.
 
+Documentation authority ladder:
+
+1. `charter-architecture-2026.md` for product behavior, command surface, rule semantics, transports, and output contracts
+2. `../audit/charter-v1-audit-checklist.md` for manual rule-audit companion detail only
+3. ADRs in `../../decisions/` for irreversible architecture constraints
+4. root companion docs for execution guidance only
+5. HTML artifacts as presentation mirrors only
+
 Normative source rule:
 
 - `charter-architecture-2026.md` is canonical for product behavior and acceptance criteria

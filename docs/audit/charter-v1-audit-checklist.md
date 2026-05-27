@@ -2,7 +2,15 @@
 
 15 rules: 12 core + 3 governance. Pass all three signals (toolchain + lockfile + hook config) for AE-ENV-001.
 
-`charter-architecture-2026` is the canonical source for Charter product behavior, command surface, transports, output formats, and roadmap. This checklist is the v1 audit companion and must stay aligned with the architecture source.
+`charter-architecture-2026` is the canonical source for Charter product behavior, command surface, transports, output formats, and roadmap. This checklist is the v1 audit companion and must stay aligned with the architecture source. It does not redefine canonical behavior, and HTML mirrors remain presentation-only.
+
+Documentation authority ladder:
+
+1. `docs/architecture/charter-architecture-2026.md` for product behavior
+2. `docs/audit/charter-v1-audit-checklist.md` for manual rule-audit companion detail
+3. ADRs in `decisions/` for irreversible constraints
+4. root workflow and companion docs for execution guidance only
+5. HTML artifacts as presentation mirrors only
 
 ## Scoring Reference
 

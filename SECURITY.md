@@ -27,7 +27,7 @@
 
 ## MCP Policy
 
-- Bootstrap keeps MCP absent by design
+- Bootstrap keeps tracked MCP config absent by design
 - Future MCP config must be local-first where possible, pinned, and least-privilege
 - Tool, prompt, and resource layers should remain distinct
 - Remote MCP endpoints require explicit security review before adoption

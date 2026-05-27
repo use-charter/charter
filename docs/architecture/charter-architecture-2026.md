@@ -4,6 +4,8 @@
 
 > This markdown file is the canonical architecture source. `charter-architecture-2026.html` is a presentation artifact with expanded ICP, distribution, monetization, and visual examples. Product behavior, command surface, rule semantics, transports, output formats, MCP tool surface, and phase timing are normative here first; HTML must not introduce behavior-only requirements that are absent from this markdown source.
 
+> Bootstrap policy: Phase 0 bootstrap keeps shared MCP configuration absent by design. Do not introduce `.mcp.json` or other tracked MCP config during bootstrap. Future MCP configuration begins only after a pinned, reviewed integration exists, and root security guidance may paraphrase this rule without redefining it.
+
 ---
 
 
@@ -130,12 +132,11 @@ Scaffold all required agent context files from a blank repo in under 2 minutes. 
   Creating
     AGENTS.md ···········  ✓  universal context
     ARCHITECTURE.md ·····  ✓  repo overview template
-    .claude/settings.json  ✓  allowed tools + MCP
-    .mcp.json ···········  ✓  empty, safe defaults
+    .claude/settings.json  ✓  allowed tools without MCP bootstrap
     .env.example ········  ✓  env refs from codebase
     charter.yaml ········  ✓  profile: standard
   ──────────────────────────────────────────
-  6 files created  ·  0 skipped  ·  0 overwritten
+  5 files created  ·  0 skipped  ·  0 overwritten
   › Next: charter doctor
 ```
 
