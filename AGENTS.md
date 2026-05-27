@@ -9,6 +9,14 @@ Last reviewed: 2026-05-23
 - Module path: `go.charter.dev/charter`
 - Current CLI: bootstrap placeholder only
 
+## Documentation Authority
+
+1. `docs/architecture/charter-architecture-2026.md` for product behavior
+2. `docs/audit/charter-v1-audit-checklist.md` for manual audit companion detail
+3. ADRs in `decisions/` for irreversible constraints
+4. root companion docs for execution guidance only
+5. HTML artifacts as presentation mirrors only
+
 ## Commands
 
 - Setup: `mise install` then `./scripts/install-hooks.sh`
@@ -21,6 +29,7 @@ Last reviewed: 2026-05-23
 - Before changing tools, SDKs, CI actions, APIs, MCP, schemas, or frameworks: inspect local manifests and lockfiles, fetch latest official docs, then inspect relevant installed skills or tool docs.
 - If latest-docs lookup is unavailable, stop and report reduced confidence.
 - Prefer repo evidence over memory.
+- Bootstrap keeps tracked MCP config absent until a pinned, reviewed integration exists.
 - No LLM calls in Charter core.
 - No silent mutation. Diff-first fixes only.
 - No secrets in docs, prompts, configs, tests, or logs.
