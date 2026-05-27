@@ -18,7 +18,9 @@ fileGroups:
 
 tasks:
   check:
-    command: "true"
+    command: "bun"
+    args:
+      - "scripts/noop.mjs"
     deps:
       - "lint"
       - "vet"
@@ -30,7 +32,9 @@ tasks:
       - "actionlint"
       - "zizmor"
   test:
-    command: "go test -race ./..."
+    command: "bun"
+    args:
+      - "scripts/go-test.mjs"
     inputs:
       - "@globs(goSources)"
   vet:
@@ -42,11 +46,23 @@ tasks:
     inputs:
       - "@globs(goSources)"
   build:
-    script: "mkdir -p dist && go build -o dist/charter ./cmd/charter"
+    command: "bun"
+    args:
+      - "scripts/go-build.mjs"
     inputs:
       - "@globs(goSources)"
   docs:
-    script: "rg -n \"TODO\\(docs\\)|TODO\\(spec\\)\" .github *.md decisions rfcs playbooks runbooks specs docs || true"
+    command: "bun"
+    args:
+      - "scripts/scan-doc-todos.mjs"
+      - ".github"
+      - "."
+      - "decisions"
+      - "rfcs"
+      - "playbooks"
+      - "runbooks"
+      - "specs"
+      - "docs"
     inputs:
       - "@globs(docsSources)"
   security:
@@ -58,9 +74,12 @@ tasks:
       - ".mise.toml"
       - "mise.lock"
   eval:
-    command: "test -f evals/README.md"
+    command: "bun"
+    args:
+      - "scripts/check-file-exists.mjs"
+      - "evals/README.md"
   actionlint:
-    command: "actionlint .github/workflows/*.yml"
+    command: "actionlint"
     inputs:
       - "@globs(workflowSources)"
   zizmor:

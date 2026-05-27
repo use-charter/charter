@@ -2,10 +2,14 @@ language: "go"
 
 tasks:
   build:
-    script: "mkdir -p ../dist && go build -o ../dist/charter ./charter"
+    command: "bun"
+    args:
+      - "../scripts/go-build.mjs"
     inputs:
       - "charter/**/*.go"
   test:
-    command: "go test -race ./..."
+    command: "bun"
+    args:
+      - "../scripts/go-test.mjs"
     inputs:
       - "charter/**/*.go"

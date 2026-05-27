@@ -2,6 +2,9 @@ id: "docs"
 
 tasks:
   lint:
-    script: "rg -n \"TODO\\(docs\\)|TODO\\(spec\\)\" . || true"
+    command: "bun"
+    args:
+      - "../scripts/scan-doc-todos.mjs"
+      - "."
     inputs:
       - "**/*.md"
