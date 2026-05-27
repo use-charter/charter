@@ -267,7 +267,7 @@ score=49 gate=FAIL threshold=80 exit=1
   +++ b/mise.toml
   + [tools]
   + go            = "1.26.3"
-  + bun           = "1.3.13"
+  + bun           = "1.3.14"
   + golangci-lint = "2.12.2"
   ──────────────────────────────────────────────────────────────
   2 fixes previewed  ·  0 applied
@@ -293,7 +293,7 @@ score=49 gate=FAIL threshold=80 exit=1
   ✦ AE-ENV-001  mise.toml (will create — pins all 3 detected runtimes)
   + [tools]
   + go            = "1.26.3"
-  + bun           = "1.3.13"
+  + bun           = "1.3.14"
   + python        = "3.12.4"
   + golangci-lint = "2.12.2"
 ```
@@ -341,7 +341,7 @@ threshold:  80
 findings:   3
 stack:
   go      1.26.3  go.mod · no toolchain directive   go.sum ✓
-  bun     1.3.13  package.json volta                 bun.lock ✗
+  bun     1.3.14  package.json volta                 bun.lock ✗
   python  3.12.4  pyproject.toml                     uv.lock ✓
   hook    —       none
 
@@ -427,19 +427,19 @@ cd charter
 ```
 
 
-### Tool Versions (.mise.toml)
+### Tool Versions (mise.toml)
 
 ```toml
 [tools]
 go            = "1.26.3"
-bun           = "1.3.13"
-moon          = "2.2.2"
-hk            = "1.44.2"
+bun           = "1.3.14"
+moon          = "2.2.5"
+hk            = "1.45.0"
 golangci-lint = "2.12.2"
-gofumpt       = "0.9.2"
+gofumpt       = "0.10.0"
 actionlint    = "1.7.12"
-zizmor        = "1.24.1"
-osv-scanner   = "2.3.5"
+zizmor        = "1.25.2"
+osv-scanner   = "2.3.8"
 ```
 
 
@@ -451,14 +451,14 @@ osv-scanner   = "2.3.5"
 #### T0.1.1 Configure mise + hk `⚡ AI`
 
 
-**User story:** As a contributor, I want tool versions pinned in .mise.toml and git hooks wired by hk v1.44.2 (Pkl config), so that every developer on macOS, Linux, and CI runs identical toolchains without manual setup steps.
+**User story:** As a contributor, I want tool versions pinned in mise.toml and git hooks wired by hk v1.45.0 (Pkl config), so that every developer on macOS, Linux, and CI runs identical toolchains without manual setup steps.
 
 **Given:** a fresh git clone with mise installed  
 **When:** mise install and hk install run  
-**Then:** go version , bun --version , and golangci-lint version match the versions declared in .mise.toml  
+**Then:** go version , bun --version , and golangci-lint version match the versions declared in mise.toml  
 
 **Happy Path:**
-- Fresh git clone + mise install installs: go 1.26.3 , bun 1.3.13 , golangci-lint 2.12.2 , gofumpt 0.9.2 , moon 2.2.2 , hk 1.44.2 , actionlint 1.7.12 , zizmor 1.24.1 , osv-scanner 2.3.5
+- Fresh git clone + mise install installs: go 1.26.3 , bun 1.3.14 , golangci-lint 2.12.2 , gofumpt 0.10.0 , moon 2.2.5 , hk 1.45.0 , actionlint 1.7.12 , zizmor 1.25.2 , osv-scanner 2.3.8
 - git commit triggers pre-commit hook → moon run :lint ; a lint failure blocks the commit with a non-zero exit
 - commit-msg hook validates conventional commit format via hk check-commit-msg ; malformed messages are rejected with a clear error
 - pre-push hook runs moon run :test ; a failing test blocks the push
@@ -470,9 +470,9 @@ osv-scanner   = "2.3.5"
 #### T0.1.2 Initialize Moonrepo Workspace `⚡ AI`
 
 
-**User story:** As a repo founder, I want Moonrepo v2.2.2 initialized with per-package moon.yml across cmd/ , action/ , web/ , and docs/ , so that all build, test, and lint tasks run from the repo root with deterministic input/output hashing.
+**User story:** As a repo founder, I want Moonrepo v2.2.5 initialized with per-package moon.yml across cmd/ , action/ , web/ , and docs/ , so that all build, test, and lint tasks run from the repo root with deterministic input/output hashing.
 
-**Given:** .mise.toml is committed and mise install has run (T0.1.1 complete)  
+**Given:** mise.toml is committed and mise install has run (T0.1.1 complete)  
 **When:** moon init runs and per-package moon.yml files are committed  
 **Then:** moon run cmd:test and moon run web:lint both succeed from repo root in under 30 s  
 
@@ -482,7 +482,7 @@ osv-scanner   = "2.3.5"
 - moon run web:lint runs Biome check and exits 0 on a clean working tree
 - moon.yml task inputs are declared ( **/*.go , .golangci.yml ) so cache hits are deterministic
 - Adding a new workspace package requires editing only one moon.yml + workspace.yml — no root config changes
-- Moonrepo version is pinned to 2.2.2 in .mise.toml ; moon --version matches
+- Moonrepo version is pinned to 2.2.5 in mise.toml ; moon --version matches
 
 
 #### T0.1.3 CI/CD Skeleton `⚡ AI`
@@ -618,15 +618,15 @@ osv-scanner   = "2.3.5"
 
 #### T0.3.1 Actions Security: actionlint + zizmor `⚡ AI`
 
-**User story:** As a platform engineer, I want actionlint v1.7.12 and zizmor v1.24.1 running as required CI jobs on every PR, so that GitHub Actions workflows are free of syntax errors, dangerous permissions, and supply-chain vulnerabilities aligned with SLSA L2 and OWASP MCP Top 10.
+**User story:** As a platform engineer, I want actionlint v1.7.12 and zizmor v1.25.2 running as required CI jobs on every PR, so that GitHub Actions workflows are free of syntax errors, dangerous permissions, and supply-chain vulnerabilities aligned with SLSA L2 and OWASP MCP Top 10.
 
 **Given:** a PR that modifies any file under .github/workflows/  
 **When:** the actions-security CI job runs  
 **Then:** actionlint and zizmor both exit 0 for valid workflows, and any violation blocks the PR with an annotated error  
 
 **Happy Path:**
-- actionlint v1.7.12 is pinned in .mise.toml and runs via moon run :actionlint ; checks all .github/workflows/*.yml files
-- zizmor v1.24.1 is pinned in .mise.toml and runs via moon run :zizmor ; checks for: unpinned action versions, pull_request_target misuse, script injection via ${{ github.event.* }} interpolation
+- actionlint v1.7.12 is pinned in mise.toml and runs via moon run :actionlint ; checks all .github/workflows/*.yml files
+- zizmor v1.25.2 is pinned in mise.toml and runs via moon run :zizmor ; checks for: unpinned action versions, pull_request_target misuse, script injection via ${{ github.event.* }} interpolation
 - zizmor runs in --pedantic mode; all findings are errors (not warnings) — zero tolerance for supply-chain risk
 - All existing workflows in the CI skeleton pass both tools before T0.3.1 is considered done
 - All workflow action pins use full SHA (40-char commit hash), not mutable tags — enforced by zizmor's unpinned-uses rule
@@ -637,7 +637,7 @@ osv-scanner   = "2.3.5"
 
 #### T0.3.2 Vulnerability Scanning: govulncheck + OSV-Scanner + Gitleaks `⚡ AI`
 
-**User story:** As a security engineer, I want govulncheck, OSV-Scanner v2.3.5, and Gitleaks v8.30.1 running as required repo and CI gates, so that reachable Go vulnerabilities, manifest issues, and leaked secrets are caught before code merges into main .
+**User story:** As a security engineer, I want govulncheck, OSV-Scanner v2.3.8, and Gitleaks v8.30.1 running as required repo and CI gates, so that reachable Go vulnerabilities, manifest issues, and leaked secrets are caught before code merges into main .
 
 **Given:** a PR that updates any go.mod , go.sum , or source file  
 **When:** the vuln-scan CI job runs  
@@ -645,8 +645,8 @@ osv-scanner   = "2.3.5"
 
 **Happy Path:**
 - govulncheck runs via moon run :security ; scans all Go packages in the module for reachable vulnerabilities against the Go vuln DB (vuln.go.dev)
-- OSV-Scanner v2.3.5 is pinned in .mise.toml ; runs as osv-scanner scan source -r . against manifests and lockfiles discovered under the working tree
-- Gitleaks v8.30.1 is pinned in .mise.toml ; scans git history and the current working tree with blocking exit codes on findings
+- OSV-Scanner v2.3.8 is pinned in mise.toml ; runs as osv-scanner scan source -r . against manifests and lockfiles discovered under the working tree
+- Gitleaks v8.30.1 is pinned in mise.toml ; scans git history and the current working tree with blocking exit codes on findings
 - .gitleaks.toml is committed and extends the built-in default Gitleaks ruleset so future suppressions or repo-specific rules remain reviewable in source control
 - All three tools fail the gate on findings; repo-local Phase 0 does not require SARIF output from these scanners
 - False-positive suppression for Gitleaks, if ever added, must stay in source control with an explanation for each allowlist entry

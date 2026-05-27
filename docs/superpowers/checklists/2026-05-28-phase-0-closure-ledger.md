@@ -4,7 +4,7 @@
 
 - Gate 0: Complete
 - Gate 1: Complete
-- Gate 2: Not started
+- Gate 2: Complete
 - Gate 3: Not started
 - Gate 4: Not started
 
@@ -47,3 +47,19 @@
 - Root Moon tasks no longer depend on shell patterns that fail on Windows (`true`, `test -f`, `mkdir -p`, wildcard positional arguments).
 - Helper scripts are tracked and used consistently by root and project Moon surfaces.
 - `mise x -- moon run :check` passes from the isolated Windows worktree.
+
+## Gate 2 Drift Ledger
+
+| File | Section | Drift type | Resolution |
+|---|---|---|---|
+| `docs/architecture/charter-architecture-2026.md` | tool/version references | stale canonical content | Resolved |
+| `docs/architecture/charter-architecture-2026.html` | init scaffold and tool/version references | stale mirror content | Resolved |
+| `docs/audit/charter-v1-audit-checklist.md` | version examples and CI rule references | stale canonical content | Resolved |
+| `docs/audit/charter-v1-audit-checklist.html` | source-of-truth banner and CI version references | stale mirror content | Resolved |
+
+## Gate 2 Evidence
+
+- Markdown was reconciled before HTML where stale versions existed.
+- HTML init scaffold no longer reintroduces the bootstrap `.mcp.json` contradiction.
+- Architecture and audit mirrors now reflect current pinned versions for Bun, Moon, hk, gofumpt, zizmor, and OSV-Scanner.
+- Mirror-only role is explicit in both architecture and audit presentation surfaces.
