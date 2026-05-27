@@ -6,11 +6,35 @@ on:
   pull_request:
     branches: ["main"]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
-  check:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      full_check: ${{ steps.classify.outputs.full_check }}
+      docs_only: ${{ steps.classify.outputs.docs_only }}
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: classify
+        name: Classify changed files
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: bash scripts/github-actions/classify-changes.sh
+
+  full-check:
+    needs: changes
+    if: needs.changes.outputs.full_check == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
@@ -22,5 +46,54 @@ jobs:
           install: true
           install_args: --locked
           cache: true
-      - name: Run root check gate
-        run: mise x -- moon run :check
+      - name: Run CI task family
+        run: mise x -- moon run :lint :vet :test :build :docs :eval
+
+  docs-check:
+    needs: changes
+    if: needs.changes.outputs.docs_only == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
+        with:
+          version: 2026.5.15
+          install: true
+          install_args: --locked
+          cache: true
+      - name: Run docs task
+        run: mise x -- moon run :docs
+
+  check:
+    needs:
+      - changes
+      - full-check
+      - docs-check
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarize CI result
+        shell: bash
+        env:
+          FULL_RESULT: ${{ needs.full-check.result }}
+          DOCS_RESULT: ${{ needs.docs-check.result }}
+          FULL_CHECK: ${{ needs.changes.outputs.full_check }}
+          DOCS_ONLY: ${{ needs.changes.outputs.docs_only }}
+        run: |
+          if [[ "$FULL_RESULT" == "failure" || "$DOCS_RESULT" == "failure" ]]; then
+            exit 1
+          fi
+
+          if [[ "$FULL_CHECK" == "true" ]]; then
+            echo "Full CI task family executed."
+            exit 0
+          fi
+
+          if [[ "$DOCS_ONLY" == "true" ]]; then
+            echo "Docs-only CI task executed."
+            exit 0
+          fi
+
+          echo "No CI-relevant changes detected."
