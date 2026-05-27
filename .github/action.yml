@@ -4,9 +4,9 @@ description: "Run Charter's root CI entrypoint with the pinned project toolchain
 runs:
   using: "composite"
   steps:
-    - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3.6.3
+    - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
       with:
-        version: 2026.5.12
+        version: 2026.5.15
         install: true
         install_args: --locked
         cache: true
