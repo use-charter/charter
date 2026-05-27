@@ -71,8 +71,8 @@ Objective:
 
 Primary scope:
 
-- `docs/architecture/charter-architecture-2026.md`
-- `docs/audit/charter-v1-audit-checklist.md`
+- `docs/internal/architecture/charter-architecture-2026.md`
+- `docs/internal/audit/charter-v1-audit-checklist.md`
 - `README.md`
 - `AGENTS.md`
 - `SECURITY.md`
@@ -149,10 +149,10 @@ Objective:
 
 Primary scope:
 
-- `docs/architecture/*.md`
-- `docs/architecture/*.html`
-- `docs/audit/*.md`
-- `docs/audit/*.html`
+- `docs/internal/architecture/*.md`
+- `docs/internal/architecture/*.html`
+- `docs/internal/audit/*.md`
+- `docs/internal/audit/*.html`
 - companion root docs that restate behavior
 
 Must resolve:
@@ -186,7 +186,7 @@ Primary scope:
 - `TESTING.md`
 - `testdata/README.md`
 - `evals/README.md`
-- `specs/*.md`
+- `docs/internal/specs/*.md`
 - first-slice proof model docs
 - CLI quality and output principles
 

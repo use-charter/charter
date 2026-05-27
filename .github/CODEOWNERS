@@ -3,6 +3,6 @@
 /internal/ @tashfiqulislam
 /docs/ @tashfiqulislam
 /.github/ @tashfiqulislam
-/decisions/ @tashfiqulislam
-/rfcs/ @tashfiqulislam
-/specs/ @tashfiqulislam
+/docs/internal/decisions/ @tashfiqulislam
+/docs/internal/rfcs/ @tashfiqulislam
+/docs/internal/specs/ @tashfiqulislam

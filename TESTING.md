@@ -37,7 +37,7 @@ Treat the test matrix as part of the product contract, not a final cleanup step.
 
 ## First Slice Proof Model
 
-The first Phase 1 slice must use the proof model in `docs/superpowers/checklists/2026-05-28-first-slice-proof-model.md`.
+The first Phase 1 slice must use the proof model in `docs/internal/superpowers/checklists/2026-05-28-first-slice-proof-model.md`.
 
 Minimum proof for the first slice:
 
@@ -49,6 +49,6 @@ Minimum proof for the first slice:
 
 ## CLI Quality
 
-Before output-heavy work begins, follow `docs/superpowers/checklists/2026-05-28-cli-quality-principles.md`.
+Before output-heavy work begins, follow `docs/internal/superpowers/checklists/2026-05-28-cli-quality-principles.md`.
 
 Treat quiet mode, redaction, rule labeling, and machine-readable output as product surfaces, not incidental logging details.

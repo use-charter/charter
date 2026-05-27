@@ -507,11 +507,11 @@ osv-scanner   = "2.3.8"
 #### T0.1.TM Trademark Clearance & Domain Acquisition — Hard Phase Gate `⛔ FOUNDER · BLOCKER`
 
 
-**User story:** As a founder, I want a signed trademark search result and confirmed domain acquisition committed in decisions/0010-trademark-clearance.md , so that Charter can go public without risk of forced rebranding after user adoption.
+**User story:** As a founder, I want a signed trademark search result and confirmed domain acquisition committed in docs/internal/decisions/0010-trademark-clearance.md , so that Charter can go public without risk of forced rebranding after user adoption.
 
 **Given:** M0.1 is closing  
 **When:** T0.1.TM is reviewed at the Phase 0 gate  
-**Then:** decisions/0010-trademark-clearance.md exists with status CLEARED or RENAMED, domain registration confirmed, and Phase 0 → Phase 1 gate checklist updated to reflect this as resolved  
+**Then:** docs/internal/decisions/0010-trademark-clearance.md exists with status CLEARED or RENAMED, domain registration confirmed, and Phase 0 → Phase 1 gate checklist updated to reflect this as resolved  
 
 
 ### M0.2 — Context Architecture
@@ -576,10 +576,10 @@ osv-scanner   = "2.3.8"
 #### T0.2.4 ADR Structure + Seed ADRs `⚡ AI`
 
 
-**User story:** As a architect, I want an decisions/ ADR directory with seed records for the five foundational decisions, so that architectural constraints are documented, discoverable, and machine-enforceable via Charter's own scanning rules.
+**User story:** As a architect, I want a docs/internal/decisions/ ADR directory with seed records for the five foundational decisions, so that architectural constraints are documented, discoverable, and machine-enforceable via Charter's own scanning rules.
 
 **Given:** a contributor asks "why does Charter have zero LLM calls in core?"  
-**When:** they read decisions/0007-no-llm-calls-in-core.md  
+**When:** they read docs/internal/decisions/0007-no-llm-calls-in-core.md  
 **Then:** they understand the rationale, the alternatives considered, and the consequences — without asking anyone  
 
 **Happy Path:**
@@ -587,7 +587,7 @@ osv-scanner   = "2.3.8"
 - Each ADR follows the Nygard format: Title, Status, Context, Decision, Consequences
 - ADR status values are one of: Proposed | Accepted | Deprecated | Superseded by ADR-XXXX
 - All five seed ADRs have status Accepted at commit time
-- Charter's AE-CTX-002 rule checks for the presence of an decisions/ directory; missing directory emits a MEDIUM finding
+- Charter's AE-CTX-002 rule checks for the presence of a docs/internal/decisions/ directory; missing directory emits a MEDIUM finding
 - Each ADR is ≤ 500 tokens (concise, scannable)
 - ADR-0008 contains the exact Charter Score formula: max(0, 100 − B×20 − H×10 − M×4 − L×1) with hard cap rules
 
@@ -595,10 +595,10 @@ osv-scanner   = "2.3.8"
 #### T0.2.5 Specs Scaffold `⚡ AI`
 
 
-**User story:** As a developer, I want a specs/ directory scaffolded with rule spec files for all 15 v1 rules (12 core + 3 governance), so that rule behavior is documented and testable before implementation begins in Phase 1.
+**User story:** As a developer, I want a docs/internal/specs/ directory scaffolded with rule spec files for all 15 v1 rules (12 core + 3 governance), so that rule behavior is documented and testable before implementation begins in Phase 1.
 
 **Given:** Phase 1 implementation begins for AE-CTX-001  
-**When:** the developer opens specs/AE-CTX-001.md  
+**When:** the developer opens docs/internal/specs/AE-CTX-001.md  
 **Then:** they find: rule ID, description, severity, detection logic pseudocode, passing example, failing example, and remediation guidance  
 
 **Happy Path:**

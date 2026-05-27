@@ -2,11 +2,13 @@
 
 Use this directory for the product authority, supporting maps, and architecture records that explain how the repo should evolve.
 
+This content is part of the repo-internal engineering docs tree and will live under `docs/internal/architecture/` once the topology migration is complete.
+
 Documentation authority ladder:
 
 1. `charter-architecture-2026.md` for product behavior, command surface, rule semantics, transports, and output contracts
 2. `../audit/charter-v1-audit-checklist.md` for manual rule-audit companion detail only
-3. ADRs in `../../decisions/` for irreversible architecture constraints
+3. ADRs in `../decisions/` for irreversible architecture constraints
 4. root companion docs for execution guidance only
 5. HTML artifacts as presentation mirrors only
 

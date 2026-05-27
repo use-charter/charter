@@ -23,12 +23,12 @@
 
 | Concern | Files | Current conflict | Canonical owner | Resolution status |
 |---|---|---|---|---|
-| Bootstrap MCP policy | `SECURITY.md`, `.github/copilot-instructions.md`, `docs/architecture/charter-architecture-2026.md` | Bootstrap docs forbid `.mcp.json`; architecture examples create it | `docs/architecture/charter-architecture-2026.md` after reconciliation | Resolved |
-| Documentation authority ladder | root docs, architecture docs, audit docs, HTML mirrors | authority was implied, not explicit everywhere | `docs/architecture/README.md` plus canonical product markdown | Resolved |
+| Bootstrap MCP policy | `SECURITY.md`, `.github/copilot-instructions.md`, `docs/internal/architecture/charter-architecture-2026.md` | Bootstrap docs forbid `.mcp.json`; architecture examples create it | `docs/internal/architecture/charter-architecture-2026.md` after reconciliation | Resolved |
+| Documentation authority ladder | root docs, architecture docs, audit docs, HTML mirrors | authority was implied, not explicit everywhere | `docs/internal/architecture/README.md` plus canonical product markdown | Resolved |
 
 ## Gate 0 Evidence
 
-- Canonical bootstrap MCP rule moved into `docs/architecture/charter-architecture-2026.md` and aligned across root trust surfaces.
+- Canonical bootstrap MCP rule moved into `docs/internal/architecture/charter-architecture-2026.md` and aligned across root trust surfaces.
 - Documentation authority ladder added and cross-referenced from root docs and audit companion surfaces.
 - HTML mirror role remains presentation-only and subordinate to markdown.
 
@@ -52,10 +52,10 @@
 
 | File | Section | Drift type | Resolution |
 |---|---|---|---|
-| `docs/architecture/charter-architecture-2026.md` | tool/version references | stale canonical content | Resolved |
-| `docs/architecture/charter-architecture-2026.html` | init scaffold and tool/version references | stale mirror content | Resolved |
-| `docs/audit/charter-v1-audit-checklist.md` | version examples and CI rule references | stale canonical content | Resolved |
-| `docs/audit/charter-v1-audit-checklist.html` | source-of-truth banner and CI version references | stale mirror content | Resolved |
+| `docs/internal/architecture/charter-architecture-2026.md` | tool/version references | stale canonical content | Resolved |
+| `docs/internal/architecture/charter-architecture-2026.html` | init scaffold and tool/version references | stale mirror content | Resolved |
+| `docs/internal/audit/charter-v1-audit-checklist.md` | version examples and CI rule references | stale canonical content | Resolved |
+| `docs/internal/audit/charter-v1-audit-checklist.html` | source-of-truth banner and CI version references | stale mirror content | Resolved |
 
 ## Gate 2 Evidence
 
@@ -66,13 +66,13 @@
 
 ## Gate 3 Evidence
 
-- First-slice proof model is documented in `docs/superpowers/checklists/2026-05-28-first-slice-proof-model.md`.
-- CLI output principles are documented in `docs/superpowers/checklists/2026-05-28-cli-quality-principles.md`.
+- First-slice proof model is documented in `docs/internal/superpowers/checklists/2026-05-28-first-slice-proof-model.md`.
+- CLI output principles are documented in `docs/internal/superpowers/checklists/2026-05-28-cli-quality-principles.md`.
 - `TESTING.md`, `testdata/README.md`, and `evals/README.md` now point to the same proof standard.
 - The first five Phase 1 rule specs now include evidence expectations, edge cases, and remediation shape instead of only summary bullets.
 
 ## Gate 4 Evidence
 
-- `docs/superpowers/checklists/2026-05-28-phase-1-admission.md` names the exact first Phase 1 slice.
+- `docs/internal/superpowers/checklists/2026-05-28-phase-1-admission.md` names the exact first Phase 1 slice.
 - README and AGENTS now reflect repo-executable Phase 0 closure and point at the first implementation slice.
 - The scorecard reaches the agreed post-closure category targets with evidence from Gates 0-3.

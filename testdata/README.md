@@ -11,4 +11,4 @@ First-slice expectation:
 
 Proof model reference:
 
-- `docs/superpowers/checklists/2026-05-28-first-slice-proof-model.md`
+- `docs/internal/superpowers/checklists/2026-05-28-first-slice-proof-model.md`

@@ -5,7 +5,7 @@ Last reviewed: 2026-05-23
 ## Current State
 
 - Phase: Phase 0 repo-executable closure complete; first Phase 1 slice ready
-- Product truth: `docs/architecture/charter-architecture-2026.md`
+- Product truth: `docs/internal/architecture/charter-architecture-2026.md`
 - Module path: `go.charter.dev/charter`
 - Current CLI: bootstrap placeholder only
 
@@ -16,11 +16,17 @@ Last reviewed: 2026-05-23
 - Finding model and score engine
 - First simple rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`
 
+## Documentation Topology
+
+- Root contract docs stay at repo root.
+- Internal engineering docs live under `docs/internal/`.
+- Future customer-facing docs live under `docs/product/`.
+
 ## Documentation Authority
 
-1. `docs/architecture/charter-architecture-2026.md` for product behavior
-2. `docs/audit/charter-v1-audit-checklist.md` for manual audit companion detail
-3. ADRs in `decisions/` for irreversible constraints
+1. `docs/internal/architecture/charter-architecture-2026.md` for product behavior
+2. `docs/internal/audit/charter-v1-audit-checklist.md` for manual audit companion detail
+3. ADRs in `docs/internal/decisions/` for irreversible constraints
 4. root companion docs for execution guidance only
 5. HTML artifacts as presentation mirrors only
 
@@ -46,7 +52,7 @@ Last reviewed: 2026-05-23
 
 - Default edit zones: repo docs, Go source, tests, specs, ADRs, RFCs, workflows, Moon config, mise config
 - Off-limits by default: `.env*`, `secrets/`, signing keys, credentials, production infra, generated local state
-- Treat `docs/architecture/charter-architecture-2026.md` as canonical for product behavior
+- Treat `docs/internal/architecture/charter-architecture-2026.md` as canonical for product behavior
 
 ## Architecture
 
