@@ -5,7 +5,7 @@
 - Gate 0: Complete
 - Gate 1: Complete
 - Gate 2: Complete
-- Gate 3: Not started
+- Gate 3: Complete
 - Gate 4: Not started
 
 ## Hard Rules
@@ -63,3 +63,10 @@
 - HTML init scaffold no longer reintroduces the bootstrap `.mcp.json` contradiction.
 - Architecture and audit mirrors now reflect current pinned versions for Bun, Moon, hk, gofumpt, zizmor, and OSV-Scanner.
 - Mirror-only role is explicit in both architecture and audit presentation surfaces.
+
+## Gate 3 Evidence
+
+- First-slice proof model is documented in `docs/superpowers/checklists/2026-05-28-first-slice-proof-model.md`.
+- CLI output principles are documented in `docs/superpowers/checklists/2026-05-28-cli-quality-principles.md`.
+- `TESTING.md`, `testdata/README.md`, and `evals/README.md` now point to the same proof standard.
+- The first five Phase 1 rule specs now include evidence expectations, edge cases, and remediation shape instead of only summary bullets.
