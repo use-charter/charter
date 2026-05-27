@@ -1,4 +1,4 @@
-name: actions-security
+name: Workflow Security
 
 on:
   pull_request:
@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   changes:
+    name: Classify changes
     runs-on: ubuntu-latest
     outputs:
       actions_security: ${{ steps.classify.outputs.actions_security }}
@@ -33,6 +34,7 @@ jobs:
         run: bash scripts/github-actions/classify-changes.sh
 
   run-workflow-lint:
+    name: Run workflow security checks
     needs: changes
     if: needs.changes.outputs.actions_security == 'true'
     runs-on: ubuntu-latest
@@ -54,6 +56,7 @@ jobs:
         run: mise x -- moon run :zizmor
 
   workflow-lint:
+    name: Report workflow security status
     needs:
       - changes
       - run-workflow-lint

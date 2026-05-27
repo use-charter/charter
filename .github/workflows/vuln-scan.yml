@@ -1,4 +1,4 @@
-name: vuln-scan
+name: Vulnerability Scan
 
 on:
   pull_request:
@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   security:
+    name: Run security gate
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
