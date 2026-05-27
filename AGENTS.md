@@ -1,20 +1,21 @@
 # AGENTS.md
 
-Last reviewed: 2026-05-23
+Last reviewed: 2026-05-28
 
 ## Current State
 
-- Phase: Phase 0 repo-executable closure complete; first Phase 1 slice ready
+- Phase: Phase 0 repo-executable closure complete; Phase 1 implementation not started
 - Product truth: `docs/internal/architecture/charter-architecture-2026.md`
 - Module path: `go.charter.dev/charter`
 - Current CLI: bootstrap placeholder only
+- First Phase 1 slice start point is defined in `docs/internal/superpowers/checklists/2026-05-28-phase-1-admission.md`
 
-## First Phase 1 Slice
+## Core Principles
 
-- Repository resolver
-- File inventory scanner
-- Finding model and score engine
-- First simple rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`
+- Think before coding. State assumptions, surface ambiguity, and ask when the repo or request is unclear.
+- Simplicity first. Prefer the smallest correct change; do not add speculative abstraction or configurability.
+- Surgical changes. Touch only what the task requires, and clean up only what your changes make obsolete.
+- Verify before claiming success. Run the narrowest meaningful checks, then the repo-standard gate when the change is broad enough.
 
 ## Documentation Topology
 
@@ -46,6 +47,7 @@ Last reviewed: 2026-05-23
 - No LLM calls in Charter core.
 - No silent mutation. Diff-first fixes only.
 - No secrets in docs, prompts, configs, tests, or logs.
+- Fail fast rather than hide broken behavior with generic fallback code.
 - No speculative refactors outside task scope.
 
 ## Edit Scope
