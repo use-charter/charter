@@ -2106,7 +2106,7 @@ pre.term-out { line-height: 1.62; }
   </table></div>
 
   <h3>Distribution ADR</h3>
-  <p>The distribution decisions above are committed as <code>decisions/0011-distribution-strategy.md</code> with status <code>Accepted</code>. The founder reviews this ADR monthly during Phase 1 and updates it based on what is actually working. The ADR is updated — not just read — with real numbers from each channel. If the Anthropic docs PR is rejected, the ADR records that outcome and doubles down on the SARIF + community channels instead.</p>
+  <p>The distribution decisions above are committed as <code>docs/internal/decisions/0011-distribution-strategy.md</code> with status <code>Accepted</code>. The founder reviews this ADR monthly during Phase 1 and updates it based on what is actually working. The ADR is updated — not just read — with real numbers from each channel. If the Anthropic docs PR is rejected, the ADR records that outcome and doubles down on the SARIF + community channels instead.</p>
 
 </div><!-- /distribution -->
 
@@ -2904,21 +2904,21 @@ pre.term-out { line-height: 1.62; }
               <li>Engage a trademark attorney: file a USPTO TESS search + international class 42 (software-as-a-service) search for "Charter" covering developer tools, CI/CD, and AI tooling categories.</li>
               <li>Domain check: confirm <code>use-charter.dev</code> and <code>charter.build</code> availability; acquire whichever is clear. Confirm <code>go.charter.dev</code> vanity module path is registerable.</li>
               <li><strong>Binary outcome options:</strong> <strong>(A) CLEARED</strong> — attorney confirms no conflicting marks in class 42; domain acquired; proceed under "Charter." <strong>(B) RENAMED</strong> — select from pre-approved fallback list (<code>Manifest</code>, <code>Groundwork</code>, <code>Preflight</code>); confirm clearance on new name; update all docs, module paths, and brand assets before any public mention.</li>
-              <li>Record outcome in <code>decisions/0010-trademark-clearance.md</code> with status CLEARED or RENAMED, attorney name, search date, and domain acquired. This ADR is the launch gate artifact.</li>
+              <li>Record outcome in <code>docs/internal/decisions/0010-trademark-clearance.md</code> with status CLEARED or RENAMED, attorney name, search date, and domain acquired. This ADR is the launch gate artifact.</li>
               <li>Add ADR-0010 as a blocking item in the Phase 0 → Phase 1 gate checklist.</li>
             </ul>
           </div>
           <div class="ac">
             <h5>Acceptance Criteria</h5>
-            <div class="ac-story"><strong>As a</strong> founder, <strong>I want</strong> a signed trademark search result and confirmed domain acquisition committed in <code>decisions/0010-trademark-clearance.md</code>, <strong>so that</strong> Charter can go public without risk of forced rebranding after user adoption.</div>
+            <div class="ac-story"><strong>As a</strong> founder, <strong>I want</strong> a signed trademark search result and confirmed domain acquisition committed in <code>docs/internal/decisions/0010-trademark-clearance.md</code>, <strong>so that</strong> Charter can go public without risk of forced rebranding after user adoption.</div>
             <div class="ac-gwt">
               <div class="ac-gwt-item"><span class="ac-gwt-label">Given</span> <span class="ac-gwt-text">M0.1 is closing</span></div>
               <div class="ac-gwt-item"><span class="ac-gwt-label">When</span> <span class="ac-gwt-text">T0.1.TM is reviewed at the Phase 0 gate</span></div>
-              <div class="ac-gwt-item"><span class="ac-gwt-label">Then</span> <span class="ac-gwt-text"><code>decisions/0010-trademark-clearance.md</code> exists with status CLEARED or RENAMED, domain registration confirmed, and Phase 0 → Phase 1 gate checklist updated to reflect this as resolved</span></div>
+              <div class="ac-gwt-item"><span class="ac-gwt-label">Then</span> <span class="ac-gwt-text"><code>docs/internal/decisions/0010-trademark-clearance.md</code> exists with status CLEARED or RENAMED, domain registration confirmed, and Phase 0 → Phase 1 gate checklist updated to reflect this as resolved</span></div>
             </div>
             <div class="ac-section-label">Done criteria (binary)</div>
             <ul class="ac-list">
-              <li><code>decisions/0010-trademark-clearance.md</code> committed with status <code>CLEARED</code> or <code>RENAMED</code></li>
+              <li><code>docs/internal/decisions/0010-trademark-clearance.md</code> committed with status <code>CLEARED</code> or <code>RENAMED</code></li>
               <li>If CLEARED: domain acquired, vanity module path reserved, all brand assets finalized under "Charter"</li>
               <li>If RENAMED: all doc references, module paths, GitHub repo name, and brand assets updated to the new name before any public mention</li>
               <li>Phase 0 → Phase 1 gate checklist item: "ADR-0010 status = CLEARED or RENAMED" is checked</li>
@@ -3002,9 +3002,9 @@ Training knowledge is always outdated. Fetch authoritative docs before implement
 - Product decisions     → product.md        (&lt;800 tokens)
 - Tech/arch decisions   → tech.md           (&lt;600 tokens)
 - Codebase navigation   → structure.md      (&lt;400 tokens)
-- Feature specs         → specs/[feature]/spec.md
-- Active tasks          → specs/[feature]/tasks/current/
-- Past decisions        → decisions/</code></pre>
+- Feature specs         → docs/internal/specs/[feature]/spec.md
+- Active tasks          → docs/internal/specs/[feature]/tasks/current/
+- Past decisions        → docs/internal/decisions/</code></pre>
           <div class="ac">
             <h5>Acceptance Criteria</h5>
             <div class="ac-story"><strong>As a</strong> AI coding agent (Claude Code / Cursor / Copilot / Gemini CLI), <strong>I want</strong> a single <code>AGENTS.md</code> at repo root that is ≤ 600 tokens, <strong>so that</strong> I can orient to the codebase, understand hard constraints, and start any task without reading more than 3 files.</div>
@@ -3068,8 +3068,8 @@ Training knowledge is always outdated. Fetch authoritative docs before implement
 - [ ] [Open question that must be answered before writing code]
 
 ## ASSETS
-- Related spec: `specs/[feature]/spec.md`
-- Prior decision: `decisions/[NNN]-[slug].md`
+- Related spec: `docs/internal/specs/[feature]/spec.md`
+- Prior decision: `docs/internal/decisions/[NNN]-[slug].md`
 
 ## ROE (Rules of Engagement)
 - [Hard constraint specific to this task]
@@ -3081,9 +3081,9 @@ Training knowledge is always outdated. Fetch authoritative docs before implement
 - [ ] [Task-specific acceptance criterion]</code></pre>
           <p>Tasks directory structure:</p>
           <ul>
-            <li><code>specs/[feature]/tasks/backlog/</code> — not yet started</li>
-            <li><code>specs/[feature]/tasks/current/</code> — in progress (max 3 files at once)</li>
-            <li><code>specs/[feature]/tasks/done/</code> — completed (never delete, serves as audit trail)</li>
+            <li><code>docs/internal/specs/[feature]/tasks/backlog/</code> — not yet started</li>
+            <li><code>docs/internal/specs/[feature]/tasks/current/</code> — in progress (max 3 files at once)</li>
+            <li><code>docs/internal/specs/[feature]/tasks/done/</code> — completed (never delete, serves as audit trail)</li>
           </ul>
           <div class="ac">
             <h5>Acceptance Criteria</h5>
@@ -3107,7 +3107,7 @@ Training knowledge is always outdated. Fetch authoritative docs before implement
           <div class="subtasks">
             <h5>Subtasks</h5>
             <ul>
-              <li>Create <code>decisions/</code> directory (NOT <code>docs/adr/</code> — avoids Mintlify collision)</li>
+              <li>Create <code>docs/internal/decisions/</code> directory (NOT <code>docs/adr/</code> — avoids Mintlify collision)</li>
               <li>Write 8 seed ADRs (one file each, ~300 words each):
                 <ul>
                   <li><code>0001-go-1.26-single-binary.md</code> — Why Go 1.26; single binary; no runtime deps; Green Tea GC; crypto/hpke</li>
@@ -3124,10 +3124,10 @@ Training knowledge is always outdated. Fetch authoritative docs before implement
           </div>
           <div class="ac">
             <h5>Acceptance Criteria</h5>
-            <div class="ac-story"><strong>As a</strong> architect, <strong>I want</strong> an <code>decisions/</code> ADR directory with seed records for the five foundational decisions, <strong>so that</strong> architectural constraints are documented, discoverable, and machine-enforceable via Charter's own scanning rules.</div>
-            <div class="ac-gwt"><div class="ac-gwt-item"><span class="ac-gwt-label">Given</span> <span class="ac-gwt-text">a contributor asks "why does Charter have zero LLM calls in core?"</span></div><div class="ac-gwt-item"><span class="ac-gwt-label">When</span> <span class="ac-gwt-text">they read <code>decisions/0007-no-llm-calls-in-core.md</code></span></div><div class="ac-gwt-item"><span class="ac-gwt-label">Then</span> <span class="ac-gwt-text">they understand the rationale, the alternatives considered, and the consequences — without asking anyone</span></div></div>
-            <div class="ac-section-label">Happy Path</div><ul class="ac-list "><li>Eight seed ADRs are committed: ADR-0001 through ADR-0008 as defined in the T0.2.4 subtasks</li><li>Each ADR follows the Nygard format: Title, Status, Context, Decision, Consequences</li><li>ADR status values are one of: <code>Proposed</code> | <code>Accepted</code> | <code>Deprecated</code> | <code>Superseded by ADR-XXXX</code></li><li>All five seed ADRs have status <code>Accepted</code> at commit time</li><li>Charter's <code>AE-CTX-002</code> rule checks for the presence of an <code>decisions/</code> directory; missing directory emits a <code>MEDIUM</code> finding</li><li>Each ADR is ≤ 500 tokens (concise, scannable)</li><li>ADR-0008 contains the exact Charter Score formula: <code>max(0, 100 − B×20 − H×10 − M×4 − L×1)</code> with hard cap rules</li></ul>
-            <div class="ac-section-label ac-err">Error Handling</div><ul class="ac-list err-list"><li>If an ADR's status is <code>Deprecated</code> but no superseding ADR is referenced, Charter emits a <code>LOW</code> finding for a dangling deprecation</li><li>If the <code>decisions/</code> directory exists but contains zero <code>.md</code> files, Charter treats it as missing and emits a <code>MEDIUM</code> finding</li></ul>
+            <div class="ac-story"><strong>As a</strong> architect, <strong>I want</strong> a <code>docs/internal/decisions/</code> ADR directory with seed records for the five foundational decisions, <strong>so that</strong> architectural constraints are documented, discoverable, and machine-enforceable via Charter's own scanning rules.</div>
+            <div class="ac-gwt"><div class="ac-gwt-item"><span class="ac-gwt-label">Given</span> <span class="ac-gwt-text">a contributor asks "why does Charter have zero LLM calls in core?"</span></div><div class="ac-gwt-item"><span class="ac-gwt-label">When</span> <span class="ac-gwt-text">they read <code>docs/internal/decisions/0007-no-llm-calls-in-core.md</code></span></div><div class="ac-gwt-item"><span class="ac-gwt-label">Then</span> <span class="ac-gwt-text">they understand the rationale, the alternatives considered, and the consequences — without asking anyone</span></div></div>
+            <div class="ac-section-label">Happy Path</div><ul class="ac-list "><li>Eight seed ADRs are committed: ADR-0001 through ADR-0008 as defined in the T0.2.4 subtasks</li><li>Each ADR follows the Nygard format: Title, Status, Context, Decision, Consequences</li><li>ADR status values are one of: <code>Proposed</code> | <code>Accepted</code> | <code>Deprecated</code> | <code>Superseded by ADR-XXXX</code></li><li>All five seed ADRs have status <code>Accepted</code> at commit time</li><li>Charter's <code>AE-CTX-002</code> rule checks for the presence of a <code>docs/internal/decisions/</code> directory; missing directory emits a <code>MEDIUM</code> finding</li><li>Each ADR is ≤ 500 tokens (concise, scannable)</li><li>ADR-0008 contains the exact Charter Score formula: <code>max(0, 100 − B×20 − H×10 − M×4 − L×1)</code> with hard cap rules</li></ul>
+            <div class="ac-section-label ac-err">Error Handling</div><ul class="ac-list err-list"><li>If an ADR's status is <code>Deprecated</code> but no superseding ADR is referenced, Charter emits a <code>LOW</code> finding for a dangling deprecation</li><li>If the <code>docs/internal/decisions/</code> directory exists but contains zero <code>.md</code> files, Charter treats it as missing and emits a <code>MEDIUM</code> finding</li></ul>
             <div class="ac-section-label ac-edge">Edge Cases</div><ul class="ac-list edge-list"><li>A repo with no architectural decisions yet: Charter emits a <code>MEDIUM</code> (no ADR directory) — the recommendation is to start with ADR-0001 covering the most fundamental constraint</li><li>An ADR that supersedes another: both the old and new ADRs must be updated; Charter's cross-reference check validates the link is bidirectional</li></ul>
             <div class="ac-section-label ac-oos">Out of Scope</div><ul class="ac-list oos-list"><li>ADR tooling integration (e.g., <code>adr-tools</code> CLI) — teams may use any tool; Charter validates presence and format, not generation method</li><li>ADRs for business decisions (pricing, licensing) — those go in <code>decisions/business/</code> outside Charter's scan scope</li></ul>
           </div>
@@ -3144,14 +3144,14 @@ Training knowledge is always outdated. Fetch authoritative docs before implement
           <div class="subtasks">
             <h5>Subtasks</h5>
             <ul>
-              <li>Create <code>specs/_template/</code> with: <code>spec.md</code>, <code>plan.md</code>, <code>acceptance.md</code>, <code>tasks/done/.gitkeep</code>, <code>tasks/current/.gitkeep</code>, <code>tasks/backlog/.gitkeep</code></li>
+              <li>Create <code>docs/internal/specs/_template/</code> with: <code>spec.md</code>, <code>plan.md</code>, <code>acceptance.md</code>, <code>tasks/done/.gitkeep</code>, <code>tasks/current/.gitkeep</code>, <code>tasks/backlog/.gitkeep</code></li>
               <li>Create spec stubs (spec.md only, tasks empty) for: <code>cli-doctor/</code>, <code>cli-init/</code>, <code>cli-fix/</code>, <code>github-action/</code></li>
             </ul>
           </div>
           <div class="ac">
             <h5>Acceptance Criteria</h5>
-            <div class="ac-story"><strong>As a</strong> developer, <strong>I want</strong> a <code>specs/</code> directory scaffolded with rule spec files for all 15 v1 rules (12 core + 3 governance), <strong>so that</strong> rule behavior is documented and testable before implementation begins in Phase 1.</div>
-            <div class="ac-gwt"><div class="ac-gwt-item"><span class="ac-gwt-label">Given</span> <span class="ac-gwt-text">Phase 1 implementation begins for <code>AE-CTX-001</code></span></div><div class="ac-gwt-item"><span class="ac-gwt-label">When</span> <span class="ac-gwt-text">the developer opens <code>specs/AE-CTX-001.md</code></span></div><div class="ac-gwt-item"><span class="ac-gwt-label">Then</span> <span class="ac-gwt-text">they find: rule ID, description, severity, detection logic pseudocode, passing example, failing example, and remediation guidance</span></div></div>
+            <div class="ac-story"><strong>As a</strong> developer, <strong>I want</strong> a <code>docs/internal/specs/</code> directory scaffolded with rule spec files for all 15 v1 rules (12 core + 3 governance), <strong>so that</strong> rule behavior is documented and testable before implementation begins in Phase 1.</div>
+            <div class="ac-gwt"><div class="ac-gwt-item"><span class="ac-gwt-label">Given</span> <span class="ac-gwt-text">Phase 1 implementation begins for <code>AE-CTX-001</code></span></div><div class="ac-gwt-item"><span class="ac-gwt-label">When</span> <span class="ac-gwt-text">the developer opens <code>docs/internal/specs/AE-CTX-001.md</code></span></div><div class="ac-gwt-item"><span class="ac-gwt-label">Then</span> <span class="ac-gwt-text">they find: rule ID, description, severity, detection logic pseudocode, passing example, failing example, and remediation guidance</span></div></div>
             <div class="ac-section-label">Happy Path</div><ul class="ac-list "><li>All 15 v1 rule spec files exist — 12 core: <code>AE-CTX-001</code>, <code>AE-CTX-002</code>, <code>AE-CTX-004</code>, <code>AE-SEC-001</code>, <code>AE-SEC-002</code>, <code>AE-MCP-001</code>, <code>AE-MCP-002</code>, <code>AE-MCP-003</code>, <code>AE-CC-001</code>, <code>AE-CC-002</code>, <code>AE-ENV-001</code>, <code>AE-CI-002</code>; plus 3 governance: <code>AE-SUPPRESS-001</code>, <code>AE-SUPPRESS-002</code>, <code>AE-SUPPRESS-003</code></li><li>Each spec contains: Rule ID, Severity, Category, Description (≤ 2 sentences), Detection Logic (pseudocode), Pass Example, Fail Example, Remediation</li><li>Severity assignments match the Charter Score penalty table: BLOCKER=−20, HIGH=−10, MEDIUM=−4, LOW=−1</li><li><code>AE-MCP-001/002/003</code> specs reference OWASP MCP Top 10 (2025) item numbers</li><li><code>AE-SEC-001</code> spec documents the secret-pattern list (API keys, JWTs, PEM headers, suspicious env var assignments)</li><li>Each spec is linked from its corresponding implementation task (T1.x.x) via a reference comment</li><li><code><span style="color:#5DCAA5">charter</span> <span style="color:#97C459">doctor</span></code>'s own specs scaffold check validates all 15 specs exist (12 core + 3 governance)</li></ul>
             <div class="ac-section-label ac-err">Error Handling</div><ul class="ac-list err-list"><li>Missing spec file for an implemented rule: Charter emits a MEDIUM finding (undocumented rule)</li><li>Spec file with no Fail Example: Charter emits a LOW finding (incomplete spec)</li></ul>
             <div class="ac-section-label ac-edge">Edge Cases</div><ul class="ac-list edge-list"><li>Rule spec for a rule under debate (severity not yet decided): use <code>Severity: TBD</code> and add an <code>UNKNOWNS</code> section</li></ul>
@@ -5873,7 +5873,7 @@ cosign verify-blob \
       <tr>
         <td><strong>Name / trademark conflict</strong> — "Charter" is high-value English word</td>
         <td>Medium × Medium</td>
-        <td><strong>RESOLVED AS HARD GATE — see T0.1.TM and ADR-0010.</strong> Trademark clearance task T0.1.TM is a blocking deliverable in Phase 0 M0.1. No public announcement, HN post, or public GitHub repo until <code>decisions/0010-trademark-clearance.md</code> has status CLEARED or RENAMED. Binary outcome by M0.1 close — no extensions. Fallback names pre-approved: <code>Manifest</code>, <code>Groundwork</code>, <code>Preflight</code>. WebMCP draft RFC publication is explicitly blocked on ADR-0010 resolution. The Phase 0 → Phase 1 gate checklist includes ADR-0010 as a blocking item.</td>
+        <td><strong>RESOLVED AS HARD GATE — see T0.1.TM and ADR-0010.</strong> Trademark clearance task T0.1.TM is a blocking deliverable in Phase 0 M0.1. No public announcement, HN post, or public GitHub repo until <code>docs/internal/decisions/0010-trademark-clearance.md</code> has status CLEARED or RENAMED. Binary outcome by M0.1 close — no extensions. Fallback names pre-approved: <code>Manifest</code>, <code>Groundwork</code>, <code>Preflight</code>. WebMCP draft RFC publication is explicitly blocked on ADR-0010 resolution. The Phase 0 → Phase 1 gate checklist includes ADR-0010 as a blocking item.</td>
       </tr>
       <tr>
         <td><strong>AE-CTX-001 token budget aging</strong> — 600-token AGENTS.md limit is calibrated to current model context windows; will need upward revision as models evolve</td>

@@ -6,9 +6,9 @@
 
 Documentation authority ladder:
 
-1. `docs/architecture/charter-architecture-2026.md` for product behavior
-2. `docs/audit/charter-v1-audit-checklist.md` for manual rule-audit companion detail
-3. ADRs in `decisions/` for irreversible constraints
+1. `docs/internal/architecture/charter-architecture-2026.md` for product behavior
+2. `docs/internal/audit/charter-v1-audit-checklist.md` for manual rule-audit companion detail
+3. ADRs in `docs/internal/decisions/` for irreversible constraints
 4. root workflow and companion docs for execution guidance only
 5. HTML artifacts as presentation mirrors only
 

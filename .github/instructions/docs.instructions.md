@@ -1,5 +1,5 @@
 ---
-applyTo: "*.md,docs/**/*.md,decisions/**/*.md,rfcs/**/*.md,playbooks/**/*.md,runbooks/**/*.md,specs/**/*.md"
+applyTo: "*.md,docs/**/*.md"
 ---
 
 # Docs Instructions
@@ -8,4 +8,4 @@ applyTo: "*.md,docs/**/*.md,decisions/**/*.md,rfcs/**/*.md,playbooks/**/*.md,run
 - Prefer concise, explicit, agent-readable structure.
 - Link related ADRs, RFCs, specs, and evals.
 - Never include live secrets or realistic credentials.
-- Keep product behavior aligned with `docs/architecture/charter-architecture-2026.md`.
+- Keep product behavior aligned with `docs/internal/architecture/charter-architecture-2026.md`.

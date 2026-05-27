@@ -38,7 +38,7 @@
 - If private reporting is unavailable, report the issue directly to the maintainer before public disclosure
 - Include reproduction steps, affected files or workflows, impact, and any known secret exposure
 - Do not open a public issue for live-secret, credential, or supply-chain findings before containment
-- Follow [runbooks/security-incident.md](./runbooks/security-incident.md) for immediate containment and follow-up
+- Follow [docs/internal/runbooks/security-incident.md](./docs/internal/runbooks/security-incident.md) for immediate containment and follow-up
 
 ## Standards Target
 

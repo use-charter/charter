@@ -17,5 +17,5 @@ First-slice expectation:
 
 References:
 
-- `docs/superpowers/checklists/2026-05-28-first-slice-proof-model.md`
-- `docs/superpowers/checklists/2026-05-28-cli-quality-principles.md`
+- `docs/internal/superpowers/checklists/2026-05-28-first-slice-proof-model.md`
+- `docs/internal/superpowers/checklists/2026-05-28-cli-quality-principles.md`

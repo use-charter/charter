@@ -12,18 +12,22 @@
 
 ## Root Layout
 
+- Root contract docs stay at repo root for contributor and agent entry.
+- Repo-internal engineering docs live under `docs/internal/`.
+- Future customer-facing docs live under `docs/product/`.
+
 - `cmd/`: binary entrypoints and command wiring
 - `internal/`: non-public implementation details, detectors, fix engines, and orchestration helpers
 - `api/openapi/`: future API contracts before implementation
 - `schemas/`: machine-readable config and report contracts
-- `specs/`: rule-level behavior contracts
-- `decisions/`: accepted ADRs
-- `rfcs/`: proposals for cross-cutting or risky changes
+- `docs/internal/specs/`: rule-level behavior contracts
+- `docs/internal/decisions/`: accepted ADRs
+- `docs/internal/rfcs/`: proposals for cross-cutting or risky changes
 - `evals/`: acceptance fixtures for prompt, workflow, and future agent behavior
 
 ## Command Tree Intent
 
-The expected CLI tree follows the product authority in `docs/architecture/charter-architecture-2026.md`:
+The expected CLI tree follows the product authority in `docs/internal/architecture/charter-architecture-2026.md`:
 
 - `charter init`
 - `charter doctor`
@@ -64,4 +68,4 @@ remediation: Add explicit versions to the bootstrap toolchain config before enab
 evidence: ["mise.toml: govulncheck uses an unpinned selector"]
 ```
 
-Every user-facing rule or command error should be backed by pass/fail examples in `specs/`.
+Every user-facing rule or command error should be backed by pass/fail examples in `docs/internal/specs/`.
