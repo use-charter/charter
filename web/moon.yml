@@ -2,6 +2,9 @@ id: "web"
 
 tasks:
   lint:
-    command: "test -f README.md"
+    command: "bun"
+    args:
+      - "../scripts/check-file-exists.mjs"
+      - "README.md"
     inputs:
       - "README.md"
