@@ -6,11 +6,34 @@ on:
   push:
     branches: ["main"]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
-  workflow-lint:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      actions_security: ${{ steps.classify.outputs.actions_security }}
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: classify
+        name: Classify changed files
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: bash scripts/github-actions/classify-changes.sh
+
+  run-workflow-lint:
+    needs: changes
+    if: needs.changes.outputs.actions_security == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
@@ -26,3 +49,27 @@ jobs:
         run: mise x -- moon run :actionlint
       - name: Run zizmor
         run: mise x -- moon run :zizmor
+
+  workflow-lint:
+    needs:
+      - changes
+      - run-workflow-lint
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarize workflow security result
+        shell: bash
+        env:
+          SHOULD_RUN: ${{ needs.changes.outputs.actions_security }}
+          RUN_RESULT: ${{ needs.run-workflow-lint.result }}
+        run: |
+          if [[ "$RUN_RESULT" == "failure" ]]; then
+            exit 1
+          fi
+
+          if [[ "$SHOULD_RUN" == "true" ]]; then
+            echo "Workflow security checks executed."
+            exit 0
+          fi
+
+          echo "No workflow-related changes detected."
