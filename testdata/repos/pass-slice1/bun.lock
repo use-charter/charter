@@ -1,1 +1,11 @@
-lock-placeholder
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "pass-slice1",
+      "dependencies": {}
+    }
+  },
+  "packages": {}
+}

@@ -39,23 +39,19 @@ func RunCTXRules(root string, inv repository.Inventory) []findings.Finding {
 }
 
 func checkCTX001(root string, inv repository.Inventory) (findings.Finding, bool) {
-	var firstFailure *findings.Finding
-
-	for _, candidate := range supportedContextLocations(inv) {
+	locations := supportedContextLocations(inv)
+	if len(locations) > 0 {
+		candidate := locations[0]
 		data, err := readContextCandidate(root, candidate)
 		if err != nil {
-			finding := findings.Finding{
+			return findings.Finding{
 				RuleID:      "AE-CTX-001",
 				Severity:    findings.SeverityBlocker,
 				Category:    "Context",
 				Summary:     "Agent context file could not be read",
 				Remediation: "Restore a readable root context file with project guidance and a verification command.",
 				Evidence:    []string{"context location: " + candidate},
-			}
-			if firstFailure == nil {
-				firstFailure = &finding
-			}
-			continue
+			}, true
 		}
 
 		content := string(data)
@@ -67,22 +63,16 @@ func checkCTX001(root string, inv repository.Inventory) (findings.Finding, bool)
 		evidence = append(evidence, contextShapeEvidence(content)...)
 		evidence = append(evidence, firstSubstantiveLineEvidence(content))
 		evidence = append(evidence, missingContextSignals(content)...)
+		evidence = append(evidence, contextBudgetEvidence(content)...)
 
-		finding := findings.Finding{
+		return findings.Finding{
 			RuleID:      "AE-CTX-001",
 			Severity:    findings.SeverityBlocker,
 			Category:    "Context",
 			Summary:     "Agent context file is present but not meaningful enough for agent use",
 			Remediation: "Add concrete project guidance and a verification command to the root context file.",
 			Evidence:    evidence,
-		}
-		if firstFailure == nil {
-			firstFailure = &finding
-		}
-	}
-
-	if firstFailure != nil {
-		return *firstFailure, true
+		}, true
 	}
 
 	evidence := append([]string(nil), supportedContextFiles...)
@@ -108,7 +98,6 @@ func supportedContextLocations(inv repository.Inventory) []string {
 	if hasCursorRules(inv) {
 		locations = append(locations, ".cursor/rules")
 	}
-	sort.Strings(locations)
 	return locations
 }
 
@@ -158,10 +147,6 @@ func isMeaningfulContext(content string) bool {
 		return false
 	}
 
-	if estimatedTokenCount(trimmed) > 600 {
-		return false
-	}
-
 	return len(missingContextSignals(trimmed)) == 0
 }
 
@@ -194,11 +179,16 @@ func missingContextSignals(content string) []string {
 	if countNonEmptyLines(content) < 5 || len(strings.TrimSpace(content)) < 120 {
 		missing = append(missing, "missing content signal: reasonable content")
 	}
-	if estimatedTokenCount(content) > 600 {
-		missing = append(missing, "context appears over budget: ~"+strconv.Itoa(estimatedTokenCount(content))+" tokens")
-	}
 
 	return missing
+}
+
+func contextBudgetEvidence(content string) []string {
+	if estimatedTokenCount(content) <= 600 {
+		return nil
+	}
+
+	return []string{"context appears over budget: ~" + strconv.Itoa(estimatedTokenCount(content)) + " tokens"}
 }
 
 func hasProjectSummarySignal(content string) bool {

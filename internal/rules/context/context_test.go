@@ -113,6 +113,47 @@ func TestAECTX001FindsWeakContextContent(t *testing.T) {
 	t.Fatalf("expected AE-CTX-001 finding")
 }
 
+func TestAECTX001PrefersAGENTSOverSecondaryContextFiles(t *testing.T) {
+	root := newContextRepo(t, map[string]string{
+		"AGENTS.md": strings.Join([]string{
+			"# Fixture Repo",
+			"",
+			"- verify with `moon run :check`",
+			"- off-limits: `.env*`, `secrets/`",
+		}, "\n"),
+		".github/copilot-instructions.md": strings.Join([]string{
+			"# Secondary Context",
+			"",
+			"Charter fixture repo used to prove secondary context files cannot mask a weak AGENTS.md.",
+			"- tech stack: Go and Bun",
+			"- verify with `moon run :check`",
+			"- off-limits: `.env*`, `secrets/`",
+		}, "\n"),
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := RunCTXRules(root, inv)
+	for _, finding := range findings {
+		if finding.RuleID != "AE-CTX-001" {
+			continue
+		}
+
+		if !containsEvidence(finding.Evidence, "context location: AGENTS.md") {
+			t.Fatalf("expected AGENTS.md evidence, got %#v", finding.Evidence)
+		}
+		if containsEvidence(finding.Evidence, "context location: .github/copilot-instructions.md") {
+			t.Fatalf("expected canonical AGENTS.md to take precedence, got %#v", finding.Evidence)
+		}
+		return
+	}
+
+	t.Fatalf("expected AE-CTX-001 finding")
+}
+
 func TestAECTX002FindsStaleRepoTruthMarkers(t *testing.T) {
 	root := newContextRepo(t, map[string]string{
 		"AGENTS.md": strings.Join([]string{

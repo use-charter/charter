@@ -44,6 +44,25 @@ func TestRunPassesWhenWorkflowCoverageUsesYAMLFiles(t *testing.T) {
 	}
 }
 
+func TestRunPassesWhenRepoQualityUsesExpandedMoonTaskFamily(t *testing.T) {
+	root := newCIRepo(t, map[string]string{
+		"README.md":                              "# Charter\n\n- Phase: Phase 1 implementation not started\n",
+		"AGENTS.md":                              "# AGENTS.md\n\n- Phase: Phase 1 implementation not started\n- Current CLI: bootstrap placeholder only\n",
+		".github/workflows/ci.yml":               "name: CI\njobs:\n  check:\n    steps:\n      - run: mise x -- moon run :lint :vet :test :build :docs :eval\n      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\n",
+		".github/workflows/actions-security.yml": "name: Workflow Security\njobs:\n  lint:\n    steps:\n      - run: mise x -- moon run :actionlint\n      - run: mise x -- moon run :zizmor\n      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151\n",
+		".github/workflows/vuln-scan.yml":        "name: Vulnerability Scan\njobs:\n  security:\n    steps:\n      - run: mise x -- moon run :security\n      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	if findings := Run(root, inv); len(findings) != 0 {
+		t.Fatalf("expected no findings, got %#v", findings)
+	}
+}
+
 func TestRunPassesWhenDoctorGateIsExplicitlyDeferred(t *testing.T) {
 	root := newCIRepo(t, map[string]string{
 		"README.md":                              "# Charter\n\n- Phase: Phase 1 implementation not started\n",
