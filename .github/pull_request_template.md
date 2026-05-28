@@ -24,6 +24,7 @@
 
 - [ ] `moon run :check`
 - [ ] Additional task-specific commands listed below
+- [ ] All commits in this PR include DCO sign-offs
 
 ```text
 [commands and outputs]
