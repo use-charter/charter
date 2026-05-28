@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"go.charter.dev/charter/internal/repository"
@@ -107,6 +108,39 @@ func TestRunFindsUnpinnedAction(t *testing.T) {
 	}
 }
 
+func TestRunIgnoresCommentsAndArbitraryText(t *testing.T) {
+	root := newCIRepo(t, map[string]string{
+		".github/workflows/ci.yml":               "name: moon run :check\n# - run: charter doctor --threshold 80\njobs:\n  check:\n    env:\n      NOTE: moon run :check\n    steps:\n      - name: moon run :check\n        shell: bash\n",
+		".github/workflows/actions-security.yml": "name: Workflow Security\n# - run: moon run :actionlint\n# - run: moon run :zizmor\n",
+		".github/workflows/vuln-scan.yml":        "name: Vulnerability Scan\n# - run: moon run :security\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing repo quality workflow coverage") {
+		t.Fatalf("expected missing repo quality evidence, got %#v", findings[0].Evidence)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing workflow lint coverage") {
+		t.Fatalf("expected missing workflow lint evidence, got %#v", findings[0].Evidence)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing security workflow coverage") {
+		t.Fatalf("expected missing security evidence, got %#v", findings[0].Evidence)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing charter doctor CI gate or documented bootstrap deferment") {
+		t.Fatalf("expected missing charter doctor evidence, got %#v", findings[0].Evidence)
+	}
+	if containsUnpinnedActionEvidence(findings[0].Evidence) {
+		t.Fatalf("expected comments to be ignored for uses lines, got %#v", findings[0].Evidence)
+	}
+}
+
 func newCIRepo(t *testing.T, files map[string]string) string {
 	t.Helper()
 
@@ -137,6 +171,15 @@ func newCIRepo(t *testing.T, files map[string]string) string {
 func containsEvidence(evidence []string, want string) bool {
 	for _, item := range evidence {
 		if item == want {
+			return true
+		}
+	}
+	return false
+}
+
+func containsUnpinnedActionEvidence(evidence []string) bool {
+	for _, item := range evidence {
+		if strings.HasPrefix(item, "unpinned action:") {
 			return true
 		}
 	}
