@@ -249,6 +249,23 @@ func TestRunPassesWithPinnedRequirementsTxtLockfile(t *testing.T) {
 	}
 }
 
+func TestRunPassesWithPinnedRequirementsTxtHashesAndMarkers(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		".python-version":  "3.12.4\n",
+		"requirements.txt": "--require-hashes\nrequests==2.32.3 --hash=sha256:abc123\nurllib3==2.2.2 ; python_version < \"3.13\"\n",
+		"hk.pkl":           "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	if findings := Run(root, inv); len(findings) != 0 {
+		t.Fatalf("expected no findings, got %#v", findings)
+	}
+}
+
 func TestRunFindsMalformedRequirementsTxtPin(t *testing.T) {
 	root := newEnvironmentRepo(t, map[string]string{
 		".python-version":  "3.12.4\n",
@@ -278,9 +295,13 @@ func TestIsPinnedRequirementSpec(t *testing.T) {
 	}{
 		{name: "accepts double equals pin", line: "requests==2.32.3", want: true},
 		{name: "accepts triple equals pin", line: "urllib3===2.2.2", want: true},
+		{name: "accepts hash option after pin", line: "requests==2.32.3 --hash=sha256:abc123", want: true},
+		{name: "accepts marker after pin", line: "requests==2.32.3 ; python_version < \"3.13\"", want: true},
+		{name: "ignores require hashes directive", line: "--require-hashes", want: true},
 		{name: "rejects latest", line: "requests==latest", want: false},
 		{name: "rejects wildcard", line: "requests===*", want: false},
 		{name: "rejects exclusion spec", line: "requests==!=2.0", want: false},
+		{name: "rejects floating spec with marker", line: "requests>=2.0 ; python_version < \"3.13\"", want: false},
 	}
 
 	for _, tc := range tests {

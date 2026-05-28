@@ -611,12 +611,25 @@ func stripInlineComment(line string) string {
 }
 
 func isPinnedRequirementSpec(line string) bool {
+	if strings.HasPrefix(line, "--") {
+		return true
+	}
+
 	match := pinnedRequirementsPattern.FindStringSubmatch(line)
 	if len(match) != 4 {
 		return false
 	}
 
 	name := strings.TrimSpace(match[1])
-	version := strings.TrimSpace(match[3])
+	version := normalizeRequirementVersion(match[3])
 	return name != "" && !strings.ContainsAny(version, "=!") && looksPinnedVersion(version)
+}
+
+func normalizeRequirementVersion(version string) string {
+	version = strings.TrimSpace(version)
+	if version == "" {
+		return ""
+	}
+
+	return strings.Fields(version)[0]
 }
