@@ -21,6 +21,7 @@ func makeTempGitRepoFromFixture(t *testing.T, fixtureRoot string) (string, error
 		{"git", "init"},
 		{"git", "config", "user.name", "Charter Test"},
 		{"git", "config", "user.email", "charter@example.com"},
+		{"git", "config", "commit.gpgsign", "false"},
 		{"git", "add", "."},
 		{"git", "commit", "-m", "fixture"},
 	}
