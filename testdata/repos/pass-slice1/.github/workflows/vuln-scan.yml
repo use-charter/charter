@@ -1,0 +1,6 @@
+name: Vulnerability Scan
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - run: moon run :security

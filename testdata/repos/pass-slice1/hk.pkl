@@ -1,0 +1,1 @@
+amends "package://example/hk@1.0.0#/Config.pkl"
