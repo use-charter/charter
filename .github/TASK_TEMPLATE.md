@@ -1,4 +1,4 @@
-# TASK: <short title>
+# TASK: [short title]
 
 ## CONTEXT
 <!-- Required. Repo evidence only. Cite files, versions, and current behavior. Max: 120 tokens. -->
