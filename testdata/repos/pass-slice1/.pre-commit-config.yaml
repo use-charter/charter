@@ -1,0 +1,7 @@
+repos:
+  - repo: local
+    hooks:
+      - id: charter-fixture
+        name: charter fixture hook
+        entry: moon run :check
+        language: system

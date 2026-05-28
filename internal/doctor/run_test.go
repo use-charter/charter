@@ -16,8 +16,8 @@ func TestRunAgainstFixtureRepo(t *testing.T) {
 		t.Fatalf("expected doctor run to succeed: %v", err)
 	}
 
-	if result.Score.Final != 59 {
-		t.Fatalf("expected score 59 for the current fixture and rule set, got %d", result.Score.Final)
+	if result.Score.Final != 100 {
+		t.Fatalf("expected passing score 100 for the fixture and rule set, got %d", result.Score.Final)
 	}
 }
 

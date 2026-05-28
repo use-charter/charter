@@ -1,1 +1,8 @@
-{ "name": "pass-slice1", "private": true }
+{
+  "name": "pass-slice1",
+  "private": true,
+  "packageManager": "bun@1.3.14",
+  "simple-git-hooks": {
+    "pre-commit": "moon run :check"
+  }
+}
