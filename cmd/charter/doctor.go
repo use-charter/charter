@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"go.charter.dev/charter/internal/doctor"
+	renderjson "go.charter.dev/charter/internal/render/json"
 )
 
 type commandExitError struct {
@@ -42,6 +43,20 @@ func newDoctorCommand() *cobra.Command {
 			result, err := doctor.Run(path, threshold)
 			if err != nil {
 				return commandExitError{message: err.Error(), exitCode: 2}
+			}
+
+			if format == "json" {
+				data, err := renderjson.Render(result)
+				if err != nil {
+					return commandExitError{message: err.Error(), exitCode: 2}
+				}
+
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), string(data))
+				if !result.Passed {
+					return commandExitError{message: "score below threshold", exitCode: 1, silent: true}
+				}
+
+				return nil
 			}
 
 			if quiet {

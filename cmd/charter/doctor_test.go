@@ -3,7 +3,10 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -82,6 +85,89 @@ func TestDoctorCommandRejectsInvalidFormat(t *testing.T) {
 	}
 }
 
+func TestDoctorCommandJSONOutput(t *testing.T) {
+	repo, err := makeTempDoctorRepo(t)
+	if err != nil {
+		t.Fatalf("fixture repo setup failed: %v", err)
+	}
+
+	cmd := newRootCommand()
+	out := new(bytes.Buffer)
+	errOut := new(bytes.Buffer)
+	cmd.SetOut(out)
+	cmd.SetErr(errOut)
+	cmd.SetArgs([]string{"doctor", "--path", repo, "--threshold", "80", "--format", "json"})
+	cmd.SetContext(context.Background())
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("expected json output to succeed: %v", err)
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(out.Bytes(), &payload); err != nil {
+		t.Fatalf("expected valid json output: %v", err)
+	}
+
+	if payload["threshold"] != float64(80) {
+		t.Fatalf("unexpected threshold: %#v", payload["threshold"])
+	}
+	if payload["passed"] != true {
+		t.Fatalf("expected passed=true, got %#v", payload["passed"])
+	}
+}
+
+func TestDoctorCommandQuietJSONStillOutputsPayload(t *testing.T) {
+	repo, err := makeTempDoctorRepo(t)
+	if err != nil {
+		t.Fatalf("fixture repo setup failed: %v", err)
+	}
+
+	cmd := newRootCommand()
+	out := new(bytes.Buffer)
+	errOut := new(bytes.Buffer)
+	cmd.SetOut(out)
+	cmd.SetErr(errOut)
+	cmd.SetArgs([]string{"doctor", "--path", repo, "--threshold", "80", "--format", "json", "--quiet"})
+	cmd.SetContext(context.Background())
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("expected quiet json output to succeed: %v", err)
+	}
+
+	if len(bytes.TrimSpace(out.Bytes())) == 0 {
+		t.Fatalf("expected full json payload even when quiet is set")
+	}
+}
+
+func makeTempDoctorRepo(t *testing.T) (string, error) {
+	t.Helper()
+
+	root := filepath.Join("..", "..", "testdata", "repos", "pass-slice1")
+	repo := t.TempDir()
+	if err := copyDir(root, repo); err != nil {
+		return "", err
+	}
+
+	cmds := [][]string{
+		{"git", "init"},
+		{"git", "config", "user.name", "Charter Test"},
+		{"git", "config", "user.email", "charter@example.com"},
+		{"git", "config", "commit.gpgsign", "false"},
+		{"git", "add", "."},
+		{"git", "commit", "-m", "fixture"},
+	}
+
+	for _, args := range cmds {
+		cmd := exec.Command(args[0], args[1:]...)
+		cmd.Dir = repo
+		if out, err := cmd.CombinedOutput(); err != nil {
+			return "", fmt.Errorf("%s failed: %w\n%s", args[0], err, out)
+		}
+	}
+
+	return repo, nil
+}
+
 func initTempRepo(t *testing.T) string {
 	t.Helper()
 
@@ -107,6 +193,52 @@ func writeTempFile(t *testing.T, root string, relative string, content string) {
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 		t.Fatalf("write temp fixture file: %v", err)
 	}
+}
+
+func copyDir(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+
+		target := filepath.Join(dst, rel)
+		if info.IsDir() {
+			return os.MkdirAll(target, info.Mode())
+		}
+
+		in, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+
+		out, err := os.Create(target)
+		if err != nil {
+			_ = in.Close()
+			return err
+		}
+
+		if _, err := io.Copy(out, in); err != nil {
+			_ = in.Close()
+			_ = out.Close()
+			return err
+		}
+
+		if err := in.Close(); err != nil {
+			_ = out.Close()
+			return err
+		}
+
+		if err := out.Close(); err != nil {
+			return err
+		}
+
+		return os.Chmod(target, info.Mode())
+	})
 }
 
 func gitInRepo(t *testing.T, root string, args ...string) {
