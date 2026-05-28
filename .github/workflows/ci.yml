@@ -53,6 +53,8 @@ jobs:
           cache: true
       - name: Run CI task family
         run: mise x -- moon run :lint :vet :test :build :docs :eval
+      - name: Run Charter doctor gate
+        run: go run ./cmd/charter doctor --path . --threshold 80 --quiet
 
   docs-check:
     name: Run docs task
