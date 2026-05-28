@@ -15,6 +15,7 @@ func TestAECTX001PassesForFixtureRepo(t *testing.T) {
 		"AGENTS.md": strings.Join([]string{
 			"# Fixture Repo",
 			"",
+			"Charter fixture repo used to prove context rule behavior.",
 			"- uses Go",
 			"- verify with `moon run :check`",
 			"- off-limits: `.env*`, `secrets/`",
@@ -44,6 +45,39 @@ func TestAECTX001PassesForFixtureRepo(t *testing.T) {
 			t.Fatalf("expected no AE-CTX-001 finding, got %#v", finding)
 		}
 	}
+}
+
+func TestAECTX001FindsWeakContextContent(t *testing.T) {
+	root := newContextRepo(t, map[string]string{
+		"AGENTS.md": strings.Join([]string{
+			"# Fixture Repo",
+			"",
+			"- verify with `moon run :check`",
+			"- off-limits: `.env*`, `secrets/`",
+		}, "\n"),
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := RunCTXRules(root, inv)
+	for _, finding := range findings {
+		if finding.RuleID != "AE-CTX-001" {
+			continue
+		}
+
+		if !containsEvidence(finding.Evidence, "missing content signal: tech stack") {
+			t.Fatalf("expected missing tech stack evidence, got %#v", finding.Evidence)
+		}
+		if !containsEvidence(finding.Evidence, "missing content signal: project summary") {
+			t.Fatalf("expected missing project summary evidence, got %#v", finding.Evidence)
+		}
+		return
+	}
+
+	t.Fatalf("expected AE-CTX-001 finding")
 }
 
 func TestAECTX002FindsStaleRepoTruthMarkers(t *testing.T) {
@@ -84,6 +118,7 @@ func TestAECTX004FindsMissingIgnoresAndTrackedArtifacts(t *testing.T) {
 		"AGENTS.md": strings.Join([]string{
 			"# Fixture Repo",
 			"",
+			"Charter fixture repo used to prove gitignore rule behavior.",
 			"- verify with `moon run :check`",
 			"- off-limits: `.env*`, `secrets/`",
 			"- hooks use `hk.pkl`",
