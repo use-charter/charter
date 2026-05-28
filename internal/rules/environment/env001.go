@@ -618,5 +618,5 @@ func isPinnedRequirementSpec(line string) bool {
 
 	name := strings.TrimSpace(match[1])
 	version := strings.TrimSpace(match[3])
-	return name != "" && version != ""
+	return name != "" && !strings.ContainsAny(version, "=!") && looksPinnedVersion(version)
 }
