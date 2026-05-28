@@ -90,7 +90,7 @@ type workflowExecutables struct {
 }
 
 func markCoverage(executable workflowExecutables, coverage map[string]bool) {
-	if hasExecutableCommand(executable.Runs, isMoonRunCommand(":check")) || hasAllExecutableCommands(executable.Runs, ":lint", ":vet", ":test", ":build", ":docs", ":eval") {
+	if hasExecutableCommand(executable.Runs, isMoonRunCommand(":check")) || hasMoonRunTasks(executable.Runs, ":lint", ":vet", ":test", ":build", ":docs", ":eval") {
 		coverage["repo-quality"] = true
 	}
 	if hasExecutableCommand(executable.Runs, isCharterDoctorCommand) || hasUsePrefix(executable.Uses, "use-charter/charter-action@") {
@@ -214,13 +214,46 @@ func hasExecutableCommand(runs []string, matcher func(string) bool) bool {
 	return false
 }
 
-func hasAllExecutableCommands(runs []string, moonTasks ...string) bool {
+func hasMoonRunTasks(runs []string, moonTasks ...string) bool {
+	needed := make(map[string]struct{}, len(moonTasks))
 	for _, task := range moonTasks {
-		if !hasExecutableCommand(runs, isMoonRunCommand(task)) {
-			return false
+		needed[task] = struct{}{}
+	}
+
+	for _, run := range runs {
+		for _, line := range strings.Split(run, "\n") {
+			trimmed := strings.TrimSpace(line)
+			if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+				continue
+			}
+			for _, segment := range commandSegmentPattern.Split(trimmed, -1) {
+				command := normalizeCommand(segment)
+				if command == "" || isOutputOnlyCommand(command) {
+					continue
+				}
+				for _, task := range extractMoonRunTasks(command) {
+					delete(needed, task)
+				}
+			}
 		}
 	}
-	return true
+
+	return len(needed) == 0
+}
+
+func extractMoonRunTasks(command string) []string {
+	fields := strings.Fields(command)
+	if len(fields) < 3 || fields[0] != "moon" || fields[1] != "run" {
+		return nil
+	}
+
+	var tasks []string
+	for _, field := range fields[2:] {
+		if strings.HasPrefix(field, ":") {
+			tasks = append(tasks, field)
+		}
+	}
+	return tasks
 }
 
 func normalizeCommand(command string) string {

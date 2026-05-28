@@ -5,6 +5,8 @@ Last reviewed: 2026-05-28
 ## Current State
 
 - Phase: Phase 0 repo-executable closure complete; Phase 1 implementation not started
+- Project summary: Charter is an offline-first Go CLI that scans repositories for AI-agent readiness and scores deterministic repo safety signals.
+- Tech stack: Go 1.26.3 CLI, Moonrepo task graph, mise-pinned toolchain, hk hooks, GitHub Actions CI.
 - Product truth: `docs/internal/architecture/charter-architecture-2026.md`
 - Module path: `go.charter.dev/charter`
 - Current CLI: bootstrap placeholder only
@@ -55,6 +57,7 @@ This file is the root operating contract for agents. Keep it universal, compact,
 
 ## Edit Scope
 
+- Edit boundaries: agents may edit tracked docs, Go source, tests, specs, ADRs, RFCs, workflows, Moon config, and mise config only when the task requires it.
 - Default edit zones: repo docs, Go source, tests, specs, ADRs, RFCs, workflows, Moon config, mise config
 - Off-limits by default: `.env*`, `secrets/`, signing keys, credentials, production infra, generated local state
 - Treat `docs/internal/architecture/charter-architecture-2026.md` as canonical for product behavior
