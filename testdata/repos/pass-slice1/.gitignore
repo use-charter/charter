@@ -1,0 +1,5 @@
+.charter/
+*.charter-session
+.claude/local/
+.cursor/cache/
+.hk/

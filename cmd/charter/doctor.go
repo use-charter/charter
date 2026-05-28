@@ -1,10 +1,29 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
+	"go.charter.dev/charter/internal/doctor"
 )
+
+type commandExitError struct {
+	message  string
+	exitCode int
+	silent   bool
+}
+
+func (err commandExitError) Error() string {
+	return err.message
+}
+
+func (err commandExitError) ExitCode() int {
+	return err.exitCode
+}
+
+func (err commandExitError) Silent() bool {
+	return err.silent
+}
 
 func newDoctorCommand() *cobra.Command {
 	var path string
@@ -15,10 +34,34 @@ func newDoctorCommand() *cobra.Command {
 		Use:   "doctor",
 		Short: "Scan a repository and compute a Charter score",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			_ = path
-			_ = threshold
-			_ = quiet
-			return errors.New("doctor runner not implemented")
+			result, err := doctor.Run(path)
+			if err != nil {
+				return commandExitError{message: err.Error(), exitCode: 2}
+			}
+
+			if quiet {
+				if result.Score.Final < threshold {
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "charter: score %d, threshold %d - FAIL\n", result.Score.Final, threshold)
+					return commandExitError{message: "score below threshold", exitCode: 1, silent: true}
+				}
+				return nil
+			}
+
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "charter doctor: %s\n", result.Root)
+			for _, finding := range result.Findings {
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s %s %s\n", finding.RuleID, finding.Severity, finding.Summary)
+				for _, evidence := range finding.Evidence {
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  - %s\n", evidence)
+				}
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  remediation: %s\n", finding.Remediation)
+			}
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "score: %d (threshold %d)\n", result.Score.Final, threshold)
+
+			if result.Score.Final < threshold {
+				return commandExitError{message: "score below threshold", exitCode: 1, silent: true}
+			}
+
+			return nil
 		},
 	}
 

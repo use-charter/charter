@@ -17,11 +17,15 @@ func TestDoctorCommandRuns(t *testing.T) {
 
 	err := cmd.Execute()
 	if err == nil {
-		t.Fatalf("expected command to fail until doctor runner is implemented")
+		t.Fatalf("expected command to fail when score stays below threshold")
 	}
 
-	if err.Error() != "doctor runner not implemented" {
-		t.Fatalf("expected placeholder doctor error, got %q", err.Error())
+	if err.Error() != "score below threshold" {
+		t.Fatalf("expected threshold failure, got %q", err.Error())
+	}
+
+	if !bytes.Contains(out.Bytes(), []byte("charter: score ")) {
+		t.Fatalf("expected quiet failure summary line")
 	}
 }
 
