@@ -106,7 +106,8 @@ func markCoverage(executable workflowExecutables, coverage map[string]bool) {
 
 func unpinnedActionEvidence(uses []string, rel string) []string {
 	var evidence []string
-	for _, ref := range uses {
+	for _, rawRef := range uses {
+		ref := normalizeUseRef(rawRef)
 		if strings.HasPrefix(ref, "./") {
 			continue
 		}
@@ -156,6 +157,16 @@ func extractWorkflowExecutables(text string) workflowExecutables {
 	}
 
 	return result
+}
+
+func normalizeUseRef(value string) string {
+	value = strings.TrimSpace(value)
+	if len(value) >= 2 {
+		if (value[0] == '"' && value[len(value)-1] == '"') || (value[0] == '\'' && value[len(value)-1] == '\'') {
+			value = value[1 : len(value)-1]
+		}
+	}
+	return strings.TrimSpace(value)
 }
 
 func collectIndentedBlock(lines []string, start int, parentIndent int) (string, int) {
@@ -273,7 +284,7 @@ func isCharterDoctorCommand(command string) bool {
 
 func hasUsePrefix(uses []string, prefix string) bool {
 	for _, use := range uses {
-		if strings.HasPrefix(use, prefix) {
+		if strings.HasPrefix(normalizeUseRef(use), prefix) {
 			return true
 		}
 	}
