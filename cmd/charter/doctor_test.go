@@ -90,6 +90,7 @@ func initTempRepo(t *testing.T) string {
 	gitInRepo(t, repo, "init", "-q")
 	gitInRepo(t, repo, "config", "user.name", "Charter Test")
 	gitInRepo(t, repo, "config", "user.email", "charter@example.com")
+	gitInRepo(t, repo, "config", "commit.gpgsign", "false")
 	gitInRepo(t, repo, "add", ".")
 	gitInRepo(t, repo, "commit", "-q", "-m", "fixture")
 
