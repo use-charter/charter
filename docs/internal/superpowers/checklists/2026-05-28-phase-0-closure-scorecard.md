@@ -24,8 +24,12 @@
 - UX/UI/Product experience foundation: 8.4 because CLI proof and output-quality principles are now documented before implementation begins.
 - Maintainability / future scale: 9.5 because drift tax is lower, source-of-truth ownership is clearer, and Phase 1 starts from one constrained baseline.
 
-Overall repo-executable Phase 0 closure score: 9.2/10
+Overall repo-executable Phase 0 closure score at gate close: 9.2/10
 Expected score after first disciplined Phase 1 slice: 9.4/10
+
+Post-slice note:
+- Phase 1 Slice 1 has now been implemented in the repo.
+- The projected post-slice foundation state is now the current working baseline.
 
 ## Gate 0 Update
 

@@ -65,6 +65,7 @@ All repo automation should route through the same task family:
 - SemVer.
 - Single Go module. No `go.work`. No extra modules.
 - Go command entrypoint lives in `cmd/charter/`. Public Go API is deferred until stable.
+- Repo-owned helper scripts use TypeScript via Bun. No plain JavaScript helpers.
 - ADRs in [`docs/internal/decisions/`](./docs/internal/decisions/).
 - RFCs in [`docs/internal/rfcs/`](./docs/internal/rfcs/).
 - Contract-first schemas in [`api/openapi/`](./api/openapi/) and [`schemas/`](./schemas/).
