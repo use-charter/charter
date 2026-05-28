@@ -1,18 +1,95 @@
 package doctor
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
-func TestRunAgainstFixtureRepo(t *testing.T) {
-	root := prepareFixtureRepo(t, filepath.Join("..", "..", "testdata", "repos", "pass-slice1"))
+func makeTempGitRepoFromFixture(t *testing.T, fixtureRoot string) (string, error) {
+	t.Helper()
 
-	result, err := Run(root)
+	dir := t.TempDir()
+	if err := copyDir(fixtureRoot, dir); err != nil {
+		return "", err
+	}
+
+	cmds := [][]string{
+		{"git", "init"},
+		{"git", "config", "user.name", "Charter Test"},
+		{"git", "config", "user.email", "charter@example.com"},
+		{"git", "add", "."},
+		{"git", "commit", "-m", "fixture"},
+	}
+
+	for _, args := range cmds {
+		cmd := exec.Command(args[0], args[1:]...)
+		cmd.Dir = dir
+		if out, err := cmd.CombinedOutput(); err != nil {
+			return "", fmt.Errorf("%s failed: %w\n%s", args[0], err, out)
+		}
+	}
+
+	return dir, nil
+}
+
+func copyDir(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+
+		target := filepath.Join(dst, rel)
+		if info.IsDir() {
+			return os.MkdirAll(target, info.Mode())
+		}
+
+		in, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+
+		out, err := os.Create(target)
+		if err != nil {
+			_ = in.Close()
+			return err
+		}
+
+		if _, err := io.Copy(out, in); err != nil {
+			_ = in.Close()
+			_ = out.Close()
+			return err
+		}
+
+		if err := in.Close(); err != nil {
+			_ = out.Close()
+			return err
+		}
+
+		if err := out.Close(); err != nil {
+			return err
+		}
+
+		return os.Chmod(target, info.Mode())
+	})
+}
+
+func TestRunAgainstFixtureRepo(t *testing.T) {
+	root := filepath.Join("..", "..", "testdata", "repos", "pass-slice1")
+	repo, err := makeTempGitRepoFromFixture(t, root)
+	if err != nil {
+		t.Fatalf("fixture repo setup failed: %v", err)
+	}
+
+	result, err := Run(repo, 80)
 	if err != nil {
 		t.Fatalf("expected doctor run to succeed: %v", err)
 	}
@@ -22,93 +99,23 @@ func TestRunAgainstFixtureRepo(t *testing.T) {
 	}
 }
 
-func prepareFixtureRepo(t *testing.T, source string) string {
-	t.Helper()
-
-	root := t.TempDir()
-	copyFixtureTree(t, source, root)
-
-	git(t, root, "init", "-q")
-	git(t, root, "config", "user.name", "Charter Test")
-	git(t, root, "config", "user.email", "charter@example.com")
-	git(t, root, "add", ".")
-	git(t, root, "commit", "-q", "-m", "fixture")
-
-	return root
-}
-
-func copyFixtureTree(t *testing.T, source string, destination string) {
-	t.Helper()
-
-	err := filepath.WalkDir(source, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		rel, err := filepath.Rel(source, path)
-		if err != nil {
-			return err
-		}
-		if rel == "." {
-			return nil
-		}
-		if rel == ".git" || strings.HasPrefix(rel, ".git"+string(filepath.Separator)) {
-			if d.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-
-		target := filepath.Join(destination, rel)
-		if d.IsDir() {
-			return os.MkdirAll(target, 0o755)
-		}
-
-		return copyFile(path, target)
-	})
+func TestRunSetsThresholdAndPassed(t *testing.T) {
+	root := filepath.Join("..", "..", "testdata", "repos", "pass-slice1")
+	repo, err := makeTempGitRepoFromFixture(t, root)
 	if err != nil {
-		t.Fatalf("copy fixture repo: %v", err)
+		t.Fatalf("fixture repo setup failed: %v", err)
 	}
-}
 
-func copyFile(source string, destination string) error {
-	input, err := os.Open(source)
+	result, err := Run(repo, 80)
 	if err != nil {
-		return err
+		t.Fatalf("expected doctor run to succeed: %v", err)
 	}
 
-	if err := os.MkdirAll(filepath.Dir(destination), 0o755); err != nil {
-		_ = input.Close()
-		return err
+	if result.Threshold != 80 {
+		t.Fatalf("expected threshold 80, got %d", result.Threshold)
 	}
 
-	output, err := os.Create(destination)
-	if err != nil {
-		_ = input.Close()
-		return err
-	}
-
-	if _, err := io.Copy(output, input); err != nil {
-		_ = input.Close()
-		_ = output.Close()
-		return err
-	}
-
-	if err := input.Close(); err != nil {
-		_ = output.Close()
-		return err
-	}
-
-	return output.Close()
-}
-
-func git(t *testing.T, root string, args ...string) {
-	t.Helper()
-
-	cmd := exec.Command("git", args...)
-	cmd.Dir = root
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("git %v: %v: %s", args, err, output)
+	if !result.Passed {
+		t.Fatalf("expected run to pass")
 	}
 }
