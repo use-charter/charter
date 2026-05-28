@@ -13,10 +13,32 @@
 
 - Commits: Conventional Commits
 - Versioning: SemVer
+- License: Apache-2.0
+- Contributions: DCO sign-off required on every commit (`Signed-off-by:` trailer)
 - Cross-cutting or risky work: RFC first
 - Irreversible architecture decisions: ADR first
 - New API surfaces: contract-first
 - Non-trivial agent workflows or prompts: eval-driven
+
+## Developer Certificate of Origin
+
+This repository uses the Developer Certificate of Origin (DCO) instead of a contributor license agreement.
+
+By contributing, you certify the Developer Certificate of Origin 1.1 at <https://developercertificate.org/>.
+
+Every commit must include a `Signed-off-by:` trailer matching the author identity. Example:
+
+```text
+Signed-off-by: Your Name <you@example.com>
+```
+
+Use:
+
+```bash
+git commit -s
+```
+
+CLA is deferred. If contribution volume, governance needs, or enterprise requirements change, the project may introduce a CLA later with an explicit policy update.
 
 Trigger rules:
 
@@ -33,6 +55,7 @@ Trigger rules:
 - Call out risks, generated code, and docs/spec changes
 - Keep diffs surgical unless the task explicitly needs breadth
 - Route verification through the root Moon task family so local and CI checks stay consistent
+- Confirm commits in the PR carry valid DCO sign-offs
 
 ## Review Culture
 

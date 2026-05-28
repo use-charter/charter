@@ -90,4 +90,14 @@ GitHub-level repo health features stay split by capability:
 
 ## License
 
-MIT. See [`LICENSE`](./LICENSE).
+Apache License 2.0 (`Apache-2.0`). See [`LICENSE`](./LICENSE).
+
+## Contribution Model
+
+- DCO first
+- CLA deferred unless governance or commercial needs require it later
+
+## Commercial Model
+
+- Apache-2.0 OSS core
+- paid hosted service, support, and enterprise features outside the OSS core
