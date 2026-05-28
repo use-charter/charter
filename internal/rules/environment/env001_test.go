@@ -266,6 +266,41 @@ func TestRunPassesWithPinnedRequirementsTxtHashesAndMarkers(t *testing.T) {
 	}
 }
 
+func TestRunFindsUnsafeRequirementsTxtDirectives(t *testing.T) {
+	tests := []struct {
+		name string
+		line string
+	}{
+		{name: "editable directive", line: "--editable ."},
+		{name: "constraint directive", line: "--constraint constraints.txt"},
+		{name: "extra index directive", line: "--extra-index-url https://example.com/simple"},
+		{name: "arbitrary directive", line: "--trusted-host example.com"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			root := newEnvironmentRepo(t, map[string]string{
+				".python-version":  "3.12.4\n",
+				"requirements.txt": tc.line + "\nrequests==2.32.3\n",
+				"hk.pkl":           "hooks {}\n",
+			})
+
+			inv, err := repository.BuildInventory(root)
+			if err != nil {
+				t.Fatalf("inventory failed: %v", err)
+			}
+
+			findings := Run(root, inv)
+			if len(findings) != 1 {
+				t.Fatalf("expected one finding, got %#v", findings)
+			}
+			if !containsEvidence(findings[0].Evidence, "missing lockfile signal for active language: python") {
+				t.Fatalf("expected missing python lockfile evidence, got %#v", findings[0].Evidence)
+			}
+		})
+	}
+}
+
 func TestRunFindsMalformedRequirementsTxtPin(t *testing.T) {
 	root := newEnvironmentRepo(t, map[string]string{
 		".python-version":  "3.12.4\n",
@@ -298,6 +333,10 @@ func TestIsPinnedRequirementSpec(t *testing.T) {
 		{name: "accepts hash option after pin", line: "requests==2.32.3 --hash=sha256:abc123", want: true},
 		{name: "accepts marker after pin", line: "requests==2.32.3 ; python_version < \"3.13\"", want: true},
 		{name: "ignores require hashes directive", line: "--require-hashes", want: true},
+		{name: "rejects editable directive", line: "--editable .", want: false},
+		{name: "rejects constraint directive", line: "--constraint constraints.txt", want: false},
+		{name: "rejects extra index directive", line: "--extra-index-url https://example.com/simple", want: false},
+		{name: "rejects arbitrary directive", line: "--trusted-host example.com", want: false},
 		{name: "rejects latest", line: "requests==latest", want: false},
 		{name: "rejects wildcard", line: "requests===*", want: false},
 		{name: "rejects exclusion spec", line: "requests==!=2.0", want: false},

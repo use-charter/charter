@@ -612,7 +612,7 @@ func stripInlineComment(line string) string {
 
 func isPinnedRequirementSpec(line string) bool {
 	if strings.HasPrefix(line, "--") {
-		return true
+		return isSafeRequirementDirective(line)
 	}
 
 	match := pinnedRequirementsPattern.FindStringSubmatch(line)
@@ -623,6 +623,20 @@ func isPinnedRequirementSpec(line string) bool {
 	name := strings.TrimSpace(match[1])
 	version := normalizeRequirementVersion(match[3])
 	return name != "" && !strings.ContainsAny(version, "=!") && looksPinnedVersion(version)
+}
+
+func isSafeRequirementDirective(line string) bool {
+	directive := strings.Fields(strings.TrimSpace(line))
+	if len(directive) == 0 {
+		return false
+	}
+
+	switch directive[0] {
+	case "--require-hashes":
+		return true
+	default:
+		return false
+	}
 }
 
 func normalizeRequirementVersion(version string) string {
