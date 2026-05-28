@@ -24,7 +24,7 @@
 - [ ] Additional task-specific commands listed below
 
 ```text
-<commands and outputs>
+[commands and outputs]
 ```
 
 ## AI Review Checklist
