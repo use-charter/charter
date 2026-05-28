@@ -1,7 +1,20 @@
 package main
 
-import "fmt"
+import (
+	"os"
+
+	"github.com/spf13/cobra"
+)
 
 func main() {
-	fmt.Println("charter bootstrap scaffold")
+	if err := execute(); err != nil {
+		cobra.CheckErr(err)
+	}
+}
+
+func execute() error {
+	cmd := newRootCommand()
+	cmd.SetOut(os.Stdout)
+	cmd.SetErr(os.Stderr)
+	return cmd.Execute()
 }
