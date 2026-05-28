@@ -3,9 +3,9 @@ import path from 'node:path';
 
 const roots = process.argv.slice(2);
 const matcher = /TODO\((docs|spec)\)/;
-const seen = new Set();
+const seen = new Set<string>();
 
-const scan = (target) => {
+const scan = (target: string) => {
   if (!existsSync(target) || seen.has(target)) return;
 
   seen.add(target);

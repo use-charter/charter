@@ -1,0 +1,10 @@
+{
+  "name": "charter-tooling",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "1.3.14",
+    "@types/node": "24.12.4",
+    "typescript": "6.0.3"
+  }
+}

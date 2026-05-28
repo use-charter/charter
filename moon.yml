@@ -20,7 +20,7 @@ tasks:
   check:
     command: "bun"
     args:
-      - "scripts/noop.mjs"
+      - "scripts/noop.ts"
     deps:
       - "lint"
       - "vet"
@@ -34,7 +34,7 @@ tasks:
   test:
     command: "bun"
     args:
-      - "scripts/go-test.mjs"
+      - "scripts/go-test.ts"
     inputs:
       - "@globs(goSources)"
   vet:
@@ -42,19 +42,22 @@ tasks:
     inputs:
       - "@globs(goSources)"
   lint:
-    script: "gofumpt -l cmd internal && golangci-lint run ./..."
+    script: "gofumpt -l cmd internal && golangci-lint run ./... && bunx tsc --noEmit"
     inputs:
       - "@globs(goSources)"
+      - "package.json"
+      - "tsconfig.json"
+      - "scripts/**/*.ts"
   build:
     command: "bun"
     args:
-      - "scripts/go-build.mjs"
+      - "scripts/go-build.ts"
     inputs:
       - "@globs(goSources)"
   docs:
     command: "bun"
     args:
-      - "scripts/scan-doc-todos.mjs"
+      - "scripts/scan-doc-todos.ts"
       - ".github"
       - "."
       - "docs/internal/decisions"
@@ -76,7 +79,7 @@ tasks:
   eval:
     command: "bun"
     args:
-      - "scripts/check-file-exists.mjs"
+      - "scripts/check-file-exists.ts"
       - "evals/README.md"
   actionlint:
     command: "actionlint"

@@ -25,6 +25,7 @@ tmp/
 .claude/local/
 .cursor/cache/
 .hk/
+node_modules/
 
 # Editors
 .idea/
