@@ -7,7 +7,7 @@
 - Pass example: CI runs the repo quality gates, workflow security tools, and keeps mutable action tags out of the baseline.
 - Fail example: no workflow coverage, no Charter entrypoint in CI, or unpinned third-party actions.
 - Evidence expectations: workflow file path, job name, threshold or gate command, SARIF upload presence when applicable, and whether workflow hygiene tools are present.
-- Edge cases: during pre-implementation bootstrap, CI may legitimately omit `charter doctor` itself if the scanner is not built yet, but the repo should still keep workflow lint/security gates active and document the deferred product gate clearly.
+- Edge cases: during pre-implementation bootstrap, CI may legitimately omit `charter doctor` itself if the scanner is not built yet. Once `charter doctor` exists, the repo should run a Charter-related CI gate, not just local quality gates.
 - Remediation: add or harden workflows so the repo's intended quality path is enforced in CI, not just locally.
 - Related ADRs: ADR-0006
 - Related evals: None yet
