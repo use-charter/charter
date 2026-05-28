@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -54,6 +55,30 @@ func TestDoctorCommandHelpRuns(t *testing.T) {
 
 	if !bytes.Contains(out.Bytes(), []byte("Scan a repository and compute a Charter score")) {
 		t.Fatalf("expected help output to include doctor command description")
+	}
+}
+
+func TestDoctorCommandRejectsInvalidFormat(t *testing.T) {
+	cmd := newRootCommand()
+	out := new(bytes.Buffer)
+	errOut := new(bytes.Buffer)
+	cmd.SetOut(out)
+	cmd.SetErr(errOut)
+	cmd.SetArgs([]string{"doctor", "--format", "yaml"})
+	cmd.SetContext(context.Background())
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatalf("expected invalid format error")
+	}
+
+	var signal interface{ ExitCode() int }
+	if !errors.As(err, &signal) {
+		t.Fatalf("expected command exit error, got %T", err)
+	}
+
+	if signal.ExitCode() != 2 {
+		t.Fatalf("expected exit code 2, got %d", signal.ExitCode())
 	}
 }
 
