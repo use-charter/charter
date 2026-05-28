@@ -141,6 +141,36 @@ func TestRunIgnoresCommentsAndArbitraryText(t *testing.T) {
 	}
 }
 
+func TestRunIgnoresEchoWrappedWorkflowCommands(t *testing.T) {
+	root := newCIRepo(t, map[string]string{
+		".github/workflows/ci.yml":               "name: CI\njobs:\n  check:\n    steps:\n      - run: |\n          echo \"moon run :check\"\n          echo \"charter doctor --threshold 80\"\n      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\n",
+		".github/workflows/actions-security.yml": "name: Workflow Security\njobs:\n  lint:\n    steps:\n      - run: |\n          printf 'moon run :actionlint\\n'\n          printf 'moon run :zizmor\\n'\n      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151\n",
+		".github/workflows/vuln-scan.yml":        "name: Vulnerability Scan\njobs:\n  security:\n    steps:\n      - run: echo \"moon run :security\"\n      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing repo quality workflow coverage") {
+		t.Fatalf("expected missing repo quality evidence, got %#v", findings[0].Evidence)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing workflow lint coverage") {
+		t.Fatalf("expected missing workflow lint evidence, got %#v", findings[0].Evidence)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing security workflow coverage") {
+		t.Fatalf("expected missing security evidence, got %#v", findings[0].Evidence)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing charter doctor CI gate or documented bootstrap deferment") {
+		t.Fatalf("expected missing charter doctor evidence, got %#v", findings[0].Evidence)
+	}
+}
+
 func newCIRepo(t *testing.T, files map[string]string) string {
 	t.Helper()
 

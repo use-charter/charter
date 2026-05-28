@@ -16,8 +16,7 @@ func TestRunPassesWhenReproducibilityFilesExist(t *testing.T) {
 		"go.mod":       "module example.com/passenv\n\ngo 1.26.0\n",
 		"go.sum":       "example.com v0.0.0 h1:abc\n",
 		"hk.pkl":       "hooks {}\n",
-		"package.json": "{\n  \"name\": \"pass-env\",\n  \"private\": true\n}\n",
-		"bunfig.toml":  "[install]\ncache = true\n",
+		"package.json": "{\n  \"name\": \"pass-env\",\n  \"private\": true,\n  \"volta\": { \"bun\": \"1.3.14\" }\n}\n",
 		"bun.lock":     "lock-placeholder\n",
 	})
 
@@ -33,7 +32,7 @@ func TestRunPassesWhenReproducibilityFilesExist(t *testing.T) {
 
 func TestRunPassesWithDevcontainerUniversalSignal(t *testing.T) {
 	root := newEnvironmentRepo(t, map[string]string{
-		"devcontainer.json": "{\n  \"image\": \"mcr.microsoft.com/devcontainers/base:ubuntu\"\n}\n",
+		"devcontainer.json": "{\n  \"image\": \"mcr.microsoft.com/devcontainers/base:ubuntu-24.04\"\n}\n",
 		"package.json":      "{\n  \"name\": \"pass-env\",\n  \"private\": true\n}\n",
 		"package-lock.json": "{}\n",
 		"pyproject.toml":    "[project]\nname = \"pass-env\"\n",
@@ -54,6 +53,7 @@ func TestRunPassesWithDevcontainerUniversalSignal(t *testing.T) {
 func TestRunPassesWithFlakeUniversalSignal(t *testing.T) {
 	root := newEnvironmentRepo(t, map[string]string{
 		"flake.nix":    "{ description = \"pass-env\"; }\n",
+		"flake.lock":   "{\"version\":7}\n",
 		"Cargo.toml":   "[package]\nname = \"pass-env\"\nversion = \"0.1.0\"\n",
 		"Cargo.lock":   "# lock\n",
 		"lefthook.yml": "pre-commit:\n  commands: {}\n",
@@ -131,6 +131,93 @@ func TestRunFindsMissingLockfile(t *testing.T) {
 	}
 	if findings[0].Evidence[0] != "missing lockfile signal for active language: javascript" {
 		t.Fatalf("expected missing bun.lock evidence, got %#v", findings[0].Evidence)
+	}
+}
+
+func TestRunFindsBunfigWithoutRuntimePin(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		"package.json": "{\n  \"name\": \"pass-env\",\n  \"private\": true\n}\n",
+		"bunfig.toml":  "[install]\ncache = true\n",
+		"bun.lock":     "lock-placeholder\n",
+		"hk.pkl":       "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: javascript") {
+		t.Fatalf("expected missing javascript toolchain evidence, got %#v", findings[0].Evidence)
+	}
+}
+
+func TestRunFindsFloatingPackageJSONRuntimePins(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		"package.json": "{\n  \"name\": \"pass-env\",\n  \"private\": true,\n  \"engines\": { \"node\": \">=20\" },\n  \"volta\": { \"bun\": \"^1.3.14\" }\n}\n",
+		"bun.lock":     "lock-placeholder\n",
+		"hk.pkl":       "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: javascript") {
+		t.Fatalf("expected missing javascript toolchain evidence, got %#v", findings[0].Evidence)
+	}
+}
+
+func TestRunFindsDevcontainerWithoutReproducibleToolchainPath(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		"devcontainer.json": "{\n  \"name\": \"dev-only\"\n}\n",
+		"package.json":      "{\n  \"name\": \"pass-env\",\n  \"private\": true\n}\n",
+		"package-lock.json": "{}\n",
+		"hk.pkl":            "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: javascript") {
+		t.Fatalf("expected missing javascript toolchain evidence, got %#v", findings[0].Evidence)
+	}
+}
+
+func TestRunFindsFlakeWithoutLockfile(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		"flake.nix":    "{ description = \"pass-env\"; }\n",
+		"Cargo.toml":   "[package]\nname = \"pass-env\"\nversion = \"0.1.0\"\n",
+		"Cargo.lock":   "# lock\n",
+		"lefthook.yml": "pre-commit:\n  commands: {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: rust") {
+		t.Fatalf("expected missing rust toolchain evidence, got %#v", findings[0].Evidence)
 	}
 }
 
