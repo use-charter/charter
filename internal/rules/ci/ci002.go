@@ -45,6 +45,9 @@ func Run(root string, inv repository.Inventory) []findings.Finding {
 	if !coverage["repo-quality"] {
 		evidence = append(evidence, "missing repo quality workflow coverage")
 	}
+	if !coverage["charter-product-gate"] && !hasDeferredProductGateDocumentation(root, inv) {
+		evidence = append(evidence, "missing charter doctor CI gate or documented bootstrap deferment")
+	}
 	if !coverage["workflow-lint"] {
 		evidence = append(evidence, "missing workflow lint coverage")
 	}
@@ -82,6 +85,9 @@ func markCoverage(text string, coverage map[string]bool) {
 	if strings.Contains(text, "moon run :check") || (strings.Contains(text, "moon run :lint") && strings.Contains(text, "moon run :vet") && strings.Contains(text, "moon run :test") && strings.Contains(text, "moon run :build") && strings.Contains(text, "moon run :docs") && strings.Contains(text, "moon run :eval")) {
 		coverage["repo-quality"] = true
 	}
+	if strings.Contains(text, "charter doctor") || strings.Contains(text, "use-charter/charter-action") {
+		coverage["charter-product-gate"] = true
+	}
 	if strings.Contains(text, "moon run :actionlint") && strings.Contains(text, "moon run :zizmor") {
 		coverage["workflow-lint"] = true
 	}
@@ -112,4 +118,26 @@ func unpinnedActionEvidence(text string, rel string) []string {
 		}
 	}
 	return evidence
+}
+
+func hasDeferredProductGateDocumentation(root string, inv repository.Inventory) bool {
+	if hasDocMarker(root, inv, "docs/internal/audit/charter-v1-audit-checklist.md", "deferred until phase 1 scanner implementation exists") {
+		return true
+	}
+
+	phaseNotStarted := hasDocMarker(root, inv, "README.md", "phase 1 implementation not started") || hasDocMarker(root, inv, "AGENTS.md", "phase 1 implementation not started")
+	bootstrapCLI := hasDocMarker(root, inv, "AGENTS.md", "current cli: bootstrap placeholder only")
+	return phaseNotStarted && bootstrapCLI
+}
+
+func hasDocMarker(root string, inv repository.Inventory, path string, marker string) bool {
+	if !inv.Has(path) {
+		return false
+	}
+	// #nosec G304 -- path is constrained to a fixed documentation file checked by this rule.
+	data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(path)))
+	if err != nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(string(data)), marker)
 }

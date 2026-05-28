@@ -47,6 +47,31 @@ func TestAECTX001PassesForFixtureRepo(t *testing.T) {
 	}
 }
 
+func TestAECTX001PassesForCursorRulesContext(t *testing.T) {
+	root := newContextRepo(t, map[string]string{
+		".cursor/rules/charter.mdc": strings.Join([]string{
+			"# Fixture Repo",
+			"",
+			"Charter fixture repo used to prove Cursor rule context behavior.",
+			"- tech stack: Go and Bun",
+			"- verify with `moon run :check`",
+			"- off-limits: `.env*`, `secrets/`",
+		}, "\n"),
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := RunCTXRules(root, inv)
+	for _, finding := range findings {
+		if finding.RuleID == "AE-CTX-001" {
+			t.Fatalf("expected no AE-CTX-001 finding, got %#v", finding)
+		}
+	}
+}
+
 func TestAECTX001FindsWeakContextContent(t *testing.T) {
 	root := newContextRepo(t, map[string]string{
 		"AGENTS.md": strings.Join([]string{
@@ -73,6 +98,11 @@ func TestAECTX001FindsWeakContextContent(t *testing.T) {
 		}
 		if !containsEvidence(finding.Evidence, "missing content signal: project summary") {
 			t.Fatalf("expected missing project summary evidence, got %#v", finding.Evidence)
+		}
+		for _, item := range finding.Evidence {
+			if strings.Contains(item, "verify with") {
+				t.Fatalf("expected no raw context excerpt evidence, got %#v", finding.Evidence)
+			}
 		}
 		return
 	}
