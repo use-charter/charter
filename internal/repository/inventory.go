@@ -1,75 +1,48 @@
 package repository
 
 import (
-	"os"
+	"fmt"
+	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
 type Inventory struct {
-	Paths           []string
-	set             map[string]struct{}
-	ignoredPrefixes []string
+	Paths []string
+	set   map[string]struct{}
 }
 
 func BuildInventory(root string) (Inventory, error) {
 	inv := Inventory{set: map[string]struct{}{}}
 
-	gitignore := filepath.Join(root, ".gitignore")
-	// #nosec G304 -- root is the resolved repository root for the active scan target.
-	if data, err := os.ReadFile(gitignore); err == nil {
-		for _, raw := range strings.Split(string(data), "\n") {
-			line := strings.TrimSpace(raw)
-			if strings.HasSuffix(line, "/") && !strings.HasPrefix(line, "#") {
-				inv.ignoredPrefixes = append(inv.ignoredPrefixes, strings.TrimSuffix(line, "/"))
-			}
-		}
+	// #nosec G204 -- root is the resolved repository root for the active scan target.
+	cmd := exec.Command("git", "-C", root, "ls-files", "--cached", "--others", "--exclude-standard", "--full-name")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return Inventory{}, fmt.Errorf("list repository files: %w: %s", err, strings.TrimSpace(string(output)))
 	}
 
-	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
+	for _, raw := range strings.Split(string(output), "\n") {
+		path := strings.TrimSpace(raw)
+		if path == "" {
+			continue
 		}
 
-		if path == root {
-			return nil
+		path = filepath.ToSlash(path)
+		if path == ".git" || strings.HasPrefix(path, ".git/") {
+			continue
 		}
 
-		rel, err := filepath.Rel(root, path)
-		if err != nil {
-			return err
-		}
+		inv.Paths = append(inv.Paths, path)
+		inv.set[path] = struct{}{}
+	}
 
-		rel = filepath.ToSlash(rel)
-		if rel == ".git" || strings.HasPrefix(rel, ".git/") {
-			if d.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-
-		for _, ignored := range inv.ignoredPrefixes {
-			if rel == ignored || strings.HasPrefix(rel, ignored+"/") {
-				if d.IsDir() {
-					return filepath.SkipDir
-				}
-				return nil
-			}
-		}
-
-		if d.IsDir() {
-			return nil
-		}
-
-		inv.Paths = append(inv.Paths, rel)
-		inv.set[rel] = struct{}{}
-		return nil
-	})
-
-	return inv, err
+	sort.Strings(inv.Paths)
+	return inv, nil
 }
 
 func (i Inventory) Has(path string) bool {
-	_, ok := i.set[path]
+	_, ok := i.set[filepath.ToSlash(path)]
 	return ok
 }
