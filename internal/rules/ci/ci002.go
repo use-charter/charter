@@ -37,9 +37,9 @@ func Run(root string, inv repository.Inventory) []findings.Finding {
 			continue
 		}
 
-		text := string(data)
-		markCoverage(text, coverage)
-		evidence = append(evidence, unpinnedActionEvidence(text, rel)...)
+		executable := extractWorkflowExecutables(string(data))
+		markCoverage(executable, coverage)
+		evidence = append(evidence, unpinnedActionEvidence(executable.Uses, rel)...)
 	}
 
 	if !coverage["repo-quality"] {
@@ -81,31 +81,29 @@ func collectWorkflowPaths(inv repository.Inventory) []string {
 	return paths
 }
 
-func markCoverage(text string, coverage map[string]bool) {
-	if strings.Contains(text, "moon run :check") || (strings.Contains(text, "moon run :lint") && strings.Contains(text, "moon run :vet") && strings.Contains(text, "moon run :test") && strings.Contains(text, "moon run :build") && strings.Contains(text, "moon run :docs") && strings.Contains(text, "moon run :eval")) {
+type workflowExecutables struct {
+	Runs []string
+	Uses []string
+}
+
+func markCoverage(executable workflowExecutables, coverage map[string]bool) {
+	if hasRunContaining(executable.Runs, "moon run :check") || hasAllRuns(executable.Runs, "moon run :lint", "moon run :vet", "moon run :test", "moon run :build", "moon run :docs", "moon run :eval") {
 		coverage["repo-quality"] = true
 	}
-	if strings.Contains(text, "charter doctor") || strings.Contains(text, "use-charter/charter-action") {
+	if hasRunContaining(executable.Runs, "charter doctor") || hasUsePrefix(executable.Uses, "use-charter/charter-action@") {
 		coverage["charter-product-gate"] = true
 	}
-	if strings.Contains(text, "moon run :actionlint") && strings.Contains(text, "moon run :zizmor") {
+	if hasRunContaining(executable.Runs, "moon run :actionlint") && hasRunContaining(executable.Runs, "moon run :zizmor") {
 		coverage["workflow-lint"] = true
 	}
-	if strings.Contains(text, "moon run :security") {
+	if hasRunContaining(executable.Runs, "moon run :security") {
 		coverage["security"] = true
 	}
 }
 
-func unpinnedActionEvidence(text string, rel string) []string {
+func unpinnedActionEvidence(uses []string, rel string) []string {
 	var evidence []string
-	for _, line := range strings.Split(text, "\n") {
-		trimmed := strings.TrimSpace(line)
-		trimmed = strings.TrimPrefix(trimmed, "- ")
-		if !strings.HasPrefix(trimmed, "uses:") {
-			continue
-		}
-
-		ref := strings.TrimSpace(strings.TrimPrefix(trimmed, "uses:"))
+	for _, ref := range uses {
 		if strings.HasPrefix(ref, "./") {
 			continue
 		}
@@ -118,6 +116,94 @@ func unpinnedActionEvidence(text string, rel string) []string {
 		}
 	}
 	return evidence
+}
+
+func extractWorkflowExecutables(text string) workflowExecutables {
+	var result workflowExecutables
+	lines := strings.Split(text, "\n")
+
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+
+		normalized := strings.TrimSpace(strings.TrimPrefix(trimmed, "-"))
+		switch {
+		case strings.HasPrefix(normalized, "run:"):
+			value := strings.TrimSpace(strings.TrimPrefix(normalized, "run:"))
+			if value == "|" || value == ">" || value == "|-" || value == ">-" {
+				block, next := collectIndentedBlock(lines, i+1, leadingIndent(line))
+				if block != "" {
+					result.Runs = append(result.Runs, block)
+				}
+				i = next - 1
+				continue
+			}
+			if value != "" {
+				result.Runs = append(result.Runs, value)
+			}
+		case strings.HasPrefix(normalized, "uses:"):
+			value := strings.TrimSpace(strings.TrimPrefix(normalized, "uses:"))
+			if value != "" {
+				result.Uses = append(result.Uses, value)
+			}
+		}
+	}
+
+	return result
+}
+
+func collectIndentedBlock(lines []string, start int, parentIndent int) (string, int) {
+	var block []string
+	i := start
+	for ; i < len(lines); i++ {
+		line := lines[i]
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		if strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		if leadingIndent(line) <= parentIndent {
+			break
+		}
+		block = append(block, trimmed)
+	}
+	return strings.Join(block, "\n"), i
+}
+
+func leadingIndent(line string) int {
+	return len(line) - len(strings.TrimLeft(line, " "))
+}
+
+func hasRunContaining(runs []string, want string) bool {
+	for _, run := range runs {
+		if strings.Contains(run, want) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasAllRuns(runs []string, wants ...string) bool {
+	for _, want := range wants {
+		if !hasRunContaining(runs, want) {
+			return false
+		}
+	}
+	return true
+}
+
+func hasUsePrefix(uses []string, prefix string) bool {
+	for _, use := range uses {
+		if strings.HasPrefix(use, prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 func hasDeferredProductGateDocumentation(root string, inv repository.Inventory) bool {
