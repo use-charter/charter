@@ -29,11 +29,16 @@ func newDoctorCommand() *cobra.Command {
 	var path string
 	var threshold int
 	var quiet bool
+	var format string
 
 	cmd := &cobra.Command{
 		Use:   "doctor",
 		Short: "Scan a repository and compute a Charter score",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if format != "text" && format != "json" {
+				return commandExitError{message: "invalid format: must be text or json", exitCode: 2}
+			}
+
 			result, err := doctor.Run(path)
 			if err != nil {
 				return commandExitError{message: err.Error(), exitCode: 2}
@@ -68,6 +73,7 @@ func newDoctorCommand() *cobra.Command {
 	cmd.Flags().StringVar(&path, "path", "", "explicit repository path")
 	cmd.Flags().IntVar(&threshold, "threshold", 80, "minimum passing score")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "suppress non-failure output")
+	cmd.Flags().StringVar(&format, "format", "text", "output format: text or json")
 
 	return cmd
 }
