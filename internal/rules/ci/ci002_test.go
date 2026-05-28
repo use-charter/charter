@@ -108,6 +108,23 @@ func TestRunFindsUnpinnedAction(t *testing.T) {
 	}
 }
 
+func TestRunPassesWithQuotedPinnedActions(t *testing.T) {
+	root := newCIRepo(t, map[string]string{
+		".github/workflows/ci.yml":               "name: CI\njobs:\n  check:\n    steps:\n      - run: moon run :check\n      - run: charter doctor --threshold 80\n      - uses: \"actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\"\n",
+		".github/workflows/actions-security.yml": "name: Workflow Security\njobs:\n  lint:\n    steps:\n      - run: moon run :actionlint\n      - run: moon run :zizmor\n      - uses: 'jdx/mise-action@1648a7812b9aeae629881980618f079932869151'\n",
+		".github/workflows/vuln-scan.yml":        "name: Vulnerability Scan\njobs:\n  security:\n    steps:\n      - run: moon run :security\n      - uses: \"actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\"\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	if findings := Run(root, inv); len(findings) != 0 {
+		t.Fatalf("expected no findings, got %#v", findings)
+	}
+}
+
 func TestRunIgnoresCommentsAndArbitraryText(t *testing.T) {
 	root := newCIRepo(t, map[string]string{
 		".github/workflows/ci.yml":               "name: moon run :check\n# - run: charter doctor --threshold 80\njobs:\n  check:\n    env:\n      NOTE: moon run :check\n    steps:\n      - name: moon run :check\n        shell: bash\n",

@@ -110,6 +110,63 @@ func TestRunPassesWithoutGoSumWhenGoHasNoDependencyState(t *testing.T) {
 	}
 }
 
+func TestRunPassesWithPinnedVersionFiles(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		".nvmrc":          "20.18.0\n",
+		".python-version": "3.12.4\n",
+		"rust-toolchain":  "1.78.0\n",
+		".swift-version":  "6.0.3\n",
+		".ruby-version":   "3.3.4\n",
+		"hk.pkl":          "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	if findings := Run(root, inv); len(findings) != 0 {
+		t.Fatalf("expected no findings, got %#v", findings)
+	}
+}
+
+func TestRunFindsFloatingVersionFiles(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		".nvmrc":              "lts/*\n",
+		".python-version":     "latest\n",
+		"rust-toolchain":      "stable\n",
+		".swift-version":      "latest\n",
+		".ruby-version":       "stable\n",
+		"rust-toolchain.toml": "[toolchain]\nchannel = \"stable\"\n",
+		"hk.pkl":              "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: javascript") {
+		t.Fatalf("expected missing javascript toolchain evidence, got %#v", findings[0].Evidence)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: python") {
+		t.Fatalf("expected missing python toolchain evidence, got %#v", findings[0].Evidence)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: rust") {
+		t.Fatalf("expected missing rust toolchain evidence, got %#v", findings[0].Evidence)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: swift") {
+		t.Fatalf("expected missing swift toolchain evidence, got %#v", findings[0].Evidence)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: ruby") {
+		t.Fatalf("expected missing ruby toolchain evidence, got %#v", findings[0].Evidence)
+	}
+}
+
 func TestRunFindsMissingLockfile(t *testing.T) {
 	root := newEnvironmentRepo(t, map[string]string{
 		"package.json": "{\n  \"name\": \"pass-env\",\n  \"private\": true\n}\n",

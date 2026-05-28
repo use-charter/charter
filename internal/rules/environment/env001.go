@@ -89,7 +89,7 @@ func activeLanguages(inv repository.Inventory) []string {
 func toolchainSignalSource(root string, language string, inv repository.Inventory) string {
 	switch language {
 	case "go":
-		if inv.Has(".go-version") {
+		if hasPinnedVersionFile(root, inv, ".go-version") {
 			return ".go-version"
 		}
 		content, ok := readRepoFile(root, inv, "go.mod")
@@ -97,10 +97,10 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 			return "go.mod"
 		}
 	case "javascript":
-		if inv.Has(".nvmrc") {
+		if hasPinnedVersionFile(root, inv, ".nvmrc") {
 			return ".nvmrc"
 		}
-		if inv.Has(".node-version") {
+		if hasPinnedVersionFile(root, inv, ".node-version") {
 			return ".node-version"
 		}
 		content, ok := readRepoFile(root, inv, "package.json")
@@ -108,7 +108,7 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 			return "package.json"
 		}
 	case "python":
-		if inv.Has(".python-version") {
+		if hasPinnedVersionFile(root, inv, ".python-version") {
 			return ".python-version"
 		}
 		content, ok := readRepoFile(root, inv, "pyproject.toml")
@@ -116,14 +116,14 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 			return "pyproject.toml"
 		}
 	case "rust":
-		if inv.Has("rust-toolchain.toml") {
+		if content, ok := readRepoFile(root, inv, "rust-toolchain.toml"); ok && hasPinnedRustToolchainTOML(content) {
 			return "rust-toolchain.toml"
 		}
-		if inv.Has("rust-toolchain") {
+		if hasPinnedVersionFile(root, inv, "rust-toolchain") {
 			return "rust-toolchain"
 		}
 	case "swift":
-		if inv.Has(".swift-version") {
+		if hasPinnedVersionFile(root, inv, ".swift-version") {
 			return ".swift-version"
 		}
 		content, ok := readRepoFile(root, inv, "Package.swift")
@@ -131,7 +131,7 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 			return "Package.swift"
 		}
 	case "ruby":
-		if inv.Has(".ruby-version") {
+		if hasPinnedVersionFile(root, inv, ".ruby-version") {
 			return ".ruby-version"
 		}
 		content, ok := readRepoFile(root, inv, "Gemfile")
@@ -330,6 +330,30 @@ func hasJavaScriptRuntimePin(content string) bool {
 	return false
 }
 
+func hasPinnedVersionFile(root string, inv repository.Inventory, path string) bool {
+	content, ok := readRepoFile(root, inv, path)
+	if !ok {
+		return false
+	}
+
+	for _, line := range strings.Split(content, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		return looksPinnedVersion(trimmed)
+	}
+
+	return false
+}
+
+var rustToolchainChannelPattern = regexp.MustCompile(`(?m)^\s*channel\s*=\s*["']([^"']+)["']`)
+
+func hasPinnedRustToolchainTOML(content string) bool {
+	match := rustToolchainChannelPattern.FindStringSubmatch(content)
+	return len(match) == 2 && looksPinnedVersion(match[1])
+}
+
 func hasGradleToolchainSignal(content string) bool {
 	lower := strings.ToLower(content)
 	return strings.Contains(lower, "jvmtoolchain") || strings.Contains(lower, "languageversion") || strings.Contains(lower, "toolchain {")
@@ -347,6 +371,11 @@ func looksPinnedVersion(value string) bool {
 	}
 	if strings.Contains(lower, ".x") || strings.HasSuffix(lower, "x") {
 		return false
+	}
+	for _, token := range []string{"stable", "nightly", "beta", "canary", "current", "lts/"} {
+		if strings.Contains(lower, token) {
+			return false
+		}
 	}
 
 	return strings.IndexFunc(value, func(r rune) bool { return r >= '0' && r <= '9' }) >= 0
