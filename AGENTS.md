@@ -4,33 +4,23 @@ Last reviewed: 2026-05-28
 
 ## Current State
 
-- Phase: Phase 1 Slice 1 implemented; first real `charter doctor` path exists
-- Charter is an offline-first Go CLI that scans repositories for AI-agent readiness and scores deterministic repo safety signals.
-- Tech stack: Go 1.26.3, Moonrepo, mise, hk, GitHub Actions, Bun-run strict TypeScript helper scripts.
-- Product truth: `docs/internal/architecture/charter-architecture-2026.md`
-- Module path: `go.charter.dev/charter`
-- Current CLI: `charter doctor` text output with `--path`, `--threshold`, `--quiet`
+- Charter is an offline-first Go CLI that scans repos for AI-agent readiness with deterministic scoring.
+- Phase: Phase 1 Slice 2 in progress on top of the real `charter doctor` path.
+- Stack: Go 1.26.3, Moonrepo, mise, hk, GitHub Actions, Bun-run TypeScript helper scripts.
+- Product truth: `docs/internal/architecture/charter-architecture-2026.md`; module: `go.charter.dev/charter`
+- CLI: `charter doctor` with `--path`, `--threshold`, `--quiet`, `--format text|json`
 - Implemented rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`
 
-## Documentation Topology
+## Documentation
 
-- Root contract docs stay at repo root.
-- Internal engineering docs live under `docs/internal/`.
-- Future customer-facing docs live under `docs/product/`.
-
-## Documentation Authority
-
-1. `docs/internal/architecture/charter-architecture-2026.md` for product behavior
-2. `docs/internal/audit/charter-v1-audit-checklist.md` for manual audit companion detail
-3. ADRs in `docs/internal/decisions/` for irreversible constraints
-4. Root companion docs for execution guidance only
-5. HTML artifacts as presentation mirrors only
+- Topology: root contract docs stay at repo root; internal engineering docs live under `docs/internal/`; future customer docs live under `docs/product/`.
+- Authority: architecture markdown for product behavior, audit markdown for manual audit detail, ADRs for irreversible constraints, root docs for execution guidance, HTML as mirrors only.
 
 ## Commands
 
 - Setup: `mise install` then `./scripts/install-hooks.sh`
 - Verify: `moon run :check`
-- Slice 1 smoke: `go run ./cmd/charter doctor --path . --threshold 80`
+- Smoke: `go run ./cmd/charter doctor --path . --threshold 80`
 
 ## Hard Constraints
 
@@ -43,8 +33,8 @@ Last reviewed: 2026-05-28
 ## Edit Scope
 
 - Default edit zones: tracked docs, Go source, tests, specs, ADRs, RFCs, workflows, Moon config, mise config.
-- Off-limits by default: `.env*`, `secrets/`, signing keys, credentials, production infra, generated local state
-- Treat `docs/internal/architecture/charter-architecture-2026.md` as canonical for product behavior
+- Off-limits: `.env*`, `secrets/`, signing keys, credentials, production infra, generated local state.
+- Canonical behavior owner: `docs/internal/architecture/charter-architecture-2026.md`
 
 ## Repo Flow
 
@@ -54,8 +44,8 @@ Last reviewed: 2026-05-28
 
 ## Context Loading
 
-- `ARCHITECTURE.md`: module layout, Slice 1 seams, error contracts
+- `ARCHITECTURE.md`: module layout, slice seams, error contracts
 - `SECURITY.md`: secrets, MCP, supply-chain posture
-- `CONTRIBUTING.md`: workflow, commits, PRs, ADR/RFC expectations
+- `CONTRIBUTING.md`: workflow, commits, PRs, ADR/RFC rules
 - `TESTING.md`: fixtures, evals, verification commands
 - `PERMISSIONS.md`: off-limits paths, escalation, destructive-action policy
