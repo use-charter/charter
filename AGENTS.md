@@ -14,8 +14,8 @@ Last reviewed: 2026-05-29
 
 ## Documentation
 
-- Topology: root contract docs stay at repo root; internal engineering docs live under `docs/internal/`; future customer docs live under `docs/product/`.
-- Authority: architecture markdown for product behavior, audit markdown for manual audit detail, ADRs for irreversible constraints, root docs for execution guidance, HTML as mirrors only.
+- Topology: root contract docs at repo root; engineering docs under `docs/internal/`; customer docs under `docs/product/`.
+- Authority: architecture markdown owns product behavior; audit markdown is companion detail; ADRs hold irreversible constraints; HTML is mirror-only.
 
 ## Commands
 
@@ -33,19 +33,19 @@ Last reviewed: 2026-05-29
 
 ## Edit Scope
 
-- Default edit zones: tracked docs, Go source, tests, specs, ADRs, RFCs, workflows, Moon config, mise config.
+- Default edit zones: tracked docs, Go source, tests, specs, ADRs, RFCs, workflows, Moon config, and mise config.
 - Off-limits: `.env*`, `secrets/`, signing keys, credentials, production infra, generated local state.
 - Canonical behavior owner: `docs/internal/architecture/charter-architecture-2026.md`
 
 ## Repo Flow
 
 - Hooks managed by `hk` via `hk.pkl`
-- Pre-commit runs `moon run :lint` and `moon run :docs`
-- Pre-push runs `moon run :test` and `moon run :security`
+- Pre-commit: `moon run :lint` and `moon run :docs`
+- Pre-push: `moon run :test` and `moon run :security`
 
 ## Context Loading
 
-- `ARCHITECTURE.md`: module layout, slice seams, error contracts
+- `ARCHITECTURE.md`: module layout, seams, error contracts
 - `SECURITY.md`: secrets, MCP, supply-chain posture
 - `CONTRIBUTING.md`: workflow, commits, PRs, ADR/RFC rules
 - `TESTING.md`: fixtures, evals, verification commands
