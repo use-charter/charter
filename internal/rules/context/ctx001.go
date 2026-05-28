@@ -143,6 +143,10 @@ func isMeaningfulContext(content string) bool {
 		return false
 	}
 
+	if estimatedTokenCount(trimmed) > 600 {
+		return false
+	}
+
 	if countNonEmptyLines(trimmed) < 5 {
 		return false
 	}

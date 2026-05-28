@@ -113,6 +113,39 @@ func TestAECTX001FindsWeakContextContent(t *testing.T) {
 	t.Fatalf("expected AE-CTX-001 finding")
 }
 
+func TestAECTX001FailsOverBudgetContext(t *testing.T) {
+	root := newContextRepo(t, map[string]string{
+		"AGENTS.md": strings.Join([]string{
+			"# Fixture Repo",
+			"",
+			"Charter fixture repo used to prove over-budget context fails even when content is otherwise meaningful.",
+			"- tech stack: Go 1.26.3 CLI with Bun tooling and Moonrepo tasks.",
+			"- off-limits: `.env*`, `secrets/`, signing keys, production infra.",
+			"- verify with `moon run :check`.",
+			strings.Repeat("This context sentence exists only to push the file beyond the token budget while staying meaningful and explicit. ", 30),
+		}, "\n"),
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := RunCTXRules(root, inv)
+	for _, finding := range findings {
+		if finding.RuleID != "AE-CTX-001" {
+			continue
+		}
+
+		if !containsEvidencePrefix(finding.Evidence, "context appears over budget: ~") {
+			t.Fatalf("expected over-budget evidence, got %#v", finding.Evidence)
+		}
+		return
+	}
+
+	t.Fatalf("expected AE-CTX-001 finding for over-budget context")
+}
+
 func TestAECTX001PrefersAGENTSOverSecondaryContextFiles(t *testing.T) {
 	root := newContextRepo(t, map[string]string{
 		"AGENTS.md": strings.Join([]string{
