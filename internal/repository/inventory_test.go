@@ -11,6 +11,7 @@ func TestBuildInventoryRespectsGitignore(t *testing.T) {
 	root := t.TempDir()
 	writeTestFile(t, filepath.Join(root, ".gitignore"), ".charter/\n")
 	writeTestFile(t, filepath.Join(root, "AGENTS.md"), "# Fixture Repo\n")
+	writeTestFile(t, filepath.Join(root, "notes with spaces.txt"), "keep me too\n")
 	writeTestFile(t, filepath.Join(root, "notes.txt"), "keep me\n")
 	writeTestFile(t, filepath.Join(root, ".charter", "local.txt"), "ignored local artifact\n")
 	initTestRepository(t, root)
@@ -31,6 +32,22 @@ func TestBuildInventoryRespectsGitignore(t *testing.T) {
 
 	if !inv.Has("notes.txt") {
 		t.Fatalf("expected untracked non-ignored file to be present in inventory")
+	}
+
+	if !inv.Has("notes with spaces.txt") {
+		t.Fatalf("expected spaced untracked file to be present in inventory")
+	}
+}
+
+func TestParseGitLSFilesOutputPreservesSpacedPaths(t *testing.T) {
+	inv := parseGitLSFilesOutput([]byte("notes with spaces.txt\x00nested/path.txt\x00"))
+
+	if !inv.Has("notes with spaces.txt") {
+		t.Fatalf("expected spaced path to be preserved")
+	}
+
+	if !inv.Has("nested/path.txt") {
+		t.Fatalf("expected plain path to be preserved")
 	}
 }
 
