@@ -633,7 +633,7 @@ func isSafeRequirementDirective(line string) bool {
 
 	switch directive[0] {
 	case "--require-hashes":
-		return true
+		return len(directive) == 1
 	default:
 		return false
 	}

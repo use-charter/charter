@@ -274,6 +274,7 @@ func TestRunFindsUnsafeRequirementsTxtDirectives(t *testing.T) {
 		{name: "editable directive", line: "--editable ."},
 		{name: "constraint directive", line: "--constraint constraints.txt"},
 		{name: "extra index directive", line: "--extra-index-url https://example.com/simple"},
+		{name: "require hashes with extra tokens", line: "--require-hashes --trusted-host example.com"},
 		{name: "arbitrary directive", line: "--trusted-host example.com"},
 	}
 
@@ -333,6 +334,7 @@ func TestIsPinnedRequirementSpec(t *testing.T) {
 		{name: "accepts hash option after pin", line: "requests==2.32.3 --hash=sha256:abc123", want: true},
 		{name: "accepts marker after pin", line: "requests==2.32.3 ; python_version < \"3.13\"", want: true},
 		{name: "ignores require hashes directive", line: "--require-hashes", want: true},
+		{name: "rejects require hashes with extra tokens", line: "--require-hashes --trusted-host example.com", want: false},
 		{name: "rejects editable directive", line: "--editable .", want: false},
 		{name: "rejects constraint directive", line: "--constraint constraints.txt", want: false},
 		{name: "rejects extra index directive", line: "--extra-index-url https://example.com/simple", want: false},
