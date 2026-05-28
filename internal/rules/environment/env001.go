@@ -351,6 +351,8 @@ func hasPinnedVersionFile(root string, inv repository.Inventory, path string) bo
 
 var rustToolchainChannelPattern = regexp.MustCompile(`(?m)^\s*channel\s*=\s*["']([^"']+)["']`)
 
+var pinnedRequirementsPattern = regexp.MustCompile(`^(.+?)(===|==)\s*(.+)$`)
+
 func hasPinnedRustToolchainTOML(content string) bool {
 	match := rustToolchainChannelPattern.FindStringSubmatch(content)
 	return len(match) == 2 && looksPinnedVersion(match[1])
@@ -589,16 +591,32 @@ func hasPinnedRequirementsLockfile(inv repository.Inventory, root string) bool {
 
 	hasRequirement := false
 	for _, line := range strings.Split(content, "\n") {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+		trimmed := strings.TrimSpace(stripInlineComment(line))
+		if trimmed == "" {
 			continue
 		}
 
 		hasRequirement = true
-		if !strings.Contains(trimmed, "==") && !strings.Contains(trimmed, "===") {
+		if !isPinnedRequirementSpec(trimmed) {
 			return false
 		}
 	}
 
 	return hasRequirement
+}
+
+func stripInlineComment(line string) string {
+	before, _, _ := strings.Cut(line, "#")
+	return before
+}
+
+func isPinnedRequirementSpec(line string) bool {
+	match := pinnedRequirementsPattern.FindStringSubmatch(line)
+	if len(match) != 4 {
+		return false
+	}
+
+	name := strings.TrimSpace(match[1])
+	version := strings.TrimSpace(match[3])
+	return name != "" && version != ""
 }
