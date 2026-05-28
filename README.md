@@ -2,20 +2,21 @@
 
 Charter is an offline-first AI-agent-readiness scanner for software repositories. It audits agent context, MCP safety, reproducibility, CI posture, and governance so teams can safely adopt coding agents without guesswork.
 
-This repository is intentionally bootstrapped as an AI-ready Go monorepo before product implementation begins. The repo itself is the first dogfood target.
+This repository started as the AI-ready bootstrap baseline and now contains the first real `charter doctor` implementation slice. The repo itself remains the first dogfood target.
 
 ## Current State
 
-- Phase: Phase 0 repo-executable closure complete; Phase 1 implementation not started
+- Phase: Phase 1 Slice 1 implemented; first real `charter doctor` path exists
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
 - Module path: `go.charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
 
-First Phase 1 slice start point:
+Current implemented Slice 1 scope:
 
 - repository resolver
 - file inventory scanner
 - finding model and score engine
+- text `charter doctor` output with `--path`, `--threshold`, and `--quiet`
 - first simple rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`
 
 Documentation topology:
