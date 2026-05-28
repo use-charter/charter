@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -27,11 +28,10 @@ func prepareFixtureRepo(t *testing.T, source string) string {
 	root := t.TempDir()
 	copyFixtureTree(t, source, root)
 
-	removeFixtureGitMarker(t, root)
 	git(t, root, "init", "-q")
-	git(t, root, "add", ".")
 	git(t, root, "config", "user.name", "Charter Test")
 	git(t, root, "config", "user.email", "charter@example.com")
+	git(t, root, "add", ".")
 	git(t, root, "commit", "-q", "-m", "fixture")
 
 	return root
@@ -50,6 +50,12 @@ func copyFixtureTree(t *testing.T, source string, destination string) {
 			return err
 		}
 		if rel == "." {
+			return nil
+		}
+		if rel == ".git" || strings.HasPrefix(rel, ".git"+string(filepath.Separator)) {
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 
@@ -94,14 +100,6 @@ func copyFile(source string, destination string) error {
 	}
 
 	return output.Close()
-}
-
-func removeFixtureGitMarker(t *testing.T, root string) {
-	t.Helper()
-
-	if err := os.RemoveAll(filepath.Join(root, ".git")); err != nil {
-		t.Fatalf("remove fixture git marker: %v", err)
-	}
 }
 
 func git(t *testing.T, root string, args ...string) {
