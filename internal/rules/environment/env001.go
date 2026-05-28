@@ -41,7 +41,7 @@ func requiredEnvironmentFiles(root string, inv repository.Inventory) []string {
 		if source == "mise" {
 			usesMiseToolchain = true
 		}
-		if requiresLockfile(language, root, inv) && !hasLockfileSignal(language, inv) {
+		if requiresLockfile(language, root, inv) && !hasLockfileSignal(language, root, inv) {
 			missing = append(missing, "missing lockfile signal for active language: "+language)
 		}
 	}
@@ -66,6 +66,8 @@ func activeLanguages(inv repository.Inventory) []string {
 		case "package.json", "bunfig.toml", ".nvmrc", ".node-version":
 			languages["javascript"] = true
 		case "pyproject.toml", ".python-version", "uv.toml":
+			languages["python"] = true
+		case "requirements.txt":
 			languages["python"] = true
 		case "rust-toolchain.toml", "rust-toolchain", "Cargo.toml":
 			languages["rust"] = true
@@ -523,7 +525,7 @@ func requiresLockfile(language string, root string, inv repository.Inventory) bo
 	case "javascript":
 		return inv.Has("package.json")
 	case "python":
-		return inv.Has("pyproject.toml")
+		return inv.Has("pyproject.toml") || inv.Has("requirements.txt")
 	case "rust":
 		return inv.Has("Cargo.toml")
 	case "swift":
@@ -537,14 +539,14 @@ func requiresLockfile(language string, root string, inv repository.Inventory) bo
 	}
 }
 
-func hasLockfileSignal(language string, inv repository.Inventory) bool {
+func hasLockfileSignal(language string, root string, inv repository.Inventory) bool {
 	switch language {
 	case "go":
 		return inv.Has("go.sum")
 	case "javascript":
 		return inv.Has("bun.lock") || inv.Has("bun.lockb") || inv.Has("package-lock.json") || inv.Has("yarn.lock") || inv.Has("pnpm-lock.yaml")
 	case "python":
-		return inv.Has("uv.lock") || inv.Has("poetry.lock") || inv.Has("requirements.txt")
+		return inv.Has("uv.lock") || inv.Has("poetry.lock") || hasPinnedRequirementsLockfile(inv, root)
 	case "rust":
 		return inv.Has("Cargo.lock")
 	case "swift":
@@ -577,4 +579,26 @@ func hasHookSignal(root string, inv repository.Inventory) bool {
 	}
 	text := string(data)
 	return strings.Contains(text, "simple-git-hooks") || strings.Contains(text, "lint-staged")
+}
+
+func hasPinnedRequirementsLockfile(inv repository.Inventory, root string) bool {
+	content, ok := readRepoFile(root, inv, "requirements.txt")
+	if !ok {
+		return false
+	}
+
+	hasRequirement := false
+	for _, line := range strings.Split(content, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+
+		hasRequirement = true
+		if !strings.Contains(trimmed, "==") && !strings.Contains(trimmed, "===") {
+			return false
+		}
+	}
+
+	return hasRequirement
 }

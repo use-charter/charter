@@ -191,6 +191,64 @@ func TestRunFindsMissingLockfile(t *testing.T) {
 	}
 }
 
+func TestRunTreatsRequirementsTxtAsPythonActivitySignal(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		"requirements.txt": "requests==2.32.3\n",
+		"hk.pkl":           "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: python") {
+		t.Fatalf("expected missing python toolchain evidence, got %#v", findings[0].Evidence)
+	}
+}
+
+func TestRunFindsUnpinnedRequirementsTxtLockfile(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		".python-version":  "3.12.4\n",
+		"requirements.txt": "requests>=2.0\n",
+		"hk.pkl":           "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing lockfile signal for active language: python") {
+		t.Fatalf("expected missing python lockfile evidence, got %#v", findings[0].Evidence)
+	}
+}
+
+func TestRunPassesWithPinnedRequirementsTxtLockfile(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		".python-version":  "3.12.4\n",
+		"requirements.txt": "requests==2.32.3\nurllib3==2.2.2\n",
+		"hk.pkl":           "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	if findings := Run(root, inv); len(findings) != 0 {
+		t.Fatalf("expected no findings, got %#v", findings)
+	}
+}
+
 func TestRunFindsBunfigWithoutRuntimePin(t *testing.T) {
 	root := newEnvironmentRepo(t, map[string]string{
 		"package.json": "{\n  \"name\": \"pass-env\",\n  \"private\": true\n}\n",
