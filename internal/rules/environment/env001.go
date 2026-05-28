@@ -135,20 +135,20 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 			return ".ruby-version"
 		}
 		content, ok := readRepoFile(root, inv, "Gemfile")
-		if ok && rubyVersionPattern.MatchString(content) {
+		if ok && hasPinnedGemfileRubyVersion(content) {
 			return "Gemfile"
 		}
 	case "jvm":
-		if inv.Has(".java-version") {
+		if hasPinnedVersionFile(root, inv, ".java-version") {
 			return ".java-version"
 		}
-		if content, ok := readRepoFile(root, inv, "gradle/wrapper/gradle-wrapper.properties"); ok && strings.Contains(content, "distributionUrl=") {
+		if content, ok := readRepoFile(root, inv, "gradle/wrapper/gradle-wrapper.properties"); ok && hasPinnedGradleDistributionURL(content) {
 			return "gradle/wrapper/gradle-wrapper.properties"
 		}
-		if content, ok := readRepoFile(root, inv, "build.gradle.kts"); ok && hasGradleToolchainSignal(content) {
+		if content, ok := readRepoFile(root, inv, "build.gradle.kts"); ok && hasPinnedGradleToolchainSignal(content) {
 			return "build.gradle.kts"
 		}
-		if content, ok := readRepoFile(root, inv, "build.gradle"); ok && hasGradleToolchainSignal(content) {
+		if content, ok := readRepoFile(root, inv, "build.gradle"); ok && hasPinnedGradleToolchainSignal(content) {
 			return "build.gradle"
 		}
 	}
@@ -169,7 +169,7 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 	return ""
 }
 
-var rubyVersionPattern = regexp.MustCompile(`(?m)^\s*ruby\s+["'][^"']+["']`)
+var rubyVersionPattern = regexp.MustCompile(`(?m)^\s*ruby\s+["']([^"']+)["']`)
 
 func hasMiseSignalForLanguage(root string, language string, inv repository.Inventory) bool {
 	for _, path := range []string{"mise.toml", ".mise.toml"} {
@@ -354,9 +354,48 @@ func hasPinnedRustToolchainTOML(content string) bool {
 	return len(match) == 2 && looksPinnedVersion(match[1])
 }
 
-func hasGradleToolchainSignal(content string) bool {
-	lower := strings.ToLower(content)
-	return strings.Contains(lower, "jvmtoolchain") || strings.Contains(lower, "languageversion") || strings.Contains(lower, "toolchain {")
+func hasPinnedGemfileRubyVersion(content string) bool {
+	match := rubyVersionPattern.FindStringSubmatch(content)
+	return len(match) == 2 && looksPinnedVersion(match[1])
+}
+
+var gradleJVMPinPatterns = []*regexp.Regexp{
+	regexp.MustCompile(`(?i)jvmToolchain\s*\(\s*([0-9]+(?:\.[0-9]+)*)\s*\)`),
+	regexp.MustCompile(`(?i)JavaLanguageVersion\.of\s*\(\s*([0-9]+(?:\.[0-9]+)*)\s*\)`),
+	regexp.MustCompile(`(?i)JavaVersion\.VERSION_([0-9_]+)`),
+}
+
+func hasPinnedGradleToolchainSignal(content string) bool {
+	for _, pattern := range gradleJVMPinPatterns {
+		matches := pattern.FindAllStringSubmatch(content, -1)
+		for _, match := range matches {
+			if len(match) < 2 {
+				continue
+			}
+			version := strings.ReplaceAll(match[1], "_", ".")
+			if looksPinnedVersion(version) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+var (
+	gradleDistributionPattern        = regexp.MustCompile(`(?m)^\s*distributionUrl\s*=\s*([^\s#]+)\s*$`)
+	gradleDistributionVersionPattern = regexp.MustCompile(`(?i)gradle-([a-z0-9._-]+?)-(?:bin|all)\.zip`)
+)
+
+func hasPinnedGradleDistributionURL(content string) bool {
+	match := gradleDistributionPattern.FindStringSubmatch(content)
+	if len(match) != 2 {
+		return false
+	}
+	versionMatch := gradleDistributionVersionPattern.FindStringSubmatch(match[1])
+	if len(versionMatch) != 2 {
+		return false
+	}
+	return looksPinnedVersion(versionMatch[1])
 }
 
 func looksPinnedVersion(value string) bool {

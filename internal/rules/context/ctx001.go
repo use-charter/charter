@@ -65,6 +65,7 @@ func checkCTX001(root string, inv repository.Inventory) (findings.Finding, bool)
 
 		evidence := []string{"context location: " + candidate}
 		evidence = append(evidence, contextShapeEvidence(content)...)
+		evidence = append(evidence, firstSubstantiveLineEvidence(content))
 		evidence = append(evidence, missingContextSignals(content)...)
 
 		finding := findings.Finding{
@@ -232,6 +233,47 @@ func contextShapeEvidence(content string) []string {
 		"non-empty lines: " + strconv.Itoa(countNonEmptyLines(content)),
 		"estimated tokens: ~" + strconv.Itoa(estimatedTokenCount(content)),
 	}
+}
+
+func firstSubstantiveLineEvidence(content string) string {
+	for _, line := range strings.Split(content, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		if lineNeedsRedaction(trimmed) {
+			return "first substantive line: [redacted]"
+		}
+		return "first substantive line: " + safeEvidenceLine(trimmed)
+	}
+
+	return "first substantive line: [none]"
+}
+
+func lineNeedsRedaction(line string) bool {
+	lower := strings.ToLower(line)
+	for _, token := range []string{"api_key", "apikey", "token", "secret", "password", "passwd", "private key", "bearer ", "authorization:"} {
+		if strings.Contains(lower, token) {
+			return true
+		}
+	}
+	for _, token := range []string{"sk-", "ghp_", "github_pat_", "xoxb-", "akia"} {
+		if strings.Contains(lower, token) {
+			return true
+		}
+	}
+	if idx := strings.Index(line, "="); idx >= 0 && len(strings.TrimSpace(line[idx+1:])) >= 12 {
+		return true
+	}
+	return false
+}
+
+func safeEvidenceLine(line string) string {
+	line = strings.Join(strings.Fields(line), " ")
+	if len(line) > 120 {
+		return line[:117] + "..."
+	}
+	return line
 }
 
 func estimatedTokenCount(content string) int {

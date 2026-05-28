@@ -35,9 +35,9 @@ func checkCTX004(root string, inv repository.Inventory) (findings.Finding, bool)
 	}
 
 	var evidence []string
-	text := string(data)
+	patterns := parseGitignorePatterns(string(data))
 	for _, pattern := range requiredGitignorePatterns {
-		if !strings.Contains(text, pattern) {
+		if !slices.Contains(patterns, pattern) {
 			evidence = append(evidence, "missing ignore pattern: "+pattern)
 		}
 	}
@@ -62,6 +62,18 @@ func checkCTX004(root string, inv repository.Inventory) (findings.Finding, bool)
 		Remediation: "Add the missing ignore patterns and stop tracking local agent or env artifacts.",
 		Evidence:    evidence,
 	}, true
+}
+
+func parseGitignorePatterns(content string) []string {
+	var patterns []string
+	for _, line := range strings.Split(content, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		patterns = append(patterns, trimmed)
+	}
+	return patterns
 }
 
 func isTrackedLocalArtifact(path string) bool {

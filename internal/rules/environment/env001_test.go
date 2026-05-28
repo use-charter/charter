@@ -300,6 +300,91 @@ func TestRunRequiresMiseLockWhenMiseProvidesToolchain(t *testing.T) {
 	}
 }
 
+func TestRunFindsFloatingJavaVersionFile(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		".java-version":             "latest\n",
+		"build.gradle.kts":          "java { toolchain { languageVersion = provider { JavaLanguageVersion.current() } } }\n",
+		"gradle/libs.versions.toml": "[versions]\njava = \"21\"\n",
+		"hk.pkl":                    "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: jvm") {
+		t.Fatalf("expected missing jvm toolchain evidence, got %#v", findings[0].Evidence)
+	}
+}
+
+func TestRunFindsFloatingGemfileRubyDeclaration(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		"Gemfile":      "source \"https://rubygems.org\"\nruby \">= 3.3\"\n",
+		"Gemfile.lock": "GEM\n",
+		"hk.pkl":       "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: ruby") {
+		t.Fatalf("expected missing ruby toolchain evidence, got %#v", findings[0].Evidence)
+	}
+}
+
+func TestRunFindsGenericGradleToolchainTextWithoutPinnedVersion(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		"build.gradle.kts":          "java { toolchain { languageVersion = provider { JavaLanguageVersion.current() } } }\n",
+		"gradle/libs.versions.toml": "[versions]\njava = \"21\"\n",
+		"hk.pkl":                    "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: jvm") {
+		t.Fatalf("expected missing jvm toolchain evidence, got %#v", findings[0].Evidence)
+	}
+}
+
+func TestRunFindsFloatingGradleDistributionURL(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		"gradle/wrapper/gradle-wrapper.properties": "distributionUrl=https\\://services.gradle.org/distributions/gradle-latest-bin.zip\n",
+		"gradle/libs.versions.toml":                "[versions]\njava = \"21\"\n",
+		"hk.pkl":                                   "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing toolchain signal for active language: jvm") {
+		t.Fatalf("expected missing jvm toolchain evidence, got %#v", findings[0].Evidence)
+	}
+}
+
 func newEnvironmentRepo(t *testing.T, files map[string]string) string {
 	t.Helper()
 

@@ -99,6 +99,9 @@ func TestAECTX001FindsWeakContextContent(t *testing.T) {
 		if !containsEvidence(finding.Evidence, "missing content signal: project summary") {
 			t.Fatalf("expected missing project summary evidence, got %#v", finding.Evidence)
 		}
+		if !containsEvidencePrefix(finding.Evidence, "first substantive line: # Fixture Repo") {
+			t.Fatalf("expected first substantive line evidence, got %#v", finding.Evidence)
+		}
 		for _, item := range finding.Evidence {
 			if strings.Contains(item, "verify with") {
 				t.Fatalf("expected no raw context excerpt evidence, got %#v", finding.Evidence)
@@ -143,6 +146,40 @@ func TestAECTX002FindsStaleRepoTruthMarkers(t *testing.T) {
 	t.Fatalf("expected AE-CTX-002 finding")
 }
 
+func TestAECTX001RedactsSecretLikeFirstSubstantiveLineEvidence(t *testing.T) {
+	root := newContextRepo(t, map[string]string{
+		"AGENTS.md": strings.Join([]string{
+			"OPENAI_API_KEY=sk-proj-abcdefghijklmnopqrstuvwxyz1234567890",
+			"",
+			"- verify with `moon run :check`",
+		}, "\n"),
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := RunCTXRules(root, inv)
+	for _, finding := range findings {
+		if finding.RuleID != "AE-CTX-001" {
+			continue
+		}
+
+		if !containsEvidencePrefix(finding.Evidence, "first substantive line: [redacted]") {
+			t.Fatalf("expected redacted first substantive line evidence, got %#v", finding.Evidence)
+		}
+		for _, item := range finding.Evidence {
+			if strings.Contains(item, "sk-proj-") {
+				t.Fatalf("expected secret-like content to be redacted, got %#v", finding.Evidence)
+			}
+		}
+		return
+	}
+
+	t.Fatalf("expected AE-CTX-001 finding")
+}
+
 func TestAECTX004FindsMissingIgnoresAndTrackedArtifacts(t *testing.T) {
 	root := newContextRepo(t, map[string]string{
 		"AGENTS.md": strings.Join([]string{
@@ -183,6 +220,52 @@ func TestAECTX004FindsMissingIgnoresAndTrackedArtifacts(t *testing.T) {
 	t.Fatalf("expected AE-CTX-004 finding")
 }
 
+func TestAECTX004IgnoresCommentedPatterns(t *testing.T) {
+	root := newContextRepo(t, map[string]string{
+		"AGENTS.md": strings.Join([]string{
+			"# Fixture Repo",
+			"",
+			"Charter fixture repo used to prove gitignore comment handling.",
+			"- verify with `moon run :check`",
+			"- off-limits: `.env*`, `secrets/`",
+			"- hooks use `hk.pkl`",
+			"- product truth: `docs/internal/architecture/charter-architecture-2026.md`",
+		}, "\n"),
+		".gitignore": strings.Join([]string{
+			"# .charter/",
+			"# *.charter-session",
+			"# .claude/local/",
+			"# .cursor/cache/",
+			"# .hk/",
+			"# .env*",
+		}, "\n"),
+		"hk.pkl": "hooks {}\n",
+		"docs/internal/architecture/charter-architecture-2026.md": "# Product Truth\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := RunCTXRules(root, inv)
+	for _, finding := range findings {
+		if finding.RuleID != "AE-CTX-004" {
+			continue
+		}
+
+		if !containsEvidence(finding.Evidence, "missing ignore pattern: .charter/") {
+			t.Fatalf("expected commented .charter pattern not to count, got %#v", finding.Evidence)
+		}
+		if !containsEvidence(finding.Evidence, "missing ignore pattern: .env*") {
+			t.Fatalf("expected commented .env pattern not to count, got %#v", finding.Evidence)
+		}
+		return
+	}
+
+	t.Fatalf("expected AE-CTX-004 finding")
+}
+
 func newContextRepo(t *testing.T, files map[string]string) string {
 	t.Helper()
 
@@ -213,6 +296,15 @@ func newContextRepo(t *testing.T, files map[string]string) string {
 func containsEvidence(evidence []string, want string) bool {
 	for _, item := range evidence {
 		if item == want {
+			return true
+		}
+	}
+	return false
+}
+
+func containsEvidencePrefix(evidence []string, want string) bool {
+	for _, item := range evidence {
+		if strings.HasPrefix(item, want) {
 			return true
 		}
 	}
