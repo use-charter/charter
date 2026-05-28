@@ -270,6 +270,28 @@ func TestRunFindsMalformedRequirementsTxtPin(t *testing.T) {
 	}
 }
 
+func TestIsPinnedRequirementSpec(t *testing.T) {
+	tests := []struct {
+		name string
+		line string
+		want bool
+	}{
+		{name: "accepts double equals pin", line: "requests==2.32.3", want: true},
+		{name: "accepts triple equals pin", line: "urllib3===2.2.2", want: true},
+		{name: "rejects latest", line: "requests==latest", want: false},
+		{name: "rejects wildcard", line: "requests===*", want: false},
+		{name: "rejects exclusion spec", line: "requests==!=2.0", want: false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := isPinnedRequirementSpec(tc.line); got != tc.want {
+				t.Fatalf("isPinnedRequirementSpec(%q) = %t, want %t", tc.line, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestRunIgnoresInlineCommentMarkersInsideRequirementsComments(t *testing.T) {
 	root := newEnvironmentRepo(t, map[string]string{
 		".python-version":  "3.12.4\n",
