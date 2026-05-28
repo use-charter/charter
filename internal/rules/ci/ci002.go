@@ -11,7 +11,10 @@ import (
 	"go.charter.dev/charter/internal/repository"
 )
 
-var pinnedActionRefPattern = regexp.MustCompile(`@[a-f0-9]{40}(\s|$)`)
+var (
+	pinnedActionRefPattern = regexp.MustCompile(`@[a-f0-9]{40}(\s|$)`)
+	commandSegmentPattern  = regexp.MustCompile(`\s*(?:&&|\|\||;)\s*`)
+)
 
 func Run(root string, inv repository.Inventory) []findings.Finding {
 	workflowPaths := collectWorkflowPaths(inv)
@@ -87,16 +90,16 @@ type workflowExecutables struct {
 }
 
 func markCoverage(executable workflowExecutables, coverage map[string]bool) {
-	if hasRunContaining(executable.Runs, "moon run :check") || hasAllRuns(executable.Runs, "moon run :lint", "moon run :vet", "moon run :test", "moon run :build", "moon run :docs", "moon run :eval") {
+	if hasExecutableCommand(executable.Runs, isMoonRunCommand(":check")) || hasAllExecutableCommands(executable.Runs, ":lint", ":vet", ":test", ":build", ":docs", ":eval") {
 		coverage["repo-quality"] = true
 	}
-	if hasRunContaining(executable.Runs, "charter doctor") || hasUsePrefix(executable.Uses, "use-charter/charter-action@") {
+	if hasExecutableCommand(executable.Runs, isCharterDoctorCommand) || hasUsePrefix(executable.Uses, "use-charter/charter-action@") {
 		coverage["charter-product-gate"] = true
 	}
-	if hasRunContaining(executable.Runs, "moon run :actionlint") && hasRunContaining(executable.Runs, "moon run :zizmor") {
+	if hasExecutableCommand(executable.Runs, isMoonRunCommand(":actionlint")) && hasExecutableCommand(executable.Runs, isMoonRunCommand(":zizmor")) {
 		coverage["workflow-lint"] = true
 	}
-	if hasRunContaining(executable.Runs, "moon run :security") {
+	if hasExecutableCommand(executable.Runs, isMoonRunCommand(":security")) {
 		coverage["security"] = true
 	}
 }
@@ -179,22 +182,93 @@ func leadingIndent(line string) int {
 	return len(line) - len(strings.TrimLeft(line, " "))
 }
 
-func hasRunContaining(runs []string, want string) bool {
+func hasExecutableCommand(runs []string, matcher func(string) bool) bool {
 	for _, run := range runs {
-		if strings.Contains(run, want) {
+		for _, line := range strings.Split(run, "\n") {
+			trimmed := strings.TrimSpace(line)
+			if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+				continue
+			}
+			for _, segment := range commandSegmentPattern.Split(trimmed, -1) {
+				command := normalizeCommand(segment)
+				if command == "" || isOutputOnlyCommand(command) {
+					continue
+				}
+				if matcher(command) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func hasAllExecutableCommands(runs []string, moonTasks ...string) bool {
+	for _, task := range moonTasks {
+		if !hasExecutableCommand(runs, isMoonRunCommand(task)) {
+			return false
+		}
+	}
+	return true
+}
+
+func normalizeCommand(command string) string {
+	command = strings.TrimSpace(command)
+	for {
+		switched := false
+		for _, prefix := range []string{"mise x -- ", "env "} {
+			if prefix == "env " && !strings.HasPrefix(command, prefix) {
+				continue
+			}
+			if prefix == "mise x -- " && !strings.HasPrefix(command, prefix) {
+				continue
+			}
+			if prefix == "env " {
+				parts := strings.Fields(command)
+				i := 1
+				for ; i < len(parts) && strings.Contains(parts[i], "="); i++ {
+				}
+				if i < len(parts) {
+					command = strings.Join(parts[i:], " ")
+					switched = true
+				}
+				break
+			}
+			command = strings.TrimSpace(strings.TrimPrefix(command, prefix))
+			switched = true
+			break
+		}
+		if !switched {
+			return command
+		}
+	}
+}
+
+func isOutputOnlyCommand(command string) bool {
+	lower := strings.ToLower(command)
+	for _, prefix := range []string{"echo ", "printf ", "write-output ", "write-host ", "rem "} {
+		if strings.HasPrefix(lower, prefix) {
 			return true
 		}
 	}
 	return false
 }
 
-func hasAllRuns(runs []string, wants ...string) bool {
-	for _, want := range wants {
-		if !hasRunContaining(runs, want) {
-			return false
-		}
+func isMoonRunCommand(task string) func(string) bool {
+	want := "moon run " + task
+	return func(command string) bool {
+		return command == want || strings.HasPrefix(command, want+" ")
 	}
-	return true
+}
+
+func isCharterDoctorCommand(command string) bool {
+	if command == "charter doctor" || strings.HasPrefix(command, "charter doctor ") {
+		return true
+	}
+	if strings.HasPrefix(command, "go run ") && strings.Contains(command, " doctor") {
+		return true
+	}
+	return false
 }
 
 func hasUsePrefix(uses []string, prefix string) bool {

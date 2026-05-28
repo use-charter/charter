@@ -1,6 +1,7 @@
 package environment
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -96,9 +97,6 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 			return "go.mod"
 		}
 	case "javascript":
-		if inv.Has("bunfig.toml") {
-			return "bunfig.toml"
-		}
 		if inv.Has(".nvmrc") {
 			return ".nvmrc"
 		}
@@ -158,10 +156,10 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 	if hasToolVersionsPinForLanguage(root, language, inv) {
 		return ".tool-versions"
 	}
-	if hasDevcontainerSignal(inv) {
+	if hasDevcontainerSignal(root, inv) {
 		return "devcontainer"
 	}
-	if hasFlakeSignal(inv) {
+	if hasFlakeSignal(root, inv) {
 		return "flake.nix"
 	}
 	if hasMiseSignalForLanguage(root, language, inv) {
@@ -187,12 +185,25 @@ func hasToolVersionsPinForLanguage(root string, language string, inv repository.
 	return ok && hasToolVersionsPin(content, language)
 }
 
-func hasDevcontainerSignal(inv repository.Inventory) bool {
-	return inv.Has("devcontainer.json") || inv.Has(".devcontainer/devcontainer.json")
+func hasDevcontainerSignal(root string, inv repository.Inventory) bool {
+	for _, configPath := range []string{"devcontainer.json", ".devcontainer/devcontainer.json"} {
+		content, ok := readRepoFile(root, inv, configPath)
+		if !ok {
+			continue
+		}
+		if devcontainerProvidesToolchainPath(root, inv, configPath, content) {
+			return true
+		}
+	}
+	return false
 }
 
-func hasFlakeSignal(inv repository.Inventory) bool {
-	return inv.Has("flake.nix")
+func hasFlakeSignal(root string, inv repository.Inventory) bool {
+	if !inv.Has("flake.nix") || !inv.Has("flake.lock") {
+		return false
+	}
+	content, ok := readRepoFile(root, inv, "flake.lock")
+	return ok && strings.TrimSpace(content) != ""
 }
 
 func readRepoFile(root string, inv repository.Inventory, path string) (string, bool) {
@@ -295,16 +306,27 @@ func toolVersionsKeys(language string) []string {
 }
 
 func hasJavaScriptRuntimePin(content string) bool {
-	lower := strings.ToLower(content)
-	if strings.Contains(lower, `"volta"`) && (strings.Contains(lower, `"node"`) || strings.Contains(lower, `"bun"`)) {
-		return true
+	var manifest struct {
+		Engines        map[string]string `json:"engines"`
+		Volta          map[string]string `json:"volta"`
+		PackageManager string            `json:"packageManager"`
 	}
-	if strings.Contains(lower, `"engines"`) && (strings.Contains(lower, `"node"`) || strings.Contains(lower, `"bun"`)) {
-		return true
+	if err := json.Unmarshal([]byte(content), &manifest); err != nil {
+		return false
 	}
-	if strings.Contains(lower, `"packagemanager"`) && (strings.Contains(lower, `bun@`) || strings.Contains(lower, `node@`)) {
-		return true
+
+	for _, key := range []string{"node", "bun"} {
+		if looksPinnedVersion(manifest.Engines[key]) || looksPinnedVersion(manifest.Volta[key]) {
+			return true
+		}
 	}
+
+	if name, version, ok := strings.Cut(manifest.PackageManager, "@"); ok {
+		if (name == "bun" || name == "node") && looksPinnedVersion(version) {
+			return true
+		}
+	}
+
 	return false
 }
 
@@ -314,7 +336,107 @@ func hasGradleToolchainSignal(content string) bool {
 }
 
 func looksPinnedVersion(value string) bool {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return false
+	}
+
+	lower := strings.ToLower(value)
+	if strings.ContainsAny(lower, "*^~<>") || strings.Contains(lower, "latest") || strings.Contains(lower, "||") {
+		return false
+	}
+	if strings.Contains(lower, ".x") || strings.HasSuffix(lower, "x") {
+		return false
+	}
+
 	return strings.IndexFunc(value, func(r rune) bool { return r >= '0' && r <= '9' }) >= 0
+}
+
+func devcontainerProvidesToolchainPath(root string, inv repository.Inventory, configPath string, content string) bool {
+	type buildConfig struct {
+		Dockerfile string `json:"dockerfile"`
+		DockerFile string `json:"dockerFile"`
+	}
+	type config struct {
+		Image             string          `json:"image"`
+		DockerFile        string          `json:"dockerFile"`
+		Build             buildConfig     `json:"build"`
+		DockerComposeFile json.RawMessage `json:"dockerComposeFile"`
+	}
+
+	var parsed config
+	if err := json.Unmarshal([]byte(content), &parsed); err != nil {
+		return false
+	}
+
+	if devcontainerImagePinned(parsed.Image) {
+		return true
+	}
+
+	for _, candidate := range []string{parsed.DockerFile, parsed.Build.DockerFile, parsed.Build.Dockerfile} {
+		if candidate != "" && devcontainerReferencedFileExists(configPath, candidate, inv) {
+			return true
+		}
+	}
+
+	for _, candidate := range devcontainerComposeFiles(parsed.DockerComposeFile) {
+		if devcontainerReferencedFileExists(configPath, candidate, inv) {
+			return true
+		}
+	}
+
+	_ = root
+	return false
+}
+
+func devcontainerComposeFiles(raw json.RawMessage) []string {
+	if len(raw) == 0 {
+		return nil
+	}
+
+	var single string
+	if err := json.Unmarshal(raw, &single); err == nil && single != "" {
+		return []string{single}
+	}
+
+	var many []string
+	if err := json.Unmarshal(raw, &many); err == nil {
+		return many
+	}
+
+	return nil
+}
+
+func devcontainerImagePinned(image string) bool {
+	image = strings.TrimSpace(image)
+	if image == "" {
+		return false
+	}
+	if strings.Contains(image, "@sha256:") {
+		return true
+	}
+	lastColon := strings.LastIndex(image, ":")
+	lastSlash := strings.LastIndex(image, "/")
+	if lastColon <= lastSlash {
+		return false
+	}
+	tag := strings.ToLower(strings.TrimSpace(image[lastColon+1:]))
+	return tag != "" && tag != "latest"
+}
+
+func devcontainerReferencedFileExists(configPath string, referenced string, inv repository.Inventory) bool {
+	referenced = strings.TrimSpace(referenced)
+	if referenced == "" {
+		return false
+	}
+
+	base := filepath.Dir(filepath.FromSlash(configPath))
+	resolved := filepath.Clean(filepath.Join(base, filepath.FromSlash(referenced)))
+	resolved = filepath.ToSlash(resolved)
+	if resolved == "." {
+		return false
+	}
+	return inv.Has(resolved)
 }
 
 func requiresLockfile(language string, root string, inv repository.Inventory) bool {
