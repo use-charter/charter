@@ -232,7 +232,7 @@ Run:
 
 ```powershell
 git status --short
-rg -n "scripts/.*\.mjs|moon run|go test|go build|gitleaks|govulncheck|osv-scanner" moon.yml cmd/moon.yml docs/moon.yml web/moon.yml action/moon.yml cloud/moon.yml hk.pkl .github/workflows scripts
+rg -n "scripts/.*\.(mjs|ts)|moon run|go test|go build|gitleaks|govulncheck|osv-scanner" moon.yml cmd/moon.yml docs/moon.yml web/moon.yml action/moon.yml cloud/moon.yml hk.pkl .github/workflows scripts
 ```
 
 Expected: no tracked config points at an untracked dependency and no accidental task split remains.

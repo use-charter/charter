@@ -4,7 +4,7 @@ tasks:
   lint:
     command: "bun"
     args:
-      - "../scripts/check-file-exists.mjs"
+      - "../scripts/check-file-exists.ts"
       - "README.md"
     inputs:
       - "README.md"

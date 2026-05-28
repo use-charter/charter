@@ -292,7 +292,7 @@ Minimum surfaces to check:
 
 ```text
 moon.yml
-scripts/scan-doc-todos.mjs
+scripts/scan-doc-todos.ts
 .github/workflows/*.yml
 ```
 
