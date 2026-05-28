@@ -235,7 +235,7 @@ func TestRunFindsUnpinnedRequirementsTxtLockfile(t *testing.T) {
 func TestRunPassesWithPinnedRequirementsTxtLockfile(t *testing.T) {
 	root := newEnvironmentRepo(t, map[string]string{
 		".python-version":  "3.12.4\n",
-		"requirements.txt": "requests==2.32.3\nurllib3==2.2.2\n",
+		"requirements.txt": "requests==2.32.3 # pinned\nurllib3===2.2.2\n",
 		"hk.pkl":           "hooks {}\n",
 	})
 
@@ -246,6 +246,48 @@ func TestRunPassesWithPinnedRequirementsTxtLockfile(t *testing.T) {
 
 	if findings := Run(root, inv); len(findings) != 0 {
 		t.Fatalf("expected no findings, got %#v", findings)
+	}
+}
+
+func TestRunFindsMalformedRequirementsTxtPin(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		".python-version":  "3.12.4\n",
+		"requirements.txt": "requests==\n",
+		"hk.pkl":           "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing lockfile signal for active language: python") {
+		t.Fatalf("expected missing python lockfile evidence, got %#v", findings[0].Evidence)
+	}
+}
+
+func TestRunIgnoresInlineCommentMarkersInsideRequirementsComments(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		".python-version":  "3.12.4\n",
+		"requirements.txt": "requests>=2 # == note\n",
+		"hk.pkl":           "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing lockfile signal for active language: python") {
+		t.Fatalf("expected missing python lockfile evidence, got %#v", findings[0].Evidence)
 	}
 }
 
