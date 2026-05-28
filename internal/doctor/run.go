@@ -10,12 +10,14 @@ import (
 )
 
 type Result struct {
-	Root     string
-	Findings []findings.Finding
-	Score    scoring.Result
+	Root      string
+	Threshold int
+	Passed    bool
+	Findings  []findings.Finding
+	Score     scoring.Result
 }
 
-func Run(path string) (Result, error) {
+func Run(path string, threshold int) (Result, error) {
 	root, err := repository.ResolveRoot(path)
 	if err != nil {
 		return Result{}, err
@@ -29,10 +31,13 @@ func Run(path string) (Result, error) {
 	all := append([]findings.Finding{}, goctx.RunCTXRules(root, inv)...)
 	all = append(all, goenv.Run(root, inv)...)
 	all = append(all, goci.Run(root, inv)...)
+	score := scoring.Calculate(all)
 
 	return Result{
-		Root:     root,
-		Findings: all,
-		Score:    scoring.Calculate(all),
+		Root:      root,
+		Threshold: threshold,
+		Passed:    score.Final >= threshold,
+		Findings:  all,
+		Score:     score,
 	}, nil
 }
