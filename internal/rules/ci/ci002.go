@@ -70,7 +70,7 @@ func Run(root string, inv repository.Inventory) []findings.Finding {
 func collectWorkflowPaths(inv repository.Inventory) []string {
 	var paths []string
 	for _, path := range inv.Paths {
-		if strings.HasPrefix(path, ".github/workflows/") && strings.HasSuffix(path, ".yml") {
+		if strings.HasPrefix(path, ".github/workflows/") && (strings.HasSuffix(path, ".yml") || strings.HasSuffix(path, ".yaml")) {
 			paths = append(paths, path)
 		}
 	}
