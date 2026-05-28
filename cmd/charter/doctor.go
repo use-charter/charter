@@ -41,7 +41,7 @@ func newDoctorCommand() *cobra.Command {
 
 			if quiet {
 				if result.Score.Final < threshold {
-					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "charter: score %d, threshold %d - FAIL\n", result.Score.Final, threshold)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "charter: score %d, threshold %d — FAIL\n", result.Score.Final, threshold)
 					return commandExitError{message: "score below threshold", exitCode: 1, silent: true}
 				}
 				return nil
