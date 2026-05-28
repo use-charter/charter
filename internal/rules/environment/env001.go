@@ -3,6 +3,7 @@ package environment
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -31,7 +32,7 @@ func requiredEnvironmentFiles(root string, inv repository.Inventory) []string {
 	var missing []string
 
 	for _, language := range activeLanguages(inv) {
-		if !hasToolchainSignal(language, inv) {
+		if !hasToolchainSignal(root, language, inv) {
 			missing = append(missing, "missing toolchain signal for active language: "+language)
 		}
 		if requiresLockfile(language, root, inv) && !hasLockfileSignal(language, inv) {
@@ -75,29 +76,197 @@ func activeLanguages(inv repository.Inventory) []string {
 	return out
 }
 
-func hasToolchainSignal(language string, inv repository.Inventory) bool {
-	if inv.Has("mise.toml") || inv.Has(".mise.toml") || inv.Has(".tool-versions") || inv.Has("devcontainer.json") || inv.Has("flake.nix") {
+func hasToolchainSignal(root string, language string, inv repository.Inventory) bool {
+	if hasUniversalToolchainSignal(root, language, inv) {
 		return true
 	}
 
 	switch language {
 	case "go":
-		return inv.Has("go.mod") || inv.Has(".go-version")
+		if inv.Has(".go-version") {
+			return true
+		}
+		content, ok := readRepoFile(root, inv, "go.mod")
+		return ok && (strings.Contains(content, "\ntoolchain go") || strings.Contains(content, "\ngo "))
 	case "javascript":
-		return inv.Has(".nvmrc") || inv.Has(".node-version") || inv.Has("bunfig.toml") || inv.Has("package.json")
+		if inv.Has(".nvmrc") || inv.Has(".node-version") {
+			return true
+		}
+		content, ok := readRepoFile(root, inv, "package.json")
+		return ok && hasJavaScriptRuntimePin(content)
 	case "python":
-		return inv.Has("pyproject.toml") || inv.Has(".python-version") || inv.Has("uv.toml")
+		if inv.Has(".python-version") {
+			return true
+		}
+		content, ok := readRepoFile(root, inv, "pyproject.toml")
+		return ok && strings.Contains(strings.ToLower(content), "requires-python")
 	case "rust":
 		return inv.Has("rust-toolchain.toml") || inv.Has("rust-toolchain")
 	case "swift":
-		return inv.Has(".swift-version") || inv.Has("Package.swift")
+		if inv.Has(".swift-version") {
+			return true
+		}
+		content, ok := readRepoFile(root, inv, "Package.swift")
+		return ok && strings.Contains(strings.ToLower(content), "swift-tools-version")
 	case "ruby":
-		return inv.Has(".ruby-version") || inv.Has("Gemfile")
+		if inv.Has(".ruby-version") {
+			return true
+		}
+		content, ok := readRepoFile(root, inv, "Gemfile")
+		return ok && rubyVersionPattern.MatchString(content)
 	case "jvm":
-		return inv.Has("gradle/wrapper/gradle-wrapper.properties") || inv.Has(".java-version") || inv.Has("build.gradle.kts") || inv.Has("build.gradle")
+		if inv.Has(".java-version") {
+			return true
+		}
+		if content, ok := readRepoFile(root, inv, "gradle/wrapper/gradle-wrapper.properties"); ok && strings.Contains(content, "distributionUrl=") {
+			return true
+		}
+		if content, ok := readRepoFile(root, inv, "build.gradle.kts"); ok && hasGradleToolchainSignal(content) {
+			return true
+		}
+		if content, ok := readRepoFile(root, inv, "build.gradle"); ok && hasGradleToolchainSignal(content) {
+			return true
+		}
+		return false
 	default:
 		return false
 	}
+}
+
+var rubyVersionPattern = regexp.MustCompile(`(?m)^\s*ruby\s+["'][^"']+["']`)
+
+func hasUniversalToolchainSignal(root string, language string, inv repository.Inventory) bool {
+	for _, path := range []string{"mise.toml", ".mise.toml"} {
+		if content, ok := readRepoFile(root, inv, path); ok && hasMiseRuntimePin(content, language) {
+			return true
+		}
+	}
+	if content, ok := readRepoFile(root, inv, ".tool-versions"); ok && hasToolVersionsPin(content, language) {
+		return true
+	}
+	return false
+}
+
+func readRepoFile(root string, inv repository.Inventory, path string) (string, bool) {
+	if !inv.Has(path) {
+		return "", false
+	}
+	// #nosec G304 -- path is a fixed repo-relative path selected from known toolchain files.
+	data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(path)))
+	if err != nil {
+		return "", false
+	}
+	return string(data), true
+}
+
+func hasMiseRuntimePin(content string, language string) bool {
+	for _, key := range miseToolKeys(language) {
+		if hasPinnedAssignment(content, key) {
+			return true
+		}
+	}
+	return false
+}
+
+func miseToolKeys(language string) []string {
+	switch language {
+	case "go":
+		return []string{"go"}
+	case "javascript":
+		return []string{"node", "bun"}
+	case "python":
+		return []string{"python"}
+	case "rust":
+		return []string{"rust"}
+	case "swift":
+		return []string{"swift"}
+	case "ruby":
+		return []string{"ruby"}
+	case "jvm":
+		return []string{"java", "gradle"}
+	default:
+		return nil
+	}
+}
+
+func hasPinnedAssignment(content string, key string) bool {
+	for _, line := range strings.Split(content, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if !strings.Contains(trimmed, "=") || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		parts := strings.SplitN(trimmed, "=", 2)
+		lhs := strings.TrimSpace(parts[0])
+		rhs := strings.TrimSpace(parts[1])
+		lhs = strings.Trim(lhs, `"`)
+		if lhs != key {
+			continue
+		}
+		if looksPinnedVersion(strings.Trim(rhs, `"'`)) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasToolVersionsPin(content string, language string) bool {
+	keys := toolVersionsKeys(language)
+	for _, line := range strings.Split(content, "\n") {
+		fields := strings.Fields(strings.TrimSpace(line))
+		if len(fields) < 2 || strings.HasPrefix(fields[0], "#") {
+			continue
+		}
+		for _, key := range keys {
+			if fields[0] == key && looksPinnedVersion(fields[1]) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func toolVersionsKeys(language string) []string {
+	switch language {
+	case "go":
+		return []string{"golang", "go"}
+	case "javascript":
+		return []string{"nodejs", "node", "bun"}
+	case "python":
+		return []string{"python"}
+	case "rust":
+		return []string{"rust"}
+	case "swift":
+		return []string{"swift"}
+	case "ruby":
+		return []string{"ruby"}
+	case "jvm":
+		return []string{"java", "gradle"}
+	default:
+		return nil
+	}
+}
+
+func hasJavaScriptRuntimePin(content string) bool {
+	lower := strings.ToLower(content)
+	if strings.Contains(lower, `"volta"`) && (strings.Contains(lower, `"node"`) || strings.Contains(lower, `"bun"`)) {
+		return true
+	}
+	if strings.Contains(lower, `"engines"`) && (strings.Contains(lower, `"node"`) || strings.Contains(lower, `"bun"`)) {
+		return true
+	}
+	if strings.Contains(lower, `"packagemanager"`) && (strings.Contains(lower, `bun@`) || strings.Contains(lower, `node@`)) {
+		return true
+	}
+	return false
+}
+
+func hasGradleToolchainSignal(content string) bool {
+	lower := strings.ToLower(content)
+	return strings.Contains(lower, "jvmtoolchain") || strings.Contains(lower, "languageversion") || strings.Contains(lower, "toolchain {")
+}
+
+func looksPinnedVersion(value string) bool {
+	return strings.IndexFunc(value, func(r rune) bool { return r >= '0' && r <= '9' }) >= 0
 }
 
 func requiresLockfile(language string, root string, inv repository.Inventory) bool {

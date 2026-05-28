@@ -14,6 +14,7 @@ import (
 var supportedContextFiles = []string{
 	"AGENTS.md",
 	"CLAUDE.md",
+	".windsurfrules",
 	".github/copilot-instructions.md",
 	"opencode.md",
 	"codex.md",
@@ -38,43 +39,53 @@ func RunCTXRules(root string, inv repository.Inventory) []findings.Finding {
 }
 
 func checkCTX001(root string, inv repository.Inventory) (findings.Finding, bool) {
-	for _, candidate := range supportedContextFiles {
-		if !inv.Has(candidate) {
-			continue
-		}
+	var firstFailure *findings.Finding
 
-		// #nosec G304 -- candidate is constrained to the supported root context file set.
-		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(candidate)))
+	for _, candidate := range supportedContextLocations(inv) {
+		data, err := readContextCandidate(root, candidate)
 		if err != nil {
-			return findings.Finding{
+			finding := findings.Finding{
 				RuleID:      "AE-CTX-001",
 				Severity:    findings.SeverityBlocker,
 				Category:    "Context",
 				Summary:     "Agent context file could not be read",
 				Remediation: "Restore a readable root context file with project guidance and a verification command.",
-				Evidence:    []string{candidate},
-			}, true
+				Evidence:    []string{"context location: " + candidate},
+			}
+			if firstFailure == nil {
+				firstFailure = &finding
+			}
+			continue
 		}
 
-		if isMeaningfulContext(string(data)) {
+		content := string(data)
+		if isMeaningfulContext(content) {
 			return findings.Finding{}, false
 		}
 
-		evidence := []string{"context file: " + candidate}
-		evidence = append(evidence, contextExcerptEvidence(string(data))...)
-		evidence = append(evidence, missingContextSignals(string(data))...)
+		evidence := []string{"context location: " + candidate}
+		evidence = append(evidence, contextShapeEvidence(content)...)
+		evidence = append(evidence, missingContextSignals(content)...)
 
-		return findings.Finding{
+		finding := findings.Finding{
 			RuleID:      "AE-CTX-001",
 			Severity:    findings.SeverityBlocker,
 			Category:    "Context",
 			Summary:     "Agent context file is present but not meaningful enough for agent use",
 			Remediation: "Add concrete project guidance and a verification command to the root context file.",
 			Evidence:    evidence,
-		}, true
+		}
+		if firstFailure == nil {
+			firstFailure = &finding
+		}
+	}
+
+	if firstFailure != nil {
+		return *firstFailure, true
 	}
 
 	evidence := append([]string(nil), supportedContextFiles...)
+	evidence = append(evidence, ".cursor/rules")
 	sort.Strings(evidence)
 	return findings.Finding{
 		RuleID:      "AE-CTX-001",
@@ -84,6 +95,56 @@ func checkCTX001(root string, inv repository.Inventory) (findings.Finding, bool)
 		Remediation: "Create a root context file such as AGENTS.md with project guidance and a verification command.",
 		Evidence:    evidence,
 	}, true
+}
+
+func supportedContextLocations(inv repository.Inventory) []string {
+	var locations []string
+	for _, candidate := range supportedContextFiles {
+		if inv.Has(candidate) {
+			locations = append(locations, candidate)
+		}
+	}
+	if hasCursorRules(inv) {
+		locations = append(locations, ".cursor/rules")
+	}
+	sort.Strings(locations)
+	return locations
+}
+
+func hasCursorRules(inv repository.Inventory) bool {
+	for _, path := range inv.Paths {
+		if strings.HasPrefix(path, ".cursor/rules/") {
+			return true
+		}
+	}
+	return false
+}
+
+func readContextCandidate(root string, candidate string) ([]byte, error) {
+	if candidate != ".cursor/rules" {
+		// #nosec G304 -- candidate is constrained to the supported root context file set.
+		return os.ReadFile(filepath.Join(root, filepath.FromSlash(candidate)))
+	}
+
+	var chunks []string
+	entries, err := os.ReadDir(filepath.Join(root, ".cursor", "rules"))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		// #nosec G304 -- file names come from the tracked .cursor/rules directory entries.
+		data, err := os.ReadFile(filepath.Join(root, ".cursor", "rules", entry.Name()))
+		if err != nil {
+			return nil, err
+		}
+		chunks = append(chunks, string(data))
+	}
+
+	return []byte(strings.Join(chunks, "\n")), nil
 }
 
 func isMeaningfulContext(content string) bool {
@@ -166,19 +227,11 @@ func hasAnySignal(content string, signals ...string) bool {
 	return false
 }
 
-func contextExcerptEvidence(content string) []string {
-	var evidence []string
-	for _, line := range strings.Split(content, "\n") {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" {
-			continue
-		}
-		evidence = append(evidence, "context excerpt: "+trimmed)
-		if len(evidence) == 3 {
-			break
-		}
+func contextShapeEvidence(content string) []string {
+	return []string{
+		"non-empty lines: " + strconv.Itoa(countNonEmptyLines(content)),
+		"estimated tokens: ~" + strconv.Itoa(estimatedTokenCount(content)),
 	}
-	return evidence
 }
 
 func estimatedTokenCount(content string) int {

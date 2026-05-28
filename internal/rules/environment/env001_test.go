@@ -16,7 +16,7 @@ func TestRunPassesWhenReproducibilityFilesExist(t *testing.T) {
 		"go.mod":       "module example.com/passenv\n\ngo 1.26.0\n",
 		"go.sum":       "example.com v0.0.0 h1:abc\n",
 		"hk.pkl":       "hooks {}\n",
-		"package.json": "{\n  \"name\": \"pass-env\",\n  \"private\": true\n}\n",
+		"package.json": "{\n  \"name\": \"pass-env\",\n  \"private\": true,\n  \"engines\": { \"bun\": \"1.3.14\" }\n}\n",
 		"bun.lock":     "lock-placeholder\n",
 	})
 
@@ -35,7 +35,11 @@ func TestRunPassesWithEquivalentReproducibilitySignals(t *testing.T) {
 		".nvmrc":                    "22\n",
 		"package-lock.json":         "{}\n",
 		"lefthook.yml":              "pre-commit:\n  commands: {}\n",
-		"package.json":              "{\n  \"name\": \"pass-env\",\n  \"private\": true\n}\n",
+		"package.json":              "{\n  \"name\": \"pass-env\",\n  \"private\": true,\n  \"engines\": { \"node\": \"22.x\" }\n}\n",
+		"pyproject.toml":            "[project]\nname = \"pass-env\"\nrequires-python = \">=3.12\"\n",
+		"uv.lock":                   "version = 1\n",
+		"Gemfile":                   "source \"https://rubygems.org\"\nruby \"3.3.1\"\n",
+		"Gemfile.lock":              "GEM\n",
 		"gradle/libs.versions.toml": "[versions]\ngradle = \"9.0\"\n",
 		"gradle/wrapper/gradle-wrapper.properties": "distributionUrl=https\\://services.gradle.org/distributions/gradle-9.0-bin.zip\n",
 	})
@@ -47,6 +51,30 @@ func TestRunPassesWithEquivalentReproducibilitySignals(t *testing.T) {
 
 	if findings := Run(root, inv); len(findings) != 0 {
 		t.Fatalf("expected no findings, got %#v", findings)
+	}
+}
+
+func TestRunFindsManifestWithoutRuntimePin(t *testing.T) {
+	root := newEnvironmentRepo(t, map[string]string{
+		"package.json":      "{\n  \"name\": \"pass-env\",\n  \"private\": true\n}\n",
+		"package-lock.json": "{}\n",
+		"hk.pkl":            "hooks {}\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if findings[0].RuleID != "AE-ENV-001" {
+		t.Fatalf("expected AE-ENV-001, got %#v", findings[0])
+	}
+	if findings[0].Evidence[0] != "missing toolchain signal for active language: javascript" {
+		t.Fatalf("expected missing javascript toolchain evidence, got %#v", findings[0].Evidence)
 	}
 }
 
