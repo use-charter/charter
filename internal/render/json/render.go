@@ -9,12 +9,21 @@ import (
 )
 
 type payload struct {
-	RepoPath  string             `json:"repo_path"`
-	Threshold int                `json:"threshold"`
-	Passed    bool               `json:"passed"`
-	Findings  []findings.Finding `json:"findings"`
-	Summary   severitySummary    `json:"summary"`
-	Score     scoreSummary       `json:"score"`
+	RepoPath  string          `json:"repo_path"`
+	Threshold int             `json:"threshold"`
+	Passed    bool            `json:"passed"`
+	Findings  []findingDTO    `json:"findings"`
+	Summary   severitySummary `json:"summary"`
+	Score     scoreSummary    `json:"score"`
+}
+
+type findingDTO struct {
+	RuleID      string            `json:"rule_id"`
+	Severity    findings.Severity `json:"severity"`
+	Category    string            `json:"category"`
+	Summary     string            `json:"summary"`
+	Remediation string            `json:"remediation"`
+	Evidence    []string          `json:"evidence"`
 }
 
 type severitySummary struct {
@@ -45,7 +54,7 @@ func Render(result doctor.Result) ([]byte, error) {
 		RepoPath:  result.Root,
 		Threshold: result.Threshold,
 		Passed:    result.Passed,
-		Findings:  ordered,
+		Findings:  toFindingDTOs(ordered),
 		Summary: severitySummary{
 			Blocker: result.Score.Blocker,
 			High:    result.Score.High,
@@ -57,6 +66,22 @@ func Render(result doctor.Result) ([]byte, error) {
 			Final: result.Score.Final,
 		},
 	})
+}
+
+func toFindingDTOs(findingsList []findings.Finding) []findingDTO {
+	dtos := make([]findingDTO, 0, len(findingsList))
+	for _, finding := range findingsList {
+		dtos = append(dtos, findingDTO{
+			RuleID:      finding.RuleID,
+			Severity:    finding.Severity,
+			Category:    finding.Category,
+			Summary:     finding.Summary,
+			Remediation: finding.Remediation,
+			Evidence:    finding.Evidence,
+		})
+	}
+
+	return dtos
 }
 
 func weight(severity findings.Severity) int {
