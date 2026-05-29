@@ -30,6 +30,9 @@ func RunSecretRules(root string, inv repository.Inventory) []findings.Finding {
 	if finding, ok := checkSEC001(root, inv); ok {
 		out = append(out, finding)
 	}
+	if finding, ok := checkSEC002(root, inv); ok {
+		out = append(out, finding)
+	}
 	return out
 }
 
