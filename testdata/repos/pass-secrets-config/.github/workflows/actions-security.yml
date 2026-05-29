@@ -1,0 +1,7 @@
+name: Workflow Security
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: moon run :actionlint
+      - run: moon run :zizmor
