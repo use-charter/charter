@@ -30,19 +30,11 @@ func TestAESEC001IgnoresSafePlaceholderFixture(t *testing.T) {
 }
 
 func TestAESEC001FindsSecretInAgentFile(t *testing.T) {
-	fixture := filepath.Join("..", "..", "..", "testdata", "repos", "pass-secrets-agent")
+	fixture := filepath.Join("..", "..", "..", "testdata", "repos", "fail-secrets-agent")
 	root, err := makeTempGitRepoFromFixture(t, fixture)
 	if err != nil {
 		t.Fatalf("fixture repo setup failed: %v", err)
 	}
-
-	writeFile(t, root, "AGENTS.md", strings.Join([]string{
-		"# Fixture Repo",
-		"",
-		"- verify with `moon run :check`",
-		"- OPENAI_API_KEY=" + fakeOpenAIKey(),
-	}, "\n")+"\n")
-	stageAndCommitAll(t, root, "fixture-update")
 
 	inv, err := repository.BuildInventory(root)
 	if err != nil {
@@ -65,6 +57,35 @@ func TestAESEC001FindsSecretInAgentFile(t *testing.T) {
 	}
 
 	t.Fatalf("expected AE-SEC-001 finding")
+}
+
+func TestAESEC001IgnoresUntrackedAgentFileInInventory(t *testing.T) {
+	fixture := filepath.Join("..", "..", "..", "testdata", "repos", "pass-secrets-agent")
+	root, err := makeTempGitRepoFromFixture(t, fixture)
+	if err != nil {
+		t.Fatalf("fixture repo setup failed: %v", err)
+	}
+
+	writeFile(t, root, "CLAUDE.md", strings.Join([]string{
+		"# Local Agent File",
+		"",
+		"OPENAI_API_KEY=" + fakeOpenAIKey(),
+	}, "\n")+"\n")
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+	if !inv.Has("CLAUDE.md") {
+		t.Fatalf("expected untracked CLAUDE.md to appear in inventory")
+	}
+
+	findings := RunSecretRules(root, inv)
+	for _, finding := range findings {
+		if finding.RuleID == "AE-SEC-001" {
+			t.Fatalf("expected untracked agent-visible file to be ignored, got %#v", finding)
+		}
+	}
 }
 
 func TestAESEC001FindsSecretInCursorRulesFile(t *testing.T) {
