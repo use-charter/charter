@@ -5,7 +5,31 @@ import (
 	"strings"
 )
 
-var envRefPattern = regexp.MustCompile(`\$\{[A-Z0-9_]+\}|\$[A-Z0-9_]+`)
+var (
+	envRefPattern      = regexp.MustCompile(`\$\{[A-Z0-9_]+\}|\$[A-Z0-9_]+`)
+	placeholderPattern = regexp.MustCompile(`(?i)(^|[^A-Za-z0-9_-])your-api-key-here($|[^A-Za-z0-9_-])`)
+	tokenPatterns      = []struct {
+		reason string
+		re     *regexp.Regexp
+	}{
+		{
+			reason: "openai-style token",
+			re:     regexp.MustCompile(`(^|[^A-Za-z0-9_-])(sk-[A-Za-z0-9_-]{20,})($|[^A-Za-z0-9_-])`),
+		},
+		{
+			reason: "github personal access token",
+			re:     regexp.MustCompile(`(^|[^A-Za-z0-9_])(ghp_[A-Za-z0-9]{30,})($|[^A-Za-z0-9_])`),
+		},
+		{
+			reason: "aws access key id",
+			re:     regexp.MustCompile(`(^|[^A-Za-z0-9])(AKIA[A-Z0-9]{16})($|[^A-Za-z0-9])`),
+		},
+		{
+			reason: "slack bot token",
+			re:     regexp.MustCompile(`(^|[^A-Za-z0-9_-])(xoxb-[A-Za-z0-9-]{20,})($|[^A-Za-z0-9_-])`),
+		},
+	}
+)
 
 type Match struct {
 	Found  bool
@@ -21,26 +45,11 @@ func DetectLine(line string) Match {
 	}
 
 	sanitized := strings.TrimSpace(envRefPattern.ReplaceAllString(trimmed, " "))
+	sanitized = placeholderPattern.ReplaceAllString(sanitized, "$1 $2")
 
-	lower := strings.ToLower(sanitized)
-	if strings.Contains(lower, "your-api-key-here") {
-		return Match{}
-	}
-
-	patterns := []struct {
-		prefix string
-		reason string
-	}{
-		{prefix: "sk-", reason: "openai-style token"},
-		{prefix: "ghp_", reason: "github personal access token"},
-		{prefix: "AKIA", reason: "aws access key id"},
-		{prefix: "xoxb-", reason: "slack bot token"},
-	}
-
-	for _, pattern := range patterns {
-		if idx := strings.Index(sanitized, pattern.prefix); idx >= 0 {
-			secret := tokenFrom(sanitized[idx:])
-			return Match{Found: true, Reason: pattern.reason, Secret: secret, Prefix: pattern.prefix}
+	for _, pattern := range tokenPatterns {
+		if groups := pattern.re.FindStringSubmatch(sanitized); len(groups) == 4 {
+			return Match{Found: true, Reason: pattern.reason, Secret: groups[2], Prefix: prefixFrom(groups[2])}
 		}
 	}
 
@@ -51,17 +60,17 @@ func DetectLine(line string) Match {
 	return Match{}
 }
 
-func tokenFrom(s string) string {
-	fields := strings.FieldsFunc(s, func(r rune) bool {
-		switch r {
-		case ' ', '\t', '\r', '\n', '\'', '"', ',', ')', ']', '}':
-			return true
-		default:
-			return false
-		}
-	})
-	if len(fields) == 0 {
-		return s
+func prefixFrom(secret string) string {
+	switch {
+	case strings.HasPrefix(secret, "sk-"):
+		return "sk-"
+	case strings.HasPrefix(secret, "ghp_"):
+		return "ghp_"
+	case strings.HasPrefix(secret, "AKIA"):
+		return "AKIA"
+	case strings.HasPrefix(secret, "xoxb-"):
+		return "xoxb-"
+	default:
+		return ""
 	}
-	return fields[0]
 }
