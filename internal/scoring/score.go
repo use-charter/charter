@@ -37,5 +37,14 @@ func Calculate(all []findings.Finding) Result {
 		result.Final = 59
 	}
 
+	for _, finding := range all {
+		if finding.RuleID == "AE-SEC-001" || finding.RuleID == "AE-SEC-002" {
+			if result.Final > 49 {
+				result.Final = 49
+			}
+			break
+		}
+	}
+
 	return result
 }

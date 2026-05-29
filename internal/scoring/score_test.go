@@ -24,3 +24,11 @@ func TestScoreWithoutFindingsStaysAtOneHundred(t *testing.T) {
 		t.Fatalf("expected 100/100, got %d/%d", result.Base, result.Final)
 	}
 }
+
+func TestScoreAppliesSecretCapAtFortyNine(t *testing.T) {
+	result := Calculate([]findings.Finding{{RuleID: "AE-SEC-001", Severity: findings.SeverityBlocker}})
+
+	if result.Final != 49 {
+		t.Fatalf("expected final score 49 when secret rule fires, got %d", result.Final)
+	}
+}
