@@ -1,8 +1,11 @@
 package secrets
 
 import (
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"go.charter.dev/charter/internal/findings"
@@ -31,7 +34,12 @@ func RunSecretRules(root string, inv repository.Inventory) []findings.Finding {
 }
 
 func checkSEC001(root string, inv repository.Inventory) (findings.Finding, bool) {
-	for _, target := range sec001Targets(inv) {
+	targets, err := sec001Targets(root, inv)
+	if err != nil {
+		return findings.Finding{}, false
+	}
+
+	for _, target := range targets {
 		// #nosec G304 -- target is constrained to agent-visible inventory paths.
 		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(target)))
 		if err != nil {
@@ -58,17 +66,42 @@ func checkSEC001(root string, inv repository.Inventory) (findings.Finding, bool)
 	return findings.Finding{}, false
 }
 
-func sec001Targets(inv repository.Inventory) []string {
+func sec001Targets(root string, inv repository.Inventory) ([]string, error) {
+	tracked, err := trackedSEC001Paths(root)
+	if err != nil {
+		return nil, err
+	}
+
 	targets := make([]string, 0, len(agentVisibleFileTargets))
 	for _, candidate := range agentVisibleFileTargets {
-		if inv.Has(candidate) {
+		if inv.Has(candidate) && tracked[candidate] {
 			targets = append(targets, candidate)
 		}
 	}
 	for _, path := range inv.Paths {
-		if strings.HasPrefix(path, ".cursor/rules/") {
+		if strings.HasPrefix(path, ".cursor/rules/") && tracked[path] {
 			targets = append(targets, path)
 		}
 	}
-	return targets
+	sort.Strings(targets)
+	return targets, nil
+}
+
+func trackedSEC001Paths(root string) (map[string]bool, error) {
+	// #nosec G204 -- root is the resolved repository root for the active scan target.
+	cmd := exec.Command("git", "-C", root, "ls-files", "-z", "--cached", "--full-name")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("list tracked agent-visible files: %w: %s", err, strings.TrimSpace(string(output)))
+	}
+
+	tracked := make(map[string]bool)
+	for _, raw := range strings.Split(string(output), "\x00") {
+		if raw == "" {
+			continue
+		}
+		tracked[filepath.ToSlash(raw)] = true
+	}
+
+	return tracked, nil
 }
