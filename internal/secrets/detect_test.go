@@ -15,6 +15,7 @@ func TestDetectRecognizesHighConfidencePrefixes(t *testing.T) {
 		{name: "placeholder", line: "OPENAI_API_KEY=your-api-key-here", want: false},
 		{name: "env-ref-brace", line: "OPENAI_API_KEY=${OPENAI_API_KEY}", want: false},
 		{name: "env-ref-shell", line: "OPENAI_API_KEY=$OPENAI_API_KEY", want: false},
+		{name: "mixed-env-ref-and-literal-secret", line: "FOO=$BAR OPENAI_API_KEY=sk-test-12345678901234567890", want: true},
 	}
 
 	for _, tt := range tests {

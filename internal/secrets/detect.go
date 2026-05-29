@@ -20,11 +20,9 @@ func DetectLine(line string) Match {
 		return Match{}
 	}
 
-	if envRefPattern.MatchString(trimmed) {
-		return Match{}
-	}
+	sanitized := strings.TrimSpace(envRefPattern.ReplaceAllString(trimmed, " "))
 
-	lower := strings.ToLower(trimmed)
+	lower := strings.ToLower(sanitized)
 	if strings.Contains(lower, "your-api-key-here") {
 		return Match{}
 	}
@@ -40,13 +38,13 @@ func DetectLine(line string) Match {
 	}
 
 	for _, pattern := range patterns {
-		if idx := strings.Index(trimmed, pattern.prefix); idx >= 0 {
-			secret := tokenFrom(trimmed[idx:])
+		if idx := strings.Index(sanitized, pattern.prefix); idx >= 0 {
+			secret := tokenFrom(sanitized[idx:])
 			return Match{Found: true, Reason: pattern.reason, Secret: secret, Prefix: pattern.prefix}
 		}
 	}
 
-	if strings.Contains(trimmed, "BEGIN RSA PRIVATE KEY") || strings.Contains(trimmed, "BEGIN EC PRIVATE KEY") || strings.Contains(trimmed, "BEGIN PRIVATE KEY") {
+	if strings.Contains(sanitized, "BEGIN RSA PRIVATE KEY") || strings.Contains(sanitized, "BEGIN EC PRIVATE KEY") || strings.Contains(sanitized, "BEGIN PRIVATE KEY") {
 		return Match{Found: true, Reason: "private key header", Secret: "PRIVATE KEY", Prefix: "BEGIN"}
 	}
 
