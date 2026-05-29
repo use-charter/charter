@@ -30,11 +30,24 @@ func TestAESEC001IgnoresSafePlaceholderFixture(t *testing.T) {
 }
 
 func TestAESEC001FindsSecretInAgentFile(t *testing.T) {
-	fixture := filepath.Join("..", "..", "..", "testdata", "repos", "fail-secrets-agent")
+	fixture := filepath.Join("..", "..", "..", "testdata", "repos", "pass-secrets-agent")
 	root, err := makeTempGitRepoFromFixture(t, fixture)
 	if err != nil {
 		t.Fatalf("fixture repo setup failed: %v", err)
 	}
+
+	writeFile(t, root, "AGENTS.md", strings.Join([]string{
+		"# pass-secrets-agent",
+		"",
+		"Project summary: pass-secrets-agent is a fixture repository for Charter secret-rule tests.",
+		"",
+		"- Tech stack: uses Go and Bun with repo automation routed through Moon.",
+		"- Edit boundaries: off-limits paths include `.github/workflows/`, `.env*`, and `secrets/`.",
+		"- Verify with `moon run :check` before claiming the fixture passes.",
+		"- Hooks use `hk.pkl` and product truth lives in `docs/internal/architecture/charter-architecture-2026.md`.",
+		"- OPENAI_API_KEY=" + fakeOpenAIKey(),
+	}, "\n")+"\n")
+	stageAndCommitAll(t, root, "fixture-update")
 
 	inv, err := repository.BuildInventory(root)
 	if err != nil {
@@ -69,6 +82,8 @@ func TestAESEC001IgnoresUntrackedAgentFileInInventory(t *testing.T) {
 	writeFile(t, root, "CLAUDE.md", strings.Join([]string{
 		"# Local Agent File",
 		"",
+		"Project summary: local scratch file.",
+		"- verify with `moon run :check`.",
 		"OPENAI_API_KEY=" + fakeOpenAIKey(),
 	}, "\n")+"\n")
 

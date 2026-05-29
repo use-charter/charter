@@ -1,0 +1,7 @@
+name: CI
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: moon run :check
+      - run: charter doctor --threshold 80

@@ -1,0 +1,8 @@
+{
+  "name": "pass-secrets-agent",
+  "private": true,
+  "packageManager": "bun@1.3.14",
+  "simple-git-hooks": {
+    "pre-commit": "moon run :check"
+  }
+}

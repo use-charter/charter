@@ -2,3 +2,14 @@ title = "Charter Gitleaks configuration"
 
 [extend]
 useDefault = true
+
+# Repo-verified: these are historical false positives from earlier Slice 3 test-only
+# commits on this branch. Keep the scope to exact commit+path pairs.
+[[allowlists]]
+description = "Slice 3 test-token history in detect_test.go"
+condition = "AND"
+commits = [
+  '''13009b7afaaf8083c8eb1275a313a58e71dab8bc''',
+  '''db3a6f7bafa6c2c522e0d09eb8d5d3c28b59e479''',
+]
+paths = ['''^internal/secrets/detect_test\.go$''']
