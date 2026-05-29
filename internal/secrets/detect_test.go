@@ -1,6 +1,25 @@
 package secrets
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
+
+func makeOpenAIToken() string {
+	return "sk-" + strings.Repeat("a", 24)
+}
+
+func makeGitHubToken() string {
+	return "ghp_" + strings.Repeat("b", 36)
+}
+
+func makeAWSAccessKeyID() string {
+	return "AKIA" + strings.Repeat("C", 16)
+}
+
+func makeSlackToken() string {
+	return "xoxb-" + strings.Repeat("1", 10) + "-" + strings.Repeat("2", 10) + "-" + strings.Repeat("d", 16)
+}
 
 func TestDetectRecognizesHighConfidencePrefixes(t *testing.T) {
 	tests := []struct {
@@ -8,14 +27,16 @@ func TestDetectRecognizesHighConfidencePrefixes(t *testing.T) {
 		line string
 		want bool
 	}{
-		{name: "openai", line: "OPENAI_API_KEY=sk-test-12345678901234567890", want: true},
-		{name: "github", line: "GITHUB_TOKEN=ghp_123456789012345678901234567890123456", want: true},
-		{name: "aws", line: "AWS_ACCESS_KEY_ID=AKIA1234567890ABCD12", want: true},
-		{name: "slack", line: "SLACK_BOT_TOKEN=xoxb-1234567890-1234567890-abcdefghijklmnop", want: true},
+		{name: "openai", line: "OPENAI_API_KEY=" + makeOpenAIToken(), want: true},
+		{name: "github", line: "GITHUB_TOKEN=" + makeGitHubToken(), want: true},
+		{name: "aws", line: "AWS_ACCESS_KEY_ID=" + makeAWSAccessKeyID(), want: true},
+		{name: "slack", line: "SLACK_BOT_TOKEN=" + makeSlackToken(), want: true},
 		{name: "placeholder", line: "OPENAI_API_KEY=your-api-key-here", want: false},
 		{name: "env-ref-brace", line: "OPENAI_API_KEY=${OPENAI_API_KEY}", want: false},
 		{name: "env-ref-shell", line: "OPENAI_API_KEY=$OPENAI_API_KEY", want: false},
-		{name: "mixed-env-ref-and-literal-secret", line: "FOO=$BAR OPENAI_API_KEY=sk-test-12345678901234567890", want: true},
+		{name: "mixed-env-ref-and-literal-secret", line: "FOO=$BAR OPENAI_API_KEY=" + makeOpenAIToken(), want: true},
+		{name: "placeholder-does-not-hide-real-secret", line: "OPENAI_API_KEY=your-api-key-here GITHUB_TOKEN=" + makeGitHubToken(), want: true},
+		{name: "normal-prose-does-not-match-prefix-fragment", line: "Keep risk-aware notes in docs.", want: false},
 	}
 
 	for _, tt := range tests {
@@ -29,8 +50,9 @@ func TestDetectRecognizesHighConfidencePrefixes(t *testing.T) {
 }
 
 func TestRedactPreservesOnlySafePrefix(t *testing.T) {
-	got := RedactValue("sk-test-12345678901234567890")
-	if got == "sk-test-12345678901234567890" {
+	raw := makeOpenAIToken()
+	got := RedactValue(raw)
+	if got == raw {
 		t.Fatalf("expected redaction, got raw secret")
 	}
 
