@@ -107,6 +107,9 @@ func TestAECTX001FindsWeakContextContent(t *testing.T) {
 				t.Fatalf("expected no raw context excerpt evidence, got %#v", finding.Evidence)
 			}
 		}
+		if len(finding.Locations) == 0 || finding.Locations[0].Path != "AGENTS.md" {
+			t.Fatalf("expected AGENTS.md location, got %#v", finding.Locations)
+		}
 		return
 	}
 

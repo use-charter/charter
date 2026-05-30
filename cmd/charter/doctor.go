@@ -70,6 +70,13 @@ func newDoctorCommand() *cobra.Command {
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "charter doctor: %s\n", result.Root)
 			for _, finding := range result.Findings {
 				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s %s %s\n", finding.RuleID, finding.Severity, finding.Summary)
+				for _, loc := range finding.Locations {
+					if loc.Line > 0 {
+						_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  location: %s:%d\n", loc.Path, loc.Line)
+					} else {
+						_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  location: %s\n", loc.Path)
+					}
+				}
 				for _, evidence := range finding.Evidence {
 					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  - %s\n", evidence)
 				}

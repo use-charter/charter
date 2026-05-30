@@ -61,6 +61,7 @@ func checkCTX004(root string, inv repository.Inventory) (findings.Finding, bool)
 		Summary:     ".gitignore does not fully exclude local agent artifacts",
 		Remediation: "Add the missing ignore patterns and stop tracking local agent or env artifacts.",
 		Evidence:    evidence,
+		Locations:   []findings.Location{{Path: ".gitignore"}},
 	}, true
 }
 

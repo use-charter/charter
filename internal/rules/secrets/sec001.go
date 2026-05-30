@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"go.charter.dev/charter/internal/agentcontext"
 	"go.charter.dev/charter/internal/findings"
 	"go.charter.dev/charter/internal/repository"
 	sharedsecrets "go.charter.dev/charter/internal/secrets"
@@ -18,17 +19,10 @@ import (
 // raw secret finding is present.
 const secretScoreCap = 49
 
-var agentVisibleFileTargets = []string{
-	"AGENTS.md",
-	"CLAUDE.md",
-	".cursor/rules",
-	".windsurfrules",
-	".github/copilot-instructions.md",
-	"opencode.md",
-	"codex.md",
-	"DESIGN.md",
-	"SKILL.md",
-}
+// agentVisibleFileTargets is the canonical context-file set plus the Cursor
+// rules directory, so AE-SEC-001 scans exactly the files the context rules
+// recognize as agent context.
+var agentVisibleFileTargets = append(append([]string{}, agentcontext.Files...), agentcontext.CursorRulesDir)
 
 func RunSecretRules(root string, inv repository.Inventory) ([]findings.Finding, error) {
 	var out []findings.Finding
@@ -61,7 +55,7 @@ func checkSEC001(root string, inv repository.Inventory) (findings.Finding, bool,
 			continue
 		}
 
-		for _, line := range strings.Split(string(data), "\n") {
+		for i, line := range strings.Split(string(data), "\n") {
 			match := sharedsecrets.DetectLine(line)
 			if !match.Found {
 				continue
@@ -74,6 +68,7 @@ func checkSEC001(root string, inv repository.Inventory) (findings.Finding, bool,
 				Summary:     "Secret detected in agent-visible context file",
 				Remediation: "Remove the literal secret and reference an environment variable instead",
 				Evidence:    []string{target + ": " + sharedsecrets.RedactValue(match.Secret)},
+				Locations:   []findings.Location{{Path: target, Line: i + 1}},
 				Cap:         secretScoreCap,
 			}, true, nil
 		}
