@@ -97,7 +97,7 @@ final = min(base, applicable_cap)
 | AE-CTX-001 | Context | AGENTS.md (or CLAUDE.md, .cursor/rules, Copilot instructions) present and non-empty with meaningful content — project summary, tech stack, agent edit scope, and a verification command; file within 600-token budget | **Blocker** |
 | AE-CTX-002 | Context | Agent context file content consistent with actual repo state — stated tech stack, off-limits paths, and test command match current codebase | **Medium** |
 | AE-CTX-004 | Context | .gitignore excludes local agent session artifacts: `.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/`; no agent artifacts already tracked in git | **Medium** |
-| AE-SEC-001 | Secrets | No raw secret patterns in any agent-visible file (v1 target: Gitleaks v8.30.1 ruleset, 160+ detector patterns; current implementation: high-confidence prefix set — OpenAI/GitHub/AWS/Slack tokens + PEM private-key headers) | **Blocker** |
+| AE-SEC-001 | Secrets | No raw secret patterns in any agent-visible file (high-confidence token detection: OpenAI/GitHub/AWS/Slack token prefixes and PEM private-key headers) | **Blocker** |
 | AE-SEC-002 | Secrets | No secret-like values in MCP server config (`.mcp.json`, `mcp.yml`, Pkl config) | **Blocker** |
 | AE-MCP-001 | MCP Safety | Every MCP server entry pinned to an exact version or digest; no `@latest`, semver ranges (`^`, `~`, `>=`), or branch-based sources | **High** |
 | AE-MCP-002 | MCP Safety | Every remote MCP server URL present in a known-server catalog or team allowlist (`charter.yaml → mcp.trustedRemotes`); unknown origins flagged — covers OWASP MCP09 Shadow Servers | **High** |
@@ -805,7 +805,9 @@ osv-scanner   = "2.3.8"
 
 **Given:** a repo with a hardcoded API key in AGENTS.md  
 **When:** charter doctor evaluates AE-SEC-001  
-**Then:** Charter emits a BLOCKER finding with the file path and a redacted match (key prefix shown, rest replaced with ***); score is hard-capped at 49  
+**Then:** Charter emits a BLOCKER finding with the file path and a redacted match (key prefix shown, rest replaced with ***); score is hard-capped at 49
+
+**Roadmap:** expand AE-SEC-001 detection from the shipped high-confidence token set (OpenAI/GitHub/AWS/Slack prefixes and PEM private-key headers) to the full Gitleaks v8.30.1 ruleset (160+ detector patterns).  
 
 
 #### T1.3.3 Env, Toolchain & CI Checkers `⚡ AI`

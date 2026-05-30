@@ -35,6 +35,16 @@ Treat the test matrix as part of the product contract, not a final cleanup step.
 - Run `go test -race ./...` through `moon run :test`
 - Run `go vet ./...` through `moon run :vet` when touching Go packages or command wiring
 
+## Secret-Rule Testing Convention
+
+AE-SEC-001 and AE-SEC-002 tests use a **generate-in-test** pattern: fake secret patterns (matching high-confidence prefixes: `sk-`, `ghp_`, `AKIA`, `xoxb-`, PEM headers) are constructed inside test code, never committed as literals in fixtures. Pass/fail fixtures like `testdata/repos/pass-secrets-agent/` and `testdata/repos/pass-secrets-config/` prove that environment-variable references (`${VAR}`, `$VAR`) and the placeholder `your-api-key-here` are correctly neutralized and **do not trigger findings**. These fixtures are git-safe and fully reviewable.
+
+To add a test:
+1. Use table-driven tests (see `internal/rules/secrets/sec001_test.go`)
+2. Generate fake patterns matching the detector's high-confidence set in test cases, not as committed files
+3. For pass-case fixtures, commit files with env-refs and placeholders only (no fake secrets)
+4. For fail-case scenarios, generate the fake pattern at test runtime
+
 ## First Slice Proof Model
 
 The first Phase 1 slice must use the proof model in `docs/internal/superpowers/checklists/2026-05-28-first-slice-proof-model.md`.

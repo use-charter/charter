@@ -78,26 +78,26 @@ final = min(base, applicable_cap)
 ## AE-SEC-001 — Raw Secret in Tracked File
 **Severity:** 🔴 BLOCKER  
 
-**Check:** Scan all tracked files for raw credential patterns: API keys (sk-*, ghp_*, AKIA*, xoxb-*), private keys (BEGIN RSA/EC/PRIVATE KEY), bearer tokens, connection strings with passwords, and high-entropy strings in config files. Focus on: .env committed to git, AGENTS.md, shell scripts, CI yamls, JSON config. Scan engine: Charter uses Gitleaks v8.30.1 under the hood for history and working-tree scanning, then applies its own agent-config-specific patterns on top (AGENTS.md, MCP config files, hk.pkl). Gitleaks covers git history; Charter adds the agent-visible file surface. A finding from Gitleaks is always High-confidence; a Charter-layer finding uses Confidence tiers.  
+**Check:** Scan agent-visible context files within the repo inventory for raw credential patterns: API keys (sk-*, ghp_*, AKIA*, xoxb-*), private keys (BEGIN RSA/EC/PRIVATE KEY). Charter scans only **tracked** files (via `git ls-files --cached`) — untracked local files and `.gitignore`d files are intentionally not scanned. Focus on: AGENTS.md, CLAUDE.md, .cursor/rules, .windsurfrules, .github/copilot-instructions.md, opencode.md, codex.md, DESIGN.md, SKILL.md. Important: environment-variable references (`${VAR}`, `$VAR`) and the placeholder `your-api-key-here` are neutralized and never flagged.
 
-**Evidence:** File path + line number. Never record the actual secret value. Record only the pattern matched (e.g., 'OPENAI_API_KEY=sk-… found at .env:3'). Note whether the file is in .gitignore.  
+**Evidence:** File path and redacted match (e.g., 'AGENTS.md: sk-…'), redacted to the first 4 chars + ellipsis; never the raw value.
 
-**False Positive Risk:** FP Risk: Medium — use Confidence tiers. High-confidence (mark Fail): exact recognized prefix + correct format length (sk-…T3BlbkFJ, ghp_…, AKIA[A-Z0-9]{16}, xoxb-…). Medium-confidence (note but verify): high entropy string matching a known prefix but wrong length, or entropy-only match without a recognizable prefix. Output as 'likely credential — verify manually.' Low-confidence (note for review, do not block): suspicious env var assignment without a recognizable pattern. Common FPs: test fixtures with clearly fake keys, documentation code blocks, commented-out placeholders. Only mark Fail for High-confidence matches. Entropy alone without a recognizable prefix is at most Medium-confidence.  
+**False Positive Risk:** FP Risk: Low (implementation uses high-confidence prefix set). High-confidence (mark Fail): exact recognized prefix + correct format length (sk-…T3BlbkFJ, ghp_…, AKIA[A-Z0-9]{16}, xoxb-…, or PEM headers). Environment-variable references and `your-api-key-here` are never flagged — they pass by design.
 
-**Fix:** Revoke the exposed credential immediately. Remove from git history (git-filter-repo or BFG). Add the file to .gitignore. Switch to environment variable injection or a secrets manager. Covers OWASP MCP01 — Token Mismanagement & Secret Exposure.  
+**Fix:** Revoke the exposed credential immediately. Remove from git history (git-filter-repo or BFG). Switch to environment variable injection: `"key": "${ENV_VAR_NAME}"`. When any AE-SEC-001 or AE-SEC-002 finding is present, Charter score is hard-capped at **49** regardless of other findings. Covers OWASP MCP01 — Token Mismanagement & Secret Exposure.  
 
 ---
 
 ## AE-SEC-002 — Raw Secret in MCP/Agent Config
 **Severity:** 🔴 BLOCKER  
 
-**Check:** Check all MCP config files for secrets embedded directly in: env object values, command args arrays, headers objects, or any string value that matches a credential pattern or has high entropy (≥ 4.0 bits/char over 20+ chars). MCP config locations to scan: .mcp.json , .mcp.yml , .cursor/mcp.json , .claude/settings.json , claude_desktop_config.json , cline_mcp_settings.json , *.pkl (MCP Pkl configs). Also check hk.pkl if it passes environment variables or tokens to hook commands.  
+**Check:** Check all MCP config files for literal secret values embedded directly in: env object values, command args arrays, headers objects, or any string value matching a credential pattern. MCP config locations to scan: .mcp.json , .mcp.yml , .cursor/mcp.json , .claude/settings.json , claude_desktop_config.json , cline_mcp_settings.json , *.pkl (MCP Pkl configs). Important: environment-variable references ( `"${MY_API_KEY}"` , `"$MY_KEY"` ) are safe injection patterns and never flagged — these always **pass**. Placeholders like `your-api-key-here` also pass.
 
-**Evidence:** Config file path + key path (e.g., 'servers.filesystem.env.API_KEY at .mcp.json'). Evidence.Snippet must be [REDACTED] — never the raw value.  
+**Evidence:** Config file path and redacted value (e.g., '.mcp.json: sk-…'), redacted to the first 4 chars + ellipsis or [REDACTED]; never the raw value.  
 
-**False Positive Risk:** FP Risk: Medium — use Confidence tiers. Environment variable references ( \"${MY_API_KEY}\" , \"$MY_KEY\" ) are safe injection patterns — never flag these. High-confidence (Fail): literal value matching a recognized credential prefix at correct length. Medium-confidence (verify): high-entropy literal string (≥4.0 bits/char, ≥20 chars) in a semantically sensitive key (env, args, headers). Low-confidence (note only): high-entropy string in tool name or server description. Do not block on Low-confidence.  
+**False Positive Risk:** FP Risk: Low (implementation uses high-confidence prefix set). Environment variable references ( `"${MY_API_KEY}"` , `"$MY_KEY"` ) are always safe and never flagged. High-confidence (Fail): literal value matching a recognized credential prefix at correct length (sk-…, ghp_…, AKIA[A-Z0-9]{16}, xoxb-…, or PEM headers). Placeholders and env-refs never flag.
 
-**Fix:** Remove the literal secret from the MCP config. Instead reference the value via the host environment: \"env\": { \"API_KEY\": \"${MY_API_KEY}\" } . Use a secrets manager to inject values at runtime. If suppressing: # charter:ignore AE-SEC-002 reason=\"test credential — zero real-world access, rotated monthly\" . Suppressions expire in 90 days by default. Covers OWASP MCP01 — Token Mismanagement & Secret Exposure.  
+**Fix:** Replace literal secrets with environment variable references: `"env": { "API_KEY": "${MY_API_KEY}" }`. Use a secrets manager to inject values at runtime. When any AE-SEC-001 or AE-SEC-002 finding is present, Charter score is hard-capped at **49** regardless of other findings. Covers OWASP MCP01 — Token Mismanagement & Secret Exposure.  
 
 ---
 
