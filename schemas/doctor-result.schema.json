@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://charter.dev/schemas/doctor-result.schema.json",
+  "title": "Charter doctor result",
+  "description": "Machine-readable contract for `charter doctor --format json`. Describes the Phase 1 Slice 4 target shape: the Slice 2 result plus the additive `locations` array defined by ADR-0009. The implementation converges to this schema in Slice 4.",
+  "$comment": "Contract-first artifact per ADR-0004; links to ADR-0009 (structured finding location). Future additive fields (e.g. auto_fix, guidance for M1.4) land as versioned schema changes, each linked to an ADR.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["repo_path", "threshold", "passed", "findings", "summary", "score"],
+  "properties": {
+    "repo_path": {
+      "type": "string",
+      "description": "Resolved repository root used for the scan."
+    },
+    "threshold": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Effective passing threshold echoed from the invocation."
+    },
+    "passed": {
+      "type": "boolean",
+      "description": "Derived from score.final >= threshold."
+    },
+    "findings": {
+      "type": "array",
+      "description": "All findings in deterministic order: severity weight descending, then rule_id ascending.",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "summary": { "$ref": "#/$defs/severitySummary" },
+    "score": { "$ref": "#/$defs/score" }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule_id", "severity", "category", "summary", "remediation", "locations", "evidence"],
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "pattern": "^AE-[A-Z]+-[0-9]{3}$",
+          "description": "Rule identifier, e.g. AE-SEC-001."
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["BLOCKER", "HIGH", "MEDIUM", "LOW"]
+        },
+        "category": { "type": "string" },
+        "summary": { "type": "string" },
+        "remediation": { "type": "string" },
+        "locations": {
+          "type": "array",
+          "description": "Physical sites implicated by the finding; empty for absence findings. Maps onto SARIF result.locations[].physicalLocation.",
+          "items": { "$ref": "#/$defs/location" }
+        },
+        "evidence": {
+          "type": "array",
+          "description": "Human-readable, secret-redacted detail lines. Not the carrier of location data.",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "line"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Repo-relative, forward-slash path. Maps to SARIF artifactLocation.uri."
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "1-based line number; 0 means file-level (no specific line). Maps to SARIF region.startLine."
+        }
+      }
+    },
+    "severitySummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["blocker", "high", "medium", "low"],
+      "properties": {
+        "blocker": { "type": "integer", "minimum": 0 },
+        "high": { "type": "integer", "minimum": 0 },
+        "medium": { "type": "integer", "minimum": 0 },
+        "low": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base", "final"],
+      "properties": {
+        "base": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Uncapped score from severity penalties, floored at 0."
+        },
+        "final": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Score after the blocker cap and per-finding caps are applied."
+        }
+      }
+    }
+  }
+}
