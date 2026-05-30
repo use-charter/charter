@@ -23,7 +23,13 @@ type findingDTO struct {
 	Category    string            `json:"category"`
 	Summary     string            `json:"summary"`
 	Remediation string            `json:"remediation"`
+	Locations   []locationDTO     `json:"locations"`
 	Evidence    []string          `json:"evidence"`
+}
+
+type locationDTO struct {
+	Path string `json:"path"`
+	Line int    `json:"line"`
 }
 
 type severitySummary struct {
@@ -71,12 +77,18 @@ func Render(result doctor.Result) ([]byte, error) {
 func toFindingDTOs(findingsList []findings.Finding) []findingDTO {
 	dtos := make([]findingDTO, 0, len(findingsList))
 	for _, finding := range findingsList {
+		locations := make([]locationDTO, 0, len(finding.Locations))
+		for _, loc := range finding.Locations {
+			locations = append(locations, locationDTO{Path: loc.Path, Line: loc.Line})
+		}
+
 		dtos = append(dtos, findingDTO{
 			RuleID:      finding.RuleID,
 			Severity:    finding.Severity,
 			Category:    finding.Category,
 			Summary:     finding.Summary,
 			Remediation: finding.Remediation,
+			Locations:   locations,
 			Evidence:    finding.Evidence,
 		})
 	}

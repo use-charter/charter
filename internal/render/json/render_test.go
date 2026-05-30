@@ -2,12 +2,76 @@ package json
 
 import (
 	encodingjson "encoding/json"
+	"strings"
 	"testing"
 
 	"go.charter.dev/charter/internal/doctor"
 	"go.charter.dev/charter/internal/findings"
 	"go.charter.dev/charter/internal/scoring"
 )
+
+func TestRenderEmitsStructuredLocations(t *testing.T) {
+	result := doctor.Result{
+		Root:      "/repo",
+		Threshold: 80,
+		Passed:    false,
+		Findings: []findings.Finding{
+			{
+				RuleID:    "AE-SEC-001",
+				Severity:  findings.SeverityBlocker,
+				Category:  "Secrets",
+				Summary:   "Secret detected in agent-visible context file",
+				Locations: []findings.Location{{Path: "AGENTS.md", Line: 14}},
+				Evidence:  []string{"AGENTS.md: sk-a…"},
+				Cap:       49,
+			},
+			{
+				RuleID:   "AE-ENV-001",
+				Severity: findings.SeverityMedium,
+				Category: "Environment",
+				Summary:  "No reproducible toolchain declaration found",
+				Evidence: []string{"no toolchain file detected"},
+			},
+		},
+		Score: scoring.Result{Blocker: 1, Medium: 1, Base: 76, Final: 49},
+	}
+
+	data, err := Render(result)
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+
+	// Absence finding must serialize an empty array, never null (SARIF needs an array).
+	if !strings.Contains(string(data), `"locations":[]`) {
+		t.Fatalf("expected an empty locations array for the absence finding, got %s", data)
+	}
+
+	var payload struct {
+		Findings []struct {
+			RuleID    string `json:"rule_id"`
+			Locations []struct {
+				Path string `json:"path"`
+				Line int    `json:"line"`
+			} `json:"locations"`
+		} `json:"findings"`
+	}
+	if err := encodingjson.Unmarshal(data, &payload); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	// Deterministic order: BLOCKER (AE-SEC-001) sorts before MEDIUM (AE-ENV-001).
+	sec := payload.Findings[0]
+	if sec.RuleID != "AE-SEC-001" {
+		t.Fatalf("expected AE-SEC-001 first, got %q", sec.RuleID)
+	}
+	if len(sec.Locations) != 1 || sec.Locations[0].Path != "AGENTS.md" || sec.Locations[0].Line != 14 {
+		t.Fatalf("expected location AGENTS.md:14, got %#v", sec.Locations)
+	}
+
+	if env := payload.Findings[1]; len(env.Locations) != 0 {
+		t.Fatalf("expected no locations for absence finding, got %#v", env.Locations)
+	}
+}
 
 func TestRenderProducesStableJSONShape(t *testing.T) {
 	result := doctor.Result{

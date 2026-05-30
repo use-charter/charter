@@ -7,20 +7,10 @@ import (
 	"strconv"
 	"strings"
 
+	"go.charter.dev/charter/internal/agentcontext"
 	"go.charter.dev/charter/internal/findings"
 	"go.charter.dev/charter/internal/repository"
 )
-
-var supportedContextFiles = []string{
-	"AGENTS.md",
-	"CLAUDE.md",
-	".windsurfrules",
-	".github/copilot-instructions.md",
-	"opencode.md",
-	"codex.md",
-	"DESIGN.md",
-	"SKILL.md",
-}
 
 func RunCTXRules(root string, inv repository.Inventory) []findings.Finding {
 	var out []findings.Finding
@@ -51,6 +41,7 @@ func checkCTX001(root string, inv repository.Inventory) (findings.Finding, bool)
 				Summary:     "Agent context file could not be read",
 				Remediation: "Restore a readable root context file with project guidance and a verification command.",
 				Evidence:    []string{"context location: " + candidate},
+				Locations:   []findings.Location{{Path: candidate}},
 			}, true
 		}
 
@@ -72,11 +63,12 @@ func checkCTX001(root string, inv repository.Inventory) (findings.Finding, bool)
 			Summary:     "Agent context file is present but not meaningful enough for agent use",
 			Remediation: "Add concrete project guidance and a verification command to the root context file.",
 			Evidence:    evidence,
+			Locations:   []findings.Location{{Path: candidate}},
 		}, true
 	}
 
-	evidence := append([]string(nil), supportedContextFiles...)
-	evidence = append(evidence, ".cursor/rules")
+	evidence := append([]string(nil), agentcontext.Files...)
+	evidence = append(evidence, agentcontext.CursorRulesDir)
 	sort.Strings(evidence)
 	return findings.Finding{
 		RuleID:      "AE-CTX-001",
@@ -90,13 +82,13 @@ func checkCTX001(root string, inv repository.Inventory) (findings.Finding, bool)
 
 func supportedContextLocations(inv repository.Inventory) []string {
 	var locations []string
-	for _, candidate := range supportedContextFiles {
+	for _, candidate := range agentcontext.Files {
 		if inv.Has(candidate) {
 			locations = append(locations, candidate)
 		}
 	}
 	if hasCursorRules(inv) {
-		locations = append(locations, ".cursor/rules")
+		locations = append(locations, agentcontext.CursorRulesDir)
 	}
 	return locations
 }
@@ -111,7 +103,7 @@ func hasCursorRules(inv repository.Inventory) bool {
 }
 
 func readContextCandidate(root string, candidate string) ([]byte, error) {
-	if candidate != ".cursor/rules" {
+	if candidate != agentcontext.CursorRulesDir {
 		// #nosec G304 -- candidate is constrained to the supported root context file set.
 		return os.ReadFile(filepath.Join(root, filepath.FromSlash(candidate)))
 	}

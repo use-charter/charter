@@ -71,6 +71,9 @@ func TestAESEC002FindsLiteralSecretInConfig(t *testing.T) {
 		if strings.Contains(finding.Evidence[0], fakeOpenAIKey()) {
 			t.Fatalf("expected redacted evidence, got raw secret: %#v", finding.Evidence)
 		}
+		if len(finding.Locations) != 1 || finding.Locations[0].Path != ".mcp.json" || finding.Locations[0].Line != 5 {
+			t.Fatalf("expected location .mcp.json:5, got %#v", finding.Locations)
+		}
 		return
 	}
 

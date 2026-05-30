@@ -72,6 +72,9 @@ func TestAESEC001FindsSecretInAgentFile(t *testing.T) {
 		if strings.Contains(finding.Evidence[0], fakeOpenAIKey()) {
 			t.Fatalf("expected redacted evidence, got raw secret: %#v", finding.Evidence)
 		}
+		if len(finding.Locations) == 0 || finding.Locations[0].Path != "AGENTS.md" || finding.Locations[0].Line < 1 {
+			t.Fatalf("expected AGENTS.md location with a line, got %#v", finding.Locations)
+		}
 		return
 	}
 
@@ -230,6 +233,9 @@ func findAESEC001(t *testing.T, allFindings []findings.Finding) findings.Finding
 		if finding.RuleID == "AE-SEC-001" {
 			if len(finding.Evidence) == 0 {
 				t.Fatalf("expected evidence for AE-SEC-001")
+			}
+			if len(finding.Locations) == 0 || finding.Locations[0].Line < 1 {
+				t.Fatalf("expected a 1-based location for AE-SEC-001, got %#v", finding.Locations)
 			}
 			return finding
 		}

@@ -42,6 +42,31 @@ func TestDoctorCommandRuns(t *testing.T) {
 	}
 }
 
+func TestDoctorCommandTextOutputShowsLocation(t *testing.T) {
+	repo := t.TempDir()
+	writeTempFile(t, repo, "AGENTS.md", "# weak context\n")
+	gitInRepo(t, repo, "init", "-q")
+	gitInRepo(t, repo, "config", "user.name", "Charter Test")
+	gitInRepo(t, repo, "config", "user.email", "charter@example.com")
+	gitInRepo(t, repo, "config", "commit.gpgsign", "false")
+	gitInRepo(t, repo, "add", ".")
+	gitInRepo(t, repo, "commit", "-q", "-m", "fixture")
+
+	cmd := newRootCommand()
+	out := new(bytes.Buffer)
+	cmd.SetOut(out)
+	cmd.SetErr(new(bytes.Buffer))
+	cmd.SetArgs([]string{"doctor", "--path", repo, "--threshold", "80"})
+	cmd.SetContext(context.Background())
+
+	// Below threshold returns a (silent) error; text output is still written.
+	_ = cmd.Execute()
+
+	if !bytes.Contains(out.Bytes(), []byte("location: AGENTS.md")) {
+		t.Fatalf("expected text output to show the finding location, got:\n%s", out.String())
+	}
+}
+
 func TestDoctorCommandHelpRuns(t *testing.T) {
 	cmd := newRootCommand()
 	out := new(bytes.Buffer)

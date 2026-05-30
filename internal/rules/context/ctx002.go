@@ -25,6 +25,7 @@ func checkCTX002(root string, inv repository.Inventory) (findings.Finding, bool)
 			Summary:     "AGENTS.md could not be read to verify repo truth",
 			Remediation: "Restore a readable AGENTS.md that matches current repo behavior.",
 			Evidence:    []string{"AGENTS.md"},
+			Locations:   []findings.Location{{Path: "AGENTS.md"}},
 		}, true
 	}
 
@@ -42,6 +43,7 @@ func checkCTX002(root string, inv repository.Inventory) (findings.Finding, bool)
 		Summary:     "AGENTS.md does not match current repository truth",
 		Remediation: "Update AGENTS.md so its commands, hook references, and boundaries match the tracked repo state.",
 		Evidence:    missing,
+		Locations:   []findings.Location{{Path: "AGENTS.md"}},
 	}, true
 }
 

@@ -50,7 +50,7 @@ func scanSEC002File(root, rel string) (findings.Finding, bool) {
 		return findings.Finding{}, false
 	}
 
-	for _, line := range strings.Split(string(data), "\n") {
+	for i, line := range strings.Split(string(data), "\n") {
 		match := sharedsecrets.DetectLine(line)
 		if !match.Found {
 			continue
@@ -63,6 +63,7 @@ func scanSEC002File(root, rel string) (findings.Finding, bool) {
 			Summary:     "Literal secret detected in MCP or adjacent config",
 			Remediation: "Replace the literal secret with an environment variable reference",
 			Evidence:    []string{rel + ": " + sharedsecrets.RedactValue(match.Secret)},
+			Locations:   []findings.Location{{Path: rel, Line: i + 1}},
 			Cap:         secretScoreCap,
 		}, true
 	}
