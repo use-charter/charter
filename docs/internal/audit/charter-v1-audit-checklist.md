@@ -39,7 +39,7 @@ final = min(base, applicable_cap)
 
 ## Reference Metadata
 
-- **Scan engine:** Gitleaks v8.30.1 (secrets) + Charter rule engine (agent config)
+- **Scan engine:** Charter rule engine — high-confidence token detection (secrets) + agent-config rules
 - **Agent formats covered:** AGENTS.md · CLAUDE.md · .cursor/rules · .windsurfrules · .github/copilot-instructions.md · opencode.md · codex.md · DESIGN.md · SKILL.md
 - **MCP config locations:** .mcp.json · .mcp.yml · .cursor/mcp.json · .claude/settings.json · claude_desktop_config.json · cline_mcp_settings.json · *.pkl
 - **Toolchain files (AE-ENV-001):** mise.toml (recommended, polyglot) · go.mod · .nvmrc · bunfig.toml · pyproject.toml · rust-toolchain.toml · .swift-version · gradle-wrapper.properties · .ruby-version · .tool-versions (asdf) · devcontainer.json · flake.nix
