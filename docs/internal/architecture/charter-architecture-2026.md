@@ -433,13 +433,14 @@ cd charter
 [tools]
 go            = "1.26.3"
 bun           = "1.3.14"
-moon          = "2.2.5"
+moon          = "2.2.6"
 hk            = "1.45.0"
 golangci-lint = "2.12.2"
 gofumpt       = "0.10.0"
 actionlint    = "1.7.12"
 zizmor        = "1.25.2"
 osv-scanner   = "2.3.8"
+gitleaks      = "8.30.1"
 ```
 
 
@@ -458,7 +459,7 @@ osv-scanner   = "2.3.8"
 **Then:** go version , bun --version , and golangci-lint version match the versions declared in mise.toml  
 
 **Happy Path:**
-- Fresh git clone + mise install installs: go 1.26.3 , bun 1.3.14 , golangci-lint 2.12.2 , gofumpt 0.10.0 , moon 2.2.5 , hk 1.45.0 , actionlint 1.7.12 , zizmor 1.25.2 , osv-scanner 2.3.8
+- Fresh git clone + mise install installs: go 1.26.3 , bun 1.3.14 , golangci-lint 2.12.2 , gofumpt 0.10.0 , moon 2.2.6 , hk 1.45.0 , actionlint 1.7.12 , zizmor 1.25.2 , osv-scanner 2.3.8
 - git commit triggers pre-commit hook → moon run :lint ; a lint failure blocks the commit with a non-zero exit
 - commit-msg hook validates conventional commit format via hk check-commit-msg ; malformed messages are rejected with a clear error
 - pre-push hook runs moon run :test ; a failing test blocks the push
@@ -470,7 +471,7 @@ osv-scanner   = "2.3.8"
 #### T0.1.2 Initialize Moonrepo Workspace `⚡ AI`
 
 
-**User story:** As a repo founder, I want Moonrepo v2.2.5 initialized with per-package moon.yml across cmd/ , action/ , web/ , and docs/ , so that all build, test, and lint tasks run from the repo root with deterministic input/output hashing.
+**User story:** As a repo founder, I want Moonrepo v2.2.6 initialized with per-package moon.yml across cmd/ , action/ , web/ , and docs/ , so that all build, test, and lint tasks run from the repo root with deterministic input/output hashing.
 
 **Given:** mise.toml is committed and mise install has run (T0.1.1 complete)  
 **When:** moon init runs and per-package moon.yml files are committed  
@@ -482,7 +483,7 @@ osv-scanner   = "2.3.8"
 - moon run web:lint runs Biome check and exits 0 on a clean working tree
 - moon.yml task inputs are declared ( **/*.go , .golangci.yml ) so cache hits are deterministic
 - Adding a new workspace package requires editing only one moon.yml + workspace.yml — no root config changes
-- Moonrepo version is pinned to 2.2.5 in mise.toml ; moon --version matches
+- Moonrepo version is pinned to 2.2.6 in mise.toml ; moon --version matches
 
 
 #### T0.1.3 CI/CD Skeleton `⚡ AI`

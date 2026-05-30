@@ -21,6 +21,7 @@ Every meaningful change should consider:
 - docs/spec drift: architecture, ADR, RFC, and rule contract updates
 - workflow verification: Moon task mapping and workflow command parity
 - security posture: secret-safety, supply-chain, and least-privilege checks
+- agent context drift guard: `agentcontext` package is the single canonical source; a new context file type cannot exist without also being scanned by AE-SEC-001 and AE-SEC-002
 - eval impact: non-trivial prompt, workflow, or agent-facing behavior
 - future scale checks: large-repo fixtures, benchmarks, and performance gates when real scanner code lands
 
