@@ -1,11 +1,11 @@
 # AGENTS.md
 
-Last reviewed: 2026-05-30
+Last reviewed: 2026-05-31
 
 ## Current State
 
 - Charter is an offline-first Go CLI that scans repos for AI-agent readiness with deterministic scoring.
-- Phase: Phase 1 Slice 3 implemented on top of the real `charter doctor` path.
+- Phase: Phase 1 Slice 4 implemented on top of the real `charter doctor` path.
 - Stack: Go 1.26.3, Moonrepo, mise, hk, GitHub Actions, Bun-run TypeScript helper scripts.
 - License: Apache-2.0 OSS core; DCO-first contribution model
 - Product truth: `docs/internal/architecture/charter-architecture-2026.md`; module: `go.charter.dev/charter`

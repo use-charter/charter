@@ -6,7 +6,7 @@ This repository started as the AI-ready bootstrap baseline and now contains the 
 
 ## Current State
 
-- Phase: Phase 1 Slice 3 implemented; real `charter doctor` path exists
+- Phase: Phase 1 Slice 4 implemented; real `charter doctor` path exists
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
 - Module path: `go.charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
@@ -19,6 +19,7 @@ Current implemented scope:
 - `charter doctor` output with `--path`, `--threshold`, `--quiet`, and `--format text|json`
 - first simple rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`
 - blocker-level secret detection with redacted evidence and a score cap at `49`: `AE-SEC-001`, `AE-SEC-002`
+- structured `path:line` finding locations (ADR-0009) in text and JSON output; shared `agentcontext` source for the context and secret rules
 
 Documentation topology:
 
