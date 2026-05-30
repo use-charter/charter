@@ -17,9 +17,17 @@
 - Future customer-facing docs live under `docs/product/`.
 
 - `cmd/`: binary entrypoints and command wiring
-- `internal/`: non-public implementation details, detectors, fix engines, and orchestration helpers
+- `internal/`: non-public implementation details
+  - `agentcontext`: canonical agent-visible context file registry (drift guard for context and secret rules)
+  - `doctor`: scan orchestration pipeline
+  - `findings`: finding model with Location support (path:line)
+  - `repository`: repo resolution and file inventory
+  - `rules/`: rule implementations (context, environment, ci, secrets)
+  - `scoring`: score calculation and caps
+  - `render/`: output formatters (text, JSON)
+  - `secrets`: secret pattern detection and redaction
 - `api/openapi/`: future API contracts before implementation
-- `schemas/`: machine-readable config and report contracts
+- `schemas/`: machine-readable config and report contracts (includes `doctor-result.schema.json`)
 - `docs/internal/specs/`: rule-level behavior contracts
 - `docs/internal/decisions/`: accepted ADRs
 - `docs/internal/rfcs/`: proposals for cross-cutting or risky changes
@@ -57,15 +65,32 @@ Agent-readable errors must expose:
 - short machine-readable summary
 - human remediation guidance
 - evidence fields that explain the failure
+- location data: structured finding locations (path:line) per ADR-0009, with 1-based line numbers (0 = file-level absence findings)
+- score cap: hard ceiling applied when finding is present
 - no secret-bearing payloads
 
-Example shape:
+Example Finding shape:
 
 ```text
-code: AE-REPRO-001
-summary: Missing pinned toolchain version
-remediation: Add explicit versions to the bootstrap toolchain config before enabling CI gates.
-evidence: ["mise.toml: govulncheck uses an unpinned selector"]
+RuleID: AE-CTX-001
+Severity: BLOCKER
+Summary: Missing agent context file
+Remediation: Create AGENTS.md with project state, tech stack, edit boundaries, and verification command
+Evidence: ["no agent-visible context file found in repo root"]
+Locations: [] (empty for absence findings)
+Cap: 0
+```
+
+Another example with locations:
+
+```text
+RuleID: AE-SEC-001
+Severity: BLOCKER
+Summary: Secret detected in agent context file
+Remediation: Remove the literal secret, rotate it externally, use an environment variable reference instead
+Evidence: ["sk-p… (redacted token)"]
+Locations: [{Path: "AGENTS.md", Line: 14}]
+Cap: 49
 ```
 
 Every user-facing rule or command error should be backed by pass/fail examples in `docs/internal/specs/`.

@@ -6,7 +6,7 @@ This repository started as the AI-ready bootstrap baseline and now contains the 
 
 ## Current State
 
-- Phase: Phase 1 Slice 4 implemented; real `charter doctor` path exists
+- Phase: Phase 1 Slice 4 implemented; real `charter doctor` path with locations-based findings
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
 - Module path: `go.charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
@@ -14,12 +14,14 @@ This repository started as the AI-ready bootstrap baseline and now contains the 
 Current implemented scope:
 
 - repository resolver
-- file inventory scanner
-- finding model and score engine
+- file inventory scanner (git-aware, respects .gitignore)
+- finding model with structured locations (path:line, 1-based)
+- score engine with hard caps (blocker ≤59, secret ≤49)
 - `charter doctor` output with `--path`, `--threshold`, `--quiet`, and `--format text|json`
-- first simple rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`
-- blocker-level secret detection with redacted evidence and a score cap at `49`: `AE-SEC-001`, `AE-SEC-002`
-- structured `path:line` finding locations (ADR-0009) in text and JSON output; shared `agentcontext` source for the context and secret rules
+- 7 implemented rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`, `AE-SEC-001`, `AE-SEC-002`
+- agent context registry (`agentcontext` — shared source for context and secret scanning, drift guard)
+- blocker-level secret detection with redacted evidence and score cap at `49`: `AE-SEC-001` (agent context), `AE-SEC-002` (MCP config)
+- text and JSON output with structured `path:line` finding locations
 
 Documentation topology:
 
