@@ -254,6 +254,38 @@ func TestAECTX001RedactsSecretLikeFirstSubstantiveLineEvidence(t *testing.T) {
 	t.Fatalf("expected AE-CTX-001 finding")
 }
 
+func TestAECTX001ShowsBenignKeyValueFirstSubstantiveLine(t *testing.T) {
+	root := newContextRepo(t, map[string]string{
+		"AGENTS.md": strings.Join([]string{
+			"homepage=https://example.com/charter/docs",
+			"",
+			"- verify with `moon run :check`",
+		}, "\n"),
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := RunCTXRules(root, inv)
+	for _, finding := range findings {
+		if finding.RuleID != "AE-CTX-001" {
+			continue
+		}
+
+		if !containsEvidencePrefix(finding.Evidence, "first substantive line: homepage=https://example.com/charter/docs") {
+			t.Fatalf("expected benign key=value line shown verbatim, got %#v", finding.Evidence)
+		}
+		if containsEvidencePrefix(finding.Evidence, "first substantive line: [redacted]") {
+			t.Fatalf("expected benign key=value line not to be redacted, got %#v", finding.Evidence)
+		}
+		return
+	}
+
+	t.Fatalf("expected AE-CTX-001 finding")
+}
+
 func TestAECTX004FindsMissingIgnoresAndTrackedArtifacts(t *testing.T) {
 	root := newContextRepo(t, map[string]string{
 		"AGENTS.md": strings.Join([]string{

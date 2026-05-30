@@ -1,6 +1,7 @@
 package secrets
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,6 +13,10 @@ import (
 	"go.charter.dev/charter/internal/repository"
 	sharedsecrets "go.charter.dev/charter/internal/secrets"
 )
+
+// secretScoreCap is the maximum final score a repository may earn while any
+// raw secret finding is present.
+const secretScoreCap = 49
 
 var agentVisibleFileTargets = []string{
 	"AGENTS.md",
@@ -25,21 +30,28 @@ var agentVisibleFileTargets = []string{
 	"SKILL.md",
 }
 
-func RunSecretRules(root string, inv repository.Inventory) []findings.Finding {
+func RunSecretRules(root string, inv repository.Inventory) ([]findings.Finding, error) {
 	var out []findings.Finding
-	if finding, ok := checkSEC001(root, inv); ok {
+
+	finding, ok, err := checkSEC001(root, inv)
+	if err != nil {
+		return nil, err
+	}
+	if ok {
 		out = append(out, finding)
 	}
+
 	if finding, ok := checkSEC002(root, inv); ok {
 		out = append(out, finding)
 	}
-	return out
+
+	return out, nil
 }
 
-func checkSEC001(root string, inv repository.Inventory) (findings.Finding, bool) {
+func checkSEC001(root string, inv repository.Inventory) (findings.Finding, bool, error) {
 	targets, err := sec001Targets(root, inv)
 	if err != nil {
-		return findings.Finding{}, false
+		return findings.Finding{}, false, fmt.Errorf("AE-SEC-001: %w", err)
 	}
 
 	for _, target := range targets {
@@ -62,11 +74,12 @@ func checkSEC001(root string, inv repository.Inventory) (findings.Finding, bool)
 				Summary:     "Secret detected in agent-visible context file",
 				Remediation: "Remove the literal secret and reference an environment variable instead",
 				Evidence:    []string{target + ": " + sharedsecrets.RedactValue(match.Secret)},
-			}, true
+				Cap:         secretScoreCap,
+			}, true, nil
 		}
 	}
 
-	return findings.Finding{}, false
+	return findings.Finding{}, false, nil
 }
 
 func sec001Targets(root string, inv repository.Inventory) ([]string, error) {
@@ -93,9 +106,11 @@ func sec001Targets(root string, inv repository.Inventory) ([]string, error) {
 func trackedSEC001Paths(root string) (map[string]bool, error) {
 	// #nosec G204 -- root is the resolved repository root for the active scan target.
 	cmd := exec.Command("git", "-C", root, "ls-files", "-z", "--cached", "--full-name")
-	output, err := cmd.CombinedOutput()
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	output, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("list tracked agent-visible files: %w: %s", err, strings.TrimSpace(string(output)))
+		return nil, fmt.Errorf("list tracked agent-visible files: %w: %s", err, strings.TrimSpace(stderr.String()))
 	}
 
 	tracked := make(map[string]bool)

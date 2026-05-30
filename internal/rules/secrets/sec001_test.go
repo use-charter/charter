@@ -21,7 +21,10 @@ func TestAESEC001IgnoresSafePlaceholderFixture(t *testing.T) {
 		t.Fatalf("inventory failed: %v", err)
 	}
 
-	findings := RunSecretRules(root, inv)
+	findings, err := RunSecretRules(root, inv)
+	if err != nil {
+		t.Fatalf("run secret rules: %v", err)
+	}
 	for _, finding := range findings {
 		if finding.RuleID == "AE-SEC-001" {
 			t.Fatalf("expected no AE-SEC-001 finding, got %#v", finding)
@@ -54,7 +57,10 @@ func TestAESEC001FindsSecretInAgentFile(t *testing.T) {
 		t.Fatalf("inventory failed: %v", err)
 	}
 
-	findings := RunSecretRules(root, inv)
+	findings, err := RunSecretRules(root, inv)
+	if err != nil {
+		t.Fatalf("run secret rules: %v", err)
+	}
 	for _, finding := range findings {
 		if finding.RuleID != "AE-SEC-001" {
 			continue
@@ -95,7 +101,10 @@ func TestAESEC001IgnoresUntrackedAgentFileInInventory(t *testing.T) {
 		t.Fatalf("expected untracked CLAUDE.md to appear in inventory")
 	}
 
-	findings := RunSecretRules(root, inv)
+	findings, err := RunSecretRules(root, inv)
+	if err != nil {
+		t.Fatalf("run secret rules: %v", err)
+	}
 	for _, finding := range findings {
 		if finding.RuleID == "AE-SEC-001" {
 			t.Fatalf("expected untracked agent-visible file to be ignored, got %#v", finding)
@@ -122,7 +131,11 @@ func TestAESEC001FindsSecretInCursorRulesFile(t *testing.T) {
 		t.Fatalf("inventory failed: %v", err)
 	}
 
-	finding := findAESEC001(t, RunSecretRules(root, inv))
+	allFindings, err := RunSecretRules(root, inv)
+	if err != nil {
+		t.Fatalf("run secret rules: %v", err)
+	}
+	finding := findAESEC001(t, allFindings)
 	if !strings.Contains(finding.Evidence[0], ".cursor/rules") {
 		t.Fatalf("expected .cursor/rules evidence, got %#v", finding.Evidence)
 	}
@@ -150,7 +163,11 @@ func TestAESEC001FindsSecretInNestedCursorRulesFile(t *testing.T) {
 		t.Fatalf("inventory failed: %v", err)
 	}
 
-	finding := findAESEC001(t, RunSecretRules(root, inv))
+	allFindings, err := RunSecretRules(root, inv)
+	if err != nil {
+		t.Fatalf("run secret rules: %v", err)
+	}
+	finding := findAESEC001(t, allFindings)
 	if !strings.Contains(finding.Evidence[0], ".cursor/rules/security/rule.mdc") {
 		t.Fatalf("expected nested .cursor/rules evidence, got %#v", finding.Evidence)
 	}
@@ -185,11 +202,24 @@ func TestAESEC001IgnoresIgnoredCursorRulesFileOutsideInventory(t *testing.T) {
 		t.Fatalf("inventory failed: %v", err)
 	}
 
-	findings := RunSecretRules(root, inv)
+	findings, err := RunSecretRules(root, inv)
+	if err != nil {
+		t.Fatalf("run secret rules: %v", err)
+	}
 	for _, finding := range findings {
 		if finding.RuleID == "AE-SEC-001" {
 			t.Fatalf("expected ignored local .cursor/rules file to stay out of inventory, got %#v", finding)
 		}
+	}
+}
+
+func TestRunSecretRulesPropagatesTrackedFileError(t *testing.T) {
+	// A non-git directory makes the tracked-file listing fail. The error must
+	// surface (fail fast) rather than being silently swallowed.
+	root := t.TempDir()
+
+	if _, err := RunSecretRules(root, repository.Inventory{}); err == nil {
+		t.Fatal("expected error when tracked-file listing fails, got nil")
 	}
 }
 

@@ -16,4 +16,8 @@ type Finding struct {
 	Summary     string
 	Remediation string
 	Evidence    []string
+	// Cap, when greater than zero, caps the final score at this value whenever
+	// this finding is present. Rules that own a hard score ceiling (e.g. raw
+	// secret detection) set it so scoring stays a pure formula engine.
+	Cap int
 }

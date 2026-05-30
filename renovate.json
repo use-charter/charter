@@ -21,6 +21,12 @@
       "groupName": "GitHub Actions"
     },
     {
+      "matchManagers": [
+        "mise"
+      ],
+      "groupName": "mise toolchain"
+    },
+    {
       "matchUpdateTypes": [
         "patch"
       ],

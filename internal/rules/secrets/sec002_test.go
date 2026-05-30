@@ -20,7 +20,10 @@ func TestAESEC002IgnoresEnvReferencesInConfig(t *testing.T) {
 		t.Fatalf("inventory failed: %v", err)
 	}
 
-	findings := RunSecretRules(root, inv)
+	findings, err := RunSecretRules(root, inv)
+	if err != nil {
+		t.Fatalf("run secret rules: %v", err)
+	}
 	for _, finding := range findings {
 		if finding.RuleID == "AE-SEC-002" {
 			t.Fatalf("expected no AE-SEC-002 finding, got %#v", finding)
@@ -53,7 +56,11 @@ func TestAESEC002FindsLiteralSecretInConfig(t *testing.T) {
 		t.Fatalf("inventory failed: %v", err)
 	}
 
-	for _, finding := range RunSecretRules(root, inv) {
+	results, err := RunSecretRules(root, inv)
+	if err != nil {
+		t.Fatalf("run secret rules: %v", err)
+	}
+	for _, finding := range results {
 		if finding.RuleID != "AE-SEC-002" {
 			continue
 		}
