@@ -26,9 +26,20 @@ func TestScoreWithoutFindingsStaysAtOneHundred(t *testing.T) {
 }
 
 func TestScoreAppliesSecretCapAtFortyNine(t *testing.T) {
-	result := Calculate([]findings.Finding{{RuleID: "AE-SEC-001", Severity: findings.SeverityBlocker}})
+	result := Calculate([]findings.Finding{{RuleID: "AE-SEC-001", Severity: findings.SeverityBlocker, Cap: 49}})
 
 	if result.Final != 49 {
 		t.Fatalf("expected final score 49 when secret rule fires, got %d", result.Final)
+	}
+}
+
+func TestScoreAppliesLowestFindingCap(t *testing.T) {
+	result := Calculate([]findings.Finding{
+		{RuleID: "AE-SEC-001", Severity: findings.SeverityBlocker, Cap: 49},
+		{RuleID: "AE-CUSTOM", Severity: findings.SeverityLow, Cap: 30},
+	})
+
+	if result.Final != 30 {
+		t.Fatalf("expected lowest cap 30 to win, got %d", result.Final)
 	}
 }

@@ -256,9 +256,6 @@ func lineNeedsRedaction(line string) bool {
 			return true
 		}
 	}
-	if idx := strings.Index(line, "="); idx >= 0 && len(strings.TrimSpace(line[idx+1:])) >= 12 {
-		return true
-	}
 	return false
 }
 

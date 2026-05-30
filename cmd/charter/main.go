@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 )
@@ -33,13 +34,5 @@ func execute() error {
 }
 
 func asExitSignal(err error, target *exitSignal) bool {
-	if err == nil {
-		return false
-	}
-
-	signal, ok := err.(exitSignal)
-	if ok {
-		*target = signal
-	}
-	return ok
+	return errors.As(err, target)
 }

@@ -38,11 +38,8 @@ func Calculate(all []findings.Finding) Result {
 	}
 
 	for _, finding := range all {
-		if finding.RuleID == "AE-SEC-001" || finding.RuleID == "AE-SEC-002" {
-			if result.Final > 49 {
-				result.Final = 49
-			}
-			break
+		if finding.Cap > 0 && result.Final > finding.Cap {
+			result.Final = finding.Cap
 		}
 	}
 

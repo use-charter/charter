@@ -196,44 +196,44 @@ checksum = "sha256:94c7c460d05748524a96583b656e8dec31a11a30ce6a997b9a5b5d8ec4d1b
 url = "https://github.com/jdx/hk/releases/download/v1.45.0/hk-x86_64-pc-windows-msvc.zip"
 
 [[tools."aqua:moonrepo/moon"]]
-version = "2.2.5"
+version = "2.2.6"
 backend = "aqua:moonrepo/moon"
 
 [tools."aqua:moonrepo/moon"."platforms.linux-arm64"]
-checksum = "sha256:6eb9be1692c72605ea835bc11e565f82daf31e40f123480e0ec2470e94543b54"
-url = "https://github.com/moonrepo/moon/releases/download/v2.2.5/moon_cli-aarch64-unknown-linux-musl.tar.xz"
+checksum = "sha256:246eebbc440d47ba3bfefd1f3b4a2e4dd3e62a84a62a60182ef032ae71fd5233"
+url = "https://github.com/moonrepo/moon/releases/download/v2.2.6/moon_cli-aarch64-unknown-linux-musl.tar.xz"
 
 [tools."aqua:moonrepo/moon"."platforms.linux-arm64-musl"]
-checksum = "sha256:6eb9be1692c72605ea835bc11e565f82daf31e40f123480e0ec2470e94543b54"
-url = "https://github.com/moonrepo/moon/releases/download/v2.2.5/moon_cli-aarch64-unknown-linux-musl.tar.xz"
+checksum = "sha256:246eebbc440d47ba3bfefd1f3b4a2e4dd3e62a84a62a60182ef032ae71fd5233"
+url = "https://github.com/moonrepo/moon/releases/download/v2.2.6/moon_cli-aarch64-unknown-linux-musl.tar.xz"
 
 [tools."aqua:moonrepo/moon"."platforms.linux-x64"]
-checksum = "sha256:9c1fec9b518b2dac49a5588d253ba0a130e6fd3117f6e39e178bfa9564dcc886"
-url = "https://github.com/moonrepo/moon/releases/download/v2.2.5/moon_cli-x86_64-unknown-linux-musl.tar.xz"
+checksum = "sha256:3ef13ebecd07a0894d49ffad6451732f9c56574498aa11edfcd124f07f47441c"
+url = "https://github.com/moonrepo/moon/releases/download/v2.2.6/moon_cli-x86_64-unknown-linux-musl.tar.xz"
 
 [tools."aqua:moonrepo/moon"."platforms.linux-x64-baseline"]
-checksum = "sha256:9c1fec9b518b2dac49a5588d253ba0a130e6fd3117f6e39e178bfa9564dcc886"
-url = "https://github.com/moonrepo/moon/releases/download/v2.2.5/moon_cli-x86_64-unknown-linux-musl.tar.xz"
+checksum = "sha256:3ef13ebecd07a0894d49ffad6451732f9c56574498aa11edfcd124f07f47441c"
+url = "https://github.com/moonrepo/moon/releases/download/v2.2.6/moon_cli-x86_64-unknown-linux-musl.tar.xz"
 
 [tools."aqua:moonrepo/moon"."platforms.linux-x64-musl"]
-checksum = "sha256:9c1fec9b518b2dac49a5588d253ba0a130e6fd3117f6e39e178bfa9564dcc886"
-url = "https://github.com/moonrepo/moon/releases/download/v2.2.5/moon_cli-x86_64-unknown-linux-musl.tar.xz"
+checksum = "sha256:3ef13ebecd07a0894d49ffad6451732f9c56574498aa11edfcd124f07f47441c"
+url = "https://github.com/moonrepo/moon/releases/download/v2.2.6/moon_cli-x86_64-unknown-linux-musl.tar.xz"
 
 [tools."aqua:moonrepo/moon"."platforms.linux-x64-musl-baseline"]
-checksum = "sha256:9c1fec9b518b2dac49a5588d253ba0a130e6fd3117f6e39e178bfa9564dcc886"
-url = "https://github.com/moonrepo/moon/releases/download/v2.2.5/moon_cli-x86_64-unknown-linux-musl.tar.xz"
+checksum = "sha256:3ef13ebecd07a0894d49ffad6451732f9c56574498aa11edfcd124f07f47441c"
+url = "https://github.com/moonrepo/moon/releases/download/v2.2.6/moon_cli-x86_64-unknown-linux-musl.tar.xz"
 
 [tools."aqua:moonrepo/moon"."platforms.macos-arm64"]
-checksum = "sha256:b5ffdffcecae2f4b6b3a6ff15b03ad9c5aa8874d67fc2111881396e0d73ccf8c"
-url = "https://github.com/moonrepo/moon/releases/download/v2.2.5/moon_cli-aarch64-apple-darwin.tar.xz"
+checksum = "sha256:61c8c48ef89a390e58a2fd2e3813597c5a722e55ad67c11fc5bf52de37d26baf"
+url = "https://github.com/moonrepo/moon/releases/download/v2.2.6/moon_cli-aarch64-apple-darwin.tar.xz"
 
 [tools."aqua:moonrepo/moon"."platforms.windows-x64"]
-checksum = "sha256:8f4be35cd9c70818e3f6f2222e652d7ee28242798f92083003d4f6e8aaaacd6e"
-url = "https://github.com/moonrepo/moon/releases/download/v2.2.5/moon_cli-x86_64-pc-windows-msvc.zip"
+checksum = "sha256:9499e8ee13b574bcfce585dc3742aa1e42df6ecdd5f8a6abe08a8a44cc42d627"
+url = "https://github.com/moonrepo/moon/releases/download/v2.2.6/moon_cli-x86_64-pc-windows-msvc.zip"
 
 [tools."aqua:moonrepo/moon"."platforms.windows-x64-baseline"]
-checksum = "sha256:8f4be35cd9c70818e3f6f2222e652d7ee28242798f92083003d4f6e8aaaacd6e"
-url = "https://github.com/moonrepo/moon/releases/download/v2.2.5/moon_cli-x86_64-pc-windows-msvc.zip"
+checksum = "sha256:9499e8ee13b574bcfce585dc3742aa1e42df6ecdd5f8a6abe08a8a44cc42d627"
+url = "https://github.com/moonrepo/moon/releases/download/v2.2.6/moon_cli-x86_64-pc-windows-msvc.zip"
 
 [[tools."aqua:mvdan/gofumpt"]]
 version = "0.10.0"

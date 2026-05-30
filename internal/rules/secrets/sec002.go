@@ -63,6 +63,7 @@ func scanSEC002File(root, rel string) (findings.Finding, bool) {
 			Summary:     "Literal secret detected in MCP or adjacent config",
 			Remediation: "Replace the literal secret with an environment variable reference",
 			Evidence:    []string{rel + ": " + sharedsecrets.RedactValue(match.Secret)},
+			Cap:         secretScoreCap,
 		}, true
 	}
 

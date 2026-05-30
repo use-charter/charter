@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"bytes"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -17,9 +18,11 @@ type Inventory struct {
 func BuildInventory(root string) (Inventory, error) {
 	// #nosec G204 -- root is the resolved repository root for the active scan target.
 	cmd := exec.Command("git", "-C", root, "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--full-name")
-	output, err := cmd.CombinedOutput()
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	output, err := cmd.Output()
 	if err != nil {
-		return Inventory{}, fmt.Errorf("list repository files: %w: %s", err, strings.TrimSpace(string(output)))
+		return Inventory{}, fmt.Errorf("list repository files: %w: %s", err, strings.TrimSpace(stderr.String()))
 	}
 
 	return parseGitLSFilesOutput(output), nil

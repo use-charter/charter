@@ -32,7 +32,13 @@ func Run(path string, threshold int) (Result, error) {
 	all := append([]findings.Finding{}, goctx.RunCTXRules(root, inv)...)
 	all = append(all, goenv.Run(root, inv)...)
 	all = append(all, goci.Run(root, inv)...)
-	all = append(all, gosecrets.RunSecretRules(root, inv)...)
+
+	secretFindings, err := gosecrets.RunSecretRules(root, inv)
+	if err != nil {
+		return Result{}, err
+	}
+	all = append(all, secretFindings...)
+
 	score := scoring.Calculate(all)
 
 	return Result{
