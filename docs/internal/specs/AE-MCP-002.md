@@ -7,7 +7,7 @@
 - Pass example: `.mcp.json` server `"url": "https://mcp.asana.com/mcp"` with `charter.yaml` listing `mcp.trustedRemotes: [mcp.asana.com]` — host allowlisted, passes.
 - Fail example: `.mcp.json` server `"url": "https://unknown.example.net/mcp"` with no matching allowlist entry — flagged High; evidence names the server and host.
 - Evidence expectations: a structured location (config file path + 1-based line of the server entry) and an evidence string naming the config file, server name, and resolved host. The summary distinguishes "not in allowlist" from "no allowlist configured".
-- Edge cases: localhost and loopback remotes never fire; SSE (`type: sse`, deprecated in favor of HTTP) is treated as remote; a dynamic `${VAR}` URL is skipped; allowlist matching is host-only (no scheme or path).
+- Edge cases: localhost and the `127.0.0.0/8` loopback range (plus `::1`, `0.0.0.0`, `*.localhost`) never fire; SSE (`type: sse`, deprecated in favor of HTTP) is treated as remote; a scheme-less or dynamic `${VAR}` URL has no parseable host and is skipped; allowlist matching is host-only (no scheme or path).
 - Remediation: add the reviewed host to `charter.yaml → mcp.trustedRemotes`, or replace the server with a trusted origin, then commit the change. (The M1.6 MCP catalog will later supersede the local allowlist as the primary trust source.)
 - Scoring impact: each finding is `High` (−10); no hard cap.
 - Related ADRs: ADR-0011, ADR-0006, ADR-0009

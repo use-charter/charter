@@ -19,10 +19,11 @@
 - `cmd/`: binary entrypoints and command wiring
 - `internal/`: non-public implementation details
   - `agentcontext`: canonical agent-visible context file registry (drift guard for context and secret rules)
+  - `config`: `charter.yaml` loader (MCP trusted-remote allowlist)
   - `doctor`: scan orchestration pipeline
   - `findings`: finding model with Location support (path:line)
   - `repository`: repo resolution and file inventory
-  - `rules/`: rule implementations (context, environment, ci, secrets)
+  - `rules/`: rule implementations (context, environment, ci, secrets, mcp)
   - `scoring`: score calculation and caps
   - `render/`: output formatters (text, JSON)
   - `secrets`: secret pattern detection and redaction
