@@ -52,8 +52,10 @@ type Suppressed struct {
 	Expires  string
 }
 
-// IsPermanent reports whether an entry has no finite expiry (blank or "permanent").
+// IsPermanent reports whether an entry is explicitly permanent (expires:
+// permanent). A blank expires is NOT permanent — it is a default-TTL suppression
+// (honored), per the audit checklist; only an explicit permanent waiver requires
+// an approver (AE-SUPPRESS-002).
 func IsPermanent(e Entry) bool {
-	x := strings.TrimSpace(e.Expires)
-	return x == "" || strings.EqualFold(x, "permanent")
+	return strings.EqualFold(strings.TrimSpace(e.Expires), "permanent")
 }
