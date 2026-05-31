@@ -7,7 +7,7 @@
 - Pass example: `.mcp.json` with `"args": ["-y", "@modelcontextprotocol/server-filesystem@1.0.4"]` — exact version, passes.
 - Fail example: `.mcp.json` with `"args": ["-y", "gumroad-mcp@latest"]` — floating tag, flagged High; evidence names `gumroad-mcp@latest`.
 - Evidence expectations: a structured location (config file path + 1-based line of the server entry) and an evidence string naming the config file, server name, and the offending package spec. The raw token is a public package name, not a secret, so it is shown verbatim.
-- Edge cases: scoped packages (`@scope/name@1.2.3`) are pinned only when the trailing version is exact; `pkg@${VERSION}` is treated as unpinned; docker/other runners beyond the recognized set are out of scope for v1.
+- Edge cases: package specs are resolved only for direct runners (`npx`, `bunx`, `uvx`) and the `dlx` subcommand of `pnpm`/`yarn`; local path args (`./`, `/`, `../`) and the `exec`/`run` forms launch local binaries and are not treated as registry packages. Scoped packages (`@scope/name@1.2.3`) are pinned only when the trailing version is exact; `pkg@${VERSION}` is treated as unpinned; other runners are out of scope for v1.
 - Remediation: pin the MCP server package to an exact version or digest instead of `@latest`, a semver range, or a floating git ref, then commit the change.
 - Scoring impact: each finding is `High` (−10); no hard cap (caps are reserved for raw-secret findings).
 - Related ADRs: ADR-0011, ADR-0006, ADR-0009

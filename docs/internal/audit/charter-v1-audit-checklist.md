@@ -101,42 +101,42 @@ final = min(base, applicable_cap)
 
 ---
 
-## AE-MCP-001 — MCP Server Unpinned or Vulnerable
+## AE-MCP-001 — MCP Server Unpinned
 **Severity:** 🟠 HIGH  
 
-**Check:** For every MCP server configured in any MCP config file, check two things: (1) Version pinning — is the package version pinned to a specific release? Scan all MCP config locations: .mcp.json , .mcp.yml , .cursor/mcp.json , .claude/settings.json , claude_desktop_config.json , cline_mcp_settings.json , *.pkl . Flag: version absent entirely, version set to latest , version set to a semver range (^1.0, ~2.1, >=3), or git source using a branch name rather than a full 40-char commit SHA — these fire as HIGH . (2) CVE advisory check — for servers that ARE pinned, cross-reference the pinned version against Charter's embedded MCP catalog ( catalog/v1/*.yaml ) advisory entries. If the catalog has an advisories[] entry whose affected version range includes the pinned version, this finding escalates to BLOCKER . A properly pinned server running a CVE-affected version is more dangerous than an unpinned server, because the team believes it is safe.  
+**Check:** For every MCP server in a scanned JSON MCP config (`.mcp.json`, `mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`), check the runner package spec for exact version pinning. Package specs are resolved for direct runners (`npx`, `bunx`, `uvx`) and the `dlx` subcommand of `pnpm`/`yarn`. Flag HIGH when the version is absent, set to `latest` or a dist-tag, a semver range (`^`, `~`, `>=`, `>`, `<`, `*`, `x`), a floating git ref (`github:`, `git+`, or a `#branch`), or a dynamic `${VAR}` value. Exact semver (`1.2.3`) and digests (`sha256:…`, 40-hex) are pinned. Local path args (`./`, `/`, `../`) and `exec`/`run` forms launch local binaries and are not treated as packages.  
 
-**Evidence:** Config file path, server name, and the version string — whether unpinned (e.g., \"latest\" ) or pinned but advisory-matched (e.g., \"1.0.2\" with catalog advisory CVE-2025-XXXXX affecting ≤1.0.3). Note severity: HIGH for unpinned/outdated, BLOCKER for advisory match. Cross-reference the catalog's stable_version field to confirm the recommended upgrade target.  
+**Evidence:** Config file path with a 1-based line, the server name, and the offending package spec (e.g., `.mcp.json:4: server gum uses gumroad-mcp@latest`).  
 
-**False Positive Risk:** FP Risk: Low. A server pinned to an exact semver (e.g., @1.2.3) or a full 40-char git SHA is safe for the unpinned check. Semver ranges (^, ~, >=) are genuinely risky for supply chain reasons. For the CVE escalation: a finding only fires if the catalog has an explicit advisory entry for that server and version range — not speculative. Mark N/A if the repo has no MCP config files at all — this rule only applies to repos with active MCP server configuration. Note: charter serve is a local STDIO server with no package version — it is always safe and never flagged by this rule.  
+**False Positive Risk:** FP Risk: Low. A server pinned to an exact semver or a digest is safe; semver ranges and floating tags are genuine supply-chain risks. Mark N/A if the repo has no scanned MCP config files. Non-runner commands (`node`, `python3`, absolute binaries) carry no pin assertion.  
 
-**Fix:** For unpinned servers: pin to exact version: \"@modelcontextprotocol/server-filesystem\": \"1.0.4\" . For git sources, pin to a full commit SHA. Run npm install --save-exact or bun add --exact and commit the lockfile. For CVE-affected versions (BLOCKER): upgrade immediately to the catalog's stable_version . Run charter fix AE-MCP-001 for an auto-generated upgrade diff. Check charter catalog show <id> for advisory details and recommended version. Covers OWASP MCP04 — Supply Chain Attacks & Dependency Tampering.  
+**Fix:** Pin the MCP server package to an exact version or digest instead of `@latest`, a semver range, or a floating git ref, then commit the change. Covers OWASP MCP04 — Software Supply Chain Attacks & Dependency Tampering.  
 
 ---
 
-## AE-MCP-002 — MCP Server Unknown or Untrusted URL
+## AE-MCP-002 — MCP Server Untrusted Remote Origin
 **Severity:** 🟠 HIGH  
 
-**Check:** For remote MCP servers (HTTP/HTTPS/SSE type), check whether the server URL appears in Charter's embedded static MCP catalog ( catalog/v1/*.yaml , embedded in the binary) or in a team allowlist ( charter.yaml → mcp.trustedRemotes ). Flag any remote URL that is not in either source. Also flag servers sourced from git URLs at unknown organizations or accounts. Note: STDIO-type servers (like charter serve ) are local by definition and are never flagged by this rule.  
+**Check:** For remote MCP servers (a `url` or `type` of `http`/`sse`) in a scanned JSON MCP config, compare the URL host against the team allowlist (`charter.yaml → mcp.trustedRemotes`, a list of hostnames). Flag HIGH when the host is absent from the allowlist; when no `charter.yaml` allowlist is configured, every non-local remote is flagged as unverifiable with a distinct message. Localhost and the `127.0.0.0/8` loopback range (plus `::1`, `0.0.0.0`, `*.localhost`) are exempt; scheme-less and `${VAR}` URLs have no parseable host and are skipped.  
 
-**Evidence:** Server name and remote URL. Note whether the URL matches a catalog entry or a local allowlist. If the server is from a known vendor not yet in Charter's catalog, note it for catalog contribution.  
+**Evidence:** Config file path with a 1-based line, the server name, and the resolved host (e.g., `.mcp.json:6: server shadow -> unknown.example.net`). The summary distinguishes "not in allowlist" from "no allowlist configured".  
 
-**False Positive Risk:** FP Risk: Medium. A remote URL from a well-known vendor (Anthropic, GitHub, Stripe, Cloudflare) that isn't in Charter's embedded catalog yet is a FP risk — file a catalog contribution. Mark as FP with a note if the server is from a verifiably trusted organization. charter serve (STDIO transport, local) is always safe — never flag it. Mark N/A if the repo has no MCP config files at all.  
+**False Positive Risk:** FP Risk: Medium. A remote from a verifiably trusted vendor that simply isn't listed yet is a FP — add the reviewed host to `charter.yaml`. Mark N/A if the repo has no scanned MCP config files. Local/loopback servers never fire.  
 
-**Fix:** Add trusted remote URLs to charter.yaml → mcp.trustedRemotes . Or switch to a local/npm-installed equivalent of the server. For unknown origins, audit the server's tool list before adding it. Covers OWASP MCP09 — Shadow MCP Servers.  
+**Fix:** Add the reviewed host to `charter.yaml → mcp.trustedRemotes`, or replace the server with a trusted origin, then commit the change. Covers OWASP MCP09 — Shadow MCP Servers.  
 
 ---
 
 ## AE-MCP-003 — Remote MCP Server Lacks Auth Metadata
 **Severity:** 🟠 HIGH  
 
-**Check:** For remote MCP servers that require authentication (servers with type: 'http' or 'sse'), check whether the config includes an authorization block with OAuth 2.1 / PKCE metadata. A server that accepts user credentials without a documented auth flow is a trust gap. Per MCP spec 2025-11-25, remote servers should declare their auth requirements.  
+**Check:** For non-local remote MCP servers (`type` of `http`/`sse`) in a scanned JSON MCP config, check for the presence of an auth header — `Authorization`, `X-Api-Key`, `Api-Key`, or `X-Auth-Token` (case-insensitive; an env-reference value such as `Bearer ${TOKEN}` counts as declared). Flag HIGH when no auth header is present. Detection is presence-based rather than OAuth-field-specific, aligned with MCP spec revision `2025-11-25` and resilient to the `2026-07-28` OAuth changes. Localhost/loopback remotes are exempt.  
 
-**Evidence:** Server name, type, and URL. Note whether an auth/authorization block exists in the config. Note if the server is listed as 'public/unauthenticated' in its own docs.  
+**Evidence:** Config file path with a 1-based line, the server name, and the host (e.g., `.mcp.json:3: server open (mcp.asana.com) has no auth header`).  
 
-**False Positive Risk:** FP Risk: High. Many legitimate read-only remote servers don't require auth. If the server is genuinely public and read-only (e.g., a public docs search server), mark N/A with a note. Only flag if the server clearly handles sensitive data or user-specific state without an auth declaration. Mark N/A if the repo has no MCP config files at all — this rule only applies to repos with active MCP server configuration.  
+**False Positive Risk:** FP Risk: Medium. A genuinely public, read-only remote server may legitimately need no auth — mark N/A with a note. Charter validates only that an auth declaration exists, not the credential itself. Mark N/A if the repo has no scanned MCP config files.  
 
-**Fix:** Add an authorization block to the server config per MCP spec: specify authorizationUrl, tokenUrl, and scopes. Or switch to an npm-installed local server that doesn't require remote auth. Covers OWASP MCP07 — Insufficient Authentication & Authorization.  
+**Fix:** Declare an auth header (e.g., `Authorization` referencing an environment variable) for the remote MCP server, or switch to a local/trusted integration mode, then commit the change. Covers OWASP MCP07 — Insufficient Authentication & Authorization.  
 
 ---
 
