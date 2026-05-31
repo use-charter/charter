@@ -7,7 +7,25 @@ import (
 	"go.charter.dev/charter/internal/doctor"
 	"go.charter.dev/charter/internal/findings"
 	"go.charter.dev/charter/internal/scoring"
+	"go.charter.dev/charter/internal/suppress"
 )
+
+func TestRenderSuppressedSection(t *testing.T) {
+	result := doctor.Result{
+		Root: "/repo", Threshold: 80, Passed: true,
+		Suppressed: []suppress.Suppressed{
+			{Finding: findings.Finding{RuleID: "AE-MCP-001", Severity: findings.SeverityHigh}, Source: suppress.SourceExternal, Reason: "vendored", Expires: "2099-01-01"},
+		},
+		Score: scoreResult(100, 100),
+	}
+	out := string(mustRender(t, result))
+	if !strings.Contains(out, "Suppressed (1)") {
+		t.Fatalf("expected suppressed section:\n%s", out)
+	}
+	if !strings.Contains(out, "AE-MCP-001") || !strings.Contains(out, "vendored") || !strings.Contains(out, "external") {
+		t.Fatalf("expected suppressed row:\n%s", out)
+	}
+}
 
 func scoreResult(base, final int) scoring.Result {
 	return scoring.Result{Base: base, Final: final}
