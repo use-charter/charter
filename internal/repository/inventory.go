@@ -33,6 +33,18 @@ func (i Inventory) Has(path string) bool {
 	return ok
 }
 
+// NewInventoryForTest builds an Inventory from a fixed path list. Test-only seam.
+func NewInventoryForTest(paths []string) Inventory {
+	inv := Inventory{set: map[string]struct{}{}}
+	for _, p := range paths {
+		s := filepath.ToSlash(p)
+		inv.Paths = append(inv.Paths, s)
+		inv.set[s] = struct{}{}
+	}
+	sort.Strings(inv.Paths)
+	return inv
+}
+
 func parseGitLSFilesOutput(output []byte) Inventory {
 	inv := Inventory{set: map[string]struct{}{}}
 
