@@ -143,26 +143,26 @@ final = min(base, applicable_cap)
 ## AE-CC-001 — Dangerous Command in Agent Config
 **Severity:** 🔴 BLOCKER  
 
-**Check:** Check all agent hook configurations for dangerous shell patterns: shell injection sequences ( ; , && , || , $(...) , backtick), destructive commands ( rm -rf , git reset --hard , truncate , dd ), or privilege escalation ( sudo , chmod 777 , chown -R ). Hook config locations to check: .claude/settings.json (hooks block), .cursor/rules (tool-use config), Codex hook definitions, and hk.pkl — hk is the modern Git hook manager (used by Charter itself); check its pre-commit , pre-push , and commit-msg hook definitions for any open-ended shell patterns that could be weaponized by prompt injection.  
+**Check:** Scan tracked JSON hook config files (`.claude/settings.json`, `.claude/settings.local.json`, `.cursor/hooks.json`) for dangerous shell commands. The parsed `hooks` structure is walked to collect every `command` string and `args` entry (Claude nested + Cursor flat shapes), and each is matched against a high-confidence destructive/privilege-escalation set: `rm -rf`, `git reset --hard`, `git clean -fd`, `dd`, `mkfs`, `truncate`, `sudo`, `chmod 777`, `chown -R`. Single-word commands (`dd`, `truncate`, `mkfs`) match at word boundaries so `git add` and `untruncated` do not false-positive.  
 
-**Evidence:** Config file path and the specific hook type + dangerous command found. Quote the minimal relevant snippet.  
+**Evidence:** Config file path with a 1-based line and the offending command (e.g., `.claude/settings.json:7: hook command uses rm -rf`).  
 
-**False Positive Risk:** FP Risk: Low. Hook scripts that use && for command chaining in a controlled, single-purpose command (e.g., cd app && npm test ) are generally safe. Flag patterns that are open-ended or could be exploited by prompt injection — not every use of shell operators.  
+**False Positive Risk:** FP Risk: Low. Operator-chaining and command-substitution injection (`&&`, `;`, `$(…)`, backticks) are intentionally NOT flagged in v1 — they are false-positive-prone (e.g., `cd app && npm test`) and deferred to a context-aware refinement. Mark N/A if the repo has no scanned JSON hook config files. Pkl/YAML/shell hook managers (`hk.pkl`, `.pre-commit-config.yaml`, `lefthook.yml`, `.husky/`) are out of scope for v1.  
 
-**Fix:** Replace open-ended shell patterns with explicit, scoped commands. Use array-form command execution where possible to avoid shell expansion. Review every hook against the principle: 'if an agent were prompt-injected, could this hook be weaponized?' Covers OWASP MCP05 — Command Injection.  
+**Fix:** Replace the destructive or privilege-escalating command with an explicit, scoped command; prefer array-form (`args`) execution to avoid shell expansion, then commit the change. Covers OWASP MCP05 — Command Injection & Execution.  
 
 ---
 
 ## AE-CC-002 — Overly Broad Agent Edit Scope
 **Severity:** 🟠 HIGH  
 
-**Check:** Does any agent context file explicitly restrict what directories, file types, or operations the agent may perform? Check all formats: AGENTS.md , CLAUDE.md , .cursor/rules , .windsurfrules , .github/copilot-instructions.md , opencode.md , codex.md . Flag: no off-limits paths defined, edit scope covers the entire repo root without exclusions, infrastructure or secrets paths are not explicitly excluded.  
+**Check:** Read the agent context files (the `agentcontext` set: AGENTS.md, CLAUDE.md, .cursor/rules, .windsurfrules, .github/copilot-instructions.md, opencode.md, codex.md, DESIGN.md, SKILL.md) plus `PERMISSIONS.md`. Pass when the context declares a concrete off-limits / protected-path boundary — a recognized sensitive-path token (`.env`, `secrets`, `.github/workflows`, `terraform`, `infra`, `db/migrations`, `credentials`) or a reference to `PERMISSIONS.md`. Flag HIGH when no concrete off-limits-path declaration is found in any context file. This is stricter than AE-CTX-001, which accepts a generic edit-boundary mention.  
 
-**Evidence:** Note what scope definition exists (or doesn't). Quote the relevant permission/scope block. Flag specific dangerous paths that are not excluded (e.g., .github/workflows/, terraform/, db/migrations/, secrets/).  
+**Evidence:** The context file evaluated (file-level location) plus the list of context files checked.  
 
-**False Positive Risk:** FP Risk: Medium. A small single-purpose repo with no sensitive paths may legitimately have broad scope. Focus on repos where broad scope creates real risk: infra code, migration scripts, CI pipeline definitions, credential files.  
+**False Positive Risk:** FP Risk: Medium. A small single-purpose repo with no sensitive paths may legitimately have broad scope. The check is presence-based on concrete sensitive-path tokens, not a semantic policy evaluation. When no agent context file exists at all, AE-CTX-001 already fires (Blocker) and AE-CC-002 does not duplicate the absence.  
 
-**Fix:** Add an explicit 'Off-limits for agents' section to AGENTS.md listing at minimum: .github/workflows/ , terraform/ or infra/ , db/migrations/ , .env* , secrets/ . Consider using allowed_paths in CLAUDE.md to hard-restrict what charter doctor reports on. Covers OWASP MCP02 — Permissioning Failures.  
+**Fix:** Add an explicit 'Off-limits for agents' section to the agent context (or `PERMISSIONS.md`) listing at minimum `.github/workflows/`, `terraform/` or `infra/`, `db/migrations/`, `.env*`, and `secrets/`, then commit the change. Covers OWASP MCP02 — Privilege Escalation via Scope Creep.  
 
 ---
 
