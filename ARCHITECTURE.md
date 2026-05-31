@@ -8,7 +8,7 @@
 - Charter core performs no LLM calls
 - Scanner remains deterministic and offline-first
 - Fixes are diff-first and never silently mutate files
-- MCP support is deferred until there is a pinned, local-first, least-privilege integration to expose
+- Tracked MCP server config stays absent until a pinned, reviewed, least-privilege integration exists (distinct from the AE-MCP-* rules, which scan MCP config when present)
 
 ## Root Layout
 
