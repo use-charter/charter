@@ -6,6 +6,27 @@ import (
 	"go.charter.dev/charter/internal/findings"
 )
 
+func TestCalculateSkipsInformational(t *testing.T) {
+	all := []findings.Finding{
+		{Severity: findings.SeverityMedium, Informational: true},
+		{Severity: findings.SeverityLow},
+	}
+	got := Calculate(all)
+	if got.Final != 99 {
+		t.Fatalf("informational finding must not deduct: got %d, want 99", got.Final)
+	}
+}
+
+func TestCalculateInformationalIgnoresCap(t *testing.T) {
+	all := []findings.Finding{
+		{Severity: findings.SeverityMedium, Informational: true, Cap: 10},
+	}
+	got := Calculate(all)
+	if got.Final != 100 {
+		t.Fatalf("informational finding must not cap: got %d, want 100", got.Final)
+	}
+}
+
 func TestScoreAppliesFormulaAndBlockerCap(t *testing.T) {
 	result := Calculate([]findings.Finding{{Severity: findings.SeverityBlocker}})
 
