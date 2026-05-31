@@ -97,6 +97,13 @@ func newDoctorCommand() *cobra.Command {
 				}
 				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  remediation: %s\n", finding.Remediation)
 			}
+			for _, s := range result.Suppressed {
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "suppressed: %s (%s)", s.Finding.RuleID, s.Source)
+				if s.Reason != "" {
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), " — %s", s.Reason)
+				}
+				_, _ = fmt.Fprintln(cmd.OutOrStdout())
+			}
 			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "score: %d (threshold %d)\n", result.Score.Final, threshold)
 
 			if result.Score.Final < threshold {

@@ -8,7 +8,54 @@ import (
 	"go.charter.dev/charter/internal/doctor"
 	"go.charter.dev/charter/internal/findings"
 	"go.charter.dev/charter/internal/scoring"
+	"go.charter.dev/charter/internal/suppress"
 )
+
+func TestRenderEmitsSuppressedAndInformational(t *testing.T) {
+	result := doctor.Result{
+		Root: "/repo", Threshold: 80, Passed: true,
+		Findings: []findings.Finding{
+			{RuleID: "AE-SUPPRESS-003", Severity: findings.SeverityMedium, Category: "Governance", Summary: "High suppression rate", Informational: true, Locations: []findings.Location{{Path: ".charter-suppress.yml"}}},
+		},
+		Suppressed: []suppress.Suppressed{
+			{Finding: findings.Finding{RuleID: "AE-MCP-001", Severity: findings.SeverityHigh, Locations: []findings.Location{{Path: ".mcp.json", Line: 1}}}, Source: suppress.SourceExternal, Reason: "vendored", Expires: "2099-01-01"},
+		},
+		Score: scoring.Result{Medium: 0, Base: 100, Final: 100},
+	}
+
+	data, err := Render(result)
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	s := string(data)
+	if !strings.Contains(s, `"informational":true`) {
+		t.Fatalf("expected informational flag, got %s", s)
+	}
+
+	var payload struct {
+		Suppressed []struct {
+			RuleID string `json:"rule_id"`
+			Source string `json:"source"`
+			Reason string `json:"reason"`
+		} `json:"suppressed"`
+	}
+	if err := encodingjson.Unmarshal(data, &payload); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(payload.Suppressed) != 1 || payload.Suppressed[0].RuleID != "AE-MCP-001" || payload.Suppressed[0].Source != "external" || payload.Suppressed[0].Reason != "vendored" {
+		t.Fatalf("unexpected suppressed payload: %#v", payload.Suppressed)
+	}
+}
+
+func TestRenderEmitsEmptySuppressedArray(t *testing.T) {
+	data, err := Render(doctor.Result{Root: "/repo", Threshold: 80, Passed: true, Score: scoring.Result{Final: 100}})
+	if err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	if !strings.Contains(string(data), `"suppressed":[]`) {
+		t.Fatalf("expected empty suppressed array (never null) for SARIF consistency, got %s", data)
+	}
+}
 
 func TestRenderEmitsStructuredLocations(t *testing.T) {
 	result := doctor.Result{

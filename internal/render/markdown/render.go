@@ -7,6 +7,7 @@ import (
 
 	"go.charter.dev/charter/internal/doctor"
 	"go.charter.dev/charter/internal/findings"
+	"go.charter.dev/charter/internal/suppress"
 )
 
 // Render projects a doctor.Result into GitHub-PR-comment-friendly Markdown.
@@ -29,15 +30,44 @@ func Render(result doctor.Result) ([]byte, error) {
 
 	if len(ordered) == 0 {
 		b.WriteString("No findings.\n")
-		return []byte(b.String()), nil
+	} else {
+		b.WriteString("| Rule | Severity | Location | Summary |\n")
+		b.WriteString("| --- | --- | --- | --- |\n")
+		for _, f := range ordered {
+			fmt.Fprintf(&b, "| %s | %s | %s | %s |\n", f.RuleID, f.Severity, location(f), escapePipes(f.Summary))
+		}
 	}
 
-	b.WriteString("| Rule | Severity | Location | Summary |\n")
-	b.WriteString("| --- | --- | --- | --- |\n")
-	for _, f := range ordered {
-		fmt.Fprintf(&b, "| %s | %s | %s | %s |\n", f.RuleID, f.Severity, location(f), escapePipes(f.Summary))
-	}
+	writeSuppressed(&b, result.Suppressed)
 	return []byte(b.String()), nil
+}
+
+func writeSuppressed(b *strings.Builder, list []suppress.Suppressed) {
+	if len(list) == 0 {
+		return
+	}
+	ordered := append([]suppress.Suppressed(nil), list...)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		if wi, wj := ordered[i].Finding.Severity.Weight(), ordered[j].Finding.Severity.Weight(); wi != wj {
+			return wi > wj
+		}
+		return ordered[i].Finding.RuleID < ordered[j].Finding.RuleID
+	})
+
+	fmt.Fprintf(b, "\n**Suppressed (%d)**\n\n", len(ordered))
+	b.WriteString("| Rule | Source | Reason | Expires |\n")
+	b.WriteString("| --- | --- | --- | --- |\n")
+	for _, s := range ordered {
+		reason := s.Reason
+		if reason == "" {
+			reason = "—"
+		}
+		expires := s.Expires
+		if expires == "" {
+			expires = "default"
+		}
+		fmt.Fprintf(b, "| %s | %s | %s | %s |\n", s.Finding.RuleID, s.Source, escapePipes(reason), expires)
+	}
 }
 
 func location(f findings.Finding) string {
