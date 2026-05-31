@@ -16,9 +16,9 @@ func writeCharterRepo(t *testing.T, contents string) (string, repository.Invento
 			t.Fatal(err)
 		}
 	}
-	inv := repository.NewInventoryForTest(nil)
+	inv := repository.New(nil)
 	if contents != "" {
-		inv = repository.NewInventoryForTest([]string{"charter.yaml"})
+		inv = repository.New([]string{"charter.yaml"})
 	}
 	return root, inv
 }
@@ -32,7 +32,7 @@ func writeCharterFile(t *testing.T, contents string) (string, repository.Invento
 	if err := os.WriteFile(filepath.Join(root, "charter.yaml"), []byte(contents), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	return root, repository.NewInventoryForTest([]string{"charter.yaml"})
+	return root, repository.New([]string{"charter.yaml"})
 }
 
 func TestLoadTrustedRemotes(t *testing.T) {

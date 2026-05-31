@@ -33,8 +33,10 @@ func (i Inventory) Has(path string) bool {
 	return ok
 }
 
-// NewInventoryForTest builds an Inventory from a fixed path list. Test-only seam.
-func NewInventoryForTest(paths []string) Inventory {
+// New builds an Inventory from an explicit, already-known file list. Paths are
+// normalized to forward slashes and sorted. BuildInventory is the git-backed
+// constructor; New serves callers (and tests) that supply paths directly.
+func New(paths []string) Inventory {
 	inv := Inventory{set: map[string]struct{}{}}
 	for _, p := range paths {
 		s := filepath.ToSlash(p)
