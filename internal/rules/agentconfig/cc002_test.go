@@ -33,7 +33,11 @@ func TestDeclaresOffLimits(t *testing.T) {
 func TestCheckEditScope(t *testing.T) {
 	t.Run("no context file present returns nil", func(t *testing.T) {
 		dir := t.TempDir()
-		if got := checkEditScope(dir, repository.New(nil)); got != nil {
+		got, err := checkEditScope(dir, repository.New(nil))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got != nil {
 			t.Fatalf("expected nil, got %v", got)
 		}
 	})
@@ -44,7 +48,11 @@ func TestCheckEditScope(t *testing.T) {
 		if err := os.WriteFile(filepath.Join(dir, "AGENTS.md"), []byte(content), 0o600); err != nil {
 			t.Fatal(err)
 		}
-		if got := checkEditScope(dir, repository.New([]string{"AGENTS.md"})); got != nil {
+		got, err := checkEditScope(dir, repository.New([]string{"AGENTS.md"}))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got != nil {
 			t.Fatalf("expected nil (declared), got %v", got)
 		}
 	})
@@ -55,12 +63,71 @@ func TestCheckEditScope(t *testing.T) {
 		if err := os.WriteFile(filepath.Join(dir, "AGENTS.md"), []byte(content), 0o600); err != nil {
 			t.Fatal(err)
 		}
-		got := checkEditScope(dir, repository.New([]string{"AGENTS.md"}))
+		got, err := checkEditScope(dir, repository.New([]string{"AGENTS.md"}))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 		if len(got) != 1 || got[0].RuleID != "AE-CC-002" || got[0].Severity != findings.SeverityHigh {
 			t.Fatalf("expected one AE-CC-002 HIGH finding, got %+v", got)
 		}
 		if len(got[0].Locations) != 1 || got[0].Locations[0].Path != "AGENTS.md" {
 			t.Fatalf("wrong location: %+v", got[0].Locations)
+		}
+	})
+
+	t.Run("unreadable context file fails fast", func(t *testing.T) {
+		dir := t.TempDir()
+		// Make AGENTS.md a directory so os.ReadFile returns an error.
+		if err := os.Mkdir(filepath.Join(dir, "AGENTS.md"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := checkEditScope(dir, repository.New([]string{"AGENTS.md"})); err == nil {
+			t.Fatal("expected a read error for an unreadable context file")
+		}
+	})
+
+	t.Run("unreadable .cursor/rules file fails fast", func(t *testing.T) {
+		dir := t.TempDir()
+		// Make the .mdc path a directory so os.ReadFile returns an error.
+		if err := os.MkdirAll(filepath.Join(dir, ".cursor", "rules", "scope.mdc"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := checkEditScope(dir, repository.New([]string{".cursor/rules/scope.mdc"})); err == nil {
+			t.Fatal("expected a read error for an unreadable .cursor/rules file")
+		}
+	})
+
+	t.Run(".cursor/rules declaring off-limits returns nil", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.MkdirAll(filepath.Join(dir, ".cursor", "rules"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, ".cursor", "rules", "scope.mdc"), []byte("Off-limits: secrets/ and .github/workflows/\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		got, err := checkEditScope(dir, repository.New([]string{".cursor/rules/scope.mdc"}))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got != nil {
+			t.Fatalf("expected nil (declared via .cursor/rules), got %v", got)
+		}
+	})
+
+	t.Run(".cursor/rules without off-limits returns one AE-CC-002 finding", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.MkdirAll(filepath.Join(dir, ".cursor", "rules"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, ".cursor", "rules", "style.mdc"), []byte("Use tabs. Be concise.\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		got, err := checkEditScope(dir, repository.New([]string{".cursor/rules/style.mdc"}))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(got) != 1 || got[0].RuleID != "AE-CC-002" {
+			t.Fatalf("expected one AE-CC-002 finding, got %+v", got)
 		}
 	})
 }

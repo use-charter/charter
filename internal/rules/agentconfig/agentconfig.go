@@ -40,6 +40,11 @@ func Run(root string, inv repository.Inventory) ([]findings.Finding, error) {
 
 	var all []findings.Finding
 	all = append(all, checkDangerousCommands(files)...)
-	all = append(all, checkEditScope(root, inv)...)
+
+	cc, err := checkEditScope(root, inv)
+	if err != nil {
+		return nil, err
+	}
+	all = append(all, cc...)
 	return all, nil
 }

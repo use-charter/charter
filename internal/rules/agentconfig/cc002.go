@@ -1,6 +1,7 @@
 package agentconfig
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -27,10 +28,11 @@ func declaresOffLimits(text string) bool {
 	return false
 }
 
-// checkEditScope returns an AE-CC-002 finding when no agent context file
-// declares concrete off-limits paths. Absence of any context file is owned by
-// AE-CTX-001 (Blocker) and is not duplicated here.
-func checkEditScope(root string, inv repository.Inventory) []findings.Finding {
+// checkEditScope returns an AE-CC-002 finding when an agent context source
+// exists but none declares concrete off-limits paths. Absence of any context
+// source is owned by AE-CTX-001 (Blocker) and is not duplicated here. An
+// unreadable tracked context file fails fast with a wrapped error.
+func checkEditScope(root string, inv repository.Inventory) ([]findings.Finding, error) {
 	var present []string
 	declared := false
 
@@ -44,15 +46,29 @@ func checkEditScope(root string, inv repository.Inventory) []findings.Finding {
 		// #nosec G304 -- rel is a fixed context/permissions path from the tracked inventory.
 		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(rel)))
 		if err != nil {
-			continue
+			return nil, fmt.Errorf("read %s: %w", rel, err)
 		}
 		if declaresOffLimits(string(data)) {
 			declared = true
 		}
 	}
 
+	if cursorRules := cursorRuleFiles(inv); len(cursorRules) > 0 {
+		present = append(present, agentcontext.CursorRulesDir)
+		for _, rel := range cursorRules {
+			// #nosec G304 -- rel is a tracked path under the .cursor/rules directory.
+			data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(rel)))
+			if err != nil {
+				return nil, fmt.Errorf("read %s: %w", rel, err)
+			}
+			if declaresOffLimits(string(data)) {
+				declared = true
+			}
+		}
+	}
+
 	if len(present) == 0 || declared {
-		return nil
+		return nil, nil
 	}
 
 	return []findings.Finding{{
@@ -61,7 +77,24 @@ func checkEditScope(root string, inv repository.Inventory) []findings.Finding {
 		Category:    "Agent Config",
 		Summary:     "Agent context declares no concrete off-limits paths (OWASP MCP02 Privilege Escalation via Scope Creep)",
 		Remediation: "Add an 'Off-limits for agents' section listing at minimum .github/workflows/, terraform/ or infra/, db/migrations/, .env*, and secrets/ (or reference PERMISSIONS.md).",
-		Evidence:    []string{"checked context files: " + strings.Join(present, ", ")},
+		Evidence:    []string{"checked context sources: " + strings.Join(present, ", ")},
 		Locations:   []findings.Location{{Path: present[0]}},
-	}}
+	}}, nil
+}
+
+// cursorRuleFiles returns the tracked files under the .cursor/rules directory,
+// sorted. It enumerates from the inventory (tracked, non-ignored) rather than
+// the filesystem so scanning stays tracked-only and deterministic — distinct
+// from AE-CTX-001, which reads the same directory via os.ReadDir for its
+// present-but-weak content check.
+func cursorRuleFiles(inv repository.Inventory) []string {
+	var out []string
+	prefix := agentcontext.CursorRulesDir + "/"
+	for _, p := range inv.Paths {
+		if strings.HasPrefix(p, prefix) {
+			out = append(out, p)
+		}
+	}
+	sort.Strings(out)
+	return out
 }
