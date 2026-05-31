@@ -1,0 +1,4 @@
+suppressions:
+  - rule: AE-MCP-001
+    reason: "vendored test server, accepted for the fixture"
+    expires: 2099-01-01
