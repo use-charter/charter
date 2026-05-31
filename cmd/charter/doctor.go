@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.charter.dev/charter/internal/doctor"
 	renderjson "go.charter.dev/charter/internal/render/json"
+	rendermarkdown "go.charter.dev/charter/internal/render/markdown"
 )
 
 type commandExitError struct {
@@ -36,8 +37,8 @@ func newDoctorCommand() *cobra.Command {
 		Use:   "doctor",
 		Short: "Scan a repository and compute a Charter score",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if format != "text" && format != "json" {
-				return commandExitError{message: "invalid format: must be text or json", exitCode: 2}
+			if format != "text" && format != "json" && format != "markdown" {
+				return commandExitError{message: "invalid format: must be text, json, or markdown", exitCode: 2}
 			}
 
 			result, err := doctor.Run(path, threshold)
@@ -47,6 +48,20 @@ func newDoctorCommand() *cobra.Command {
 
 			if format == "json" {
 				data, err := renderjson.Render(result)
+				if err != nil {
+					return commandExitError{message: err.Error(), exitCode: 2}
+				}
+
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), string(data))
+				if !result.Passed {
+					return commandExitError{message: "score below threshold", exitCode: 1, silent: true}
+				}
+
+				return nil
+			}
+
+			if format == "markdown" {
+				data, err := rendermarkdown.Render(result)
 				if err != nil {
 					return commandExitError{message: err.Error(), exitCode: 2}
 				}
@@ -95,7 +110,7 @@ func newDoctorCommand() *cobra.Command {
 	cmd.Flags().StringVar(&path, "path", "", "explicit repository path")
 	cmd.Flags().IntVar(&threshold, "threshold", 80, "minimum passing score")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "suppress non-failure output")
-	cmd.Flags().StringVar(&format, "format", "text", "output format: text or json")
+	cmd.Flags().StringVar(&format, "format", "text", "output format: text, json, or markdown")
 
 	return cmd
 }

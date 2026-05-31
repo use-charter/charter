@@ -47,8 +47,7 @@ type scoreSummary struct {
 func Render(result doctor.Result) ([]byte, error) {
 	ordered := append([]findings.Finding(nil), result.Findings...)
 	sort.SliceStable(ordered, func(i, j int) bool {
-		wi := weight(ordered[i].Severity)
-		wj := weight(ordered[j].Severity)
+		wi, wj := ordered[i].Severity.Weight(), ordered[j].Severity.Weight()
 		if wi != wj {
 			return wi > wj
 		}
@@ -94,19 +93,4 @@ func toFindingDTOs(findingsList []findings.Finding) []findingDTO {
 	}
 
 	return dtos
-}
-
-func weight(severity findings.Severity) int {
-	switch severity {
-	case findings.SeverityBlocker:
-		return 4
-	case findings.SeverityHigh:
-		return 3
-	case findings.SeverityMedium:
-		return 2
-	case findings.SeverityLow:
-		return 1
-	default:
-		return 0
-	}
 }
