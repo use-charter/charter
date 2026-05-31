@@ -9,6 +9,22 @@ const (
 	SeverityLow     Severity = "LOW"
 )
 
+// Weight returns the ordering/scoring weight of a severity (Blocker highest, 0 if unknown).
+func (s Severity) Weight() int {
+	switch s {
+	case SeverityBlocker:
+		return 4
+	case SeverityHigh:
+		return 3
+	case SeverityMedium:
+		return 2
+	case SeverityLow:
+		return 1
+	default:
+		return 0
+	}
+}
+
 // Location identifies a physical site implicated by a finding. Line is 1-based;
 // a Line of 0 means the finding is file-level (no specific line). Locations map
 // directly onto SARIF result.locations[].physicalLocation.

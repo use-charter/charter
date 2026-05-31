@@ -1,0 +1,57 @@
+package markdown
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+
+	"go.charter.dev/charter/internal/doctor"
+	"go.charter.dev/charter/internal/findings"
+)
+
+// Render projects a doctor.Result into GitHub-PR-comment-friendly Markdown.
+func Render(result doctor.Result) ([]byte, error) {
+	ordered := append([]findings.Finding(nil), result.Findings...)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		if wi, wj := ordered[i].Severity.Weight(), ordered[j].Severity.Weight(); wi != wj {
+			return wi > wj
+		}
+		return ordered[i].RuleID < ordered[j].RuleID
+	})
+
+	var b strings.Builder
+	status := "FAIL"
+	if result.Passed {
+		status = "PASS"
+	}
+	b.WriteString("# Charter\n\n")
+	fmt.Fprintf(&b, "**Score: %d / 100** (threshold %d) — **%s**\n\n", result.Score.Final, result.Threshold, status)
+
+	if len(ordered) == 0 {
+		b.WriteString("No findings.\n")
+		return []byte(b.String()), nil
+	}
+
+	b.WriteString("| Rule | Severity | Location | Summary |\n")
+	b.WriteString("| --- | --- | --- | --- |\n")
+	for _, f := range ordered {
+		fmt.Fprintf(&b, "| %s | %s | %s | %s |\n", f.RuleID, f.Severity, location(f), escapePipes(f.Summary))
+	}
+	return []byte(b.String()), nil
+}
+
+func location(f findings.Finding) string {
+	if len(f.Locations) == 0 {
+		return "—"
+	}
+	loc := f.Locations[0]
+	if loc.Line > 0 {
+		return fmt.Sprintf("`%s:%d`", loc.Path, loc.Line)
+	}
+	if loc.Path == "" {
+		return "—"
+	}
+	return "`" + loc.Path + "`"
+}
+
+func escapePipes(s string) string { return strings.ReplaceAll(s, "|", `\|`) }
