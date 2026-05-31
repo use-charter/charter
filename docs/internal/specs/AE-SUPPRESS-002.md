@@ -2,10 +2,13 @@
 
 - Severity: High
 - Category: Governance
-- Description: Permanent suppressions require an approver.
-- Detection logic: inspect permanent suppression entries for approver metadata.
-- Pass example: permanent suppression includes approver.
-- Fail example: permanent suppression without approver.
-- Remediation: add approver or convert to time-bounded suppression.
-- Related ADRs: ADR-0006
+- Description: A permanent suppression must name an `approver` who owns the accepted risk; an unapproved permanent suppression is a governance hole, so Charter both flags it (High) and refuses to honor it long-term — the finding re-surfaces until an approver is recorded or a finite `expires` is set.
+- Detection logic: over the audited suppressions (every non-expired `.charter-suppress.yml` entry plus inline `charter:ignore` directives discovered at a finding location), the governance check emits one High finding per suppression that is **permanent** — `expires` is absent/blank or the literal `permanent` — **and** has a missing or blank `approver`. Such a suppression is **not honored** (the underlying finding stays active and is scored), matching the audit checklist's "treated as not suppressed long-term." A time-bounded suppression (any valid future `expires`) does not require an approver and is never flagged by this rule. An expired or malformed-date entry is inert and not flagged.
+- Pass example: `{rule: AE-CC-002, reason: "accepted risk", approver: "security-team"}` (permanent, has approver), or `{rule: AE-MCP-001, reason: "temporary", expires: 2026-09-01}` (time-bounded, approver optional) — no finding.
+- Fail example: `{rule: AE-CC-002, reason: "we'll deal with it later"}` (permanent, no approver), or `<!-- charter:ignore AE-CC-002 reason="legacy" -->` (inline, permanent, no `approver="…"`) — flagged High; evidence names the rule and source.
+- Evidence expectations: a structured location (`.charter-suppress.yml` with entry line when resolvable, or the inline directive `path:line`) and an evidence string naming the suppressed rule and stating it is a permanent suppression without an approver (e.g., `.charter-suppress.yml: permanent suppression of AE-CC-002 has no approver`).
+- Edge cases: `expires` present but malformed (not `YYYY-MM-DD`) fails **closed** — the engine treats it as inert so it suppresses nothing and the finding stays active (loud); an inert entry is not audited by this rule (only non-expired file entries and matched inline directives are audited); a blank-only `approver` counts as missing; secrets are suppressible like any rule, so an unapproved permanent `AE-SEC-001/002` suppression fires this rule and is not honored (the ≤ 49 cap holds — an approved permanent secret suppression lifts it); an entry that is both reason-less and permanent-without-approver fires both `AE-SUPPRESS-001` (Medium) and `AE-SUPPRESS-002` (High).
+- Remediation: add `approver="<name>"` to the permanent suppression, or convert it to a time-bounded suppression with an `expires` date so it re-surfaces for review. Prefer `charter suppress <RULE> --reason "…" --approver "<name>"` or `--expires 90d`.
+- Scoring impact: `High` — deducts 10 points via the standard formula; no cap.
+- Related ADRs: ADR-0013, ADR-0008, ADR-0009
 - Related evals: None yet
