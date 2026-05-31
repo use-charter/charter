@@ -6,6 +6,7 @@ import (
 	goci "go.charter.dev/charter/internal/rules/ci"
 	goctx "go.charter.dev/charter/internal/rules/context"
 	goenv "go.charter.dev/charter/internal/rules/environment"
+	gomcp "go.charter.dev/charter/internal/rules/mcp"
 	gosecrets "go.charter.dev/charter/internal/rules/secrets"
 	"go.charter.dev/charter/internal/scoring"
 )
@@ -32,6 +33,12 @@ func Run(path string, threshold int) (Result, error) {
 	all := append([]findings.Finding{}, goctx.RunCTXRules(root, inv)...)
 	all = append(all, goenv.Run(root, inv)...)
 	all = append(all, goci.Run(root, inv)...)
+
+	mcpFindings, err := gomcp.Run(root, inv)
+	if err != nil {
+		return Result{}, err
+	}
+	all = append(all, mcpFindings...)
 
 	secretFindings, err := gosecrets.RunSecretRules(root, inv)
 	if err != nil {

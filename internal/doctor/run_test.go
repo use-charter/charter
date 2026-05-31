@@ -6,11 +6,16 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
 func makeTempGitRepoFromFixture(t *testing.T, fixtureRoot string) (string, error) {
 	t.Helper()
+
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git not available")
+	}
 
 	dir := t.TempDir()
 	if err := copyDir(fixtureRoot, dir); err != nil {
@@ -83,6 +88,16 @@ func copyDir(src, dst string) error {
 	})
 }
 
+func mcpFindingIDs(result Result) []string {
+	var ids []string
+	for _, f := range result.Findings {
+		if strings.HasPrefix(f.RuleID, "AE-MCP") {
+			ids = append(ids, f.RuleID)
+		}
+	}
+	return ids
+}
+
 func TestRunAgainstFixtureRepo(t *testing.T) {
 	root := filepath.Join("..", "..", "testdata", "repos", "pass-slice1")
 	repo, err := makeTempGitRepoFromFixture(t, root)
@@ -118,5 +133,61 @@ func TestRunSetsThresholdAndPassed(t *testing.T) {
 
 	if !result.Passed {
 		t.Fatalf("expected run to pass")
+	}
+}
+
+func TestRunMCPCleanFixtureNoMCPFindings(t *testing.T) {
+	repo, err := makeTempGitRepoFromFixture(t, filepath.Join("..", "..", "testdata", "repos", "pass-mcp-clean"))
+	if err != nil {
+		t.Fatalf("fixture setup: %v", err)
+	}
+	result, err := Run(repo, 80)
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if ids := mcpFindingIDs(result); len(ids) != 0 {
+		t.Fatalf("unexpected MCP findings: %v", ids)
+	}
+}
+
+func TestRunMCPUnpinnedFixtureFlagsAEMCP001(t *testing.T) {
+	repo, err := makeTempGitRepoFromFixture(t, filepath.Join("..", "..", "testdata", "repos", "fail-mcp-unpinned"))
+	if err != nil {
+		t.Fatalf("fixture setup: %v", err)
+	}
+	result, err := Run(repo, 80)
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if ids := mcpFindingIDs(result); len(ids) != 1 || ids[0] != "AE-MCP-001" {
+		t.Fatalf("expected exactly [AE-MCP-001], got %v", ids)
+	}
+}
+
+func TestRunMCPUntrustedRemoteFixtureFlagsAEMCP002(t *testing.T) {
+	repo, err := makeTempGitRepoFromFixture(t, filepath.Join("..", "..", "testdata", "repos", "fail-mcp-untrusted-remote"))
+	if err != nil {
+		t.Fatalf("fixture setup: %v", err)
+	}
+	result, err := Run(repo, 80)
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if ids := mcpFindingIDs(result); len(ids) != 1 || ids[0] != "AE-MCP-002" {
+		t.Fatalf("expected exactly [AE-MCP-002], got %v", ids)
+	}
+}
+
+func TestRunMCPNoAuthFixtureFlagsAEMCP003(t *testing.T) {
+	repo, err := makeTempGitRepoFromFixture(t, filepath.Join("..", "..", "testdata", "repos", "fail-mcp-noauth"))
+	if err != nil {
+		t.Fatalf("fixture setup: %v", err)
+	}
+	result, err := Run(repo, 80)
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if ids := mcpFindingIDs(result); len(ids) != 1 || ids[0] != "AE-MCP-003" {
+		t.Fatalf("expected exactly [AE-MCP-003], got %v", ids)
 	}
 }
