@@ -1,0 +1,6 @@
+{
+  "mcpServers": {
+    "fs": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem@1.0.4"] },
+    "asana": { "type": "http", "url": "https://mcp.asana.com/mcp", "headers": { "Authorization": "Bearer ${ASANA_TOKEN}" } }
+  }
+}

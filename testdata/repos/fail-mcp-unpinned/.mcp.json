@@ -1,0 +1,1 @@
+{ "mcpServers": { "gum": { "command": "npx", "args": ["-y", "gumroad-mcp@latest"] } } }
