@@ -46,6 +46,12 @@ func TestParseSuppressFileMalformed(t *testing.T) {
 	}
 }
 
+func TestParseSuppressFileBlankRuleFailsFast(t *testing.T) {
+	if _, err := parseSuppressFile([]byte("suppressions:\n  - reason: x\n")); err == nil {
+		t.Fatal("expected error for an entry missing the rule field")
+	}
+}
+
 func TestLoadFileMissing(t *testing.T) {
 	inv := repository.New(nil)
 	entries, err := LoadFile(t.TempDir(), inv)

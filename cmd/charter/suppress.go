@@ -95,7 +95,7 @@ func resolveExpires(expires, approver string, now time.Time) (stored, warn strin
 		return "permanent", "", nil
 	case isoDatePattern.MatchString(x):
 		if _, perr := time.Parse("2006-01-02", x); perr != nil {
-			return "", "", fmt.Errorf("invalid --expires date %q", expires)
+			return "", "", fmt.Errorf("invalid --expires date %q: %w", expires, perr)
 		}
 		return x, "", nil
 	default:

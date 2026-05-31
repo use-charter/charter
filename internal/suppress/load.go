@@ -34,9 +34,13 @@ func parseSuppressFile(data []byte) ([]Entry, error) {
 		return nil, err
 	}
 	entries := make([]Entry, 0, len(doc.Suppressions))
-	for _, e := range doc.Suppressions {
+	for i, e := range doc.Suppressions {
+		rule := strings.TrimSpace(e.Rule)
+		if rule == "" {
+			return nil, fmt.Errorf("suppression entry %d: missing required %q field", i+1, "rule")
+		}
 		entries = append(entries, Entry{
-			Rule:     strings.TrimSpace(e.Rule),
+			Rule:     rule,
 			Reason:   strings.TrimSpace(e.Reason),
 			Approver: strings.TrimSpace(e.Approver),
 			Expires:  strings.TrimSpace(e.Expires),
