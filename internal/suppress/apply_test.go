@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"go.charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/findings"
 )
 
 func now(t *testing.T) time.Time {

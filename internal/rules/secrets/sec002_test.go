@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"go.charter.dev/charter/internal/repository"
+	"go.use-charter.dev/charter/internal/repository"
 )
 
 func TestAESEC002IgnoresEnvReferencesInConfig(t *testing.T) {

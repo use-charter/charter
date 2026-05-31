@@ -1,6 +1,6 @@
 package scoring
 
-import "go.charter.dev/charter/internal/findings"
+import "go.use-charter.dev/charter/internal/findings"
 
 type Result struct {
 	Blocker int

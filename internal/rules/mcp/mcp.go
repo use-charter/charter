@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.charter.dev/charter/internal/config"
-	"go.charter.dev/charter/internal/findings"
-	"go.charter.dev/charter/internal/repository"
+	"go.use-charter.dev/charter/internal/config"
+	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/repository"
 )
 
 // isMCPConfigPath reports whether p is an MCP config file Charter scans. Keep

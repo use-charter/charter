@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/findings"
 )
 
 // authHeaderNames are case-insensitive header keys that declare authentication.

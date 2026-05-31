@@ -4,9 +4,9 @@ import (
 	encodingjson "encoding/json"
 	"sort"
 
-	"go.charter.dev/charter/internal/doctor"
-	"go.charter.dev/charter/internal/findings"
-	"go.charter.dev/charter/internal/suppress"
+	"go.use-charter.dev/charter/internal/doctor"
+	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/suppress"
 )
 
 type payload struct {

@@ -4,7 +4,7 @@ applyTo: "cmd/**/*.go,internal/**/*.go"
 
 # Go Instructions
 
-- Keep one root module: `go.charter.dev/charter`.
+- Keep one root module: `go.use-charter.dev/charter`.
 - No `go.work` or extra modules.
 - Prefer `cmd/` for binaries and `internal/` for non-public code.
 - Defer public Go packages until a stable external API is proven.

@@ -4,10 +4,10 @@ import (
 	"strings"
 	"testing"
 
-	"go.charter.dev/charter/internal/doctor"
-	"go.charter.dev/charter/internal/findings"
-	"go.charter.dev/charter/internal/scoring"
-	"go.charter.dev/charter/internal/suppress"
+	"go.use-charter.dev/charter/internal/doctor"
+	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/scoring"
+	"go.use-charter.dev/charter/internal/suppress"
 )
 
 func TestRenderSuppressedSection(t *testing.T) {

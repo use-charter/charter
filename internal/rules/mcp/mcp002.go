@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/findings"
 )
 
 func remoteHost(rawURL string) (string, bool) {

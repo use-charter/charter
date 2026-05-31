@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"go.charter.dev/charter/internal/repository"
+	"go.use-charter.dev/charter/internal/repository"
 )
 
 func TestRunPassesWhenWorkflowCoverageIsPresent(t *testing.T) {

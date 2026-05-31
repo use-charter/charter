@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/findings"
 )
 
 // multiTokenPatterns are specific multi-token phrases; substring matching is

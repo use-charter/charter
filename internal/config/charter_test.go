@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"go.charter.dev/charter/internal/repository"
+	"go.use-charter.dev/charter/internal/repository"
 )
 
 func writeCharterRepo(t *testing.T, contents string) (string, repository.Inventory) {

@@ -8,7 +8,7 @@ This repository started as the AI-ready bootstrap baseline and now contains the 
 
 - Phase: Phase 1 Slice 7 implemented; real `charter doctor` path with the full 15-rule v1 set, governance, and suppression
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
-- Module path: `go.charter.dev/charter`
+- Module path: `go.use-charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
 
 Current implemented scope:

@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"go.charter.dev/charter/internal/doctor"
-	renderjson "go.charter.dev/charter/internal/render/json"
-	rendermarkdown "go.charter.dev/charter/internal/render/markdown"
+	"go.use-charter.dev/charter/internal/doctor"
+	renderjson "go.use-charter.dev/charter/internal/render/json"
+	rendermarkdown "go.use-charter.dev/charter/internal/render/markdown"
 )
 
 type commandExitError struct {

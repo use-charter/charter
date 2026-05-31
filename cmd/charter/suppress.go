@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"go.charter.dev/charter/internal/repository"
-	"go.charter.dev/charter/internal/suppress"
+	"go.use-charter.dev/charter/internal/repository"
+	"go.use-charter.dev/charter/internal/suppress"
 )
 
 var (

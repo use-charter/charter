@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"go.charter.dev/charter/internal/agentcontext"
-	"go.charter.dev/charter/internal/findings"
-	"go.charter.dev/charter/internal/repository"
+	"go.use-charter.dev/charter/internal/agentcontext"
+	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/repository"
 )
 
 func RunCTXRules(root string, inv repository.Inventory) []findings.Finding {

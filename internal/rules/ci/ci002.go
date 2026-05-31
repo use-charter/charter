@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"go.charter.dev/charter/internal/findings"
-	"go.charter.dev/charter/internal/repository"
+	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/repository"
 )
 
 var (
