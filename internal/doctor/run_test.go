@@ -191,3 +191,61 @@ func TestRunMCPNoAuthFixtureFlagsAEMCP003(t *testing.T) {
 		t.Fatalf("expected exactly [AE-MCP-003], got %v", ids)
 	}
 }
+
+func ccFindingIDs(result Result) []string {
+	var ids []string
+	for _, f := range result.Findings {
+		if strings.HasPrefix(f.RuleID, "AE-CC") {
+			ids = append(ids, f.RuleID)
+		}
+	}
+	return ids
+}
+
+func TestRunCCCleanFixtureNoCCFindings(t *testing.T) {
+	repo, err := makeTempGitRepoFromFixture(t, filepath.Join("..", "..", "testdata", "repos", "pass-cc-clean"))
+	if err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+	result, err := Run(repo, 80)
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if ids := ccFindingIDs(result); len(ids) != 0 {
+		t.Fatalf("expected no AE-CC findings, got %v", ids)
+	}
+}
+
+func TestRunCCDangerousHookFixture(t *testing.T) {
+	repo, err := makeTempGitRepoFromFixture(t, filepath.Join("..", "..", "testdata", "repos", "fail-cc-dangerous-hook"))
+	if err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+	result, err := Run(repo, 80)
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if ids := ccFindingIDs(result); len(ids) != 1 || ids[0] != "AE-CC-001" {
+		t.Fatalf("expected AE-CC-001, got %v", ids)
+	}
+}
+
+func TestRunCCNoScopeFixtureIsolatesAECC002(t *testing.T) {
+	repo, err := makeTempGitRepoFromFixture(t, filepath.Join("..", "..", "testdata", "repos", "fail-cc-no-scope"))
+	if err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+	result, err := Run(repo, 80)
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	cc := ccFindingIDs(result)
+	if len(cc) != 1 || cc[0] != "AE-CC-002" {
+		t.Fatalf("expected exactly [AE-CC-002], got %v", cc)
+	}
+	for _, f := range result.Findings {
+		if f.RuleID == "AE-CTX-001" {
+			t.Fatalf("fixture should not trip AE-CTX-001 (it must isolate AE-CC-002); findings: %+v", result.Findings)
+		}
+	}
+}

@@ -3,6 +3,7 @@ package doctor
 import (
 	"go.charter.dev/charter/internal/findings"
 	"go.charter.dev/charter/internal/repository"
+	goagentconfig "go.charter.dev/charter/internal/rules/agentconfig"
 	goci "go.charter.dev/charter/internal/rules/ci"
 	goctx "go.charter.dev/charter/internal/rules/context"
 	goenv "go.charter.dev/charter/internal/rules/environment"
@@ -39,6 +40,12 @@ func Run(path string, threshold int) (Result, error) {
 		return Result{}, err
 	}
 	all = append(all, mcpFindings...)
+
+	ccFindings, err := goagentconfig.Run(root, inv)
+	if err != nil {
+		return Result{}, err
+	}
+	all = append(all, ccFindings...)
 
 	secretFindings, err := gosecrets.RunSecretRules(root, inv)
 	if err != nil {
