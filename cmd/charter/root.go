@@ -11,5 +11,6 @@ func newRootCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(newDoctorCommand())
+	cmd.AddCommand(newSuppressCommand())
 	return cmd
 }
