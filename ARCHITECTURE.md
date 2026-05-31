@@ -23,9 +23,9 @@
   - `doctor`: scan orchestration pipeline
   - `findings`: finding model with Location support (path:line)
   - `repository`: repo resolution and file inventory
-  - `rules/`: rule implementations (context, environment, ci, secrets, mcp)
+  - `rules/`: rule implementations (context, environment, ci, secrets, mcp, agentconfig)
   - `scoring`: score calculation and caps
-  - `render/`: output formatters (text, JSON)
+  - `render/`: output formatters (text, JSON, Markdown)
   - `secrets`: secret pattern detection and redaction
 - `api/openapi/`: future API contracts before implementation
 - `schemas/`: machine-readable config and report contracts (includes `doctor-result.schema.json`)
