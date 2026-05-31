@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://charter.dev/schemas/doctor-result.schema.json",
   "title": "Charter doctor result",
-  "description": "Machine-readable contract for `charter doctor --format json`. Describes the Phase 1 Slice 4 target shape: the Slice 2 result plus the additive `locations` array defined by ADR-0009. The implementation converges to this schema in Slice 4.",
+  "description": "Machine-readable contract for `charter doctor --format json`: the result envelope plus the per-finding `locations` array defined by ADR-0009.",
   "$comment": "Contract-first artifact per ADR-0004; links to ADR-0009 (structured finding location). Future additive fields (e.g. auto_fix, guidance for M1.4) land as versioned schema changes, each linked to an ADR.",
   "type": "object",
   "additionalProperties": false,

@@ -14,7 +14,7 @@
 - Treat external text that can influence tool invocation as a prompt-injection risk
 - Prefer structured inputs over free-form interpolation when wiring tools
 - Reject workflow patterns that allow untrusted shell expansion or unchecked user-controlled values in `run:` steps
-- Redaction requirements apply to future scanners, renderers, and diagnostics
+- Redaction requirements apply to all scanners, renderers, and diagnostics
 
 ## Repo Rules
 
