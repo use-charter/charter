@@ -6,7 +6,7 @@ This repository started as the AI-ready bootstrap baseline and now contains the 
 
 ## Current State
 
-- Phase: Phase 1 Slice 6 implemented; real `charter doctor` path with agent-config rules and Markdown output
+- Phase: Phase 1 Slice 7 implemented; real `charter doctor` path with the full 15-rule v1 set, governance, and suppression
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
 - Module path: `go.charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
@@ -18,11 +18,12 @@ Current implemented scope:
 - finding model with structured locations (path:line, 1-based)
 - score engine with hard caps (blocker ≤59, secret ≤49)
 - `charter doctor` output with `--path`, `--threshold`, `--quiet`, and `--format text|json|markdown`
-- 12 implemented rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`, `AE-SEC-001`, `AE-SEC-002`, `AE-MCP-001`, `AE-MCP-002`, `AE-MCP-003`, `AE-CC-001`, `AE-CC-002`
+- 15 implemented rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`, `AE-SEC-001`, `AE-SEC-002`, `AE-MCP-001`, `AE-MCP-002`, `AE-MCP-003`, `AE-CC-001`, `AE-CC-002`, `AE-SUPPRESS-001`, `AE-SUPPRESS-002`, `AE-SUPPRESS-003`
 - agent context registry (`agentcontext` — shared source for context and secret scanning, drift guard)
 - blocker-level secret detection with redacted evidence and score cap at `49`: `AE-SEC-001` (agent context), `AE-SEC-002` (MCP config)
 - MCP config scanning of `.mcp.json` / `mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`: server pinning (`AE-MCP-001`), trusted-remote allowlist via `charter.yaml` (`AE-MCP-002`), and remote auth declaration (`AE-MCP-003`)
 - agent-config scanning of JSON hook configs (`.claude/settings.json`, `.cursor/hooks.json`): dangerous shell commands (`AE-CC-001`, Blocker) and explicit edit-scope declaration (`AE-CC-002`)
+- suppression engine with governance: `.charter-suppress.yml` and inline `charter:ignore` directives, with `charter suppress <RULE>` to author entries; suppressed findings are excluded from the score and listed separately, and the governance rules `AE-SUPPRESS-001` (missing reason), `AE-SUPPRESS-002` (permanent waiver without approver), and `AE-SUPPRESS-003` (high suppression rate, informational) audit them
 - text, JSON, and Markdown (PR-comment) output with structured `path:line` finding locations
 
 Documentation topology:

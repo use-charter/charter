@@ -45,7 +45,8 @@ final = min(base, applicable_cap)
 - **Toolchain files (AE-ENV-001):** mise.toml (recommended, polyglot) · go.mod · .nvmrc · bunfig.toml · pyproject.toml · rust-toolchain.toml · .swift-version · gradle-wrapper.properties · .ruby-version · .tool-versions (asdf) · devcontainer.json · flake.nix
 - **Hook managers (AE-ENV-001):** hk (hk.pkl, preferred) · husky (.husky/) · lefthook (lefthook.yml) · pre-commit (.pre-commit-config.yaml) · simple-git-hooks · lint-staged · overcommit (.overcommit.yml) · cargo-husky
 - **Suppression syntax:** `# charter:ignore AE-RULE-NNN reason="…"`
-- **Suppression TTL:** 90 days default (configurable). Permanent suppression is reserved for Phase 2 Cloud and requires an `ApprovedBy` field; without it, Charter treats the suppression as 90-day.
+- **Suppression sources:** `.charter-suppress.yml` (external) and inline `charter:ignore` comment directives (in-source, detected on a finding's own line). Fields: `reason`, `expires`, `approver`.
+- **Suppression TTL:** an entry with no `expires` is a default-TTL suppression (honored); `charter suppress` writes an absolute date defaulting to 90 days out. Only the literal `expires: permanent` is a permanent waiver and requires an `approver`; without one it is **not honored** (the finding stays active) and is flagged by AE-SUPPRESS-002 (full org-level permanent enforcement is reserved for Phase 2 Cloud).
 
 ---
 
@@ -208,9 +209,9 @@ final = min(base, applicable_cap)
 ## AE-SUPPRESS-001 — Suppression Missing Required Reason
 **Severity:** 🟡 MEDIUM  
 
-**Check:** Scan all suppression comments in the repo for bare # charter:ignore AE-RULE-NNN entries that lack a reason=\"…\" field. Every suppression must include a human-readable reason string explaining why the finding is being suppressed. A suppression without a reason is itself a finding — Charter emits AE-SUPPRESS-001 MEDIUM and the suppression is still honored, but the missing reason is flagged.  
+**Check:** Scan all applied suppressions — `.charter-suppress.yml` entries and inline `# charter:ignore AE-RULE-NNN` comments — for entries that lack a `reason` field. Every suppression must include a human-readable reason explaining why the finding is being suppressed. A suppression without a reason is itself a finding — Charter emits AE-SUPPRESS-001 MEDIUM and the suppression is still honored, but the missing reason is flagged.  
 
-**Evidence:** List every suppression comment that lacks a reason field: file path, line number, and rule being suppressed. If all suppressions have reasons, note that explicitly.  
+**Evidence:** List every suppression that lacks a reason: source (file or inline directive `path:line`) and the rule being suppressed. If all suppressions have reasons, note that explicitly.  
 
 **False Positive Risk:** FP Risk: Very Low. The syntax is unambiguous: # charter:ignore AE-SEC-001 reason=\"test fixture\" is valid; # charter:ignore AE-SEC-001 (no reason) always fails. There are no edge cases — either the reason field is present or it isn't.  
 
@@ -221,13 +222,13 @@ final = min(base, applicable_cap)
 ## AE-SUPPRESS-002 — Permanent Suppression Without Approver
 **Severity:** 🟠 HIGH  
 
-**Check:** Scan all suppression comments ( # charter:ignore AE-RULE-NNN reason="…" ) and any .charter-suppress.yml file for entries that set ExpiresAt: permanent (or equivalent). For each permanent suppression found, check whether a non-empty ApprovedBy field is present containing a valid GitHub handle. A permanent suppression without an ApprovedBy value is treated by Charter as a 90-day suppression on the next scan — the finding is not actually suppressed long-term.  
+**Check:** Scan all applied suppressions — inline `# charter:ignore AE-RULE-NNN …` comments and any `.charter-suppress.yml` entries — for an explicit `expires: permanent` waiver. For each, check whether a non-empty `approver` field is present. A permanent waiver without an `approver` is **not honored** — the underlying finding stays active and is scored — and Charter emits AE-SUPPRESS-002 HIGH until an approver is added or a finite `expires` is set. A bare entry with no `expires` is a default-TTL suppression (honored) and is not a permanent waiver.  
 
-**Evidence:** List each permanent suppression entry: file path or suppression key, rule suppressed, and whether ApprovedBy is present. If absent, note that Charter will re-fire the original finding on the next scan.  
+**Evidence:** List each permanent waiver: source (file or inline directive `path:line`), rule suppressed, and whether `approver` is present. If absent, note that the finding stays active.  
 
-**False Positive Risk:** FP Risk: Low. Permanent suppressions are intentionally rare and require explicit opt-in. A permanent entry without ApprovedBy is a genuine governance gap — the repo owner intended a permanent waiver but it won't be honored. Only mark N/A if the repo has no suppression entries at all.  
+**False Positive Risk:** FP Risk: Low. Permanent waivers are intentionally rare and require explicit opt-in (`expires: permanent`). A permanent waiver without `approver` is a genuine governance gap — the repo owner intended a permanent waiver but it is not honored. Only mark N/A if the repo has no permanent waivers.  
 
-**Fix:** For each permanent suppression missing ApprovedBy : either add ApprovedBy: github-handle after a security/founder review, or convert to a 90-day TTL suppression. Permanent suppressions require Phase 2 Cloud to be fully enforced at the org level. In v1, enforce as a manual gate: no permanent suppression ships without a documented approver. Syntax: # charter:ignore AE-SEC-001 reason="test fixture" expires=permanent approved-by=tashfiqul-islam .  
+**Fix:** For each permanent waiver missing `approver`: either add `approver="github-handle"` after a security/founder review, or convert to a finite `expires` date. Org-level enforcement of permanent waivers is reserved for Phase 2 Cloud. Syntax: `# charter:ignore AE-SEC-001 reason="test fixture" expires=permanent approver="tashfiqul-islam"` .  
 
 ---
 

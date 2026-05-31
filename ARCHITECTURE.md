@@ -23,10 +23,11 @@
   - `doctor`: scan orchestration pipeline
   - `findings`: finding model with Location support (path:line)
   - `repository`: repo resolution and file inventory
-  - `rules/`: rule implementations (context, environment, ci, secrets, mcp, agentconfig)
-  - `scoring`: score calculation and caps
+  - `rules/`: rule implementations (context, environment, ci, secrets, mcp, agentconfig, governance)
+  - `scoring`: score calculation and caps (skips informational findings)
   - `render/`: output formatters (text, JSON, Markdown)
   - `secrets`: secret pattern detection and redaction
+  - `suppress`: suppression loading (`.charter-suppress.yml` + inline `charter:ignore`) and the active/suppressed partition
 - `api/openapi/`: future API contracts before implementation
 - `schemas/`: machine-readable config and report contracts (includes `doctor-result.schema.json`)
 - `docs/internal/specs/`: rule-level behavior contracts
