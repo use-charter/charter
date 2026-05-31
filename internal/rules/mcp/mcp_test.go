@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"go.charter.dev/charter/internal/repository"
+	"go.use-charter.dev/charter/internal/repository"
 )
 
 func newMCPRepo(t *testing.T, files map[string]string) (string, repository.Inventory) {

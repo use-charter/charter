@@ -3,7 +3,7 @@ package scoring
 import (
 	"testing"
 
-	"go.charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/findings"
 )
 
 func TestCalculateSkipsInformational(t *testing.T) {

@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"go.charter.dev/charter/internal/doctor"
-	"go.charter.dev/charter/internal/findings"
-	"go.charter.dev/charter/internal/suppress"
+	"go.use-charter.dev/charter/internal/doctor"
+	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/suppress"
 )
 
 // Render projects a doctor.Result into GitHub-PR-comment-friendly Markdown.

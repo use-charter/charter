@@ -9,10 +9,10 @@ import (
 	"sort"
 	"strings"
 
-	"go.charter.dev/charter/internal/agentcontext"
-	"go.charter.dev/charter/internal/findings"
-	"go.charter.dev/charter/internal/repository"
-	sharedsecrets "go.charter.dev/charter/internal/secrets"
+	"go.use-charter.dev/charter/internal/agentcontext"
+	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/repository"
+	sharedsecrets "go.use-charter.dev/charter/internal/secrets"
 )
 
 // secretScoreCap is the maximum final score a repository may earn while any

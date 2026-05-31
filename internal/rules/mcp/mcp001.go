@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/findings"
 )
 
 // exactVersionPattern matches a pinned exact semver; digestPattern matches a

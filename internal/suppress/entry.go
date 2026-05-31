@@ -6,7 +6,7 @@ package suppress
 import (
 	"strings"
 
-	"go.charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/findings"
 )
 
 // File is the repo-relative suppression file path.

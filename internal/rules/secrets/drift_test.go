@@ -3,7 +3,7 @@ package secrets
 import (
 	"testing"
 
-	"go.charter.dev/charter/internal/agentcontext"
+	"go.use-charter.dev/charter/internal/agentcontext"
 )
 
 // TestSEC001ScansEveryCanonicalContextFile guards the drift gap: every file the

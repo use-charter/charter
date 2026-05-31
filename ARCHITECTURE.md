@@ -2,7 +2,7 @@
 
 ## Bootstrap Contract
 
-- Single root Go module: `go.charter.dev/charter`
+- Single root Go module: `go.use-charter.dev/charter`
 - No `go.work`
 - No extra modules during bootstrap
 - Charter core performs no LLM calls

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"go.charter.dev/charter/internal/repository"
+	"go.use-charter.dev/charter/internal/repository"
 )
 
 func writeFile(t *testing.T, path, content string) error {

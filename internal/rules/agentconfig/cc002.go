@@ -7,9 +7,9 @@ import (
 	"sort"
 	"strings"
 
-	"go.charter.dev/charter/internal/agentcontext"
-	"go.charter.dev/charter/internal/findings"
-	"go.charter.dev/charter/internal/repository"
+	"go.use-charter.dev/charter/internal/agentcontext"
+	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/repository"
 )
 
 // offLimitsTokens are concrete sensitive-path signals that count as an explicit

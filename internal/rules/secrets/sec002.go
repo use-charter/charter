@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.charter.dev/charter/internal/findings"
-	"go.charter.dev/charter/internal/repository"
-	sharedsecrets "go.charter.dev/charter/internal/secrets"
+	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/repository"
+	sharedsecrets "go.use-charter.dev/charter/internal/secrets"
 )
 
 var sec002Targets = []string{

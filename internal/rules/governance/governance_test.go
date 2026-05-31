@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"go.charter.dev/charter/internal/findings"
-	"go.charter.dev/charter/internal/suppress"
+	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/suppress"
 )
 
 func ids(fs []findings.Finding) []string {

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"go.charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/findings"
 )
 
 // Apply partitions findings into active and suppressed using .charter-suppress.yml

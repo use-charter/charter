@@ -1,4 +1,4 @@
-module go.charter.dev/charter
+module go.use-charter.dev/charter
 
 go 1.26.0
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"go.charter.dev/charter/internal/repository"
+	"go.use-charter.dev/charter/internal/repository"
 	"gopkg.in/yaml.v3"
 )
 

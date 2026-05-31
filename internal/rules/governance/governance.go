@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"go.charter.dev/charter/internal/findings"
-	"go.charter.dev/charter/internal/suppress"
+	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/suppress"
 )
 
 // rateThreshold is the AE-SUPPRESS-003 suppression-rate trigger (30%, per the
