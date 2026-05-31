@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 
 	"go.charter.dev/charter/internal/config"
 	"go.charter.dev/charter/internal/findings"
@@ -34,8 +33,6 @@ func Run(root string, inv repository.Inventory) ([]findings.Finding, error) {
 	if len(paths) == 0 {
 		return nil, nil
 	}
-	// Defensive: keep discovery order independent of BuildInventory's sort contract.
-	sort.Strings(paths)
 
 	files := make([]ConfigFile, 0, len(paths))
 	for _, rel := range paths {

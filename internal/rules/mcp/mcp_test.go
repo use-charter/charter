@@ -102,3 +102,14 @@ func TestRunMalformedConfigErrors(t *testing.T) {
 		t.Fatal("expected error for malformed .mcp.json")
 	}
 }
+
+func TestRunUntrustedAndNoAuth(t *testing.T) {
+	// Untrusted host + no auth header + no allowlist: the rules are independent,
+	// so both AE-MCP-002 and AE-MCP-003 fire (in pipeline order).
+	ids := runIDs(t, map[string]string{
+		".mcp.json": `{ "mcpServers": { "x": { "type": "http", "url": "https://unknown.example.net/mcp" } } }`,
+	})
+	if len(ids) != 2 || ids[0] != "AE-MCP-002" || ids[1] != "AE-MCP-003" {
+		t.Fatalf("expected [AE-MCP-002 AE-MCP-003], got %v", ids)
+	}
+}

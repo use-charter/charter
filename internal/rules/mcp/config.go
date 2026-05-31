@@ -73,17 +73,17 @@ func parseConfigFile(path string, data []byte) (ConfigFile, error) {
 			Type:    r.Type,
 			URL:     r.URL,
 			Headers: r.Headers,
-			Line:    lineOfKey(string(data), name),
+			Line:    bestEffortLineOfKey(string(data), name),
 		})
 	}
 	return cf, nil
 }
 
-// lineOfKey returns the 1-based line of the first occurrence of "name" as a JSON
+// bestEffortLineOfKey returns the 1-based line of the first occurrence of "name" as a JSON
 // key. Deterministic best-effort; returns 0 if not found.
 // NOTE: if name is a substring of an earlier key (e.g. "s" inside "servers"),
 // the returned line may point to that earlier key. Sufficient for diagnostic display.
-func lineOfKey(text, name string) int {
+func bestEffortLineOfKey(text, name string) int {
 	needle := `"` + name + `"`
 	for i, line := range strings.Split(text, "\n") {
 		if strings.Contains(line, needle) {

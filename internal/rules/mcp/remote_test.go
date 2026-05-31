@@ -1,6 +1,9 @@
 package mcp
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func remoteFixture() []ConfigFile {
 	return []ConfigFile{{Path: ".mcp.json", Servers: []Server{
@@ -22,6 +25,9 @@ func TestCheckTrustedRemotes(t *testing.T) {
 	if fs[0].Locations[0].Line != 6 {
 		t.Fatalf("wrong location: %+v", fs[0].Locations)
 	}
+	if !strings.Contains(fs[0].Summary, "not in the trusted-remote allowlist") {
+		t.Fatalf("expected allowlist summary, got %q", fs[0].Summary)
+	}
 }
 
 func TestCheckTrustedRemotesNoAllowlistFlagsAll(t *testing.T) {
@@ -29,6 +35,11 @@ func TestCheckTrustedRemotesNoAllowlistFlagsAll(t *testing.T) {
 	// no allowlist -> both non-local remotes flagged (asana + shadow).
 	if len(fs) != 2 {
 		t.Fatalf("expected 2 findings, got %d", len(fs))
+	}
+	for _, f := range fs {
+		if !strings.Contains(f.Summary, "no charter.yaml mcp.trustedRemotes allowlist is configured") {
+			t.Fatalf("expected no-allowlist summary, got %q", f.Summary)
+		}
 	}
 }
 
