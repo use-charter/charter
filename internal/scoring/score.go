@@ -15,6 +15,9 @@ func Calculate(all []findings.Finding) Result {
 	result := Result{}
 
 	for _, finding := range all {
+		if finding.Informational {
+			continue
+		}
 		switch finding.Severity {
 		case findings.SeverityBlocker:
 			result.Blocker++
@@ -38,6 +41,9 @@ func Calculate(all []findings.Finding) Result {
 	}
 
 	for _, finding := range all {
+		if finding.Informational {
+			continue
+		}
 		if finding.Cap > 0 && result.Final > finding.Cap {
 			result.Final = finding.Cap
 		}

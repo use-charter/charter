@@ -47,4 +47,8 @@ type Finding struct {
 	// this finding is present. Rules that own a hard score ceiling (e.g. raw
 	// secret detection) set it so scoring stays a pure formula engine.
 	Cap int
+	// Informational marks a finding that is listed in output but excluded from
+	// scoring (it neither deducts points nor engages a cap). Used by
+	// AE-SUPPRESS-003 (high suppression rate).
+	Informational bool
 }
