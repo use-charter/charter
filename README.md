@@ -44,7 +44,7 @@ Documentation authority ladder:
 
 ## Install
 
-- Homebrew (recommended): `brew install <owner>/tap/charter` installs the signed Homebrew cask.
+- Homebrew (recommended): `brew install use-charter/tap/charter` installs the signed Homebrew cask.
 - Signed binary: download from the GitHub Releases page. Each release ships SHA-256 checksums, a cosign keyless signature bundle, an SPDX-2.3 SBOM, and SLSA Build L3 provenance.
 - `go install go.use-charter.dev/charter/cmd/charter@latest` is pending the vanity-path `go-import` redirect host (not yet available).
 
