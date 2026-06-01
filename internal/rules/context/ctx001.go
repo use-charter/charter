@@ -24,6 +24,9 @@ func RunCTXRules(root string, inv repository.Inventory) []findings.Finding {
 	if finding, ok := checkCTX004(root, inv); ok {
 		out = append(out, finding)
 	}
+	if finding, ok := checkCTX006(root, inv); ok {
+		out = append(out, finding)
+	}
 
 	return out
 }
