@@ -6,16 +6,74 @@
 version: "2026.06.02"
 generated: "2026-06-02"
 
-# Vendor-operated remote MCP hosts (OAuth 2.1). Baseline allowlist for AE-MCP-002.
+# Vendor-operated remote MCP hosts. Baseline allowlist for AE-MCP-002: a remote
+# server pointing at one of these hosts is recognized as a known vendor endpoint
+# and not flagged. Scope is intentionally limited to major, reputable, officially
+# vendor-operated servers — the obscure/hobbyist long tail is deliberately
+# excluded so unfamiliar origins still prompt review (an allowlist entry is a
+# statement of trust). charter.yaml mcp.trustedRemotes remains the per-repo
+# override. Sources: vendor docs + curated remote-MCP indexes (2026-06).
 trustedHosts:
+  # Source control, CI & developer platforms
   - api.githubcopilot.com
-  - mcp.sentry.dev
+  - mcp.vercel.com
+  - netlify-mcp.netlify.app
+  - mcp.buildkite.com
+  - mcp.stackoverflow.com
+  - gitmcp.io
+  - mcp.globalping.dev
+  - mcp.docs.astro.build
+  - knowledge-mcp.global.api.aws
+  # Databases & backends
+  - mcp.supabase.com
+  - mcp.neon.tech
+  - mcp.prisma.io
+  - mcp.instantdb.com
+  # AI search, docs & RAG
+  - mcp.context7.com
+  - mcp.exa.ai
+  - mcp.deepwiki.com
+  - hf.co
+  # Design & content
+  - mcp.figma.com
+  - mcp.canva.com
+  - mcp.webflow.com
+  - mcp.wix.com
+  - asset-management.mcp.cloudinary.com
+  # Productivity, CRM & project management
   - mcp.linear.app
   - mcp.atlassian.com
   - mcp.notion.com
-  - mcp.stripe.com
-  - mcp.vercel.com
   - mcp.asana.com
+  - mcp.monday.com
+  - mcp.intercom.com
+  - app.hubspot.com
+  - mcp.box.com
+  - mcp.attio.com
+  - mcp.zapier.com
+  - rube.app
+  # Observability, security & platform
+  - mcp.sentry.dev
+  - mcp.semgrep.ai
+  - mcp.zenable.app
+  - mcp.stytch.dev
+  - mcp.port.io
+  - mcp.cortex.io
+  # Payments & commerce
+  - mcp.stripe.com
+  - mcp.paypal.com
+  - mcp.squareup.com
+  - api.dashboard.plaid.com
+  - ramp-mcp-remote.ramp.com
+  - mcp.mercadopago.com
+  - mcp.dodopayments.com
+  # Google Cloud MCP endpoints
+  - bigquery.googleapis.com
+  - compute.googleapis.com
+  - container.googleapis.com
+  - mapstools.googleapis.com
+  # Web3 contract tooling
+  - mcp.openzeppelin.com
   # Cloudflare managed remote MCP servers (developers.cloudflare.com/agents/
   # model-context-protocol/mcp-servers-for-cloudflare/). OAuth 2.1; the API
   # "Code Mode" server plus product-specific *.mcp.cloudflare.com endpoints.
@@ -65,6 +123,46 @@ servers:
     ecosystem: pypi
     status: active
     reference: "https://github.com/modelcontextprotocol/servers/tree/main/src/time"
+
+  # --- Popular AI/agentic stdio servers (known-good packages; no version
+  # tracking yet — these document recognized servers and are a home for future
+  # advisories. The behind-stable nudge activates once knownVersions are added). ---
+  - package: "shadcn"
+    ecosystem: npm
+    status: active
+    reference: "https://ui.shadcn.com/docs/mcp"
+  - package: "@upstash/context7-mcp"
+    ecosystem: npm
+    status: active
+    reference: "https://github.com/upstash/context7"
+  - package: "@playwright/mcp"
+    ecosystem: npm
+    status: active
+    reference: "https://github.com/microsoft/playwright-mcp"
+  - package: "firecrawl-mcp"
+    ecosystem: npm
+    status: active
+    reference: "https://github.com/mendableai/firecrawl-mcp-server"
+  - package: "exa-mcp-server"
+    ecosystem: npm
+    status: active
+    reference: "https://github.com/exa-labs/exa-mcp-server"
+  - package: "tavily-mcp"
+    ecosystem: npm
+    status: active
+    reference: "https://github.com/tavily-ai/tavily-mcp"
+  - package: "@supabase/mcp-server-supabase"
+    ecosystem: npm
+    status: active
+    reference: "https://github.com/supabase-community/supabase-mcp"
+  - package: "@neondatabase/mcp-server-neon"
+    ecosystem: npm
+    status: active
+    reference: "https://github.com/neondatabase/mcp-server-neon"
+  - package: "mongodb-mcp-server"
+    ecosystem: npm
+    status: active
+    reference: "https://github.com/mongodb-js/mongodb-mcp-server"
 
   # --- Archived reference servers → migrate to the successor (HIGH) ---
   - package: "@modelcontextprotocol/server-github"

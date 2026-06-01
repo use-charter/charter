@@ -77,6 +77,37 @@ func TestCatalogValid(t *testing.T) {
 	}
 }
 
+// TestCatalogCoversMajorServers guards against accidental shrinkage of the
+// curated coverage: a representative set of major vendor hosts and known
+// packages must stay present (the catalog is meant to be broad — Slice 13).
+func TestCatalogCoversMajorServers(t *testing.T) {
+	c := Default()
+
+	hosts := c.TrustedHostSet()
+	for _, h := range []string{
+		"api.githubcopilot.com", "mcp.supabase.com", "mcp.neon.tech", "mcp.figma.com",
+		"mcp.stripe.com", "mcp.linear.app", "mcp.notion.com", "mcp.sentry.dev",
+		"mcp.context7.com", "hf.co", "mcp.cloudflare.com", "mcp.vercel.com",
+	} {
+		if _, ok := hosts[h]; !ok {
+			t.Errorf("expected trusted host %q in catalog", h)
+		}
+	}
+	if len(hosts) < 50 {
+		t.Errorf("expected a broad trusted-host baseline (>=50), got %d", len(hosts))
+	}
+
+	for _, pkg := range []string{
+		"shadcn",
+		"@modelcontextprotocol/server-filesystem",
+		"@modelcontextprotocol/server-github", // deprecated
+	} {
+		if _, ok := c.Lookup(pkg); !ok {
+			t.Errorf("expected package %q in catalog", pkg)
+		}
+	}
+}
+
 func assertAscendingUnique(t *testing.T, pkg string, vs []string) {
 	t.Helper()
 	seen := map[string]bool{}
