@@ -21,6 +21,22 @@ When an item is resolved, strike it (or move it to a "Done" note) in the slice t
 | CF-6 | `AE-MCP-001` has no `charter fix` fixer (auto-pin `@latest`/range → exact version). | The correct pin target needs the MCP catalog. | After **Slice 13** (MCP Catalog) — add an `AE-MCP-001` fixer that pins to the catalog's stable version | Slice 12 |
 | CF-7 | `charter version` has no `--format json`/`--short`; the GitHub Action has no `score` output. | Minimal v1 surface; not required by current consumers. | Phase 1.5 / when a consumer needs them | Slices 9, 10 |
 | CF-8 | First-party exemptions in `AE-CI-002` (the `use-charter/charter-action@<tag>` and `slsa-github-generator@<tag>` skips) accept tag pins. | Tag-pinning is the conventional/required form for these; SHA-pinning the SLSA generator is unsupported. | Revisit only if a stricter first-party-pin policy is wanted post-launch | Slices 9, 12 |
+| CF-9 | SARIF `helpUri`s point at `https://use-charter.dev/rules/AE-*`, which are **dead links until the rule docs pages exist**. | Pages live in the Mintlify docs site, not yet built. | **Hard launch dependency** — must be live by/with Slice 15 (docs) | Slice 8 |
+| CF-10 | `use-charter` GitHub org hardening: verify the `use-charter.dev` domain (DNS TXT) on the org and require 2FA for org members. | Recommended during the org migration; admin-side. | go-public ops / Slice 17 checklist | Org migration |
+| CF-11 | macOS release binaries are cosign-signed but **not Apple-notarized** (the Homebrew cask strips `com.apple.quarantine` as the interim). | Notarization needs an Apple Developer cert. | Post-launch, when an Apple Developer cert is available | Slice 9 |
+
+## Phase 1.5 / post-launch product backlog
+
+Canonical list of feature-level deferrals (supersedes the roadmap's short "Deferred to Phase 1.5" note). Not launch blockers; pulled by Phase 1 validation signals.
+
+- **Commands:** `charter serve` (MCP server exposing `charter_doctor`/`charter_score`/`charter_fix`/`charter_explain`); `charter explain <RULE>` (reuses the rule catalog); standalone `charter report --format spdx`.
+- **Output:** `--format toon`, `--format json-compact`, `--for-agent`; `--no-color`/plain-CI text variant.
+- **SARIF:** 2.2 upgrade; `artifacts[]`/`invocation` enrichment; content-based (line-shift-resilient) `partialFingerprints` (today's are position-based).
+- **Policy/CLI:** `charter doctor --rule` filtering; rule-level enable/disable, per-rule severity overrides, `rules.ignore`, `rules.AE-CTX-001.token_budget` (see CF-3).
+- **Rules:** `AE-SEC-001` → full Gitleaks ruleset (160+ detectors); full 7-agent config parsing (T1.2.1) + deep multi-agent conflict detection (T1.2.2) — current coverage is lighter than the architecture envisions.
+- **`charter fix`:** `AE-ENV-001`/`AE-MCP-001` fixers (CF-5/CF-6); present-but-weak-file rewrites; content-aware/3-way diffs; interactive selection.
+- **`charter init`:** `.cursor/rules` scaffolding, `.env.example` codebase env-scanning, interactive prompts.
+- **Distribution:** GHCR/container images, Scoop, Nix, apt, winget; charter-action Marketplace listing + automated monorepo→action-repo sync (today: manual seed at launch).
 
 ## Done
 

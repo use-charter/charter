@@ -126,7 +126,7 @@ Pure-deterministic/offline engine work (no CI secrets): **11, 12, 13**, plus the
 
 - **Hard constraints hold throughout:** no LLM calls in core; deterministic, offline-first core; diff-first, no silent mutation; fail fast; never log/print secrets; no speculative refactors.
 - **Latest-docs-first (ADR-0006):** Slices 9, 10, 15 touch fast-moving external tooling (GoReleaser, cosign, SLSA, codeql-action, Mintlify) — fetch current official docs during each grill; do not rely on training data for config schemas or action versions.
-- **Deferred to Phase 1.5 / v1.1 (not in this roadmap):** `charter serve` (MCP server), `--format toon`, `--format json-compact`, `--for-agent`, `charter report --format spdx` as a standalone command, AE-SEC-001 expansion to the full Gitleaks ruleset, deep multi-agent conflict detection (T1.2.2).
+- **Deferred to Phase 1.5 / v1.1:** the canonical list lives in `carry-forward.md` (Phase 1.5 backlog) — `charter serve`, `--format toon|json-compact`, `--for-agent`, standalone `charter report --format spdx`, `charter explain`, AE-SEC-001 → full Gitleaks ruleset, deep multi-agent parsing/conflict detection, SARIF 2.2/enrichment, richer policy/CLI, and more distribution channels.
 - **Validation ≠ launch:** §1.7 Phase 1 exit signals (organic CI adoption, stranger issues, mentions, community self-help) are measured *after* launch and decide Phase 2 — they are not pre-launch gates.
 - **Carry-forward ledger:** smaller cross-slice follow-ups deliberately deferred during execution live in `carry-forward.md` (e.g. §1.8 gallery mockups → Slice 14, HTML mirror reconciliation, AGENTS.md token budget, the deferred `AE-MCP-001` fixer → after Slice 13). Review it when starting Slices 13/14.
 
