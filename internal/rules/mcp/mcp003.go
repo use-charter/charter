@@ -25,7 +25,12 @@ func hasAuthHeader(headers map[string]string) bool {
 	return false
 }
 
-func checkRemoteAuth(files []ConfigFile) []findings.Finding {
+// checkRemoteAuth emits AE-MCP-003 for remote servers that declare no auth
+// metadata. oauthHosts are catalog-known vendor hosts that authenticate via the
+// OAuth 2.1 flow rather than a static config header, so they are exempt — flagging
+// them is a false positive (a config for e.g. mcp.sentry.dev legitimately carries
+// no Authorization header). FP fix from the M1.6 catalog FP-validation (CF-13).
+func checkRemoteAuth(files []ConfigFile, oauthHosts map[string]struct{}) []findings.Finding {
 	var result []findings.Finding
 	for _, cf := range files {
 		for _, s := range cf.Servers {
@@ -34,6 +39,9 @@ func checkRemoteAuth(files []ConfigFile) []findings.Finding {
 			}
 			host, ok := remoteHost(s.URL)
 			if !ok || isLocalHost(host) {
+				continue
+			}
+			if _, trusted := oauthHosts[host]; trusted {
 				continue
 			}
 			if hasAuthHeader(s.Headers) {

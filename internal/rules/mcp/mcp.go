@@ -69,6 +69,6 @@ func Run(root string, inv repository.Inventory) ([]findings.Finding, error) {
 	var all []findings.Finding
 	all = append(all, checkPinning(files, cat)...)
 	all = append(all, checkTrustedRemotes(files, mergeTrustedHosts(allow, cat))...)
-	all = append(all, checkRemoteAuth(files)...)
+	all = append(all, checkRemoteAuth(files, cat.TrustedHostSet())...)
 	return all, nil
 }

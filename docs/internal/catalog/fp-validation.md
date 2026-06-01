@@ -58,13 +58,14 @@ Scope of the gate is **AE-MCP-001 + AE-MCP-002** (the catalog rules). AE-MCP-003
 ### Refresh landed this run (T1.6.2)
 - Added **real, verified CVEs** for `mcp-server-git` (CVE-2026-27735 / CVE-2025-68145 / CVE-2025-68143, all CWE-22 path traversal; fixes `2026.1.14` / `2025.12.18` / `2025.9.25`), using the new `affectedBelow` range matcher. Verified: a repo pinning `mcp-server-git@2025.8.0` now fires AE-MCP-001 HIGH → CVE-2026-27735.
 
-## Out-of-scope observation (AE-MCP-003)
-AE-MCP-003 ("remote server declares no auth metadata") fired on **every** OAuth-based vendor remote server configured without a static `Authorization` header (sentry, context7, atlassian, openfort). For modern OAuth 2.1 remote servers, auth is declared via the OAuth flow, not a config header — so this is a likely systematic FP for AE-MCP-003. Tracked as **CF-13** for a future AE-MCP-003 refinement (e.g. treat catalog-known OAuth hosts as auth-declared). Not in this slice's scope (catalog = AE-MCP-001/002).
+## AE-MCP-003 observation — RESOLVED (CF-13)
+AE-MCP-003 ("remote server declares no auth metadata") fired on **every** OAuth-based vendor remote server configured without a static `Authorization` header (sentry, context7, atlassian, openfort). For modern OAuth 2.1 remote servers, auth is declared via the OAuth flow, not a config header — a systematic FP. **Fixed:** `checkRemoteAuth` now exempts catalog `trustedHosts` (known OAuth vendor servers), so these no longer flag. Non-catalog remotes without auth still flag.
 
 ## Sign-off
 
 - [x] FP rate ≤ 10% recorded above (10% → 0% after fix).
 - [x] The FP has a rule fix landed and re-verified.
 - [x] Real CVE advisories added for a cataloged package (T1.6.2).
-- [ ] Broaden the run to more repos over time; resolve CF-13 (AE-MCP-003 OAuth) and continue version-data curation (CF-12) before the public tag (Slice 17).
+- [x] CF-13 (AE-MCP-003 OAuth FP) resolved — catalog OAuth hosts exempt.
+- [ ] Broaden the run to more repos over time; continue version-data curation (CF-12) before the public tag (Slice 17).
 - [ ] Final founder sign-off at the Slice 17 release gate.
