@@ -100,7 +100,7 @@ Pure-deterministic/offline engine work (no CI secrets): **11, 12, 13**, plus the
 ## Slice 17 — Production Release Checklist (assemble)
 
 - **Goal:** assemble the single gate document that must be all-green to launch.
-- **Scope:** extend `docs/internal/runbooks/release.md` into a v1.0 launch checklist: signed release verified (cosign/SLSA/SBOM), perf budgets met, all 6 commands working, Action verified end-to-end, docs live + helpUris resolve, website live, GitHub Discussions enabled, alerts configured (Signals 1/3/4), branch protection + private vuln reporting + CodeQL/Scorecard on public, LICENSE/NOTICE/CHANGELOG + versioning policy, trademark ADR-0010 = CLEARED, demo asset.
+- **Scope:** extend `docs/internal/runbooks/release.md` into a v1.0 launch checklist: signed release verified (cosign/SLSA/SBOM), perf budgets met, all 6 commands working, Action verified end-to-end, docs live + helpUris resolve, website live, GitHub Discussions enabled, alerts configured (Signals 1/3/4), branch protection + private vuln reporting + CodeQL/Scorecard on public, LICENSE/NOTICE/CHANGELOG + versioning policy, trademark ADR-0010 = CLEARED, demo asset, flip `use-charter/homebrew-tap` to **public** (kept private until launch so `brew install` works).
 - **Depends on:** Slices 9–16.
 - **Exit:** checklist authored, every item with an owner and a verifiable check. **Hard blocker.**
 
