@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Charter",
+          "informationUri": "https://use-charter.dev",
+          "version": "0.0.0-dev",
+          "rules": [
+            {
+              "id": "AE-ENV-001",
+              "name": "ReproducibleToolchain",
+              "shortDescription": {
+                "text": "A reproducible toolchain declaration is present."
+              },
+              "helpUri": "https://use-charter.dev/rules/AE-ENV-001",
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "category": "Environment",
+                "severity": "MEDIUM",
+                "tags": [
+                  "security"
+                ],
+                "security-severity": "5.0"
+              }
+            },
+            {
+              "id": "AE-MCP-001",
+              "name": "MCPServerPinned",
+              "shortDescription": {
+                "text": "Every MCP server entry is pinned to an exact version."
+              },
+              "helpUri": "https://use-charter.dev/rules/AE-MCP-001",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "category": "MCP Safety",
+                "severity": "HIGH",
+                "tags": [
+                  "security"
+                ],
+                "security-severity": "7.5"
+              }
+            },
+            {
+              "id": "AE-SEC-001",
+              "name": "NoRawSecretsInContext",
+              "shortDescription": {
+                "text": "No raw secret patterns in agent-visible files."
+              },
+              "helpUri": "https://use-charter.dev/rules/AE-SEC-001",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "category": "Secrets",
+                "severity": "BLOCKER",
+                "tags": [
+                  "security"
+                ],
+                "security-severity": "9.5"
+              }
+            },
+            {
+              "id": "AE-SUPPRESS-003",
+              "name": "SuppressionRate",
+              "shortDescription": {
+                "text": "Suppression rate is within a healthy range (informational)."
+              },
+              "helpUri": "https://use-charter.dev/rules/AE-SUPPRESS-003",
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "category": "Governance",
+                "severity": "MEDIUM"
+              }
+            }
+          ]
+        }
+      },
+      "automationDetails": {
+        "id": "charter"
+      },
+      "results": [
+        {
+          "ruleId": "AE-SEC-001",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "secret in context"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "AGENTS.md"
+                },
+                "region": {
+                  "startLine": 14
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash": "e3a9fb43a95797b51d0ae17309da5d9153adbda196c76a0e879f4f67adc84f79"
+          },
+          "suppressions": []
+        },
+        {
+          "ruleId": "AE-MCP-001",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "unpinned"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".mcp.json"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash": "340c5d9414348c8daf5abc3f932d54ea2d403c4b0117b4ca5980f186ae8bdf51"
+          },
+          "suppressions": [
+            {
+              "kind": "external"
+            }
+          ]
+        },
+        {
+          "ruleId": "AE-ENV-001",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "no toolchain"
+          },
+          "partialFingerprints": {
+            "primaryLocationLineHash": "cf9cf055642a67b69dad6bd00f147c55e28a27619991e80f30d6c17ca4c40d45"
+          },
+          "suppressions": []
+        },
+        {
+          "ruleId": "AE-SUPPRESS-003",
+          "ruleIndex": 3,
+          "level": "note",
+          "kind": "informational",
+          "message": {
+            "text": "high suppression rate"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".charter-suppress.yml"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash": "1c3e9acbd190ac6600f0fee7fd636322ca25979a4094c94a270f21f27a4c4b60"
+          },
+          "suppressions": []
+        }
+      ]
+    }
+  ]
+}
