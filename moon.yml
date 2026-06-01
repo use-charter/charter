@@ -72,8 +72,22 @@ tasks:
       - "docs/internal/runbooks"
       - "docs/internal/specs"
       - "docs"
+    deps:
+      - "docs-html"
     inputs:
       - "@globs(docsSources)"
+  docs-html:
+    command: "bun"
+    args:
+      - "scripts/generate-doc-html.ts"
+      - "--check"
+    inputs:
+      - "docs/internal/architecture/charter-architecture-2026.md"
+      - "docs/internal/architecture/charter-architecture-2026.html"
+      - "docs/internal/audit/charter-v1-audit-checklist.md"
+      - "docs/internal/audit/charter-v1-audit-checklist.html"
+      - "scripts/generate-doc-html.ts"
+      - "package.json"
   security:
     script: "gitleaks git --config .gitleaks.toml . --redact --no-banner && gitleaks dir --config .gitleaks.toml . --redact --no-banner && govulncheck ./... && osv-scanner scan source -r ."
     inputs:
