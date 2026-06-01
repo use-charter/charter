@@ -45,7 +45,7 @@ func checkTrustedRemotes(files []ConfigFile, allow []string) []findings.Finding 
 			if _, trusted := allowed[host]; trusted {
 				continue
 			}
-			summary := "Remote MCP server origin is not in the trusted-remote allowlist (OWASP MCP09 Shadow Servers)"
+			summary := "Remote MCP server origin is not in the trusted-remote allowlist (MCP catalog or charter.yaml mcp.trustedRemotes) (OWASP MCP09 Shadow Servers)"
 			if noAllowlist {
 				summary = "Remote MCP server origin cannot be verified — no charter.yaml mcp.trustedRemotes allowlist is configured (OWASP MCP09)"
 			}

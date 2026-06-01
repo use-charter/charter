@@ -32,7 +32,7 @@
               "id": "AE-MCP-001",
               "name": "MCPServerPinned",
               "shortDescription": {
-                "text": "Every MCP server entry is pinned to an exact version."
+                "text": "Every MCP server is pinned to an exact, current, non-deprecated version per the MCP catalog."
               },
               "helpUri": "https://use-charter.dev/rules/AE-MCP-001",
               "defaultConfiguration": {

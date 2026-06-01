@@ -192,6 +192,34 @@ func TestRunMCPNoAuthFixtureFlagsAEMCP003(t *testing.T) {
 	}
 }
 
+func TestRunMCPDeprecatedFixtureFlagsAEMCP001(t *testing.T) {
+	repo, err := makeTempGitRepoFromFixture(t, filepath.Join("..", "..", "testdata", "repos", "fail-mcp-deprecated"))
+	if err != nil {
+		t.Fatalf("fixture setup: %v", err)
+	}
+	result, err := Run(repo, 80, true)
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if ids := mcpFindingIDs(result); len(ids) != 1 || ids[0] != "AE-MCP-001" {
+		t.Fatalf("expected exactly [AE-MCP-001] for an archived package, got %v", ids)
+	}
+}
+
+func TestRunMCPCatalogHostFixtureNoMCPFindings(t *testing.T) {
+	repo, err := makeTempGitRepoFromFixture(t, filepath.Join("..", "..", "testdata", "repos", "pass-mcp-catalog-host"))
+	if err != nil {
+		t.Fatalf("fixture setup: %v", err)
+	}
+	result, err := Run(repo, 80, true)
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if ids := mcpFindingIDs(result); len(ids) != 0 {
+		t.Fatalf("expected no MCP findings for a catalog-trusted host, got %v", ids)
+	}
+}
+
 func ccFindingIDs(result Result) []string {
 	var ids []string
 	for _, f := range result.Findings {
