@@ -115,6 +115,28 @@ servers:
     ecosystem: pypi
     status: active
     reference: "https://github.com/modelcontextprotocol/servers/tree/main/src/git"
+    advisories:
+      # Path-traversal CVEs in the reference git server (CWE-22). Upgrading to
+      # 2026.1.14 remediates all three. affectedBelow uses the published fix
+      # boundary (real GHSA/NVD data; verified 2026-06).
+      - id: "CVE-2026-27735"
+        affectedBelow: "2026.1.14"
+        fixedIn: "2026.1.14"
+        severity: high
+        summary: "git_add path traversal stages files outside the repository (CWE-22)"
+        reference: "https://github.com/modelcontextprotocol/servers/security/advisories/GHSA-vjqx-cfc4-9h6v"
+      - id: "CVE-2025-68145"
+        affectedBelow: "2025.12.18"
+        fixedIn: "2025.12.18"
+        severity: high
+        summary: "--repository flag not enforced; tool calls can reach other repositories (CWE-22)"
+        reference: "https://github.com/modelcontextprotocol/servers/security/advisories/GHSA-j22h-9j4x-23w5"
+      - id: "CVE-2025-68143"
+        affectedBelow: "2025.9.25"
+        fixedIn: "2025.9.25"
+        severity: high
+        summary: "git_init accepts arbitrary filesystem paths (CWE-22)"
+        reference: "https://github.com/modelcontextprotocol/servers/security/advisories/GHSA-5cgr-j3jf-jw3v"
   - package: "mcp-server-fetch"
     ecosystem: pypi
     status: active

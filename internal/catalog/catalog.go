@@ -28,14 +28,19 @@ import (
 var embedded []byte
 
 // Advisory is a known security advisory (CVE/GHSA) against specific versions of
-// a cataloged MCP server package.
+// a cataloged MCP server package. A pinned version matches when it is listed in
+// Affected (exact) or, for the common "fixed in X, affected below X" CVE shape,
+// when AffectedBelow is set and the version orders numerically below it. The
+// numeric comparison is conservative (see versionLess) and applies ONLY to
+// authoritative advisories — the behind-stable nudge stays exact-match only.
 type Advisory struct {
-	ID        string   `yaml:"id"`
-	Affected  []string `yaml:"affected"`
-	FixedIn   string   `yaml:"fixedIn"`
-	Severity  string   `yaml:"severity"`
-	Summary   string   `yaml:"summary"`
-	Reference string   `yaml:"reference"`
+	ID            string   `yaml:"id"`
+	Affected      []string `yaml:"affected"`
+	AffectedBelow string   `yaml:"affectedBelow"`
+	FixedIn       string   `yaml:"fixedIn"`
+	Severity      string   `yaml:"severity"`
+	Summary       string   `yaml:"summary"`
+	Reference     string   `yaml:"reference"`
 }
 
 // ServerEntry is one curated MCP server package.
@@ -103,8 +108,8 @@ func (c *Catalog) Lookup(pkg string) (ServerEntry, bool) {
 	return ServerEntry{}, false
 }
 
-// AdvisoryFor returns the first advisory whose affected set contains version
-// exactly.
+// AdvisoryFor returns the first advisory affecting version — by exact membership
+// in Affected, or by AffectedBelow (version orders numerically below the fix).
 func (e ServerEntry) AdvisoryFor(version string) (Advisory, bool) {
 	for _, a := range e.Advisories {
 		for _, v := range a.Affected {
@@ -112,8 +117,64 @@ func (e ServerEntry) AdvisoryFor(version string) (Advisory, bool) {
 				return a, true
 			}
 		}
+		if a.AffectedBelow != "" {
+			if less, ok := versionLess(version, a.AffectedBelow); ok && less {
+				return a, true
+			}
+		}
 	}
 	return Advisory{}, false
+}
+
+// versionLess reports whether version a orders below b using component-wise
+// numeric comparison of dot-separated integers (correct for CalVer like
+// 2026.1.14 and semver like 1.2.3). A leading "v" is ignored. ok is false when
+// either version contains a non-numeric component (prerelease/build tags, dist
+// tags, "latest", git refs) — callers treat ok=false as "no match", so an
+// ambiguous version is never flagged by a range advisory.
+func versionLess(a, b string) (less, ok bool) {
+	pa, ok := numericParts(a)
+	if !ok {
+		return false, false
+	}
+	pb, ok := numericParts(b)
+	if !ok {
+		return false, false
+	}
+	for i := 0; i < len(pa) || i < len(pb); i++ {
+		var x, y int
+		if i < len(pa) {
+			x = pa[i]
+		}
+		if i < len(pb) {
+			y = pb[i]
+		}
+		if x != y {
+			return x < y, true
+		}
+	}
+	return false, true // equal
+}
+
+func numericParts(v string) ([]int, bool) {
+	v = strings.TrimSpace(v)
+	v = strings.TrimPrefix(v, "v")
+	if v == "" {
+		return nil, false
+	}
+	fields := strings.Split(v, ".")
+	parts := make([]int, 0, len(fields))
+	for _, f := range fields {
+		n := 0
+		for _, r := range f {
+			if r < '0' || r > '9' {
+				return nil, false
+			}
+			n = n*10 + int(r-'0')
+		}
+		parts = append(parts, n)
+	}
+	return parts, true
 }
 
 // KnownBehind reports whether version is a recognized, non-stable version with

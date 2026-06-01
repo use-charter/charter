@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"net"
 	"net/url"
 	"sort"
 	"strings"
@@ -16,12 +17,26 @@ func remoteHost(rawURL string) (string, bool) {
 	return strings.ToLower(u.Hostname()), true
 }
 
+// isLocalHost reports whether a host is local/internal rather than a public
+// remote origin. AE-MCP-002 (shadow servers) and AE-MCP-003 (remote auth) target
+// public origins, so loopback, RFC1918 private and link-local addresses, the
+// unspecified address, and the reserved internal-only TLDs (.localhost, .local
+// mDNS, .internal) are exempt — a server on your own machine or LAN is not a
+// public shadow server. (FP fix from the M1.6 catalog FP-validation: a config
+// pointing at a 172.16.x.x LAN address was wrongly flagged as an untrusted
+// public remote.)
 func isLocalHost(host string) bool {
 	switch host {
 	case "localhost", "::1", "0.0.0.0":
 		return true
 	}
-	return strings.HasPrefix(host, "127.") || strings.HasSuffix(host, ".localhost")
+	if strings.HasSuffix(host, ".localhost") || strings.HasSuffix(host, ".local") || strings.HasSuffix(host, ".internal") {
+		return true
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		return ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsUnspecified()
+	}
+	return strings.HasPrefix(host, "127.")
 }
 
 func checkTrustedRemotes(files []ConfigFile, allow []string) []findings.Finding {
