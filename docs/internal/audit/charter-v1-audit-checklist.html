@@ -227,6 +227,27 @@ final = min(base, applicable_cap)
 <p><strong>False Positive Risk:</strong> FP Risk: Medium. A brand-new repo migrating to Charter may legitimately have many suppressions during the initial calibration period. Mark FP if the repo is clearly in a transition state (Charter installed within the last 30 days, most suppressions dated within the same window). Otherwise, a persistent high suppression rate after 30 days is a genuine governance signal.  </p>
 <p><strong>Fix:</strong> Review the suppression log in bulk. For suppressions covering the same rule across many files: consider whether the rule needs a repo-level exception in charter.yaml → rules.ignore (instead of per-line suppression) or whether the rule&#39;s FP rate for this codebase pattern warrants a false-positive report. For suppressions that have grown stale: check expiry dates and remove expired ones. This finding does not affect the Charter Score.  </p>
 <hr>
+<h2>AE-TEST-001 — Automated Tests Missing</h2>
+<p><strong>Severity:</strong> 🟠 HIGH  </p>
+<p><strong>Check:</strong> For each <strong>active</strong> code language — one with non-test source files outside tooling directories (<code>scripts/</code>, <code>tools/</code>, <code>testdata/</code>, <code>examples/</code>, <code>vendor/</code>, <code>node_modules/</code>, <code>dist/</code>, <code>build/</code>, <code>.github/</code>, <code>gen/</code>) — confirm ≥1 recognized test artifact exists: Go <code>*_test.go</code>; JS/TS <code>*.{test,spec}.*</code> or <code>__tests__/</code>; Python <code>test_*.py</code>/<code>*_test.py</code>/<code>tests/</code>/<code>conftest.py</code>; Rust <code>tests/**.rs</code> or inline <code>#[test]</code>/<code>#[cfg(test)]</code>; Java/Kotlin <code>src/test/**</code>/<code>*Test.*</code>; Ruby <code>*_spec.rb</code>/<code>*_test.rb</code>; C# <code>*Tests.cs</code>; PHP <code>tests/</code>/<code>*Test.php</code>. Flag HIGH for any active language with no tests.  </p>
+<p><strong>Evidence:</strong> One finding listing each active language lacking tests (e.g., <code>no test files detected for active language: Go</code>).  </p>
+<p><strong>False Positive Risk:</strong> FP Risk: Low. A manifest alone does not make a language active — a <code>package.json</code> driving only build scripts in a Go repo is <strong>not</strong> a JS surface (no non-test JS source outside tooling). Mark N/A if no recognized code language is active (docs/config-only repos). Rust inline unit tests count.  </p>
+<p><strong>Fix:</strong> Add tests for the active language(s) so an agent can run them and self-verify before finishing a task. Covers the agent-verifiability gap (ADR-0023).  </p>
+<hr>
+<h2>AE-AUTO-001 — Verification Command Not Discoverable</h2>
+<p><strong>Severity:</strong> 🟡 MEDIUM  </p>
+<p><strong>Check:</strong> When a code language is active, confirm the test command is discoverable via either a task runner declaring a test/check entrypoint (<code>Makefile</code>, <code>justfile</code>, <code>Taskfile.yml</code>, <code>moon.yml</code>, <code>mise.toml [tasks]</code>, <code>package.json</code> <code>scripts.test</code>) <strong>or</strong> the active language&#39;s conventional zero-config toolchain (Go <code>go test</code>, Rust <code>cargo test</code>, Python with a configured <code>pytest</code>). Flag MEDIUM when neither applies.  </p>
+<p><strong>Evidence:</strong> A finding noting no runner test target and no conventional toolchain for the active language(s).  </p>
+<p><strong>False Positive Risk:</strong> FP Risk: Low. A single-language Go/Rust repo is never penalized for lacking a <code>Makefile</code> — its toolchain is the contract. Mark N/A if no language is active.  </p>
+<p><strong>Fix:</strong> Expose a test command via a task runner so an agent can discover and run it. Covers agent operability (ADR-0023).  </p>
+<hr>
+<h2>AE-CTX-006 — Agent Instructions Over-Emphasized</h2>
+<p><strong>Severity:</strong> ⚪ INFORMATIONAL  </p>
+<p><strong>Check:</strong> In the agent context file, measure emphatic-directive density (<code>IMPORTANT</code>/<code>NEVER</code>/<code>MUST</code>/<code>CRITICAL</code>/<code>ALWAYS</code>/<code>EXTREMELY</code>/<code>ABSOLUTELY</code>/<code>FORBIDDEN</code>/<code>PROHIBITED</code>) per 1,000 words. Flag when ≥ 15 per 1K. This finding does not reduce the Charter Score — it is an instruction-quality nudge.  </p>
+<p><strong>Evidence:</strong> Emphatic-directive count, word count, density, and threshold.  </p>
+<p><strong>False Positive Risk:</strong> FP Risk: Low. Informational — never deducts. Grounded in instruction-following research: stacked imperatives create a fragile, competitive instruction topology that degrades adherence.  </p>
+<p><strong>Fix:</strong> Prefer concise, declarative guidance over stacked emphatic directives; state constraints plainly. This finding does not affect the Charter Score.  </p>
+<hr>
 </main>
 </body>
 </html>

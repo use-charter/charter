@@ -211,7 +211,7 @@ final = min(base, applicable_cap)
 <td>High ROI at org scale; add when use-charter/org has 3+ repos</td>
 </tr>
 </tbody></table>
-<h2>§0.2 Rule Catalog — v1 Launch Set (15 rules)</h2>
+<h2>§0.2 Rule Catalog — v1 Launch Set (18 rules)</h2>
 <table>
 <thead>
 <tr>
@@ -238,6 +238,12 @@ final = min(base, applicable_cap)
 <td>Context</td>
 <td>.gitignore excludes local agent session artifacts: <code>.charter/</code>, <code>*.charter-session</code>, <code>.claude/local/</code>, <code>.cursor/cache/</code>; no agent artifacts already tracked in git</td>
 <td><strong>Medium</strong></td>
+</tr>
+<tr>
+<td>AE-CTX-006</td>
+<td>Context</td>
+<td>Agent context file avoids over-emphasis — emphatic-directive density (<code>IMPORTANT</code>/<code>NEVER</code>/<code>MUST</code>/…) under ~15 per 1K words; stacked imperatives degrade instruction adherence (ADR-0023)</td>
+<td><strong>Informational</strong></td>
 </tr>
 <tr>
 <td>AE-SEC-001</td>
@@ -292,6 +298,18 @@ final = min(base, applicable_cap)
 <td>CI</td>
 <td>At least one CI workflow runs <code>charter doctor</code>; <code>actionlint</code> and <code>zizmor</code> pass on all workflow files; no unpinned third-party actions</td>
 <td><strong>Low</strong></td>
+</tr>
+<tr>
+<td>AE-TEST-001</td>
+<td>Testing</td>
+<td>Every active code language (non-test source outside tooling dirs) has automated tests, so an agent can verify its own work; manifest-only/tooling languages are N/A (ADR-0023)</td>
+<td><strong>High</strong></td>
+</tr>
+<tr>
+<td>AE-AUTO-001</td>
+<td>Autonomy</td>
+<td>The project&#39;s test command is discoverable — via a task runner (Makefile/justfile/Taskfile/npm scripts/mise/moon) or the language&#39;s conventional toolchain (<code>go test</code>/<code>cargo test</code>/configured <code>pytest</code>) (ADR-0023)</td>
+<td><strong>Medium</strong></td>
 </tr>
 <tr>
 <td>AE-SUPPRESS-001</td>
