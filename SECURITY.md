@@ -35,7 +35,7 @@
 ## Reporting
 
 - Prefer GitHub private vulnerability reporting when the repository setting is enabled
-- If private reporting is unavailable, report the issue directly to the maintainer before public disclosure
+- If private reporting is unavailable, email `security@use-charter.dev` before public disclosure
 - Include reproduction steps, affected files or workflows, impact, and any known secret exposure
 - Do not open a public issue for live-secret, credential, or supply-chain findings before containment
 - Follow [docs/internal/runbooks/security-incident.md](./docs/internal/runbooks/security-incident.md) for immediate containment and follow-up
