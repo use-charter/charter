@@ -130,9 +130,12 @@ func emit(cmd *cobra.Command, outPath string, data []byte) error {
 		_, err := fmt.Fprintln(cmd.OutOrStdout(), string(data))
 		return err
 	}
+	if !bytes.HasSuffix(data, []byte{'\n'}) {
+		data = append(data, '\n')
+	}
 	// #nosec G306 -- report output is non-sensitive and meant to be shareable.
-	if err := os.WriteFile(outPath, append(data, '\n'), 0o644); err != nil {
-		return err
+	if err := os.WriteFile(outPath, data, 0o644); err != nil {
+		return fmt.Errorf("write %s: %w", outPath, err)
 	}
 	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "charter: wrote %s\n", outPath)
 	return nil

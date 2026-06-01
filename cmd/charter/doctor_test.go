@@ -210,6 +210,33 @@ func TestDoctorCommandOutWritesFile(t *testing.T) {
 	}
 }
 
+func TestDoctorCommandTextOutWritesFileSingleTrailingNewline(t *testing.T) {
+	repo, err := makeTempDoctorRepo(t)
+	if err != nil {
+		t.Fatalf("fixture: %v", err)
+	}
+	outPath := filepath.Join(t.TempDir(), "report.txt")
+	cmd := newRootCommand()
+	stdout := new(bytes.Buffer)
+	cmd.SetOut(stdout)
+	cmd.SetErr(new(bytes.Buffer))
+	cmd.SetArgs([]string{"doctor", "--path", repo, "--format", "text", "--out", outPath})
+	cmd.SetContext(context.Background())
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if stdout.Len() != 0 {
+		t.Fatalf("expected nothing on stdout when --out is set, got %q", stdout.String())
+	}
+	data, rerr := os.ReadFile(outPath)
+	if rerr != nil {
+		t.Fatalf("expected file written: %v", rerr)
+	}
+	if !bytes.HasSuffix(data, []byte("\n")) || bytes.HasSuffix(data, []byte("\n\n")) {
+		t.Fatalf("expected exactly one trailing newline, got %q", data)
+	}
+}
+
 func makeTempDoctorRepo(t *testing.T) (string, error) {
 	t.Helper()
 
