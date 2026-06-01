@@ -15,3 +15,12 @@ func TestVersionDefaultsInTestBuild(t *testing.T) {
 		t.Fatalf("expected the development default in a test build, got %q", got)
 	}
 }
+
+func TestCommitAndDateNeverEmpty(t *testing.T) {
+	if Commit() == "" {
+		t.Fatal("Commit() must never be empty")
+	}
+	if Date() == "" {
+		t.Fatal("Date() must never be empty")
+	}
+}
