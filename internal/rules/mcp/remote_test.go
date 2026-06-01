@@ -44,13 +44,26 @@ func TestCheckTrustedRemotesNoAllowlistFlagsAll(t *testing.T) {
 }
 
 func TestCheckRemoteAuth(t *testing.T) {
-	fs := checkRemoteAuth(remoteFixture())
+	fs := checkRemoteAuth(remoteFixture(), nil)
 	// asana has Authorization header, local exempt -> only "shadow" flagged.
 	if len(fs) != 1 || fs[0].RuleID != "AE-MCP-003" {
 		t.Fatalf("expected 1 AE-MCP-003, got %+v", fs)
 	}
 	if fs[0].Locations[0].Line != 6 {
 		t.Fatalf("wrong location: %+v", fs[0].Locations)
+	}
+}
+
+func TestCheckRemoteAuthExemptsOAuthCatalogHosts(t *testing.T) {
+	// A catalog OAuth vendor host with NO auth header must NOT be flagged (auth is
+	// via the OAuth flow, not a config header) — CF-13 FP fix.
+	files := []ConfigFile{{Path: ".mcp.json", Servers: []Server{
+		{Name: "sentry", Type: "http", URL: "https://mcp.sentry.dev/mcp", Line: 3},
+		{Name: "shadow", Type: "http", URL: "https://unknown.example.net/mcp", Line: 6},
+	}}}
+	fs := checkRemoteAuth(files, map[string]struct{}{"mcp.sentry.dev": {}})
+	if len(fs) != 1 || fs[0].Locations[0].Line != 6 {
+		t.Fatalf("expected only the non-catalog host flagged, got %+v", fs)
 	}
 }
 
