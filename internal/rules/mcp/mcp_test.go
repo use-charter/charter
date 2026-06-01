@@ -90,6 +90,26 @@ func TestRunNoAuth(t *testing.T) {
 	}
 }
 
+func TestRunCatalogTrustedHostPasses(t *testing.T) {
+	// A catalog vendor host (api.githubcopilot.com) with auth and NO charter.yaml
+	// allowlist must pass AE-MCP-002 on the catalog baseline alone.
+	ids := runIDs(t, map[string]string{
+		".mcp.json": `{ "mcpServers": { "gh": { "type": "http", "url": "https://api.githubcopilot.com/mcp/", "headers": { "Authorization": "Bearer ${GH}" } } } }`,
+	})
+	if len(ids) != 0 {
+		t.Fatalf("expected no findings for a catalog-trusted host, got %v", ids)
+	}
+}
+
+func TestRunDeprecatedPackageFlags(t *testing.T) {
+	ids := runIDs(t, map[string]string{
+		".mcp.json": `{ "mcpServers": { "github": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-github@1.2.3"] } } }`,
+	})
+	if len(ids) != 1 || ids[0] != "AE-MCP-001" {
+		t.Fatalf("expected [AE-MCP-001] for a deprecated package, got %v", ids)
+	}
+}
+
 func TestRunNoConfigNoFindings(t *testing.T) {
 	if ids := runIDs(t, map[string]string{"README.md": "# x\n"}); len(ids) != 0 {
 		t.Fatalf("expected no findings without MCP config, got %v", ids)
