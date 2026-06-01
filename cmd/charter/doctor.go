@@ -41,7 +41,7 @@ func newDoctorCommand() *cobra.Command {
 				return commandExitError{message: "invalid format: must be text, json, or markdown", exitCode: 2}
 			}
 
-			result, err := doctor.Run(path, threshold)
+			result, err := doctor.Run(path, threshold, cmd.Flags().Changed("threshold"))
 			if err != nil {
 				return commandExitError{message: err.Error(), exitCode: 2}
 			}

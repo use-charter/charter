@@ -105,7 +105,7 @@ func TestRunAgainstFixtureRepo(t *testing.T) {
 		t.Fatalf("fixture repo setup failed: %v", err)
 	}
 
-	result, err := Run(repo, 80)
+	result, err := Run(repo, 80, true)
 	if err != nil {
 		t.Fatalf("expected doctor run to succeed: %v", err)
 	}
@@ -122,7 +122,7 @@ func TestRunSetsThresholdAndPassed(t *testing.T) {
 		t.Fatalf("fixture repo setup failed: %v", err)
 	}
 
-	result, err := Run(repo, 80)
+	result, err := Run(repo, 80, true)
 	if err != nil {
 		t.Fatalf("expected doctor run to succeed: %v", err)
 	}
@@ -141,7 +141,7 @@ func TestRunMCPCleanFixtureNoMCPFindings(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fixture setup: %v", err)
 	}
-	result, err := Run(repo, 80)
+	result, err := Run(repo, 80, true)
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
@@ -155,7 +155,7 @@ func TestRunMCPUnpinnedFixtureFlagsAEMCP001(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fixture setup: %v", err)
 	}
-	result, err := Run(repo, 80)
+	result, err := Run(repo, 80, true)
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
@@ -169,7 +169,7 @@ func TestRunMCPUntrustedRemoteFixtureFlagsAEMCP002(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fixture setup: %v", err)
 	}
-	result, err := Run(repo, 80)
+	result, err := Run(repo, 80, true)
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
@@ -183,7 +183,7 @@ func TestRunMCPNoAuthFixtureFlagsAEMCP003(t *testing.T) {
 	if err != nil {
 		t.Fatalf("fixture setup: %v", err)
 	}
-	result, err := Run(repo, 80)
+	result, err := Run(repo, 80, true)
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
@@ -207,7 +207,7 @@ func TestRunCCCleanFixtureNoCCFindings(t *testing.T) {
 	if err != nil {
 		t.Fatalf("setup: %v", err)
 	}
-	result, err := Run(repo, 80)
+	result, err := Run(repo, 80, true)
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
@@ -221,7 +221,7 @@ func TestRunCCDangerousHookFixture(t *testing.T) {
 	if err != nil {
 		t.Fatalf("setup: %v", err)
 	}
-	result, err := Run(repo, 80)
+	result, err := Run(repo, 80, true)
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
@@ -235,7 +235,7 @@ func TestRunCCNoScopeFixtureIsolatesAECC002(t *testing.T) {
 	if err != nil {
 		t.Fatalf("setup: %v", err)
 	}
-	result, err := Run(repo, 80)
+	result, err := Run(repo, 80, true)
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
@@ -247,6 +247,29 @@ func TestRunCCNoScopeFixtureIsolatesAECC002(t *testing.T) {
 		if f.RuleID == "AE-CTX-001" {
 			t.Fatalf("fixture should not trip AE-CTX-001 (it must isolate AE-CC-002); findings: %+v", result.Findings)
 		}
+	}
+}
+
+func TestRunResolvesProfileThreshold(t *testing.T) {
+	repo, err := makeTempGitRepoFromFixture(t, filepath.Join("..", "..", "testdata", "repos", "profile-strict"))
+	if err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+	// Flag not set -> the strict profile (90) governs the gate.
+	result, err := Run(repo, 80, false)
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if result.Threshold != 90 {
+		t.Fatalf("expected strict profile threshold 90, got %d", result.Threshold)
+	}
+	// An explicit --threshold flag overrides the profile.
+	override, err := Run(repo, 50, true)
+	if err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if override.Threshold != 50 {
+		t.Fatalf("expected flag override 50, got %d", override.Threshold)
 	}
 }
 
@@ -265,7 +288,7 @@ func TestRunSuppressHonoredExcludesFromScore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("setup base: %v", err)
 	}
-	baseResult, err := Run(base, 80)
+	baseResult, err := Run(base, 80, true)
 	if err != nil {
 		t.Fatalf("run base: %v", err)
 	}
@@ -274,7 +297,7 @@ func TestRunSuppressHonoredExcludesFromScore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("setup: %v", err)
 	}
-	result, err := Run(repo, 80)
+	result, err := Run(repo, 80, true)
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}
@@ -302,7 +325,7 @@ func TestRunPermanentNoApproverNotHonored(t *testing.T) {
 	if err != nil {
 		t.Fatalf("setup: %v", err)
 	}
-	result, err := Run(repo, 80)
+	result, err := Run(repo, 80, true)
 	if err != nil {
 		t.Fatalf("run: %v", err)
 	}

@@ -3,6 +3,7 @@ package doctor
 import (
 	"time"
 
+	"go.use-charter.dev/charter/internal/config"
 	"go.use-charter.dev/charter/internal/findings"
 	"go.use-charter.dev/charter/internal/repository"
 	goagentconfig "go.use-charter.dev/charter/internal/rules/agentconfig"
@@ -25,7 +26,7 @@ type Result struct {
 	Score      scoring.Result
 }
 
-func Run(path string, threshold int) (Result, error) {
+func Run(path string, threshold int, thresholdSet bool) (Result, error) {
 	root, err := repository.ResolveRoot(path)
 	if err != nil {
 		return Result{}, err
@@ -74,10 +75,19 @@ func Run(path string, threshold int) (Result, error) {
 
 	score := scoring.Calculate(active)
 
+	policy, err := config.LoadPolicy(root, inv)
+	if err != nil {
+		return Result{}, err
+	}
+	effective, err := config.ResolveThreshold(policy, threshold, thresholdSet)
+	if err != nil {
+		return Result{}, err
+	}
+
 	return Result{
 		Root:       root,
-		Threshold:  threshold,
-		Passed:     score.Final >= threshold,
+		Threshold:  effective,
+		Passed:     score.Final >= effective,
 		Findings:   active,
 		Suppressed: suppressed,
 		Score:      score,
