@@ -248,55 +248,58 @@ score=49 gate=FAIL threshold=80 exit=1
 
 `charter fix` always shows a unified diff before writing. It never deletes files, never silently mutates, and never auto-fixes secret rules — those require manual remediation (Commitment #4). Backups land in `.charter/backups/` before every write.
 
+The v1 fixers are `AE-CTX-001` (create `AGENTS.md`), `AE-CTX-004` (create/append `.gitignore` agent-artifact patterns), `AE-CI-002` (create the Charter CI workflow), and `AE-MCP-001` (bump an MCP server package to a catalog-known safe version — an advisory-affected pin to its fixed version, or an unpinned/behind-stable cataloged package to the catalog stable; never an archived package, whose migration is manual). Secret, dangerous-command, and toolchain (`AE-ENV-001`) findings are not auto-fixed.
+
 **Dry run — preview before writing:**
 ```
 ❯ charter fix --dry-run
-  ✦ Charter v1.0.0  ·  Preview mode  ·  no files written
-  ──────────────────────────────────────────────────────────────
-  Fix 1 / 2  AE-MCP-001  .mcp.json
-  --- a/.mcp.json
-  +++ b/.mcp.json
-      "servers": {
-        "db": {
-  -       "command": "npx @acme/db-mcp@latest"
-  +       "command": "npx @acme/db-mcp@2.4.1"
-        }
-      }
-  ──────────────────────────────────────────────────────────────
-  Fix 2 / 2  AE-ENV-001  mise.toml  (will create — detected: Go, Bun)
-  +++ b/mise.toml
-  + [tools]
-  + go            = "1.26.3"
-  + bun           = "1.3.14"
-  + golangci-lint = "2.12.2"
-  ──────────────────────────────────────────────────────────────
-  2 fixes previewed  ·  0 applied
-  › Apply all: charter fix --all
+AE-MCP-001  .mcp.json
+--- a/.mcp.json
++++ b/.mcp.json
+@@ -2,1 +2,1 @@
+-      "git": { "command": "uvx", "args": ["mcp-server-git@2025.8.0"] }
++      "git": { "command": "uvx", "args": ["mcp-server-git@2026.1.14"] }
+AE-CTX-004  .gitignore
+--- a/.gitignore
++++ b/.gitignore
+@@ -3,3 +3,6 @@
+ .claude/local/
+ .cursor/cache/
++
++# Charter / agent session artifacts
++.hk/
++.env*
+(dry run — no files written)
 ```
 
-**Apply all with score delta:**
+**Apply (originals backed up, then rescan):**
 ```
-❯ charter fix --all --yes
-  ✦ Charter v1.0.0  ·  Applying 2 auto-fixes
-  Backups → .charter/backups/fix-2026-05-18/
-  AE-MCP-001  .mcp.json  ····  ✓  patched   @latest → @2.4.1
-  AE-ENV-001  mise.toml  ····  ✓  created   Go + Bun pinned (detected languages)
-  ──────────────────────────────────────────
-  Rescanning...
-  Score  49 → 87  █████████████████░░░  PASS
+❯ charter fix
+AE-MCP-001  .mcp.json   (diff as above)
+AE-CTX-004  .gitignore  (diff as above)
+wrote .mcp.json
+wrote .gitignore
+backups: .charter/backups/20260601T212756Z
+2 fixed
+› Re-run: charter doctor
 ```
 
-**Single-rule fix (detects all active languages):**
+**Single-rule fix:**
 ```
-❯ charter fix --rule AE-ENV-001
-  Detected: Go (go.mod)  ·  also found: Bun (package.json), Python (pyproject.toml)
-  ✦ AE-ENV-001  mise.toml (will create — pins all 3 detected runtimes)
-  + [tools]
-  + go            = "1.26.3"
-  + bun           = "1.3.14"
-  + python        = "3.12.4"
-  + golangci-lint = "2.12.2"
+❯ charter fix --rule AE-MCP-001
+AE-MCP-001  .mcp.json
+--- a/.mcp.json
++++ b/.mcp.json
+@@ -2,1 +2,1 @@
+-      "git": { "command": "uvx", "args": ["mcp-server-git@2025.8.0"] }
++      "git": { "command": "uvx", "args": ["mcp-server-git@2026.1.14"] }
+wrote .mcp.json
+backups: .charter/backups/20260601T212756Z
+1 fixed
+› Re-run: charter doctor
 ```
+
+A rule with no registered fixer (e.g. a secret rule) reports its no-op explicitly: `charter fix --rule AE-SEC-001` → `AE-SEC-001 is not auto-fixable; remediate manually.`
 
 ---
 
@@ -358,17 +361,17 @@ auto_fix:  true
 
 FINDING 3  MEDIUM  AE-ENV-001  toolchain (incomplete)
 message:   Toolchain declarations found for Go only; Bun and Python runtimes active but unpinned
-guidance:  charter fix --rule AE-ENV-001
-auto_fix:  true
+guidance:  Pin Bun and Python in mise.toml (or .nvmrc / pyproject.toml)
+auto_fix:  false
 ```
 
 **JSON output (pipe to jq):**
 ```
 ❯ charter doctor --format json | \
-      jq '.findings[] | {rule:.rule_id,sev:.severity,fix:.auto_fix}'
-{"rule": "AE-SEC-001", "sev": "BLOCKER", "fix": false}
-{"rule": "AE-MCP-001", "sev": "HIGH",    "fix": true}
-{"rule": "AE-ENV-001", "sev": "MEDIUM",  "fix": true}
+      jq '.findings[] | {rule:.rule_id, sev:.severity, cat:.category}'
+{"rule": "AE-SEC-001", "sev": "BLOCKER", "cat": "Secrets"}
+{"rule": "AE-MCP-001", "sev": "HIGH",    "cat": "MCP Safety"}
+{"rule": "AE-ENV-001", "sev": "MEDIUM",  "cat": "Environment"}
 ```
 
 **charter version:**
@@ -379,6 +382,12 @@ commit    abc1234f
 built     2026-05-18T09:42:00Z
 go        1.26.3
 platform  darwin/arm64
+
+❯ charter version --short
+1.0.0
+
+❯ charter version --format json
+{"version":"1.0.0","commit":"abc1234f","date":"2026-05-18T09:42:00Z","go":"1.26.3","platform":"darwin/arm64"}
 ```
 
 ---
