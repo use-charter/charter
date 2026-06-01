@@ -67,8 +67,8 @@ func TestCatalogValid(t *testing.T) {
 		}
 
 		for _, a := range e.Advisories {
-			if a.ID == "" || len(a.Affected) == 0 || a.FixedIn == "" {
-				t.Errorf("%s: advisory must set id, affected, fixedIn; got %+v", e.Package, a)
+			if a.ID == "" || a.FixedIn == "" || (len(a.Affected) == 0 && a.AffectedBelow == "") {
+				t.Errorf("%s: advisory must set id, fixedIn, and affected or affectedBelow; got %+v", e.Package, a)
 			}
 			if a.Severity != "high" {
 				t.Errorf("%s: advisory %s severity must be \"high\", got %q", e.Package, a.ID, a.Severity)
@@ -215,6 +215,47 @@ func TestKnownBehind(t *testing.T) {
 	advised, _ := c.Lookup("@scope/advised")
 	if _, behind := advised.KnownBehind("1.9.0"); behind {
 		t.Fatal("advisory-covered version must not also be reported as behind")
+	}
+}
+
+func TestVersionLess(t *testing.T) {
+	cases := []struct {
+		a, b       string
+		less, okay bool
+	}{
+		{"2025.9.25", "2026.1.14", true, true},      // CalVer year
+		{"2025.12.18", "2026.1.14", true, true},     // lexical would be wrong (12>1); numeric is right
+		{"2026.1.14", "2026.1.14", false, true},     // equal (the fixed version)
+		{"2026.2.1", "2026.1.14", false, true},      // later month
+		{"1.0.0", "1.0.1", true, true},              // semver
+		{"v1.2.3", "1.2.4", true, true},             // leading v ignored
+		{"latest", "2026.1.14", false, false},       // non-numeric -> not orderable
+		{"2025.8.0-rc1", "2026.1.14", false, false}, // prerelease tag -> not orderable
+	}
+	for _, c := range cases {
+		less, ok := versionLess(c.a, c.b)
+		if less != c.less || ok != c.okay {
+			t.Errorf("versionLess(%q,%q) = (%v,%v), want (%v,%v)", c.a, c.b, less, ok, c.less, c.okay)
+		}
+	}
+}
+
+func TestAdvisoryForRange(t *testing.T) {
+	c := Default()
+	git, ok := c.Lookup("mcp-server-git")
+	if !ok {
+		t.Fatal("mcp-server-git missing from catalog")
+	}
+	// An old pinned version is caught by the affectedBelow range; the fixed
+	// version and an unparseable version are not.
+	if a, hit := git.AdvisoryFor("2025.8.0"); !hit || a.FixedIn != "2026.1.14" {
+		t.Fatalf("expected 2025.8.0 affected, fix 2026.1.14; got %+v hit=%v", a, hit)
+	}
+	if _, hit := git.AdvisoryFor("2026.1.14"); hit {
+		t.Fatal("the fixed version 2026.1.14 must not be flagged")
+	}
+	if _, hit := git.AdvisoryFor("latest"); hit {
+		t.Fatal("an unparseable version must not be flagged by a range advisory")
 	}
 }
 

@@ -120,7 +120,7 @@ final = min(base, applicable_cap)
 ## AE-MCP-002 — MCP Server Untrusted Remote Origin
 **Severity:** 🟠 HIGH  
 
-**Check:** For remote MCP servers (a `url` or `type` of `http`/`sse`) in a scanned JSON MCP config, compare the URL host against the effective allowlist — `union(charter.yaml → mcp.trustedRemotes, catalog trustedHosts)`. The catalog (Slice 13, ADR-0021) ships a baseline of 60+ major vendor-operated remote hosts (GitHub, Vercel, Supabase, Neon, Figma, Stripe, PayPal, Linear, Notion, Atlassian, Sentry, Semgrep, Hugging Face, Context7, Exa, Google Cloud endpoints, the full Cloudflare managed `*.mcp.cloudflare.com` set, and more — reputable vendor servers only), so those pass without per-repo config. Flag HIGH when the host is absent from both. Localhost and the `127.0.0.0/8` loopback range (plus `::1`, `0.0.0.0`, `*.localhost`) are exempt; scheme-less and `${VAR}` URLs have no parseable host and are skipped.  
+**Check:** For remote MCP servers (a `url` or `type` of `http`/`sse`) in a scanned JSON MCP config, compare the URL host against the effective allowlist — `union(charter.yaml → mcp.trustedRemotes, catalog trustedHosts)`. The catalog (Slice 13, ADR-0021) ships a baseline of 60+ major vendor-operated remote hosts (GitHub, Vercel, Supabase, Neon, Figma, Stripe, PayPal, Linear, Notion, Atlassian, Sentry, Semgrep, Hugging Face, Context7, Exa, Google Cloud endpoints, the full Cloudflare managed `*.mcp.cloudflare.com` set, and more — reputable vendor servers only), so those pass without per-repo config. Flag HIGH when the host is absent from both. Local/internal origins are exempt: loopback (`127.0.0.0/8`, `::1`), `0.0.0.0`, RFC1918 private ranges, link-local, and the reserved `.localhost`/`.local`/`.internal` TLDs (a LAN/internal server is not a public shadow origin); scheme-less and `${VAR}` URLs have no parseable host and are skipped.  
 
 **Evidence:** Config file path with a 1-based line, the server name, and the resolved host (e.g., `.mcp.json:6: server shadow -> unknown.example.net`).  
 
@@ -133,11 +133,11 @@ final = min(base, applicable_cap)
 ## AE-MCP-003 — Remote MCP Server Lacks Auth Metadata
 **Severity:** 🟠 HIGH  
 
-**Check:** For non-local remote MCP servers (`type` of `http`/`sse`) in a scanned JSON MCP config, check for the presence of an auth header — `Authorization`, `X-Api-Key`, `Api-Key`, or `X-Auth-Token` (case-insensitive; an env-reference value such as `Bearer ${TOKEN}` counts as declared). Flag HIGH when no auth header is present. Detection is presence-based rather than OAuth-field-specific, aligned with MCP spec revision `2025-11-25` and resilient to the `2026-07-28` OAuth changes. Localhost/loopback remotes are exempt.  
+**Check:** For non-local remote MCP servers (`type` of `http`/`sse`) in a scanned JSON MCP config, check for the presence of an auth header — `Authorization`, `X-Api-Key`, `Api-Key`, or `X-Auth-Token` (case-insensitive; an env-reference value such as `Bearer ${TOKEN}` counts as declared). Flag HIGH when no auth header is present. Detection is presence-based rather than OAuth-field-specific, aligned with MCP spec revision `2025-11-25` and resilient to the `2026-07-28` OAuth changes. Local/internal origins are exempt (loopback, RFC1918 private, link-local, `.localhost`/`.local`/`.internal`).  
 
 **Evidence:** Config file path with a 1-based line, the server name, and the host (e.g., `.mcp.json:3: server open (mcp.asana.com) has no auth header`).  
 
-**False Positive Risk:** FP Risk: Medium. A genuinely public, read-only remote server may legitimately need no auth — mark N/A with a note. Charter validates only that an auth declaration exists, not the credential itself. Mark N/A if the repo has no scanned MCP config files.  
+**False Positive Risk:** FP Risk: Medium. A genuinely public, read-only remote server may legitimately need no auth — mark N/A with a note. **Known systematic FP (CF-13):** OAuth 2.1 remote servers (e.g. Sentry, Atlassian, Context7) declare auth via the OAuth flow, not a static config header, so this rule currently flags them; a future refinement will treat catalog-known OAuth hosts as auth-declared. Charter validates only that an auth declaration exists, not the credential itself. Mark N/A if the repo has no scanned MCP config files.  
 
 **Fix:** Declare an auth header (e.g., `Authorization` referencing an environment variable) for the remote MCP server, or switch to a local/trusted integration mode, then commit the change. Covers OWASP MCP07 — Insufficient Authentication & Authorization.  
 

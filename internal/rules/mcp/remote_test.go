@@ -76,14 +76,20 @@ func TestRemoteHost(t *testing.T) {
 }
 
 func TestIsLocalHost(t *testing.T) {
-	for _, h := range []string{"localhost", "127.0.0.1", "127.0.0.2", "::1", "0.0.0.0", "foo.localhost"} {
+	local := []string{
+		"localhost", "127.0.0.1", "127.0.0.2", "::1", "0.0.0.0", "foo.localhost",
+		// RFC1918 private + link-local + internal-only TLDs (FP-validation fix).
+		"10.0.0.5", "172.16.1.230", "192.168.1.10", "169.254.1.1", "fe80::1",
+		"archon.local", "db.internal",
+	}
+	for _, h := range local {
 		if !isLocalHost(h) {
-			t.Errorf("expected %q to be local", h)
+			t.Errorf("expected %q to be local/internal", h)
 		}
 	}
-	for _, h := range []string{"mcp.asana.com", "example.com"} {
+	for _, h := range []string{"mcp.asana.com", "example.com", "8.8.8.8", "172.32.0.1"} {
 		if isLocalHost(h) {
-			t.Errorf("expected %q to be remote", h)
+			t.Errorf("expected %q to be a public remote", h)
 		}
 	}
 }
