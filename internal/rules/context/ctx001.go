@@ -169,7 +169,7 @@ func missingContextSignals(content string) []string {
 	if !hasAnySignal(lower, "off-limits", "edit scope", "edit boundaries", "safe for agent edits", "do not edit", "protected path") {
 		missing = append(missing, "missing content signal: edit boundaries")
 	}
-	if !hasAnySignal(lower, "moon run :check", "charter doctor", "verification command", "verify with") {
+	if !hasVerificationSignal(lower) {
 		missing = append(missing, "missing content signal: verification command")
 	}
 	if countNonEmptyLines(content) < 5 || len(strings.TrimSpace(content)) < 120 {
@@ -177,6 +177,14 @@ func missingContextSignals(content string) []string {
 	}
 
 	return missing
+}
+
+// hasVerificationSignal reports whether the context references a recognized
+// verification command. Shared by AE-CTX-001 (must have one) and AE-CTX-002
+// (the stated command must be recognized, not hardcoded to this repo's
+// `moon run :check`).
+func hasVerificationSignal(lower string) bool {
+	return hasAnySignal(lower, "moon run :check", "charter doctor", "verification command", "verify with")
 }
 
 func contextBudgetEvidence(content string) []string {

@@ -4,7 +4,7 @@
 - Category: Context
 - Description: Agent context must remain current with repo reality.
 - Detection logic: compare stated stack, setup path, verification command, off-limits paths, and hook/tooling references against actual repo manifests, workflow files, and directory structure.
-- Pass example: `AGENTS.md` points at `moon run :check`, mentions `hk.pkl`, and matches the current toolchain and repo boundaries.
+- Pass example: `AGENTS.md` points at a recognized verification command (e.g. `charter doctor`, `moon run :check`), mentions `hk.pkl`, and matches the current toolchain and repo boundaries.
 - Fail example: the context file references stale runtimes, missing task paths, or MCP/config behavior that no longer matches the repo.
 - Evidence expectations: last-reviewed date if present, plus exact contradictions between the file and repo state.
 - Edge cases: an old date alone is not enough to fail the rule if the content is still factually accurate.
