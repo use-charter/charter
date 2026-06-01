@@ -1,6 +1,6 @@
-# Charter v1.0 Launch Roadmap — Slices 9–19
+# Charter v1.0 Launch Roadmap — Slices 9–20
 
-Last reviewed: 2026-06-01
+Last reviewed: 2026-06-02
 
 > **What this is:** the locked-in *execution sequence* from the current state (post–Slice 8: SARIF + policy profiles) to a public v1.0 launch. It owns ordering, dependencies, and per-slice definition-of-done — **not** product behavior.
 >
@@ -10,7 +10,7 @@ Last reviewed: 2026-06-01
 
 ## Numbering note
 
-The source request double-used `16` and mislabeled the checklist as `1`/`17`. Canonical numbering is **9–19** below; the post-launch "go-public ops → tag v1.0.0" stays as a final ops step, not a slice.
+Canonical numbering is **9–20** below; the post-launch "go-public ops → tag v1.0.0" stays as a final ops step, not a slice. (Slice 14 — the agent-operability rule expansion — was inserted after Slice 13 shipped; the former Slices 14–19 shifted to 15–20.)
 
 ## Sequence at a glance
 
@@ -21,15 +21,16 @@ The source request double-used `16` and mislabeled the checklist as `1`/`17`. Ca
 | 11 | `charter init` | M1.4 / T1.4.1 | Pure-Go engine | Should-have | — |
 | 12 | `charter fix` | M1.4 / T1.4.2 | Pure-Go engine | Should-have | Slice 11 (templates reuse) |
 | 13 | MCP Catalog v1 + FP-validation gate (≤10%) | M1.6 / T1.6.1–3 | Pure-Go engine | Should-have | — (couples to Slice 15 help pages) |
-| 14 | Full codebase review + 2026 architecture/doc alignment | hardening | Review pass | Quality gate | Slices 9–13 landed |
-| 15 | External docs on Mintlify (live, incl. `/rules/AE-*` pages) | distribution | Docs/web | **Hard** | rule catalog helpUris (Slice 8/13) |
-| 16 | Launch website (design → build) + docs wiring | distribution | Web | Should-have | Slice 15 (docs to link) |
-| 17 | Production Release Checklist (assemble the gate) | release ops | Checklist | **Hard** | Slices 9–16 |
-| 18 | Close everything outstanding from the checklist | release ops | Execution | **Hard** | Slice 17 |
-| 19 | Final go-live readiness (end-to-end RC dry-run + sign-off) | release ops | Verification | **Hard** | Slice 18 |
-| — | go-public ops → tag `v1.0.0` | launch | Ops | — | Slice 19 |
+| 14 | Agent-operability rule expansion (AE-TEST-001, AE-AUTO-001, AE-CTX-006 + category scorecard) | ADR-0023 | Pure-Go engine | Should-have (top-tier) | Slices 9–13 landed |
+| 15 | Full codebase review + 2026 architecture/doc alignment | hardening | Review pass | Quality gate | Slices 9–14 landed |
+| 16 | External docs on Mintlify (live, incl. `/rules/AE-*` pages) | distribution | Docs/web | **Hard** | rule catalog helpUris (Slice 8/13/14) |
+| 17 | Launch website (design → build) + docs wiring | distribution | Web | Should-have | Slice 16 (docs to link) |
+| 18 | Production Release Checklist (assemble the gate) | release ops | Checklist | **Hard** | Slices 9–17 |
+| 19 | Close everything outstanding from the checklist | release ops | Execution | **Hard** | Slice 18 |
+| 20 | Final go-live readiness (end-to-end RC dry-run + sign-off) | release ops | Verification | **Hard** | Slice 19 |
+| — | go-public ops → tag `v1.0.0` | launch | Ops | — | Slice 20 |
 
-Pure-deterministic/offline engine work (no CI secrets): **11, 12, 13**, plus the `charter version` command in 9. CI/secret/admin-side: **9 (infra), 10**. Web/content: **15, 16**. Process/verification: **14, 17, 18, 19**.
+Pure-deterministic/offline engine work (no CI secrets): **11, 12, 13, 14**, plus the `charter version` command in 9. CI/secret/admin-side: **9 (infra), 10**. Web/content: **16, 17**. Process/verification: **15, 18, 19, 20**.
 
 ---
 
@@ -73,49 +74,57 @@ Pure-deterministic/offline engine work (no CI secrets): **11, 12, 13**, plus the
 - **Exit:** a repo pinned below the catalog stable version fires AE-MCP-001 with the upgrade message; FP rate ≤10% documented.
 - **Grill / decisions:** FP validation needs real-world repos + manual classification (research effort); catalog curation source-of-truth and update cadence. Should-have (retention).
 
-## Slice 14 — Full codebase review + 2026 architecture/doc alignment
+## Slice 14 — Agent-operability rule expansion
+
+- **Goal:** take Charter from an agent-*setup* linter to an agent-*operability* scorecard by scoring the third axis of agent-readiness — can the agent verify its work and run the project? — alongside context and safety.
+- **Scope:** `AE-TEST-001` (tests present, High), `AE-AUTO-001` (verification command discoverable, Medium), `AE-CTX-006` (instruction over-emphasis, informational), and a per-category readiness scorecard in the report. Offline/deterministic/no-LLM; score formula (ADR-0008) unchanged. Implements ADR-0023.
+- **Depends on:** Slices 9–13 landed.
+- **Exit:** rule set 15→18; Charter dogfoods to 100; FP ≤10% on real repos (recorded); `moon run :check` green.
+- **Grill / decisions:** "active language" = non-test source outside tooling dirs (FP guard); conventional toolchains satisfy AE-AUTO-001; scorecard is reporting-only. Grounded in the AGENTS.md standard + instruction-following research.
+
+## Slice 15 — Full codebase review + 2026 architecture/doc alignment
 
 - **Goal:** a top-to-bottom hardening pass before we point the world at it — pristine, idiomatic, drift-free.
 - **Scope:** whole-codebase review against every ADR/spec/architecture clause and latest Go idioms/patterns; reconcile any doc drift; run review subagents (e.g. `go-reviewer`, `security-reviewer`, `ce-code-review`). Not a feature slice.
-- **Depends on:** Slices 9–13 landed.
+- **Depends on:** Slices 9–14 landed.
 - **Exit:** review report with findings resolved; `moon run :check` green; Charter dogfoods to 100; zero stale doc references.
 - **Grill / decisions:** scope discipline — fix real issues, resist speculative refactors (Hard Constraint: no speculative refactors). Quality gate.
 
-## Slice 15 — External docs on Mintlify
+## Slice 16 — External docs on Mintlify
 
-- **Goal:** live customer-facing docs, including the `/rules/AE-*` pages the SARIF `helpUri`s already point at (currently dead links until this ships).
+- **Goal:** live customer-facing docs, including the `/rules/AE-*` pages the SARIF `helpUri`s already point at (currently dead links until this ships). *(Foundation drafted under `web/docs/` — ADR-0022, currently stashed; the page set now includes the Slice 14 rules.)*
 - **Scope:** Mintlify site (latest `docs.json` schema — fetch fresh, Mintlify moved off `mint.json`); quickstart, CLI reference, CI integration guide, full rule reference (one page per AE-* rule resolving `use-charter.dev/rules/AE-XXX`), config (`charter.yaml`) reference, suppression governance.
-- **Depends on:** rule catalog + helpUri scheme (Slices 8/13).
+- **Depends on:** rule catalog + helpUri scheme (Slices 8/13/14).
 - **Exit:** docs deployed at the chosen domain; every `helpUri` resolves; quickstart reproduces a real scan.
 - **Grill / decisions:** hosting + domain (`docs.use-charter.dev` vs `use-charter.dev/docs`); latest Mintlify config schema and navigation model. **Hard blocker** (helpUris must resolve at launch).
 
-## Slice 16 — Launch website + docs wiring
+## Slice 17 — Launch website + docs wiring
 
 - **Goal:** the marketing/landing surface for `use-charter.dev`, wired to the docs.
 - **Scope:** design + implementation (lean on `frontend-design`); hero around the PR-comment scenario, install paths, live examples, CTA into docs/quickstart; link Mintlify docs.
-- **Depends on:** Slice 15 (docs to link).
+- **Depends on:** Slice 16 (docs to link).
 - **Exit:** site live; install instructions accurate; navigation into docs works.
 - **Grill / decisions:** stack choice (static/Astro/Next), hosting, and keeping it honest with as-built behavior. Should-have.
 
-## Slice 17 — Production Release Checklist (assemble)
+## Slice 18 — Production Release Checklist (assemble)
 
 - **Goal:** assemble the single gate document that must be all-green to launch.
-- **Scope:** extend `docs/internal/runbooks/release.md` into a v1.0 launch checklist: signed release verified (cosign/SLSA/SBOM), perf budgets met, all 6 commands working, Action verified end-to-end, docs live + helpUris resolve, website live, GitHub Discussions enabled, alerts configured (Signals 1/3/4), branch protection + private vuln reporting + CodeQL/Scorecard on public, LICENSE/NOTICE/CHANGELOG + versioning policy, trademark ADR-0010 = CLEARED, demo asset, flip `use-charter/homebrew-tap` to **public** (kept private until launch so `brew install` works), create + seed `use-charter/charter-action` from `action/` (tag `v1`) and switch Charter's own CI to dogfood `use-charter/charter-action@`.
-- **Depends on:** Slices 9–16.
+- **Scope:** extend `docs/internal/runbooks/release.md` into a v1.0 launch checklist: signed release verified (cosign/SLSA/SBOM), perf budgets met, all 6 commands working, Action verified end-to-end, docs live + helpUris resolve, website live, GitHub Discussions enabled, alerts configured (Signals 1/3/4), branch protection + private vuln reporting + CodeQL/Scorecard on public, LICENSE/NOTICE/CHANGELOG + versioning policy, trademark ADR-0010 = CLEARED, demo asset, flip `use-charter/homebrew-tap` to **public** (kept private until launch so `brew install` works), create + seed `use-charter/charter-action` from `action/` (tag `v1`) and switch Charter's own CI to dogfood `use-charter/charter-action@`. **MCP catalog T1.6.3 refresh + FP re-validation (CF-12).**
+- **Depends on:** Slices 9–17.
 - **Exit:** checklist authored, every item with an owner and a verifiable check. **Hard blocker.**
 
-## Slice 18 — Close outstanding checklist items
+## Slice 19 — Close outstanding checklist items
 
 - **Goal:** drive every open checklist item to done.
-- **Scope:** execute whatever Slice 17 surfaced as not-yet-green (admin settings, missing assets, doc fixes, etc.).
-- **Depends on:** Slice 17.
+- **Scope:** execute whatever Slice 18 surfaced as not-yet-green (admin settings, missing assets, doc fixes, etc.).
+- **Depends on:** Slice 18.
 - **Exit:** checklist fully green except the final tag. **Hard blocker.**
 
-## Slice 19 — Final go-live readiness
+## Slice 20 — Final go-live readiness
 
 - **Goal:** an end-to-end release-candidate dry-run and sign-off.
 - **Scope:** tag an RC; verify the full pipeline on the about-to-be-public repo; smoke-test every install path (brew, `go install`, the Action); confirm SARIF lands in Code Scanning; final sign-off.
-- **Depends on:** Slice 18.
+- **Depends on:** Slice 19.
 - **Exit:** RC verified across all surfaces; go/no-go recorded. **Hard blocker.**
 
 → **go-public ops → tag `v1.0.0`** (repo public, Discussions live, alerts armed, then the release tag).
@@ -125,19 +134,18 @@ Pure-deterministic/offline engine work (no CI secrets): **11, 12, 13**, plus the
 ## Cross-cutting (applies to every slice)
 
 - **Hard constraints hold throughout:** no LLM calls in core; deterministic, offline-first core; diff-first, no silent mutation; fail fast; never log/print secrets; no speculative refactors.
-- **Latest-docs-first (ADR-0006):** Slices 9, 10, 15 touch fast-moving external tooling (GoReleaser, cosign, SLSA, codeql-action, Mintlify) — fetch current official docs during each grill; do not rely on training data for config schemas or action versions.
+- **Latest-docs-first (ADR-0006):** Slices 9, 10, 16 touch fast-moving external tooling (GoReleaser, cosign, SLSA, codeql-action, Mintlify) — fetch current official docs during each grill; do not rely on training data for config schemas or action versions.
 - **Deferred to Phase 1.5 / v1.1:** the canonical list lives in `carry-forward.md` (Phase 1.5 backlog) — `charter serve`, `--format toon|json-compact`, `--for-agent`, standalone `charter report --format spdx`, `charter explain`, AE-SEC-001 → full Gitleaks ruleset, deep multi-agent parsing/conflict detection, SARIF 2.2/enrichment, richer policy/CLI, and more distribution channels.
 - **Validation ≠ launch:** §1.7 Phase 1 exit signals (organic CI adoption, stranger issues, mentions, community self-help) are measured *after* launch and decide Phase 2 — they are not pre-launch gates.
-- **Carry-forward ledger:** smaller cross-slice follow-ups deliberately deferred during execution live in `carry-forward.md` (e.g. §1.8 gallery mockups → Slice 14, HTML mirror reconciliation, AGENTS.md token budget, the deferred `AE-MCP-001` fixer → after Slice 13). Review it when starting Slices 13/14.
+- **Carry-forward ledger:** smaller cross-slice follow-ups live in `carry-forward.md`. As of 2026-06-02 all code-resolvable items are closed; the open items (CF-4/9/10/11/12) are external/ops, scheduled to Slices 16/18/20 + go-public. Review it when starting each slice.
 
 ## Critical path
 
 ```
 9 ─▶ 10 ─┐
-         ├─▶ 14 ─▶ 17 ─▶ 18 ─▶ 19 ─▶ (public + v1.0.0)
-11 ─▶ 12 ┤              ▲
-13 ──────┘              │
-        13 ─▶ 15 ─▶ 16 ─┘
+11 ─▶ 12 ┼─▶ 15 ─▶ 18 ─▶ 19 ─▶ 20 ─▶ (public + v1.0.0)
+13 ─▶ 14 ┘              ▲
+        16 ─▶ 17 ───────┘
 ```
 
 11/12/13 (pure-Go) can proceed in parallel with 9/10 (CI/infra). 15 depends on the rule set + catalog; 16 depends on 15; 17 gates on everything.

@@ -246,3 +246,42 @@ final = min(base, applicable_cap)
 **Fix:** Review the suppression log in bulk. For suppressions covering the same rule across many files: consider whether the rule needs a repo-level exception in charter.yaml → rules.ignore (instead of per-line suppression) or whether the rule's FP rate for this codebase pattern warrants a false-positive report. For suppressions that have grown stale: check expiry dates and remove expired ones. This finding does not affect the Charter Score.  
 
 ---
+
+## AE-TEST-001 — Automated Tests Missing
+**Severity:** 🟠 HIGH  
+
+**Check:** For each **active** code language — one with non-test source files outside tooling directories (`scripts/`, `tools/`, `testdata/`, `examples/`, `vendor/`, `node_modules/`, `dist/`, `build/`, `.github/`, `gen/`) — confirm ≥1 recognized test artifact exists: Go `*_test.go`; JS/TS `*.{test,spec}.*` or `__tests__/`; Python `test_*.py`/`*_test.py`/`tests/`/`conftest.py`; Rust `tests/**.rs` or inline `#[test]`/`#[cfg(test)]`; Java/Kotlin `src/test/**`/`*Test.*`; Ruby `*_spec.rb`/`*_test.rb`; C# `*Tests.cs`; PHP `tests/`/`*Test.php`. Flag HIGH for any active language with no tests.  
+
+**Evidence:** One finding listing each active language lacking tests (e.g., `no test files detected for active language: Go`).  
+
+**False Positive Risk:** FP Risk: Low. A manifest alone does not make a language active — a `package.json` driving only build scripts in a Go repo is **not** a JS surface (no non-test JS source outside tooling). Mark N/A if no recognized code language is active (docs/config-only repos). Rust inline unit tests count.  
+
+**Fix:** Add tests for the active language(s) so an agent can run them and self-verify before finishing a task. Covers the agent-verifiability gap (ADR-0023).  
+
+---
+
+## AE-AUTO-001 — Verification Command Not Discoverable
+**Severity:** 🟡 MEDIUM  
+
+**Check:** When a code language is active, confirm the test command is discoverable via either a task runner declaring a test/check entrypoint (`Makefile`, `justfile`, `Taskfile.yml`, `moon.yml`, `mise.toml [tasks]`, `package.json` `scripts.test`) **or** the active language's conventional zero-config toolchain (Go `go test`, Rust `cargo test`, Python with a configured `pytest`). Flag MEDIUM when neither applies.  
+
+**Evidence:** A finding noting no runner test target and no conventional toolchain for the active language(s).  
+
+**False Positive Risk:** FP Risk: Low. A single-language Go/Rust repo is never penalized for lacking a `Makefile` — its toolchain is the contract. Mark N/A if no language is active.  
+
+**Fix:** Expose a test command via a task runner so an agent can discover and run it. Covers agent operability (ADR-0023).  
+
+---
+
+## AE-CTX-006 — Agent Instructions Over-Emphasized
+**Severity:** ⚪ INFORMATIONAL  
+
+**Check:** In the agent context file, measure emphatic-directive density (`IMPORTANT`/`NEVER`/`MUST`/`CRITICAL`/`ALWAYS`/`EXTREMELY`/`ABSOLUTELY`/`FORBIDDEN`/`PROHIBITED`) per 1,000 words. Flag when ≥ 15 per 1K. This finding does not reduce the Charter Score — it is an instruction-quality nudge.  
+
+**Evidence:** Emphatic-directive count, word count, density, and threshold.  
+
+**False Positive Risk:** FP Risk: Low. Informational — never deducts. Grounded in instruction-following research: stacked imperatives create a fragile, competitive instruction topology that degrades adherence.  
+
+**Fix:** Prefer concise, declarative guidance over stacked emphatic directives; state constraints plainly. This finding does not affect the Charter Score.  
+
+---

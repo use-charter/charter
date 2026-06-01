@@ -90,13 +90,14 @@ final = min(base, applicable_cap)
 | Kubernetes | Not relevant until Charter Cloud needs multi-tenant infra |
 | OpenSSF Allstar | High ROI at org scale; add when use-charter/org has 3+ repos |
 
-## §0.2 Rule Catalog — v1 Launch Set (15 rules)
+## §0.2 Rule Catalog — v1 Launch Set (18 rules)
 
 | Rule ID | Category | What It Checks | Severity |
 |---|---|---|---|
 | AE-CTX-001 | Context | AGENTS.md (or CLAUDE.md, .cursor/rules, Copilot instructions) present and non-empty with meaningful content — project summary, tech stack, agent edit scope, and a verification command; file within 600-token budget | **Blocker** |
 | AE-CTX-002 | Context | Agent context file content consistent with actual repo state — stated tech stack, off-limits paths, and test command match current codebase | **Medium** |
 | AE-CTX-004 | Context | .gitignore excludes local agent session artifacts: `.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/`; no agent artifacts already tracked in git | **Medium** |
+| AE-CTX-006 | Context | Agent context file avoids over-emphasis — emphatic-directive density (`IMPORTANT`/`NEVER`/`MUST`/…) under ~15 per 1K words; stacked imperatives degrade instruction adherence (ADR-0023) | **Informational** |
 | AE-SEC-001 | Secrets | No raw secret patterns in any agent-visible file (high-confidence token detection: OpenAI/GitHub/AWS/Slack token prefixes and PEM private-key headers) | **Blocker** |
 | AE-SEC-002 | Secrets | No secret-like values in MCP server config (`.mcp.json`, `mcp.yml`, Pkl config) | **Blocker** |
 | AE-MCP-001 | MCP Safety | Every MCP server pinned to an exact, **current, non-deprecated** version per the MCP catalog; no `@latest`, semver ranges (`^`, `~`, `>=`), or branch-based sources. Archived packages + CVE/GHSA advisories → High; behind catalog stable → informational (ADR-0021) | **High** |
@@ -106,6 +107,8 @@ final = min(base, applicable_cap)
 | AE-CC-002 | Agent Config | Agent context explicitly restricts edit scope: off-limits paths declared (`.github/workflows/`, `terraform/`, `db/migrations/`, `.env*`, `secrets/`); no implicit full-repo write access granted — OWASP MCP02 Permissioning Failures | **High** |
 | AE-ENV-001 | Environment | Reproducible toolchain declared for all active languages — `mise.toml` (recommended, covers any runtime) or a language-native file: Go `go.mod toolchain` · JS/TS `.nvmrc`/`bunfig.toml`/volta · Python `pyproject.toml requires-python` · Rust `rust-toolchain.toml` · Swift `.swift-version` · Kotlin `gradle-wrapper.properties` · Ruby `.ruby-version` · also accepted: `.tool-versions` (asdf), `devcontainer.json`, `flake.nix`; lockfiles committed; hook config committed — `hk.pkl` (hk, preferred) · `.husky/` (husky) · `lefthook.yml` (lefthook) · `.pre-commit-config.yaml` (pre-commit) · simple-git-hooks/lint-staged (JS) · `.overcommit.yml` (Ruby) · `.cargo-husky/hooks/` (Rust) | **Medium** |
 | AE-CI-002 | CI | At least one CI workflow runs `charter doctor`; `actionlint` and `zizmor` pass on all workflow files; no unpinned third-party actions | **Low** |
+| AE-TEST-001 | Testing | Every active code language (non-test source outside tooling dirs) has automated tests, so an agent can verify its own work; manifest-only/tooling languages are N/A (ADR-0023) | **High** |
+| AE-AUTO-001 | Autonomy | The project's test command is discoverable — via a task runner (Makefile/justfile/Taskfile/npm scripts/mise/moon) or the language's conventional toolchain (`go test`/`cargo test`/configured `pytest`) (ADR-0023) | **Medium** |
 | AE-SUPPRESS-001 | Governance | Suppression comment missing required `reason="…"` field | **Medium** |
 | AE-SUPPRESS-002 | Governance | Permanent suppression present without `approver="…"` field | **High** |
 | AE-SUPPRESS-003 | Governance | High suppression rate (informational — does **not** deduct points or affect score) | **Medium** |
