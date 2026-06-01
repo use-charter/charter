@@ -5,10 +5,12 @@
 // context and safety rules. Detection is pure, offline, and deterministic over
 // the tracked inventory; no network, no LLM (Commitments #4/#7).
 //
-// A language is "active" only when it has non-test SOURCE outside tooling
-// directories (scripts/, tools/, testdata/, …). A manifest alone (e.g. a
-// package.json that only drives build scripts in a Go repo) does not make a
-// language a tested surface — this is the core false-positive guard.
+// A language is "active" only when it has BOTH a recognizing manifest (go.mod,
+// package.json, Cargo.toml, …) AND non-test SOURCE outside tooling directories
+// (scripts/, tools/, testdata/, …). The manifest gate rejects a stray secondary
+// file (e.g. a single Homebrew `.rb` formula in a Rust repo); the source-outside-
+// tooling gate rejects a tooling-only manifest (e.g. a package.json that only
+// drives build scripts in a Go repo). Both are core false-positive guards.
 package operability
 
 import (
@@ -41,7 +43,7 @@ type stackInfo struct{ source, tests int }
 // Run evaluates AE-TEST-001 and AE-AUTO-001 over the repository.
 func Run(root string, inv repository.Inventory) []findings.Finding {
 	stacks := scanStacks(inv)
-	active := activeLanguages(stacks)
+	active := activeLanguages(stacks, inv)
 	if len(active) == 0 {
 		// No real code surface: both rules are N/A (a docs/config/tooling-only
 		// repo is not penalized for having no tests or test command).
@@ -99,10 +101,10 @@ func scanStacks(inv repository.Inventory) map[string]*stackInfo {
 	return m
 }
 
-func activeLanguages(stacks map[string]*stackInfo) []string {
+func activeLanguages(stacks map[string]*stackInfo, inv repository.Inventory) []string {
 	var out []string
 	for lang, info := range stacks {
-		if info.source > 0 {
+		if info.source > 0 && hasManifest(inv, lang) {
 			out = append(out, lang)
 		}
 	}
@@ -110,34 +112,67 @@ func activeLanguages(stacks map[string]*stackInfo) []string {
 	return out
 }
 
-// classifySource maps a path to its language and whether it is a test file.
+// hasManifest reports whether a language's project manifest is present — the
+// gate that distinguishes a real language surface from a stray source file.
+func hasManifest(inv repository.Inventory, lang string) bool {
+	switch lang {
+	case langGo:
+		return inv.Has("go.mod")
+	case langJS:
+		return inv.Has("package.json")
+	case langPython:
+		return inv.Has("pyproject.toml") || inv.Has("setup.py") || inv.Has("setup.cfg") || inv.Has("requirements.txt")
+	case langRust:
+		return inv.Has("Cargo.toml")
+	case langJVM:
+		return inv.Has("pom.xml") || inv.Has("build.gradle") || inv.Has("build.gradle.kts")
+	case langRuby:
+		return inv.Has("Gemfile")
+	case langCSharp:
+		for _, p := range inv.Paths {
+			if strings.HasSuffix(p, ".csproj") {
+				return true
+			}
+		}
+		return false
+	case langPHP:
+		return inv.Has("composer.json")
+	default:
+		return false
+	}
+}
+
+// classifySource maps a path to its language and whether it is a test file. A
+// file under a test/tests/spec/__tests__ directory counts as a test for any
+// language (catches AVA/tap/node:test/RSpec-style layouts that don't use a
+// per-file *.test.* naming convention), in addition to language-specific names.
 func classifySource(p string) (lang string, isTest, ok bool) {
 	base := pathBase(p)
+	inTestDir := hasSegment(p, "test") || hasSegment(p, "tests") || hasSegment(p, "spec") || hasSegment(p, "__tests__")
 	switch {
 	case strings.HasSuffix(p, ".go"):
-		return langGo, strings.HasSuffix(p, "_test.go"), true
+		return langGo, strings.HasSuffix(p, "_test.go") || inTestDir, true
 	case strings.HasSuffix(base, ".d.ts"):
 		return "", false, false // type declarations, not a source surface
 	case hasAnySuffix(base, ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"):
-		return langJS, jsTestFile(base) || hasSegment(p, "__tests__"), true
+		return langJS, jsTestFile(base) || inTestDir, true
 	case strings.HasSuffix(p, ".py"):
 		t := (strings.HasPrefix(base, "test_") && strings.HasSuffix(base, ".py")) ||
-			strings.HasSuffix(base, "_test.py") || base == "conftest.py" || hasSegment(p, "tests")
+			strings.HasSuffix(base, "_test.py") || base == "conftest.py" || inTestDir
 		return langPython, t, true
 	case strings.HasSuffix(p, ".rs"):
-		return langRust, hasSegment(p, "tests"), true // inline #[test] handled separately
+		return langRust, inTestDir, true // inline #[test] handled separately
 	case hasAnySuffix(base, ".java", ".kt"):
-		t := hasSegment(p, "test") || strings.HasSuffix(base, "Test.java") ||
+		t := inTestDir || strings.HasSuffix(base, "Test.java") ||
 			strings.HasSuffix(base, "Test.kt") || strings.HasSuffix(base, "Spec.kt")
 		return langJVM, t, true
 	case strings.HasSuffix(p, ".rb"):
-		t := strings.HasSuffix(base, "_spec.rb") || strings.HasSuffix(base, "_test.rb") ||
-			hasSegment(p, "spec") || hasSegment(p, "test")
+		t := strings.HasSuffix(base, "_spec.rb") || strings.HasSuffix(base, "_test.rb") || inTestDir
 		return langRuby, t, true
 	case strings.HasSuffix(p, ".cs"):
-		return langCSharp, strings.HasSuffix(base, "Tests.cs") || strings.HasSuffix(base, "Test.cs"), true
+		return langCSharp, strings.HasSuffix(base, "Tests.cs") || strings.HasSuffix(base, "Test.cs") || inTestDir, true
 	case strings.HasSuffix(p, ".php"):
-		return langPHP, strings.HasSuffix(base, "Test.php") || hasSegment(p, "tests"), true
+		return langPHP, strings.HasSuffix(base, "Test.php") || inTestDir, true
 	}
 	return "", false, false
 }

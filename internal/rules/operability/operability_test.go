@@ -149,6 +149,32 @@ func TestMakefileTestTargetSatisfiesAutonomy(t *testing.T) {
 	}
 }
 
+func TestStrayLanguageFileWithoutManifestIsNotActive(t *testing.T) {
+	// A Rust repo with a lone Homebrew .rb formula (no Gemfile) must not activate
+	// Ruby — the ripgrep false positive from FP-validation.
+	ids := ruleIDs(t, map[string]string{
+		"Cargo.toml":           "[package]\nname=\"x\"\n",
+		"src/main.rs":          "fn main(){}\n#[cfg(test)]\nmod t{#[test]fn a(){}}\n",
+		"pkg/brew/tool-bin.rb": "class ToolBin < Formula\nend\n",
+	})
+	if len(ids) != 0 {
+		t.Fatalf("a stray .rb (no Gemfile) must not activate Ruby; got %v", ids)
+	}
+}
+
+func TestJSTestsInTestDirCount(t *testing.T) {
+	// Tests in test/*.ts (AVA layout, no *.test.ts naming) must count — the ky
+	// false positive from FP-validation.
+	ids := ruleIDs(t, map[string]string{
+		"package.json":    `{"name":"app","scripts":{"test":"ava"}}`,
+		"source/index.ts": "export const app = () => 1;\n",
+		"test/main.ts":    "import test from 'ava';\n",
+	})
+	if len(ids) != 0 {
+		t.Fatalf("tests in test/*.ts should count; got %v", ids)
+	}
+}
+
 func TestTestFindingDeductsAndIsHigh(t *testing.T) {
 	root, inv := repo(t, map[string]string{
 		"go.mod":              "module x\n\ngo 1.26\n",
