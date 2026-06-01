@@ -64,6 +64,74 @@ func buildAppendDiff(path string, existing, added []byte) string {
 	return b.String()
 }
 
+// buildReplaceDiff renders a unified diff for an in-place rewrite that preserves
+// line count (e.g. a token/version bump). It emits one hunk spanning from up to
+// three lines before the first change to three after the last, marking changed
+// lines `-`/`+` and unchanged lines as context. Falls back to a whole-file
+// replace hunk if the line counts differ.
+func buildReplaceDiff(path string, oldContents, newContents []byte) string {
+	oldLines := splitLines(oldContents)
+	newLines := splitLines(newContents)
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "--- a/%s\n", path)
+	fmt.Fprintf(&b, "+++ b/%s\n", path)
+
+	if len(oldLines) != len(newLines) {
+		fmt.Fprintf(&b, "@@ -1,%d +1,%d @@\n", len(oldLines), len(newLines))
+		for _, line := range oldLines {
+			b.WriteByte('-')
+			b.WriteString(line)
+			b.WriteByte('\n')
+		}
+		for _, line := range newLines {
+			b.WriteByte('+')
+			b.WriteString(line)
+			b.WriteByte('\n')
+		}
+		return b.String()
+	}
+
+	first, last := -1, -1
+	for i := range oldLines {
+		if oldLines[i] != newLines[i] {
+			if first == -1 {
+				first = i
+			}
+			last = i
+		}
+	}
+	if first == -1 {
+		return b.String() // no changes (shouldn't happen for a real plan)
+	}
+
+	start := first - 3
+	if start < 0 {
+		start = 0
+	}
+	end := last + 3
+	if end > len(oldLines)-1 {
+		end = len(oldLines) - 1
+	}
+	count := end - start + 1
+	fmt.Fprintf(&b, "@@ -%d,%d +%d,%d @@\n", start+1, count, start+1, count)
+	for i := start; i <= end; i++ {
+		if oldLines[i] == newLines[i] {
+			b.WriteByte(' ')
+			b.WriteString(oldLines[i])
+			b.WriteByte('\n')
+			continue
+		}
+		b.WriteByte('-')
+		b.WriteString(oldLines[i])
+		b.WriteByte('\n')
+		b.WriteByte('+')
+		b.WriteString(newLines[i])
+		b.WriteByte('\n')
+	}
+	return b.String()
+}
+
 // splitLines splits b into logical lines, discarding exactly one trailing
 // newline so a file ending in "\n" does not yield a phantom empty final line.
 // Empty input yields no lines.

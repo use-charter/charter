@@ -15,5 +15,6 @@
   - **Behind the catalog's `stable_version`** with no advisory → **informational** (`Informational: true`; re-surfaces in output but does **not** deduct from the score — same idiom as AE-SUPPRESS-003).
   - Comparison is **exact-match only** (no cross-scheme version ordering; the official servers use CalVer, not semver). A pinned version absent from the catalog's `known_versions` is **silent** — a stale catalog under-reports rather than misreporting (Commitment #9).
 - Scoring impact: deprecated/unpinned/advisory findings are `High` (−10); the behind-stable nudge is informational (0). No hard cap (caps are reserved for raw-secret findings).
+- `charter fix` (Slice 13 / CF-6, ADR-0020): `charter fix` performs a **safe, diff-first version bump** — an advisory-affected pin → its `fixedIn`, and an unpinned or behind-stable cataloged package → the catalog `stableVersion` — by replacing only the exact package-spec token (originals are backed up). It **never** auto-rewrites a deprecated/archived package, because the successor is a different package/transport; that migration stays manual.
 - Related ADRs: ADR-0021, ADR-0011, ADR-0006, ADR-0009
 - Related evals: None yet

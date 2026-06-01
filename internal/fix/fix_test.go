@@ -45,9 +45,12 @@ func planRuleIDs(plans []FilePlan) []string {
 
 func TestRegistryHoldsExactlyTheV1Fixers(t *testing.T) {
 	if len(registry) != 3 {
-		t.Fatalf("registry has %d fixers, want exactly 3: %v", len(registry), registry)
+		t.Fatalf("single-file registry has %d fixers, want 3: %v", len(registry), registry)
 	}
-	for _, id := range []string{"AE-CTX-001", "AE-CTX-004", "AE-CI-002"} {
+	if len(multiRegistry) != 1 {
+		t.Fatalf("multi-file registry has %d fixers, want 1: %v", len(multiRegistry), multiRegistry)
+	}
+	for _, id := range []string{"AE-CTX-001", "AE-CTX-004", "AE-CI-002", "AE-MCP-001"} {
 		if !Fixable(id) {
 			t.Errorf("Fixable(%q) = false, want true", id)
 		}
@@ -55,7 +58,7 @@ func TestRegistryHoldsExactlyTheV1Fixers(t *testing.T) {
 }
 
 func TestFixableRejectsSecretAndDangerousRules(t *testing.T) {
-	for _, id := range []string{"AE-SEC-001", "AE-SEC-002", "AE-CC-001", "AE-CTX-002", "AE-MCP-001", "unknown"} {
+	for _, id := range []string{"AE-SEC-001", "AE-SEC-002", "AE-CC-001", "AE-CTX-002", "unknown"} {
 		if Fixable(id) {
 			t.Errorf("Fixable(%q) = true, want false (must never be fixable)", id)
 		}
@@ -524,6 +527,93 @@ func TestPlanThenApplyCreatesFixableFiles(t *testing.T) {
 	}
 	if _, statErr := os.Stat(filepath.Join(root, ".github", "workflows", "charter.yaml")); statErr != nil {
 		t.Errorf("charter.yaml not written: %v", statErr)
+	}
+}
+
+// --- fixMCP001 (in-place version bumps) -------------------------------------
+
+func TestFixMCP001BumpsAdvisoryPinToFixedVersion(t *testing.T) {
+	root := t.TempDir()
+	cfg := `{ "mcpServers": { "git": { "command": "uvx", "args": ["mcp-server-git@2025.8.0"] } } }` + "\n"
+	writeFileT(t, filepath.Join(root, ".mcp.json"), cfg)
+	inv := repository.New([]string{".mcp.json"})
+
+	plans, err := fixMCP001(root, inv)
+	if err != nil {
+		t.Fatalf("fixMCP001: %v", err)
+	}
+	if len(plans) != 1 || plans[0].Action != Replace || plans[0].Path != ".mcp.json" {
+		t.Fatalf("plans = %+v, want one Replace of .mcp.json", plans)
+	}
+	if !strings.Contains(string(plans[0].Contents), "mcp-server-git@2026.1.14") {
+		t.Errorf("bumped contents = %q, want mcp-server-git@2026.1.14", plans[0].Contents)
+	}
+	if strings.Contains(string(plans[0].Contents), "2025.8.0") {
+		t.Errorf("vulnerable version still present: %q", plans[0].Contents)
+	}
+	if !strings.Contains(plans[0].Diff, "-") || !strings.Contains(plans[0].Diff, "+") {
+		t.Errorf("diff should show the change: %q", plans[0].Diff)
+	}
+}
+
+func TestFixMCP001PinsUnpinnedCatalogedPackage(t *testing.T) {
+	root := t.TempDir()
+	cfg := `{ "mcpServers": { "fs": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem@latest"] } } }` + "\n"
+	writeFileT(t, filepath.Join(root, ".mcp.json"), cfg)
+	inv := repository.New([]string{".mcp.json"})
+
+	plans, err := fixMCP001(root, inv)
+	if err != nil {
+		t.Fatalf("fixMCP001: %v", err)
+	}
+	if len(plans) != 1 {
+		t.Fatalf("plans = %+v, want one", plans)
+	}
+	if !strings.Contains(string(plans[0].Contents), "@modelcontextprotocol/server-filesystem@2026.1.14") {
+		t.Errorf("expected pin to catalog stable, got %q", plans[0].Contents)
+	}
+}
+
+func TestFixMCP001NeverRewritesDeprecatedPackage(t *testing.T) {
+	root := t.TempDir()
+	cfg := `{ "mcpServers": { "gh": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-github@1.2.3"] } } }` + "\n"
+	writeFileT(t, filepath.Join(root, ".mcp.json"), cfg)
+	inv := repository.New([]string{".mcp.json"})
+
+	plans, err := fixMCP001(root, inv)
+	if err != nil {
+		t.Fatalf("fixMCP001: %v", err)
+	}
+	if len(plans) != 0 {
+		t.Fatalf("deprecated package must not be auto-rewritten; got %+v", plans)
+	}
+}
+
+func TestFixMCP001ApplyBacksUpAndRewritesInPlace(t *testing.T) {
+	root := t.TempDir()
+	cfg := `{ "mcpServers": { "git": { "command": "uvx", "args": ["mcp-server-git@2025.8.0"] } } }` + "\n"
+	target := filepath.Join(root, ".mcp.json")
+	writeFileT(t, target, cfg)
+	inv := repository.New([]string{".mcp.json"})
+
+	plans, err := fixMCP001(root, inv)
+	if err != nil {
+		t.Fatalf("fixMCP001: %v", err)
+	}
+	written, backupDir, err := Apply(root, plans)
+	if err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	if !slicesEqual(written, []string{".mcp.json"}) || backupDir == "" {
+		t.Fatalf("written=%v backupDir=%q, want [.mcp.json] + a backup", written, backupDir)
+	}
+	if got := string(readFileT(t, target)); !strings.Contains(got, "2026.1.14") || strings.Contains(got, "2025.8.0") {
+		t.Errorf("live .mcp.json not bumped: %q", got)
+	}
+	// Backup preserves the original vulnerable pin.
+	backup := filepath.Join(root, filepath.FromSlash(backupDir), ".mcp.json")
+	if got := string(readFileT(t, backup)); !strings.Contains(got, "2025.8.0") {
+		t.Errorf("backup should hold the original: %q", got)
 	}
 }
 
