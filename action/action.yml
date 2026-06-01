@@ -1,0 +1,137 @@
+name: "Charter"
+description: "Scan a repository for AI-agent readiness and upload SARIF to GitHub Code Scanning."
+author: "use-charter"
+branding:
+  icon: "shield"
+  color: "purple"
+
+inputs:
+  version:
+    description: "Charter release to use (e.g. v1.0.0), or 'latest'."
+    required: false
+    default: "latest"
+  path:
+    description: "Repository path to scan."
+    required: false
+    default: "."
+  threshold:
+    description: "Minimum passing score (0-100). Empty defers to charter.yaml policy / default 80."
+    required: false
+    default: ""
+  format:
+    description: "Output format: text, json, markdown, or sarif."
+    required: false
+    default: "sarif"
+  sarif-file:
+    description: "Path to write the SARIF report."
+    required: false
+    default: "charter.sarif"
+  upload:
+    description: "Upload SARIF to GitHub Code Scanning (requires security-events: write)."
+    required: false
+    default: "true"
+  verify:
+    description: "Verify the binary with cosign + sha256 before running."
+    required: false
+    default: "true"
+  fail-below:
+    description: "Fail the step when the score is below the threshold."
+    required: false
+    default: "true"
+  category:
+    description: "Optional Code Scanning category for the SARIF results."
+    required: false
+    default: ""
+
+outputs:
+  exit-code:
+    description: "charter doctor exit code (0 pass, 1 below threshold, 2 error)."
+    value: ${{ steps.run.outputs.exit-code }}
+  sarif-file:
+    description: "Path to the written SARIF report."
+    value: ${{ steps.run.outputs.sarif-file }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install cosign
+      if: inputs.verify == 'true'
+      uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+      with:
+        cosign-release: "v3.0.6"
+    - name: Download and verify Charter
+      id: install
+      shell: bash
+      env:
+        IN_VERSION: ${{ inputs.version }}
+        IN_VERIFY: ${{ inputs.verify }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        ver="$IN_VERSION"
+        if [ "$ver" = "latest" ]; then
+          ver="$(gh release view --repo use-charter/charter --json tagName -q .tagName)"
+        fi
+        nover="${ver#v}"
+        case "$RUNNER_OS" in
+          Linux) os="linux" ;;
+          macOS) os="darwin" ;;
+          Windows) os="windows" ;;
+          *) echo "unsupported OS: $RUNNER_OS" >&2; exit 1 ;;
+        esac
+        case "$RUNNER_ARCH" in
+          X64) arch="amd64" ;;
+          ARM64) arch="arm64" ;;
+          *) echo "unsupported arch: $RUNNER_ARCH" >&2; exit 1 ;;
+        esac
+        ext="tar.gz"; [ "$os" = "windows" ] && ext="zip"
+        base="charter_${nover}_${os}_${arch}"
+        work="$(mktemp -d)"
+        gh release download "$ver" --repo use-charter/charter \
+          --pattern "${base}.${ext}" --pattern "checksums.txt" --pattern "checksums.txt.sigstore.json" \
+          --dir "$work"
+        cd "$work"
+        if [ "$IN_VERIFY" = "true" ]; then
+          cosign verify-blob \
+            --bundle "checksums.txt.sigstore.json" \
+            --certificate-identity "https://github.com/use-charter/charter/.github/workflows/release.yml@refs/tags/${ver}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "checksums.txt"
+          line="$(grep " ${base}.${ext}\$" checksums.txt)"
+          if command -v sha256sum >/dev/null 2>&1; then echo "$line" | sha256sum -c -; else echo "$line" | shasum -a 256 -c -; fi
+        fi
+        if [ "$ext" = "zip" ]; then unzip -q "${base}.${ext}"; else tar -xzf "${base}.${ext}"; fi
+        bin="charter"; [ "$os" = "windows" ] && bin="charter.exe"
+        echo "charter-bin=${work}/${bin}" >> "$GITHUB_OUTPUT"
+    - name: Run charter doctor
+      id: run
+      shell: bash
+      env:
+        CHARTER_BIN: ${{ steps.install.outputs.charter-bin }}
+        IN_PATH: ${{ inputs.path }}
+        IN_FORMAT: ${{ inputs.format }}
+        IN_SARIF: ${{ inputs.sarif-file }}
+        IN_THRESHOLD: ${{ inputs.threshold }}
+      run: |
+        set -uo pipefail
+        args=(doctor --path "$IN_PATH" --format "$IN_FORMAT" --out "$IN_SARIF")
+        [ -n "$IN_THRESHOLD" ] && args+=(--threshold "$IN_THRESHOLD")
+        "$CHARTER_BIN" "${args[@]}"; code=$?
+        echo "exit-code=${code}" >> "$GITHUB_OUTPUT"
+        echo "sarif-file=${IN_SARIF}" >> "$GITHUB_OUTPUT"
+    - name: Upload SARIF
+      if: inputs.upload == 'true' && inputs.format == 'sarif'
+      uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
+      with:
+        sarif_file: ${{ inputs.sarif-file }}
+        category: ${{ inputs.category }}
+    - name: Apply gate
+      shell: bash
+      env:
+        CODE: ${{ steps.run.outputs.exit-code }}
+        FAIL_BELOW: ${{ inputs.fail-below }}
+      run: |
+        set -euo pipefail
+        if [ "$CODE" = "2" ]; then echo "charter: scan error" >&2; exit 2; fi
+        if [ "$CODE" = "1" ] && [ "$FAIL_BELOW" = "true" ]; then echo "charter: score below threshold" >&2; exit 1; fi
+        exit 0

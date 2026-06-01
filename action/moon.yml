@@ -1,1 +1,10 @@
 id: "action"
+
+tasks:
+  validate:
+    command: "bun"
+    args:
+      - "../scripts/validate-action.ts"
+    inputs:
+      - "action.yml"
+      - "/scripts/validate-action.ts"

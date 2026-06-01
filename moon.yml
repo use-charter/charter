@@ -32,6 +32,7 @@ tasks:
       - "actionlint"
       - "zizmor"
       - "release-check"
+      - "action:validate"
   test:
     command: "bun"
     args:
