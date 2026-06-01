@@ -95,16 +95,18 @@ type workflowExecutables struct {
 }
 
 func markCoverage(executable workflowExecutables, coverage map[string]bool) {
-	if hasExecutableCommand(executable.Runs, isMoonRunCommand(":check")) || hasMoonRunTasks(executable.Runs, ":lint", ":vet", ":test", ":build", ":docs", ":eval") {
+	if hasExecutableCommand(executable.Runs, isMoonRunCommand(":check")) || hasMoonRunTasks(executable.Runs, ":lint", ":vet", ":test", ":build", ":docs", ":eval") || hasExecutableCommand(executable.Runs, isTestOrBuildCommand) {
 		coverage["repo-quality"] = true
 	}
 	if hasExecutableCommand(executable.Runs, isCharterDoctorCommand) || hasUsePrefix(executable.Uses, "use-charter/charter-action@") {
 		coverage["charter-product-gate"] = true
 	}
-	if hasExecutableCommand(executable.Runs, isMoonRunCommand(":actionlint")) && hasExecutableCommand(executable.Runs, isMoonRunCommand(":zizmor")) {
+	actionlint := hasExecutableCommand(executable.Runs, isMoonRunCommand(":actionlint")) || hasExecutableCommand(executable.Runs, isActionlintCommand) || usesContains(executable.Uses, "rhysd/actionlint")
+	zizmor := hasExecutableCommand(executable.Runs, isMoonRunCommand(":zizmor")) || hasExecutableCommand(executable.Runs, isZizmorCommand) || usesContains(executable.Uses, "zizmorcore/zizmor")
+	if actionlint && zizmor {
 		coverage["workflow-lint"] = true
 	}
-	if hasExecutableCommand(executable.Runs, isMoonRunCommand(":security")) {
+	if hasExecutableCommand(executable.Runs, isMoonRunCommand(":security")) || hasExecutableCommand(executable.Runs, isSecurityScanCommand) || usesContains(executable.Uses, "github/codeql-action") {
 		coverage["security"] = true
 	}
 }
@@ -118,6 +120,9 @@ func unpinnedActionEvidence(uses []string, rel string) []string {
 		}
 		if slsaReusableWorkflowPin.MatchString(ref) {
 			continue
+		}
+		if strings.HasPrefix(ref, "use-charter/charter-action@") {
+			continue // first-party action; tag-pinned is the conventional consumer form (ADR-0020)
 		}
 		if !strings.Contains(ref, "@") {
 			evidence = append(evidence, "unpinned action: "+rel+" -> "+ref)
@@ -322,6 +327,45 @@ func isCharterDoctorCommand(command string) bool {
 	}
 	if strings.HasPrefix(command, "go run ") && strings.Contains(command, " doctor") {
 		return true
+	}
+	return false
+}
+
+// isTestOrBuildCommand recognizes the common direct test/build invocations a
+// non-moon repo runs for repo-quality coverage.
+func isTestOrBuildCommand(c string) bool {
+	for _, p := range []string{"go test", "go build", "npm test", "npm run test", "pnpm test", "pnpm run test", "yarn test", "cargo test", "cargo build", "pytest", "python -m pytest", "bun test", "make test", "make check"} {
+		if c == p || strings.HasPrefix(c, p+" ") {
+			return true
+		}
+	}
+	return false
+}
+
+func isActionlintCommand(c string) bool {
+	return c == "actionlint" || strings.HasPrefix(c, "actionlint ")
+}
+
+func isZizmorCommand(c string) bool {
+	return c == "zizmor" || strings.HasPrefix(c, "zizmor ")
+}
+
+// isSecurityScanCommand recognizes the common direct supply-chain/security
+// scanners a non-moon repo runs for security coverage.
+func isSecurityScanCommand(c string) bool {
+	for _, p := range []string{"govulncheck", "osv-scanner", "gitleaks", "trivy", "grype"} {
+		if c == p || strings.HasPrefix(c, p+" ") {
+			return true
+		}
+	}
+	return false
+}
+
+func usesContains(uses []string, substr string) bool {
+	for _, u := range uses {
+		if strings.Contains(normalizeUseRef(u), substr) {
+			return true
+		}
 	}
 	return false
 }

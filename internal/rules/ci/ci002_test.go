@@ -267,6 +267,84 @@ func TestRunRecognizesSHAPinnedActionWithTrailingComment(t *testing.T) {
 	}
 }
 
+func TestRunPassesWhenDirectCommandsSatisfyCoverage(t *testing.T) {
+	root := newCIRepo(t, map[string]string{
+		".github/workflows/ci.yml": "name: CI\njobs:\n  build:\n    steps:\n      - run: go test ./...\n      - run: actionlint\n      - run: zizmor .\n      - run: govulncheck ./...\n      - run: charter doctor --threshold 80\n      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	if findings := Run(root, inv); len(findings) != 0 {
+		t.Fatalf("expected no findings for direct (non-moon) coverage commands, got %#v", findings)
+	}
+}
+
+func TestRunPassesWhenLintAndSecurityUseActionForms(t *testing.T) {
+	root := newCIRepo(t, map[string]string{
+		".github/workflows/ci.yml": "name: CI\njobs:\n  build:\n    steps:\n      - run: npm test\n      - uses: rhysd/actionlint@08eba0b27e820071cde6df949e0beb9ba4906955\n      - uses: zizmorcore/zizmor@08eba0b27e820071cde6df949e0beb9ba4906955\n      - uses: github/codeql-action/upload-sarif@08eba0b27e820071cde6df949e0beb9ba4906955\n      - uses: use-charter/charter-action@v1\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	if findings := Run(root, inv); len(findings) != 0 {
+		t.Fatalf("expected no findings when coverage comes from action forms, got %#v", findings)
+	}
+}
+
+func TestRunExemptsFirstPartyCharterActionFromPinCheck(t *testing.T) {
+	root := newCIRepo(t, map[string]string{
+		".github/workflows/ci.yml": "name: CI\njobs:\n  build:\n    steps:\n      - run: go test ./...\n      - run: actionlint\n      - run: zizmor\n      - run: govulncheck ./...\n      - uses: use-charter/charter-action@v1\n      - uses: foo/bar@v1\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "unpinned action: .github/workflows/ci.yml -> foo/bar@v1") {
+		t.Fatalf("expected genuinely unpinned action to remain flagged, got %#v", findings[0].Evidence)
+	}
+	for _, item := range findings[0].Evidence {
+		if strings.Contains(item, "use-charter/charter-action") {
+			t.Fatalf("expected first-party charter-action to be exempt from pin check, got %#v", findings[0].Evidence)
+		}
+	}
+}
+
+func TestRunFlagsMissingSecurityWithDirectQualityForms(t *testing.T) {
+	root := newCIRepo(t, map[string]string{
+		".github/workflows/ci.yml": "name: CI\njobs:\n  build:\n    steps:\n      - run: go test ./...\n      - run: actionlint\n      - run: zizmor\n      - run: charter doctor --threshold 80\n      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "missing security workflow coverage") {
+		t.Fatalf("expected missing security evidence, got %#v", findings[0].Evidence)
+	}
+	if containsEvidence(findings[0].Evidence, "missing repo quality workflow coverage") ||
+		containsEvidence(findings[0].Evidence, "missing workflow lint coverage") ||
+		containsEvidence(findings[0].Evidence, "missing charter doctor CI gate or documented bootstrap deferment") {
+		t.Fatalf("expected only the security gap to be reported, got %#v", findings[0].Evidence)
+	}
+}
+
 func newCIRepo(t *testing.T, files map[string]string) string {
 	t.Helper()
 
