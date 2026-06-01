@@ -58,6 +58,8 @@ jobs:
         run: mise x -- moon run :lint :vet :test :build :docs :eval
       - name: Run Charter doctor gate
         run: go run ./cmd/charter doctor --path . --threshold 80 --quiet
+      - name: Run performance validation
+        run: mise x -- moon run :perf
 
   docs-check:
     name: Run docs task
