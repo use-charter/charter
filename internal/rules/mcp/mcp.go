@@ -5,10 +5,21 @@ import (
 	"os"
 	"path/filepath"
 
+	"go.use-charter.dev/charter/internal/catalog"
 	"go.use-charter.dev/charter/internal/config"
 	"go.use-charter.dev/charter/internal/findings"
 	"go.use-charter.dev/charter/internal/repository"
 )
+
+// mergeTrustedHosts combines the per-repo charter.yaml allowlist with the
+// catalog's vendor-host baseline for AE-MCP-002. checkTrustedRemotes lowercases
+// and de-duplicates via its set, so order here is irrelevant.
+func mergeTrustedHosts(user []string, cat *catalog.Catalog) []string {
+	merged := make([]string, 0, len(user)+len(cat.TrustedHosts))
+	merged = append(merged, user...)
+	merged = append(merged, cat.TrustedHosts...)
+	return merged
+}
 
 // isMCPConfigPath reports whether p is an MCP config file Charter scans. Keep
 // this list consistent with AE-SEC-002's MCP targets (future drift-guard candidate).
@@ -53,9 +64,11 @@ func Run(root string, inv repository.Inventory) ([]findings.Finding, error) {
 		return nil, err
 	}
 
+	cat := catalog.Default()
+
 	var all []findings.Finding
-	all = append(all, checkPinning(files)...)
-	all = append(all, checkTrustedRemotes(files, allow)...)
+	all = append(all, checkPinning(files, cat)...)
+	all = append(all, checkTrustedRemotes(files, mergeTrustedHosts(allow, cat))...)
 	all = append(all, checkRemoteAuth(files)...)
 	return all, nil
 }

@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"go.use-charter.dev/charter/internal/catalog"
 	"go.use-charter.dev/charter/internal/findings"
 )
 
@@ -97,7 +98,12 @@ func firstNonFlag(args []string) int {
 	return -1
 }
 
-func checkPinning(files []ConfigFile) []findings.Finding {
+// checkPinning evaluates AE-MCP-001 across all servers, emitting at most one
+// finding per server via a precedence ladder (ADR-0021):
+// deprecated > unpinned > advisory > behind-stable > clean. Catalog comparisons
+// are exact-match only, so a version absent from the catalog's known set is
+// silent (a stale catalog under-reports rather than misreporting).
+func checkPinning(files []ConfigFile, cat *catalog.Catalog) []findings.Finding {
 	var result []findings.Finding
 	for _, cf := range files {
 		for _, s := range cf.Servers {
@@ -105,18 +111,9 @@ func checkPinning(files []ConfigFile) []findings.Finding {
 			if !ok {
 				continue
 			}
-			if _, _, pinned := classifyPackageSpec(token); pinned {
-				continue
+			if f, ok := catalogFinding(cf, s, token, cat); ok {
+				result = append(result, f)
 			}
-			result = append(result, findings.Finding{
-				RuleID:      "AE-MCP-001",
-				Severity:    findings.SeverityHigh,
-				Category:    "MCP Safety",
-				Summary:     "MCP server package is not pinned to an exact version (supply-chain risk, OWASP MCP04)",
-				Remediation: "Pin the MCP server package to an exact version or digest instead of @latest, a semver range, or a floating git ref.",
-				Evidence:    []string{cf.Path + ": server " + s.Name + " uses " + token},
-				Locations:   []findings.Location{{Path: cf.Path, Line: s.Line}},
-			})
 		}
 	}
 	sort.Slice(result, func(i, j int) bool {
@@ -127,4 +124,80 @@ func checkPinning(files []ConfigFile) []findings.Finding {
 		return li.Line < lj.Line
 	})
 	return result
+}
+
+func catalogFinding(cf ConfigFile, s Server, token string, cat *catalog.Catalog) (findings.Finding, bool) {
+	name, version, pinned := classifyPackageSpec(token)
+	entry, known := cat.Lookup(name)
+	loc := []findings.Location{{Path: cf.Path, Line: s.Line}}
+	base := cf.Path + ": server " + s.Name
+
+	// 1. Deprecated/archived package — migration supersedes pinning.
+	if known && entry.Status == "deprecated" {
+		return findings.Finding{
+			RuleID:      "AE-MCP-001",
+			Severity:    findings.SeverityHigh,
+			Category:    "MCP Safety",
+			Summary:     "MCP server package " + name + " is archived/deprecated — migrate to " + entry.Successor + " (supply-chain maintenance risk)",
+			Remediation: "Replace " + name + " with its maintained successor: " + entry.Successor + ".",
+			Evidence:    []string{base + " uses " + token + " (archived; see " + entry.Reference + ")"},
+			Locations:   loc,
+		}, true
+	}
+
+	// 2. Unpinned — the original AE-MCP-001 supply-chain check.
+	if !pinned {
+		return findings.Finding{
+			RuleID:      "AE-MCP-001",
+			Severity:    findings.SeverityHigh,
+			Category:    "MCP Safety",
+			Summary:     "MCP server package is not pinned to an exact version (supply-chain risk, OWASP MCP04)",
+			Remediation: "Pin the MCP server package to an exact version or digest instead of @latest, a semver range, or a floating git ref.",
+			Evidence:    []string{base + " uses " + token},
+			Locations:   loc,
+		}, true
+	}
+
+	if !known {
+		return findings.Finding{}, false
+	}
+
+	// 3. Known advisory affecting the pinned version.
+	if adv, hit := entry.AdvisoryFor(version); hit {
+		summary := "MCP server " + name + "@" + version + " is affected by " + adv.ID + " — fixed in " + adv.FixedIn
+		if adv.Summary != "" {
+			summary += " (" + adv.Summary + ")"
+		}
+		ev := base + " uses " + token + "; advisory " + adv.ID
+		if adv.Reference != "" {
+			ev += " (" + adv.Reference + ")"
+		}
+		return findings.Finding{
+			RuleID:      "AE-MCP-001",
+			Severity:    findings.SeverityHigh,
+			Category:    "MCP Safety",
+			Summary:     summary,
+			Remediation: "Upgrade " + name + " to " + adv.FixedIn + " or later.",
+			Evidence:    []string{ev},
+			Locations:   loc,
+		}, true
+	}
+
+	// 4. Behind the catalog's stable version — informational nudge (non-deducting,
+	// re-surfaces). Mirrors AE-SUPPRESS-003's informational shape.
+	if stable, behind := entry.KnownBehind(version); behind {
+		return findings.Finding{
+			RuleID:        "AE-MCP-001",
+			Severity:      findings.SeverityLow,
+			Category:      "MCP Safety",
+			Summary:       "MCP server " + name + " is pinned to " + version + "; catalog stable version is " + stable + " — upgrade available",
+			Remediation:   "Bump " + name + " to " + stable + " when convenient.",
+			Evidence:      []string{base + " uses " + token + " (catalog stable: " + stable + ")"},
+			Locations:     loc,
+			Informational: true,
+		}, true
+	}
+
+	// 5. Clean.
+	return findings.Finding{}, false
 }
