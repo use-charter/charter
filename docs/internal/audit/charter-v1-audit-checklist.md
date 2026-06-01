@@ -109,20 +109,22 @@ final = min(base, applicable_cap)
 
 **Evidence:** Config file path with a 1-based line, the server name, and the offending package spec (e.g., `.mcp.json:4: server gum uses gumroad-mcp@latest`).  
 
-**False Positive Risk:** FP Risk: Low. A server pinned to an exact semver or a digest is safe; semver ranges and floating tags are genuine supply-chain risks. Mark N/A if the repo has no scanned MCP config files. Non-runner commands (`node`, `python3`, absolute binaries) carry no pin assertion.  
+**Catalog (Slice 13, ADR-0021):** the rule is catalog-aware with a one-finding-per-server precedence ladder — **deprecated > unpinned > advisory > behind-stable > clean**. A package the catalog marks **archived/deprecated** (e.g. `@modelcontextprotocol/server-github`) → HIGH, "migrate to `<successor>`" (even when unpinned). A pinned version in a catalog **advisory** (CVE/GHSA) `affected` set → HIGH, names `id`/`fixedIn`. A pin **behind** the catalog `stable_version` with no advisory → **informational** (re-surfaces, does **not** deduct). Comparison is **exact-match only**; a version absent from `known_versions` is silent (a stale catalog under-reports, never misreports).  
 
-**Fix:** Pin the MCP server package to an exact version or digest instead of `@latest`, a semver range, or a floating git ref, then commit the change. Covers OWASP MCP04 — Software Supply Chain Attacks & Dependency Tampering.  
+**False Positive Risk:** FP Risk: Low. A server pinned to an exact semver or a digest is safe; semver ranges and floating tags are genuine supply-chain risks. The behind-stable nudge is informational (non-deducting), so catalog staleness cannot create a scoring FP. Mark N/A if the repo has no scanned MCP config files. Non-runner commands (`node`, `python3`, absolute binaries) carry no pin assertion.  
+
+**Fix:** Pin the MCP server package to an exact version or digest instead of `@latest`, a semver range, or a floating git ref (or migrate an archived package to its successor), then commit the change. Covers OWASP MCP04 — Software Supply Chain Attacks & Dependency Tampering.  
 
 ---
 
 ## AE-MCP-002 — MCP Server Untrusted Remote Origin
 **Severity:** 🟠 HIGH  
 
-**Check:** For remote MCP servers (a `url` or `type` of `http`/`sse`) in a scanned JSON MCP config, compare the URL host against the team allowlist (`charter.yaml → mcp.trustedRemotes`, a list of hostnames). Flag HIGH when the host is absent from the allowlist; when no `charter.yaml` allowlist is configured, every non-local remote is flagged as unverifiable with a distinct message. Localhost and the `127.0.0.0/8` loopback range (plus `::1`, `0.0.0.0`, `*.localhost`) are exempt; scheme-less and `${VAR}` URLs have no parseable host and are skipped.  
+**Check:** For remote MCP servers (a `url` or `type` of `http`/`sse`) in a scanned JSON MCP config, compare the URL host against the effective allowlist — `union(charter.yaml → mcp.trustedRemotes, catalog trustedHosts)`. The catalog (Slice 13, ADR-0021) ships a baseline of vendor-operated remote hosts (GitHub, Sentry, Linear, Atlassian, Notion, Stripe, Vercel, Asana, and the full Cloudflare managed `*.mcp.cloudflare.com` set), so those pass without per-repo config. Flag HIGH when the host is absent from both. Localhost and the `127.0.0.0/8` loopback range (plus `::1`, `0.0.0.0`, `*.localhost`) are exempt; scheme-less and `${VAR}` URLs have no parseable host and are skipped.  
 
-**Evidence:** Config file path with a 1-based line, the server name, and the resolved host (e.g., `.mcp.json:6: server shadow -> unknown.example.net`). The summary distinguishes "not in allowlist" from "no allowlist configured".  
+**Evidence:** Config file path with a 1-based line, the server name, and the resolved host (e.g., `.mcp.json:6: server shadow -> unknown.example.net`).  
 
-**False Positive Risk:** FP Risk: Medium. A remote from a verifiably trusted vendor that simply isn't listed yet is a FP — add the reviewed host to `charter.yaml`. Mark N/A if the repo has no scanned MCP config files. Local/loopback servers never fire.  
+**False Positive Risk:** FP Risk: Low–Medium. The catalog baseline clears the common vendor-host case; a remote from a trusted vendor not yet in the catalog or `charter.yaml` is a FP — add the reviewed host to `charter.yaml`. Mark N/A if the repo has no scanned MCP config files. Local/loopback servers never fire.  
 
 **Fix:** Add the reviewed host to `charter.yaml → mcp.trustedRemotes`, or replace the server with a trusted origin, then commit the change. Covers OWASP MCP09 — Shadow MCP Servers.  
 
