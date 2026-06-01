@@ -97,8 +97,9 @@ runs:
             --certificate-identity "https://github.com/use-charter/charter/.github/workflows/release.yml@refs/tags/${ver}" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
             "checksums.txt"
-          line="$(grep " ${base}.${ext}\$" checksums.txt)"
-          if command -v sha256sum >/dev/null 2>&1; then echo "$line" | sha256sum -c -; else echo "$line" | shasum -a 256 -c -; fi
+          line="$(awk -v f="${base}.${ext}" '$2 == f {print}' checksums.txt)"
+          if [ -z "$line" ]; then echo "no checksum entry for ${base}.${ext}" >&2; exit 1; fi
+          if command -v sha256sum >/dev/null 2>&1; then printf '%s\n' "$line" | sha256sum -c -; else printf '%s\n' "$line" | shasum -a 256 -c -; fi
         fi
         if [ "$ext" = "zip" ]; then unzip -q "${base}.${ext}"; else tar -xzf "${base}.${ext}"; fi
         bin="charter"; [ "$os" = "windows" ] && bin="charter.exe"
@@ -117,8 +118,12 @@ runs:
         args=(doctor --path "$IN_PATH" --format "$IN_FORMAT" --out "$IN_SARIF")
         [ -n "$IN_THRESHOLD" ] && args+=(--threshold "$IN_THRESHOLD")
         "$CHARTER_BIN" "${args[@]}"; code=$?
-        echo "exit-code=${code}" >> "$GITHUB_OUTPUT"
-        echo "sarif-file=${IN_SARIF}" >> "$GITHUB_OUTPUT"
+        {
+          echo "exit-code=${code}"
+          echo "sarif-file<<CHARTER_EOF"
+          echo "${IN_SARIF}"
+          echo "CHARTER_EOF"
+        } >> "$GITHUB_OUTPUT"
     - name: Upload SARIF
       if: inputs.upload == 'true' && inputs.format == 'sarif'
       uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
