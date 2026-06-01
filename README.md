@@ -17,7 +17,7 @@ Current implemented scope:
 - file inventory scanner (git-aware, respects .gitignore)
 - finding model with structured locations (path:line, 1-based)
 - score engine with hard caps (blocker ≤59, secret ≤49)
-- `charter doctor` output with `--path`, `--threshold`, `--quiet`, and `--format text|json|markdown`
+- `charter doctor` output with `--path`, `--threshold`, `--quiet`, `--format text|json|markdown|sarif`, and `--out` for file output
 - 15 implemented rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`, `AE-SEC-001`, `AE-SEC-002`, `AE-MCP-001`, `AE-MCP-002`, `AE-MCP-003`, `AE-CC-001`, `AE-CC-002`, `AE-SUPPRESS-001`, `AE-SUPPRESS-002`, `AE-SUPPRESS-003`
 - agent context registry (`agentcontext` — shared source for context and secret scanning, drift guard)
 - blocker-level secret detection with redacted evidence and score cap at `49`: `AE-SEC-001` (agent context), `AE-SEC-002` (MCP config)
