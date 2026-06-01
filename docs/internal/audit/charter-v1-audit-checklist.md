@@ -120,7 +120,7 @@ final = min(base, applicable_cap)
 ## AE-MCP-002 — MCP Server Untrusted Remote Origin
 **Severity:** 🟠 HIGH  
 
-**Check:** For remote MCP servers (a `url` or `type` of `http`/`sse`) in a scanned JSON MCP config, compare the URL host against the effective allowlist — `union(charter.yaml → mcp.trustedRemotes, catalog trustedHosts)`. The catalog (Slice 13, ADR-0021) ships a baseline of vendor-operated remote hosts (GitHub, Sentry, Linear, Atlassian, Notion, Stripe, Vercel, Asana, and the full Cloudflare managed `*.mcp.cloudflare.com` set), so those pass without per-repo config. Flag HIGH when the host is absent from both. Localhost and the `127.0.0.0/8` loopback range (plus `::1`, `0.0.0.0`, `*.localhost`) are exempt; scheme-less and `${VAR}` URLs have no parseable host and are skipped.  
+**Check:** For remote MCP servers (a `url` or `type` of `http`/`sse`) in a scanned JSON MCP config, compare the URL host against the effective allowlist — `union(charter.yaml → mcp.trustedRemotes, catalog trustedHosts)`. The catalog (Slice 13, ADR-0021) ships a baseline of 60+ major vendor-operated remote hosts (GitHub, Vercel, Supabase, Neon, Figma, Stripe, PayPal, Linear, Notion, Atlassian, Sentry, Semgrep, Hugging Face, Context7, Exa, Google Cloud endpoints, the full Cloudflare managed `*.mcp.cloudflare.com` set, and more — reputable vendor servers only), so those pass without per-repo config. Flag HIGH when the host is absent from both. Localhost and the `127.0.0.0/8` loopback range (plus `::1`, `0.0.0.0`, `*.localhost`) are exempt; scheme-less and `${VAR}` URLs have no parseable host and are skipped.  
 
 **Evidence:** Config file path with a 1-based line, the server name, and the resolved host (e.g., `.mcp.json:6: server shadow -> unknown.example.net`).  
 
