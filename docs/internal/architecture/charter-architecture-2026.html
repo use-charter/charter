@@ -302,7 +302,7 @@ final = min(base, applicable_cap)
 <tr>
 <td>AE-TEST-001</td>
 <td>Testing</td>
-<td>Every active code language (non-test source outside tooling dirs) has automated tests, so an agent can verify its own work; manifest-only/tooling languages are N/A (ADR-0023)</td>
+<td>Every active code language (manifest present + non-test source outside tooling dirs) has automated tests, so an agent can verify its own work; tooling-only manifests and stray secondary-language files are N/A (ADR-0023)</td>
 <td><strong>High</strong></td>
 </tr>
 <tr>
