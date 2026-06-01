@@ -99,7 +99,7 @@ final = min(base, applicable_cap)
 | AE-CTX-004 | Context | .gitignore excludes local agent session artifacts: `.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/`; no agent artifacts already tracked in git | **Medium** |
 | AE-SEC-001 | Secrets | No raw secret patterns in any agent-visible file (high-confidence token detection: OpenAI/GitHub/AWS/Slack token prefixes and PEM private-key headers) | **Blocker** |
 | AE-SEC-002 | Secrets | No secret-like values in MCP server config (`.mcp.json`, `mcp.yml`, Pkl config) | **Blocker** |
-| AE-MCP-001 | MCP Safety | Every MCP server entry pinned to an exact version or digest; no `@latest`, semver ranges (`^`, `~`, `>=`), or branch-based sources | **High** |
+| AE-MCP-001 | MCP Safety | Every MCP server pinned to an exact, **current, non-deprecated** version per the MCP catalog; no `@latest`, semver ranges (`^`, `~`, `>=`), or branch-based sources. Archived packages + CVE/GHSA advisories → High; behind catalog stable → informational (ADR-0021) | **High** |
 | AE-MCP-002 | MCP Safety | Every remote MCP server URL present in a known-server catalog or team allowlist (`charter.yaml → mcp.trustedRemotes`); unknown origins flagged — covers OWASP MCP09 Shadow Servers | **High** |
 | AE-MCP-003 | MCP Safety | Remote HTTP/SSE MCP servers declare OAuth 2.1 + PKCE authorization metadata per MCP spec 2025-11-25; servers handling sensitive data without an auth declaration flagged — OWASP MCP07 | **High** |
 | AE-CC-001 | Agent Config | No dangerous shell patterns in agent hook configs: shell injection (`$()`, backticks, `&&` with open input), destructive commands (`rm -rf`, `git reset --hard`), or privilege escalation (`sudo`, `chmod 777`) — OWASP MCP05 Command Injection | **Blocker** |
@@ -895,9 +895,13 @@ gitleaks      = "8.30.1"
 
 **User story:** As a developer running charter doctor , I want AE-MCP-001 and AE-MCP-002 to reference a versioned catalog of known safe MCP servers, so that when a server I depend on receives a CVE or releases a new stable version, Charter re-fires without any action on my part.
 
-**Given:** a repo pinning @modelcontextprotocol/server-filesystem@1.0.2 and the catalog's stable_version is 1.0.4  
+**As built (Slice 13, ADR-0021):** severity is split by signal class so catalog *staleness stays safe* (a curated catalog tracking a fast-moving ecosystem will lag). Grounding showed the official servers use **CalVer** (`@modelcontextprotocol/server-filesystem` is at `2026.1.14`, not semver) and that the catalog's most durable value is **deprecation** (≈10 popular `@modelcontextprotocol/server-*` packages were archived to vendor/community successors). So AE-MCP-001 is catalog-aware with a one-finding-per-server ladder — **deprecated > unpinned > advisory > behind-stable > clean**:
+
+**Given:** a repo pinning `@modelcontextprotocol/server-github@<v>` (an archived package)  
 **When:** charter doctor runs  
-**Then:** AE-MCP-001 fires HIGH with message: "MCP server @modelcontextprotocol/server-filesystem is pinned to 1.0.2; catalog stable version is 1.0.4 — upgrade recommended"  
+**Then:** AE-MCP-001 fires **HIGH**: "MCP server package @modelcontextprotocol/server-github is archived/deprecated — migrate to github/github-mcp-server" — re-firing on a repo that previously passed (the engagement loop).
+
+A pinned version in a catalog **CVE/GHSA advisory** also fires **HIGH** (names `id`/`fixedIn`). A pin merely **behind** the catalog's `stable_version` (no advisory) is **informational** — it re-surfaces but does **not** deduct (mirrors AE-SUPPRESS-003), matching Dependabot/Renovate convention and protecting Commitment #9. Comparison is **exact-match only** (no cross-scheme ordering); a version absent from the catalog's `known_versions` is silent. Rationale: ADR-0021.  
 
 
 #### T1.6.2 Catalog Contribution & CVE Update Process `⚑ FOUNDER`
@@ -913,7 +917,7 @@ gitleaks      = "8.30.1"
 
 **Given:** 5+ real public repos with committed MCP configs scanned with the M1.6 catalog build  
 **When:** all AE-MCP-001 and AE-MCP-002 findings are reviewed and classified  
-**Then:** ≤ 10% of findings are false positives, and docs/catalog-fp-validation.md documents every finding and its classification  
+**Then:** ≤ 10% of findings are false positives, and `docs/internal/catalog/fp-validation.md` documents every finding and its classification  
 
 
 ## §1.7 Phase 1 Exit Criteria — What "Validated" Means

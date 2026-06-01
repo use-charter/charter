@@ -9,6 +9,11 @@
 - Evidence expectations: a structured location (config file path + 1-based line of the server entry) and an evidence string naming the config file, server name, and the offending package spec. The raw token is a public package name, not a secret, so it is shown verbatim.
 - Edge cases: package specs are resolved only for direct runners (`npx`, `bunx`, `uvx`) and the `dlx` subcommand of `pnpm`/`yarn`; local path args (`./`, `/`, `../`) and the `exec`/`run` forms launch local binaries and are not treated as registry packages. Scoped packages (`@scope/name@1.2.3`) are pinned only when the trailing version is exact; `pkg@${VERSION}` is treated as unpinned; other runners are out of scope for v1.
 - Remediation: pin the MCP server package to an exact version or digest instead of `@latest`, a semver range, or a floating git ref, then commit the change.
-- Scoring impact: each finding is `High` (−10); no hard cap (caps are reserved for raw-secret findings).
-- Related ADRs: ADR-0011, ADR-0006, ADR-0009
+- Catalog (Slice 13, ADR-0021): the rule is catalog-aware. Per server, at most one finding fires via a precedence ladder — **deprecated > unpinned > advisory > behind-stable > clean**:
+  - **Deprecated/archived package** (e.g. `@modelcontextprotocol/server-github`) → **High**, "migrate to `<successor>`" (fires even when unpinned — migration supersedes pinning).
+  - **Known advisory (CVE/GHSA)** whose `affected` set contains the pinned version → **High**, names the advisory `id` and `fixedIn`.
+  - **Behind the catalog's `stable_version`** with no advisory → **informational** (`Informational: true`; re-surfaces in output but does **not** deduct from the score — same idiom as AE-SUPPRESS-003).
+  - Comparison is **exact-match only** (no cross-scheme version ordering; the official servers use CalVer, not semver). A pinned version absent from the catalog's `known_versions` is **silent** — a stale catalog under-reports rather than misreporting (Commitment #9).
+- Scoring impact: deprecated/unpinned/advisory findings are `High` (−10); the behind-stable nudge is informational (0). No hard cap (caps are reserved for raw-secret findings).
+- Related ADRs: ADR-0021, ADR-0011, ADR-0006, ADR-0009
 - Related evals: None yet
