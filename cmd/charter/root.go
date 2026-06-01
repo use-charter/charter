@@ -12,5 +12,6 @@ func newRootCommand() *cobra.Command {
 
 	cmd.AddCommand(newDoctorCommand())
 	cmd.AddCommand(newSuppressCommand())
+	cmd.AddCommand(newVersionCommand())
 	return cmd
 }
