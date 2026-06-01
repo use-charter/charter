@@ -11,6 +11,9 @@ bun = "1.3.14"
 "go:golang.org/x/vuln/cmd/govulncheck" = "1.3.0"
 "go:github.com/google/osv-scanner/v2/cmd/osv-scanner" = "2.3.8"
 "aqua:gitleaks/gitleaks" = "8.30.1"
+"aqua:goreleaser/goreleaser" = "2.16.0"
+"aqua:sigstore/cosign" = "3.0.6"
+"aqua:anchore/syft" = "1.44.0"
 
 [env]
 HK_MISE = "1"
