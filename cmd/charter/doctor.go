@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"go.use-charter.dev/charter/internal/doctor"
 	renderjson "go.use-charter.dev/charter/internal/render/json"
 	rendermarkdown "go.use-charter.dev/charter/internal/render/markdown"
+	rendersarif "go.use-charter.dev/charter/internal/render/sarif"
 )
 
 type commandExitError struct {
@@ -32,13 +35,16 @@ func newDoctorCommand() *cobra.Command {
 	var threshold int
 	var quiet bool
 	var format string
+	var out string
 
 	cmd := &cobra.Command{
 		Use:   "doctor",
 		Short: "Scan a repository and compute a Charter score",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if format != "text" && format != "json" && format != "markdown" {
-				return commandExitError{message: "invalid format: must be text, json, or markdown", exitCode: 2}
+			switch format {
+			case "text", "json", "markdown", "sarif":
+			default:
+				return commandExitError{message: "invalid format: must be text, json, markdown, or sarif", exitCode: 2}
 			}
 
 			result, err := doctor.Run(path, threshold, cmd.Flags().Changed("threshold"))
@@ -46,78 +52,95 @@ func newDoctorCommand() *cobra.Command {
 				return commandExitError{message: err.Error(), exitCode: 2}
 			}
 
-			if format == "json" {
-				data, err := renderjson.Render(result)
+			if format != "text" {
+				var data []byte
+				switch format {
+				case "json":
+					data, err = renderjson.Render(result)
+				case "markdown":
+					data, err = rendermarkdown.Render(result)
+				case "sarif":
+					data, err = rendersarif.Render(result)
+				}
 				if err != nil {
 					return commandExitError{message: err.Error(), exitCode: 2}
 				}
-
-				_, _ = fmt.Fprintln(cmd.OutOrStdout(), string(data))
-				if !result.Passed {
-					return commandExitError{message: "score below threshold", exitCode: 1, silent: true}
-				}
-
-				return nil
-			}
-
-			if format == "markdown" {
-				data, err := rendermarkdown.Render(result)
-				if err != nil {
+				if err := emit(cmd, out, data); err != nil {
 					return commandExitError{message: err.Error(), exitCode: 2}
 				}
-
-				_, _ = fmt.Fprintln(cmd.OutOrStdout(), string(data))
-				if !result.Passed {
-					return commandExitError{message: "score below threshold", exitCode: 1, silent: true}
-				}
-
-				return nil
+				return passFail(result)
 			}
 
 			if quiet {
-				if result.Score.Final < threshold {
-					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "charter: score %d, threshold %d — FAIL\n", result.Score.Final, threshold)
+				if !result.Passed {
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "charter: score %d, threshold %d — FAIL\n", result.Score.Final, result.Threshold)
 					return commandExitError{message: "score below threshold", exitCode: 1, silent: true}
 				}
 				return nil
 			}
 
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "charter doctor: %s\n", result.Root)
+			var buf bytes.Buffer
+			fmt.Fprintf(&buf, "charter doctor: %s\n", result.Root)
 			for _, finding := range result.Findings {
-				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "%s %s %s\n", finding.RuleID, finding.Severity, finding.Summary)
+				fmt.Fprintf(&buf, "%s %s %s\n", finding.RuleID, finding.Severity, finding.Summary)
 				for _, loc := range finding.Locations {
 					if loc.Line > 0 {
-						_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  location: %s:%d\n", loc.Path, loc.Line)
+						fmt.Fprintf(&buf, "  location: %s:%d\n", loc.Path, loc.Line)
 					} else {
-						_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  location: %s\n", loc.Path)
+						fmt.Fprintf(&buf, "  location: %s\n", loc.Path)
 					}
 				}
 				for _, evidence := range finding.Evidence {
-					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  - %s\n", evidence)
+					fmt.Fprintf(&buf, "  - %s\n", evidence)
 				}
-				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  remediation: %s\n", finding.Remediation)
+				fmt.Fprintf(&buf, "  remediation: %s\n", finding.Remediation)
 			}
 			for _, s := range result.Suppressed {
-				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "suppressed: %s (%s)", s.Finding.RuleID, s.Source)
+				fmt.Fprintf(&buf, "suppressed: %s (%s)", s.Finding.RuleID, s.Source)
 				if s.Reason != "" {
-					_, _ = fmt.Fprintf(cmd.OutOrStdout(), " — %s", s.Reason)
+					fmt.Fprintf(&buf, " — %s", s.Reason)
 				}
-				_, _ = fmt.Fprintln(cmd.OutOrStdout())
+				fmt.Fprintln(&buf)
 			}
-			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "score: %d (threshold %d)\n", result.Score.Final, threshold)
+			fmt.Fprintf(&buf, "score: %d (threshold %d)\n", result.Score.Final, result.Threshold)
 
-			if result.Score.Final < threshold {
-				return commandExitError{message: "score below threshold", exitCode: 1, silent: true}
+			if out != "" {
+				if err := emit(cmd, out, buf.Bytes()); err != nil {
+					return commandExitError{message: err.Error(), exitCode: 2}
+				}
+			} else {
+				_, _ = cmd.OutOrStdout().Write(buf.Bytes())
 			}
-
-			return nil
+			return passFail(result)
 		},
 	}
 
 	cmd.Flags().StringVar(&path, "path", "", "explicit repository path")
 	cmd.Flags().IntVar(&threshold, "threshold", 80, "minimum passing score")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "suppress non-failure output")
-	cmd.Flags().StringVar(&format, "format", "text", "output format: text, json, or markdown")
+	cmd.Flags().StringVar(&format, "format", "text", "output format: text, json, markdown, or sarif")
+	cmd.Flags().StringVar(&out, "out", "", "write output to a file instead of stdout")
 
 	return cmd
+}
+
+// emit writes data to outPath (with a one-line stderr summary) or to stdout.
+func emit(cmd *cobra.Command, outPath string, data []byte) error {
+	if outPath == "" {
+		_, err := fmt.Fprintln(cmd.OutOrStdout(), string(data))
+		return err
+	}
+	// #nosec G306 -- report output is non-sensitive and meant to be shareable.
+	if err := os.WriteFile(outPath, append(data, '\n'), 0o644); err != nil {
+		return err
+	}
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "charter: wrote %s\n", outPath)
+	return nil
+}
+
+func passFail(result doctor.Result) error {
+	if !result.Passed {
+		return commandExitError{message: "score below threshold", exitCode: 1, silent: true}
+	}
+	return nil
 }

@@ -164,6 +164,52 @@ func TestDoctorCommandQuietJSONStillOutputsPayload(t *testing.T) {
 	}
 }
 
+func TestDoctorCommandSARIFOutput(t *testing.T) {
+	repo, err := makeTempDoctorRepo(t)
+	if err != nil {
+		t.Fatalf("fixture: %v", err)
+	}
+	cmd := newRootCommand()
+	out := new(bytes.Buffer)
+	cmd.SetOut(out)
+	cmd.SetErr(new(bytes.Buffer))
+	cmd.SetArgs([]string{"doctor", "--path", repo, "--format", "sarif"})
+	cmd.SetContext(context.Background())
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("sarif run: %v", err)
+	}
+	var log map[string]any
+	if err := json.Unmarshal(out.Bytes(), &log); err != nil {
+		t.Fatalf("expected valid SARIF JSON: %v", err)
+	}
+	if log["version"] != "2.1.0" {
+		t.Fatalf("expected SARIF 2.1.0, got %#v", log["version"])
+	}
+}
+
+func TestDoctorCommandOutWritesFile(t *testing.T) {
+	repo, err := makeTempDoctorRepo(t)
+	if err != nil {
+		t.Fatalf("fixture: %v", err)
+	}
+	outPath := filepath.Join(t.TempDir(), "charter.sarif")
+	cmd := newRootCommand()
+	stdout := new(bytes.Buffer)
+	cmd.SetOut(stdout)
+	cmd.SetErr(new(bytes.Buffer))
+	cmd.SetArgs([]string{"doctor", "--path", repo, "--format", "sarif", "--out", outPath})
+	cmd.SetContext(context.Background())
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if stdout.Len() != 0 {
+		t.Fatalf("expected nothing on stdout when --out is set, got %q", stdout.String())
+	}
+	if _, err := os.Stat(outPath); err != nil {
+		t.Fatalf("expected %s written: %v", outPath, err)
+	}
+}
+
 func makeTempDoctorRepo(t *testing.T) (string, error) {
 	t.Helper()
 
