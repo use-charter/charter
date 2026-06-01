@@ -1,0 +1,114 @@
+# Charter MCP Catalog v1 (static, founder-curated — ADR-0021 / M1.6 T1.6.x).
+# Comparison is EXACT-MATCH only: a pinned version absent from knownVersions is
+# intentionally SILENT (a stale catalog under-reports, never misreports).
+# Curation process: docs/internal/catalog/contribution.md. CVE advisories are
+# added here with real IDs only (T1.6.2). Pre-ship FP gate: docs/internal/catalog/fp-validation.md.
+version: "2026.06.02"
+generated: "2026-06-02"
+
+# Vendor-operated remote MCP hosts (OAuth 2.1). Baseline allowlist for AE-MCP-002.
+trustedHosts:
+  - api.githubcopilot.com
+  - mcp.sentry.dev
+  - mcp.linear.app
+  - mcp.atlassian.com
+  - mcp.notion.com
+  - mcp.stripe.com
+  - mcp.vercel.com
+  - mcp.asana.com
+  # Cloudflare managed remote MCP servers (developers.cloudflare.com/agents/
+  # model-context-protocol/mcp-servers-for-cloudflare/). OAuth 2.1; the API
+  # "Code Mode" server plus product-specific *.mcp.cloudflare.com endpoints.
+  - mcp.cloudflare.com
+  - docs.mcp.cloudflare.com
+  - bindings.mcp.cloudflare.com
+  - builds.mcp.cloudflare.com
+  - observability.mcp.cloudflare.com
+  - radar.mcp.cloudflare.com
+  - containers.mcp.cloudflare.com
+  - browser.mcp.cloudflare.com
+  - logs.mcp.cloudflare.com
+  - ai-gateway.mcp.cloudflare.com
+  - autorag.mcp.cloudflare.com
+  - auditlogs.mcp.cloudflare.com
+  - dns-analytics.mcp.cloudflare.com
+  - dex.mcp.cloudflare.com
+  - casb.mcp.cloudflare.com
+  - graphql.mcp.cloudflare.com
+  - agents.cloudflare.com
+
+servers:
+  # --- Active reference servers (modelcontextprotocol/servers) ---
+  - package: "@modelcontextprotocol/server-filesystem"
+    ecosystem: npm
+    status: active
+    stableVersion: "2026.1.14"
+    knownVersions: ["2025.11.25", "2025.12.18", "2026.1.14"]
+    reference: "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem"
+  - package: "@modelcontextprotocol/server-memory"
+    ecosystem: npm
+    status: active
+    reference: "https://github.com/modelcontextprotocol/servers/tree/main/src/memory"
+  - package: "@modelcontextprotocol/server-everything"
+    ecosystem: npm
+    status: active
+    reference: "https://github.com/modelcontextprotocol/servers/tree/main/src/everything"
+  - package: "mcp-server-git"
+    ecosystem: pypi
+    status: active
+    reference: "https://github.com/modelcontextprotocol/servers/tree/main/src/git"
+  - package: "mcp-server-fetch"
+    ecosystem: pypi
+    status: active
+    reference: "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch"
+  - package: "mcp-server-time"
+    ecosystem: pypi
+    status: active
+    reference: "https://github.com/modelcontextprotocol/servers/tree/main/src/time"
+
+  # --- Archived reference servers → migrate to the successor (HIGH) ---
+  - package: "@modelcontextprotocol/server-github"
+    ecosystem: npm
+    status: deprecated
+    successor: "github/github-mcp-server (official, Go) or the hosted api.githubcopilot.com endpoint"
+    reference: "https://github.com/github/github-mcp-server"
+  - package: "@modelcontextprotocol/server-gdrive"
+    ecosystem: npm
+    status: deprecated
+    successor: "taylorwilsdon/google_workspace_mcp"
+    reference: "https://github.com/taylorwilsdon/google_workspace_mcp"
+  - package: "@modelcontextprotocol/server-slack"
+    ecosystem: npm
+    status: deprecated
+    successor: "zencoderai/slack-mcp-server (community)"
+    reference: "https://github.com/zencoderai/slack-mcp-server"
+  - package: "@modelcontextprotocol/server-postgres"
+    ecosystem: npm
+    status: deprecated
+    successor: "crystaldba/postgres-mcp, or AWS Labs aurora-postgres-mcp-server"
+    reference: "https://github.com/crystaldba/postgres-mcp"
+  - package: "@modelcontextprotocol/server-sqlite"
+    ecosystem: npm
+    status: deprecated
+    successor: "a community-maintained SQLite MCP fork (the reference server was archived)"
+    reference: "https://github.com/modelcontextprotocol/servers-archived"
+  - package: "@modelcontextprotocol/server-puppeteer"
+    ecosystem: npm
+    status: deprecated
+    successor: "microsoft/playwright-mcp"
+    reference: "https://github.com/microsoft/playwright-mcp"
+  - package: "@modelcontextprotocol/server-brave-search"
+    ecosystem: npm
+    status: deprecated
+    successor: "brave/brave-search-mcp-server (first-party)"
+    reference: "https://github.com/brave/brave-search-mcp-server"
+  - package: "@modelcontextprotocol/server-redis"
+    ecosystem: npm
+    status: deprecated
+    successor: "redis/mcp-redis (first-party)"
+    reference: "https://github.com/redis/mcp-redis"
+  - package: "@modelcontextprotocol/server-aws-kb-retrieval"
+    ecosystem: npm
+    status: deprecated
+    successor: "AWS Labs bedrock-kb-retrieval-mcp-server"
+    reference: "https://github.com/awslabs/mcp"
