@@ -93,13 +93,19 @@ func CharterYAML(profile string) []byte {
 	return []byte("policy:\n  profile: " + profile + "\n")
 }
 
-// Gitignore builds an ignore block for Charter and agent session artifacts.
+// Gitignore builds an ignore block covering the agent-artifact, hook-state, and
+// env patterns AE-CTX-004 requires (.charter/, *.charter-session, .claude/local/,
+// .cursor/cache/, .hk/, .env*). The trailing negation keeps the committed
+// .env.example trackable while .env and friends stay ignored.
 func Gitignore() []byte {
 	return []byte("# Charter / agent session artifacts\n" +
 		".charter/\n" +
 		"*.charter-session\n" +
 		".claude/local/\n" +
-		".cursor/cache/\n")
+		".cursor/cache/\n" +
+		".hk/\n" +
+		".env*\n" +
+		"!.env.example\n")
 }
 
 // ClaudeSettings builds an MCP-free Claude Code settings file that denies reads
