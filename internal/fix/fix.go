@@ -31,6 +31,10 @@ const (
 	Create Action = iota
 	// Append adds bytes to the end of an existing file (after backing it up).
 	Append
+	// Replace rewrites an existing file in place with Contents (after backing it
+	// up). Used for surgical, content-preserving edits such as an MCP version
+	// bump; the target must exist at apply time.
+	Replace
 )
 
 // FilePlan is a single planned, previewable file change.
@@ -51,16 +55,27 @@ type Options struct{ Rule string }
 // do). It performs reads but never writes.
 type fixer func(root string, inv repository.Inventory) (FilePlan, bool, error)
 
+// multiFixer computes zero or more plans for one rule (e.g. several MCP config
+// files). An empty slice means "nothing to do". It reads but never writes.
+type multiFixer func(root string, inv repository.Inventory) ([]FilePlan, error)
+
 var registry = map[string]fixer{
 	"AE-CTX-001": fixCTX001,
 	"AE-CTX-004": fixCTX004,
 	"AE-CI-002":  fixCI002,
 }
 
+var multiRegistry = map[string]multiFixer{
+	"AE-MCP-001": fixMCP001,
+}
+
 // Fixable reports whether a rule has a registered fixer. Rules without one
 // (notably the secret and dangerous-config rules) are never fixable.
 func Fixable(ruleID string) bool {
-	_, ok := registry[ruleID]
+	if _, ok := registry[ruleID]; ok {
+		return true
+	}
+	_, ok := multiRegistry[ruleID]
 	return ok
 }
 
@@ -76,23 +91,30 @@ func Plan(result doctor.Result, root string, inv repository.Inventory, opts Opti
 		if opts.Rule != "" && f.RuleID != opts.Rule {
 			continue
 		}
-		fn, ok := registry[f.RuleID]
-		if !ok {
-			continue
-		}
 		if _, done := seen[f.RuleID]; done {
 			continue
 		}
-		seen[f.RuleID] = struct{}{}
 
-		plan, want, err := fn(root, inv)
-		if err != nil {
-			return nil, err
-		}
-		if !want {
+		if fn, ok := registry[f.RuleID]; ok {
+			seen[f.RuleID] = struct{}{}
+			plan, want, err := fn(root, inv)
+			if err != nil {
+				return nil, err
+			}
+			if want {
+				plans = append(plans, plan)
+			}
 			continue
 		}
-		plans = append(plans, plan)
+
+		if fn, ok := multiRegistry[f.RuleID]; ok {
+			seen[f.RuleID] = struct{}{}
+			more, err := fn(root, inv)
+			if err != nil {
+				return nil, err
+			}
+			plans = append(plans, more...)
+		}
 	}
 
 	return plans, nil
@@ -152,6 +174,21 @@ func Apply(root string, plans []FilePlan) (written []string, backupDir string, e
 			merged = append(merged, existing...)
 			merged = append(merged, plan.Contents...)
 			if writeErr := writeFile(target, merged); writeErr != nil {
+				return written, backupDir, writeErr
+			}
+			written = append(written, plan.Path)
+
+		case Replace:
+			// #nosec G304 -- target is a registered fixer's repo-relative plan path joined to root and root-bounded above.
+			existing, readErr := os.ReadFile(target)
+			if readErr != nil {
+				return written, backupDir, fmt.Errorf("fix: read %s: %w", plan.Path, readErr)
+			}
+			if backupErr := backupFile(root, ts, plan.Path, existing); backupErr != nil {
+				return written, backupDir, backupErr
+			}
+			backupDir = relBackupRoot
+			if writeErr := writeFile(target, plan.Contents); writeErr != nil {
 				return written, backupDir, writeErr
 			}
 			written = append(written, plan.Path)
