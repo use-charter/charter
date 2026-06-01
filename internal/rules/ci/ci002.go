@@ -14,6 +14,11 @@ import (
 var (
 	pinnedActionRefPattern = regexp.MustCompile(`@[a-f0-9]{40}(\s|$)`)
 	commandSegmentPattern  = regexp.MustCompile(`\s*(?:&&|\|\||;)\s*`)
+	// slsaReusableWorkflowPin matches a SLSA reusable workflow call pinned to an
+	// immutable semantic version tag. These are exempt from the SHA-pin
+	// requirement because slsa-verifier resolves the trusted builder identity
+	// from the semver tag and SHA-pinning is unsupported (ADR-0016).
+	slsaReusableWorkflowPin = regexp.MustCompile(`^slsa-framework/slsa-github-generator/\.github/workflows/[^@]+\.yml@v[0-9]+\.[0-9]+\.[0-9]+$`)
 )
 
 func Run(root string, inv repository.Inventory) []findings.Finding {
@@ -111,6 +116,9 @@ func unpinnedActionEvidence(uses []string, rel string) []string {
 		if strings.HasPrefix(ref, "./") {
 			continue
 		}
+		if slsaReusableWorkflowPin.MatchString(ref) {
+			continue
+		}
 		if !strings.Contains(ref, "@") {
 			evidence = append(evidence, "unpinned action: "+rel+" -> "+ref)
 			continue
@@ -165,6 +173,9 @@ func normalizeUseRef(value string) string {
 		if (value[0] == '"' && value[len(value)-1] == '"') || (value[0] == '\'' && value[len(value)-1] == '\'') {
 			value = value[1 : len(value)-1]
 		}
+	}
+	if idx := strings.Index(value, " #"); idx >= 0 {
+		value = value[:idx]
 	}
 	return strings.TrimSpace(value)
 }

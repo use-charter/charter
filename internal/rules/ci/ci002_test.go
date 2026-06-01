@@ -207,6 +207,66 @@ func TestRunIgnoresEchoWrappedWorkflowCommands(t *testing.T) {
 	}
 }
 
+func TestRunExemptsTrustedSLSAReusableWorkflow(t *testing.T) {
+	root := newCIRepo(t, map[string]string{
+		".github/workflows/ci.yml":               "name: CI\njobs:\n  check:\n    steps:\n      - run: moon run :check\n      - run: go run ./cmd/charter doctor --threshold 80\n      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\n",
+		".github/workflows/actions-security.yml": "name: Workflow Security\njobs:\n  lint:\n    steps:\n      - run: moon run :actionlint\n      - run: moon run :zizmor\n      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151\n",
+		".github/workflows/vuln-scan.yml":        "name: Vulnerability Scan\njobs:\n  security:\n    steps:\n      - run: moon run :security\n      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\n",
+		".github/workflows/release.yml":          "name: Release\njobs:\n  provenance:\n    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0 # zizmor: ignore[unpinned-uses] slsa-verifier resolves the builder identity from this semantic tag\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	if findings := Run(root, inv); len(findings) != 0 {
+		t.Fatalf("expected no findings for trusted SLSA reusable workflow, got %#v", findings)
+	}
+}
+
+func TestRunStillFlagsUnpinnedRefsWithSLSACarveOut(t *testing.T) {
+	root := newCIRepo(t, map[string]string{
+		".github/workflows/ci.yml":               "name: CI\njobs:\n  check:\n    steps:\n      - run: moon run :check\n      - run: go run ./cmd/charter doctor --threshold 80\n      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\n",
+		".github/workflows/actions-security.yml": "name: Workflow Security\njobs:\n  lint:\n    steps:\n      - run: moon run :actionlint\n      - run: moon run :zizmor\n      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151\n",
+		".github/workflows/vuln-scan.yml":        "name: Vulnerability Scan\njobs:\n  security:\n    steps:\n      - run: moon run :security\n      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\n",
+		".github/workflows/release.yml":          "name: Release\njobs:\n  provenance:\n    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main\n  build:\n    steps:\n      - uses: some/action@v1\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := Run(root, inv)
+	if len(findings) != 1 {
+		t.Fatalf("expected one finding, got %#v", findings)
+	}
+	if !containsEvidence(findings[0].Evidence, "unpinned action: .github/workflows/release.yml -> slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@main") {
+		t.Fatalf("expected branch-pinned SLSA ref to remain flagged, got %#v", findings[0].Evidence)
+	}
+	if !containsEvidence(findings[0].Evidence, "unpinned action: .github/workflows/release.yml -> some/action@v1") {
+		t.Fatalf("expected non-SLSA tag-pinned action to remain flagged, got %#v", findings[0].Evidence)
+	}
+}
+
+func TestRunRecognizesSHAPinnedActionWithTrailingComment(t *testing.T) {
+	root := newCIRepo(t, map[string]string{
+		".github/workflows/ci.yml":               "name: CI\njobs:\n  check:\n    steps:\n      - run: moon run :check\n      - run: go run ./cmd/charter doctor --threshold 80\n      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2\n",
+		".github/workflows/actions-security.yml": "name: Workflow Security\njobs:\n  lint:\n    steps:\n      - run: moon run :actionlint\n      - run: moon run :zizmor\n      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4\n",
+		".github/workflows/vuln-scan.yml":        "name: Vulnerability Scan\njobs:\n  security:\n    steps:\n      - run: moon run :security\n      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	if findings := Run(root, inv); len(findings) != 0 {
+		t.Fatalf("expected SHA-pinned actions with trailing comments to be recognized as pinned, got %#v", findings)
+	}
+}
+
 func newCIRepo(t *testing.T, files map[string]string) string {
 	t.Helper()
 
