@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://use-charter.dev/schemas/charter-config.schema.json",
+  "title": "Charter configuration (charter.yaml)",
+  "description": "Repo-root charter.yaml: MCP trusted remotes and policy gating. Contract-first per ADR-0004; policy semantics per ADR-0015.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "mcp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trustedRemotes": {
+          "type": "array",
+          "description": "Allowlisted remote MCP server hosts (AE-MCP-002).",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Pipeline gate. Precedence: --threshold flag > policy.threshold > policy.profile > 80.",
+      "properties": {
+        "profile": {
+          "type": "string",
+          "enum": ["strict", "standard", "relaxed"],
+          "description": "Named gate: strict=90, standard=80, relaxed=60."
+        },
+        "threshold": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Explicit passing score; overrides profile."
+        }
+      }
+    }
+  }
+}
