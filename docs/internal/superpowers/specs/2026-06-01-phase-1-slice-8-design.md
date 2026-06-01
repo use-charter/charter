@@ -52,8 +52,9 @@ SARIF is the spine of the Phase 1 distribution surface: the M1.5 Action uploads 
 ## SARIF renderer (`internal/render/sarif`)
 
 - `Render(doctor.Result) ([]byte, error)` builds a SARIF 2.1.0 log: `{version: "2.1.0", $schema, runs: [run]}`.
-- **tool.driver**: `name: "Charter"`, `informationUri: "https://use-charter.dev"`, `version: version.Version`, `rules: [...]`.
-- **rules[]**: the distinct rule IDs across active + suppressed findings, deduped, sorted by ID; each = `{id, name, shortDescription.text, helpUri, defaultConfiguration.level, properties:{category, severity}}` (metadata from the catalog; level/severity from the finding). Results reference rules via `ruleIndex`.
+- **run**: `automationDetails.id: "charter"` (logical analysis id for clean re-run replacement / multi-tool coexistence).
+- **tool.driver**: `name: "Charter"`, `informationUri: "https://use-charter.dev"`, `version: version.Version()`, `rules: [...]`.
+- **rules[]**: the distinct rule IDs across active + suppressed findings, deduped, sorted by ID; each = `{id, name, shortDescription.text, helpUri, defaultConfiguration.level, properties}` (metadata from the catalog; level/severity from the finding). `properties` = `{category, severity}` always; non-informational rules also add `tags: ["security"]` + `security-severity` (Blocker 9.5 / High 7.5 / Medium 5.0 / Low 2.0) for GitHub security classification/ranking. Results reference rules via `ruleIndex`.
 - **results[]**: for each finding (active and suppressed), `{ruleId, ruleIndex, level, message.text: Summary, locations[], partialFingerprints}`; suppressed findings add `suppressions: [{kind}]`; informational findings add `kind: "informational"`. When any result is suppressed, active results carry `suppressions: []` (consistency rule).
 - **level mapping:** Blocker/High → `error`, Medium → `warning`, Low → `note`.
 - **locations[]**: only when the finding has a location with a non-empty path; `physicalLocation.artifactLocation.uri` = repo-relative forward-slash path; `region.startLine` only when line > 0.
@@ -78,7 +79,7 @@ SARIF is the spine of the Phase 1 distribution surface: the M1.5 Action uploads 
 
 - `internal/rules/catalog/` (new) — pure metadata table + lookup; imported by `render/sarif` (and later `charter explain`). No imports of rule packages.
 - `internal/render/sarif/` (new) — `Render(doctor.Result) ([]byte, error)`; depends on `doctor`, `findings`, `suppress`, `catalog`, `version`. Mirrors `render/json`.
-- `internal/version/` — add `var Version = "0.0.0-dev"` (ldflags-injectable).
+- `internal/version/` — add a `Version()` func: ldflags-injected value → else `runtime/debug.ReadBuildInfo().Main.Version` (accurate for `go install …@vX`) → else `0.0.0-dev`.
 - `internal/config/` — `Policy` type + `LoadPolicy`; built-in profile table; `Resolve` (here or a thin `internal/policy`).
 - `internal/doctor/run.go` — `Run(path, threshold, thresholdSet)`; resolve effective threshold.
 - `cmd/charter/doctor.go` — `--format sarif`, `--out`, `Changed("threshold")`.
@@ -97,7 +98,8 @@ Avoid: a SARIF library dependency, a charter-authored SARIF schema, a generic po
 ## Testing strategy
 
 - catalog: spec-sync (IDs == specs/AE-*.md), `Lookup` hit/miss.
-- sarif unit: valid 2.1.0 shape; severity→level; rules[] deduped/sorted from the catalog with `ruleIndex` wiring; suppressed result carries `suppressions[{kind}]` and active results carry `suppressions: []` when any is suppressed; informational → `kind: informational`; fingerprint determinism + content/file-level/no-location fallbacks; absence finding emits no `locations`.
+- sarif unit: valid 2.1.0 shape; severity→level; rules[] deduped/sorted from the catalog with `ruleIndex` wiring; `automationDetails.id`; non-informational rules carry `tags:["security"]` + `security-severity`, informational omit both; suppressed result carries `suppressions[{kind}]` and active results carry `suppressions: []`; informational → `kind: informational`; fingerprint determinism + position/no-location fallbacks; absence finding emits no `locations`.
+- sarif conformance: every emitted document validates against the vendored official `sarif-2.1.0` JSON schema using the test-only `github.com/santhosh-tekuri/jsonschema/v6`; plus a golden-file test locking the exact bytes for a known fixture.
 - config/policy: `LoadPolicy` (present/missing/malformed); `Resolve` precedence matrix (flag>threshold>profile>default), unknown profile → error, out-of-range → error.
 - doctor: `Run` honors the resolved threshold (fixture `charter.yaml` with `policy.profile: strict` → threshold 90; flag overrides config).
 - CLI: `--format sarif` to stdout is valid SARIF; `--out` writes the file + nothing to stdout; invalid format → exit 2.
@@ -106,7 +108,7 @@ Avoid: a SARIF library dependency, a charter-authored SARIF schema, a generic po
 
 ## Risks
 
-- **SARIF correctness without a validator** — control: golden-file + structural tests asserting required fields/levels/fingerprints; mapping kept to the documented Code-Scanning subset; manual upload check noted for M1.5.
+- **SARIF correctness** — control: every emitted document is validated against the vendored official `sarif-2.1.0` schema (test-only `santhosh-tekuri/jsonschema/v6`), plus golden-file + structural tests; mapping kept to the documented Code-Scanning subset; real upload check at M1.5. Cost: one pinned test-only dependency (never shipped) — a deliberate, documented exception to dependency-minimalism (ADR-0014).
 - **Catalog drift from specs** — control: the spec-sync test fails CI if the ID sets diverge.
 - **partialFingerprints churn** — control: content-based hash (line-shift resilient) with deterministic fallbacks; documented.
 - **Threshold-precedence ambiguity** — control: `Changed("threshold")` distinguishes a set flag from the default; explicit precedence matrix tested.
