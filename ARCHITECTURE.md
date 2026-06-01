@@ -16,7 +16,7 @@
 - Repo-internal engineering docs live under `docs/internal/`.
 - Future customer-facing docs live under `docs/product/`.
 
-- `cmd/`: binary entrypoints and command wiring
+- `cmd/`: binary entrypoints and command wiring (includes `cmd/charter/version.go`, the `charter version` command)
 - `internal/`: non-public implementation details
   - `agentcontext`: canonical agent-visible context file registry (drift guard for context and secret rules)
   - `config`: `charter.yaml` loader (MCP trusted-remote allowlist; policy profile/threshold resolution)
@@ -28,13 +28,17 @@
   - `render/`: output formatters (text, JSON, Markdown, SARIF 2.1.0)
   - `secrets`: secret pattern detection and redaction
   - `suppress`: suppression loading (`.charter-suppress.yml` + inline `charter:ignore`) and the active/suppressed partition
-  - `version`: build version (`runtime/debug` + ldflags fallback) for SARIF `tool.driver.version`
+  - `version`: build version with `Commit()`/`Date()` build-stamp accessors (`runtime/debug` + ldflags fallback) for SARIF `tool.driver.version` and the `charter version` command
 - `api/openapi/`: future API contracts before implementation
 - `schemas/`: machine-readable config and report contracts (includes `doctor-result.schema.json`, `charter-config.schema.json`)
 - `docs/internal/specs/`: rule-level behavior contracts
 - `docs/internal/decisions/`: accepted ADRs
 - `docs/internal/rfcs/`: proposals for cross-cutting or risky changes
 - `evals/`: acceptance fixtures for prompt, workflow, and future agent behavior
+- `.goreleaser.yaml`: GoReleaser v2 release build (multi-platform binaries, cosign keyless bundle signing, syft SPDX-2.3 SBOMs, Homebrew cask)
+- `.github/workflows/release.yml`: tag-triggered release workflow (GoReleaser + SLSA Build L3 provenance via slsa-github-generator)
+
+Release rails are mise-pinned (GoReleaser, cosign, syft) and Moon-driven via the `release`, `release-snapshot`, and `release-check` tasks (`release-check` runs in `:check`).
 
 ## Command Tree Intent
 

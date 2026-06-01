@@ -6,7 +6,7 @@ This repository started as the AI-ready bootstrap baseline and now contains the 
 
 ## Current State
 
-- Phase: Phase 1 Slice 8 implemented; real `charter doctor` path with the full 15-rule v1 set, governance, suppression, SARIF output, and policy profiles
+- Phase: Phase 1 Slice 9 implemented; real `charter doctor` path with the full 15-rule v1 set, governance, suppression, SARIF output, policy profiles, the `charter version` command, and a signed GoReleaser release pipeline
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
 - Module path: `go.use-charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
@@ -26,6 +26,7 @@ Current implemented scope:
 - suppression engine with governance: `.charter-suppress.yml` and inline `charter:ignore` directives, with `charter suppress <RULE>` to author entries; suppressed findings are excluded from the score and listed separately, and the governance rules `AE-SUPPRESS-001` (missing reason), `AE-SUPPRESS-002` (permanent waiver without approver), and `AE-SUPPRESS-003` (high suppression rate, informational) audit them
 - text, JSON, Markdown (PR-comment), and SARIF 2.1.0 output with structured `path:line` finding locations; `--out <file>` writes any format to a file. SARIF is backed by a rule catalog (`internal/rules/catalog`) and carries GitHub Code Scanning metadata (`security-severity`, `tags`, `automationDetails`) so findings rank correctly in the Security tab
 - policy profiles in `charter.yaml`: `policy.profile` (strict=90 / standard=80 / relaxed=60) or `policy.threshold`, with precedence `--threshold` flag > `policy.threshold` > `policy.profile` > default 80 (see `schemas/charter-config.schema.json`)
+- `charter version` prints the build version, commit, build date, Go version, and platform (stamped at release time)
 
 Documentation topology:
 
@@ -40,6 +41,12 @@ Documentation authority ladder:
 3. ADRs in `docs/internal/decisions/` for irreversible constraints
 4. root companion docs for execution guidance only
 5. HTML artifacts as presentation mirrors only
+
+## Install
+
+- Homebrew (recommended): `brew install <owner>/tap/charter` installs the signed Homebrew cask.
+- Signed binary: download from the GitHub Releases page. Each release ships SHA-256 checksums, a cosign keyless signature bundle, an SPDX-2.3 SBOM, and SLSA Build L3 provenance.
+- `go install go.use-charter.dev/charter/cmd/charter@latest` is pending the vanity-path `go-import` redirect host (not yet available).
 
 ## Golden Path
 

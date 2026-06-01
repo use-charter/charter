@@ -58,7 +58,7 @@ final = min(base, applicable_cap)
 3. Never delete a user file.
 4. Never apply a fix without showing a diff first.
 5. Every finding has a rule ID, evidence, and fix suggestion.
-6. Every release is signed (cosign) with SLSA Level 2 provenance.
+6. Every release is signed (cosign) with SLSA Level 3 provenance.
 7. The score formula is public and unchanging within a major version.
 8. Always stays cross-vendor: works with Claude Code, Codex, Cursor, Windsurf, OpenCode, Copilot, Gemini.
 9. Never print raw secret values in any output. Never auto-fix secrets destructively. Keep false-positive rate below a measured threshold — enforced by zero-FP assertions on all clean-repo fixtures.
@@ -237,7 +237,7 @@ score=49 gate=FAIL threshold=80 exit=1
 **SPDX output:**
 ```
 ❯ charter report --format spdx --out sbom.spdx
-  ✦ Charter v1.0.0  ·  SPDX 3.0.1
+  ✦ Charter v1.0.0  ·  SPDX 2.3
   Written  sbom.spdx  (agent tool inventory)
   Exit     0
 ```
@@ -619,7 +619,7 @@ gitleaks      = "8.30.1"
 
 #### T0.3.1 Actions Security: actionlint + zizmor `⚡ AI`
 
-**User story:** As a platform engineer, I want actionlint v1.7.12 and zizmor v1.25.2 running as required CI jobs on every PR, so that GitHub Actions workflows are free of syntax errors, dangerous permissions, and supply-chain vulnerabilities aligned with SLSA L2 and OWASP MCP Top 10.
+**User story:** As a platform engineer, I want actionlint v1.7.12 and zizmor v1.25.2 running as required CI jobs on every PR, so that GitHub Actions workflows are free of syntax errors, dangerous permissions, and supply-chain vulnerabilities aligned with SLSA L3 and OWASP MCP Top 10.
 
 **Given:** a PR that modifies any file under .github/workflows/  
 **When:** the actions-security CI job runs  
@@ -864,11 +864,11 @@ gitleaks      = "8.30.1"
 #### T1.5.2 Release Pipeline (GoReleaser + Supply Chain) `⚡ AI`
 
 
-**User story:** As a maintainer, I want GoReleaser v2 producing SLSA L2 provenance, cosign v3.0.6 keyless signatures, and SPDX 3.0.1 SBOMs for all release artifacts, so that Charter's own supply chain meets the standards it enforces on others — dogfooding its own rules.
+**User story:** As a maintainer, I want GoReleaser v2 producing SLSA L3 provenance, cosign v3.0.6 keyless signatures, and SPDX 2.3 SBOMs for all release artifacts, so that Charter's own supply chain meets the standards it enforces on others — dogfooding its own rules.
 
 **Given:** a tag v1.0.0 is pushed to GitHub  
 **When:** the release workflow completes  
-**Then:** GitHub Releases contains: binaries for linux/darwin/windows (amd64+arm64), a cosign-signed SBOM in SPDX 3.0.1 format, SLSA L2 provenance attestation, and Homebrew formula updated  
+**Then:** GitHub Releases contains: binaries for linux/darwin/windows (amd64+arm64), a cosign-signed SBOM in SPDX 2.3 format, SLSA L3 provenance attestation, and Homebrew formula updated  
 
 
 #### T1.5.3 Performance Validation `👁 REVIEW`
