@@ -78,7 +78,7 @@ Satisfies: project-summary (Overview prose), tech-stack (`Go`/detected), edit-bo
 ### Other templates
 
 - `charter.yaml`: `policy:\n  profile: <profile>\n` (schema-valid).
-- `.gitignore` (create-if-absent): a `# Charter / agent artifacts` block — `.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/`.
+- `.gitignore` (create-if-absent): a `# Charter / agent artifacts` block — as built includes `.hk/`, `.env*` (+ `!.env.example`), `.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/` — enough agent-artifact patterns to fully clear `AE-CTX-004`.
 - `.claude/settings.json` (when claude): `{ "$schema": "https://json.schemastore.org/claude-code-settings.json", "permissions": { "deny": ["Read(./.env)","Read(./.env.*)","Read(./secrets/**)"] } }`.
 - `ARCHITECTURE.md`, `.env.example`: minimal, useful templates.
 
@@ -113,7 +113,7 @@ Satisfies: project-summary (Overview prose), tech-stack (`Go`/detected), edit-bo
 - **scaffold unit:** detection per language/CI/agents; each template's required content (AGENTS.md has all CTX-001 signals + off-limits, ≤ 600 tokens; charter.yaml schema-valid; .claude/settings.json valid JSON, MCP-free, secret-denies); `Plan` marks existing files `skip`.
 - **CTX-002 unit:** an AGENTS.md with `charter doctor` (no `moon run :check`) + `.env*` + `secrets/` does NOT fire CTX-002; one missing the verification signal still does; Charter's own repo still passes.
 - **CLI:** `init` on a temp blank Go repo creates the set; re-running reports all `skip` (idempotent, nothing overwritten); `--dry-run` writes nothing; `--profile strict` writes `profile: strict`; invalid profile → exit 2.
-- **Integration (the OOTB proof):** synthesize a blank Go repo (git-init, `go.mod`), run `init`, then `doctor` → assert **score ≥ 80** (expect ~100; residual AE-ENV-001/AE-CI-002 only if the fixture lacks hooks/CI). Hermetic (`t.TempDir`).
+- **Integration (the OOTB proof):** synthesize a blank Go repo (git-init, `go.mod`), run `init`, then `doctor` → assert **score ≥ 80** (measured **95** as built; residual AE-ENV-001/AE-CI-002 only, since the fixture lacks hooks/CI). Hermetic (`t.TempDir`).
 - **Dogfood:** Charter's own `charter doctor` stays **100** (CTX-002 generalization keeps Charter passing; `init` is not run on Charter's already-populated repo — all-skip).
 - `moon run :check` green.
 
