@@ -3,7 +3,7 @@
 - Severity: Low
 - Category: CI
 - Description: Repo should run Charter-related checks in CI.
-- Detection logic: inspect `.github/workflows/` for Charter-related verification, workflow linting, supply-chain checks, and pinned third-party actions.
+- Detection logic: inspect `.github/workflows/` for Charter-related verification, workflow linting, supply-chain checks, and pinned third-party actions. Trusted SLSA reusable workflows (`slsa-framework/slsa-github-generator/.github/workflows/*.yml@vX.Y.Z`) are exempt from the SHA-pin requirement because `slsa-verifier` resolves the trusted builder identity from the semantic version tag and SHA-pinning is unsupported.
 - Pass example: CI runs the repo quality gates, workflow security tools, and keeps mutable action tags out of the baseline.
 - Fail example: no workflow coverage, no Charter entrypoint in CI, or unpinned third-party actions.
 - Evidence expectations: workflow file path, job name, threshold or gate command, SARIF upload presence when applicable, and whether workflow hygiene tools are present.
