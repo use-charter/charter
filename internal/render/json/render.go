@@ -6,6 +6,7 @@ import (
 
 	"go.use-charter.dev/charter/internal/doctor"
 	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/scoring"
 	"go.use-charter.dev/charter/internal/suppress"
 )
 
@@ -17,6 +18,14 @@ type payload struct {
 	Suppressed []suppressedDTO `json:"suppressed"`
 	Summary    severitySummary `json:"summary"`
 	Score      scoreSummary    `json:"score"`
+	Categories []categoryDTO   `json:"categories"`
+}
+
+type categoryDTO struct {
+	Category      string            `json:"category"`
+	Findings      int               `json:"findings"`
+	Deduction     int               `json:"deduction"`
+	WorstSeverity findings.Severity `json:"worst_severity"`
 }
 
 type findingDTO struct {
@@ -84,7 +93,22 @@ func Render(result doctor.Result) ([]byte, error) {
 			Base:  result.Score.Base,
 			Final: result.Score.Final,
 		},
+		Categories: toCategoryDTOs(result.Findings),
 	})
+}
+
+func toCategoryDTOs(all []findings.Finding) []categoryDTO {
+	breakdown := scoring.ByCategory(all)
+	dtos := make([]categoryDTO, 0, len(breakdown))
+	for _, c := range breakdown {
+		dtos = append(dtos, categoryDTO{
+			Category:      c.Category,
+			Findings:      c.Findings,
+			Deduction:     c.Deduction,
+			WorstSeverity: c.WorstSeverity,
+		})
+	}
+	return dtos
 }
 
 func toSuppressedDTOs(list []suppress.Suppressed) []suppressedDTO {
