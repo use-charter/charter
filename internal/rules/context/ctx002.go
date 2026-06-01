@@ -49,13 +49,13 @@ func checkCTX002(root string, inv repository.Inventory) (findings.Finding, bool)
 
 func missingRepoTruthMarkers(content string, inv repository.Inventory) []string {
 	var missing []string
+	lower := strings.ToLower(content)
 
-	requiredMarkers := []string{
-		"moon run :check",
-		".env*",
-		"secrets/",
+	if !hasVerificationSignal(lower) {
+		missing = append(missing, "verification command")
 	}
 
+	requiredMarkers := []string{".env*", "secrets/"}
 	if inv.Has("hk.pkl") {
 		requiredMarkers = append(requiredMarkers, "hk.pkl")
 	}

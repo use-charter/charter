@@ -223,6 +223,89 @@ func TestAECTX002FindsStaleRepoTruthMarkers(t *testing.T) {
 	t.Fatalf("expected AE-CTX-002 finding")
 }
 
+func TestAECTX002AcceptsCharterDoctorVerification(t *testing.T) {
+	root := newContextRepo(t, map[string]string{
+		"AGENTS.md": strings.Join([]string{
+			"# Fixture Repo",
+			"",
+			"Charter fixture repo proving charter doctor satisfies the verification signal.",
+			"- run `charter doctor` to validate changes",
+			"- off-limits: `.env*`, `secrets/`",
+		}, "\n"),
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := RunCTXRules(root, inv)
+	for _, finding := range findings {
+		if finding.RuleID == "AE-CTX-002" {
+			t.Fatalf("expected no AE-CTX-002 finding for charter doctor verification, got %#v", finding)
+		}
+	}
+}
+
+func TestAECTX002FindsMissingVerificationCommand(t *testing.T) {
+	root := newContextRepo(t, map[string]string{
+		"AGENTS.md": strings.Join([]string{
+			"# Fixture Repo",
+			"",
+			"Charter fixture repo that omits any recognized build or test command.",
+			"- off-limits: `.env*`, `secrets/`",
+		}, "\n"),
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := RunCTXRules(root, inv)
+	for _, finding := range findings {
+		if finding.RuleID != "AE-CTX-002" {
+			continue
+		}
+
+		if !containsEvidence(finding.Evidence, "verification command") {
+			t.Fatalf("expected missing verification command evidence, got %#v", finding.Evidence)
+		}
+		return
+	}
+
+	t.Fatalf("expected AE-CTX-002 finding for missing verification command")
+}
+
+func TestAECTX002PassesForCharterStyleContext(t *testing.T) {
+	root := newContextRepo(t, map[string]string{
+		"AGENTS.md": strings.Join([]string{
+			"# Fixture Repo",
+			"",
+			"Charter is an offline-first Go CLI scoring repos for agent readiness.",
+			"- tech stack: Go",
+			"- verify with `moon run :check`",
+			"- off-limits: `.env*`, `secrets/`",
+			"- hooks use `hk.pkl`",
+			"- product truth: `docs/internal/architecture/charter-architecture-2026.md`",
+		}, "\n"),
+		"hk.pkl": "hooks {}\n",
+		"docs/internal/architecture/charter-architecture-2026.md": "# Product Truth\n",
+	})
+
+	inv, err := repository.BuildInventory(root)
+	if err != nil {
+		t.Fatalf("inventory failed: %v", err)
+	}
+
+	findings := RunCTXRules(root, inv)
+	for _, finding := range findings {
+		if finding.RuleID == "AE-CTX-002" {
+			t.Fatalf("expected no AE-CTX-002 finding for Charter-style context, got %#v", finding)
+		}
+	}
+}
+
 func TestAECTX001RedactsSecretLikeFirstSubstantiveLineEvidence(t *testing.T) {
 	root := newContextRepo(t, map[string]string{
 		"AGENTS.md": strings.Join([]string{
