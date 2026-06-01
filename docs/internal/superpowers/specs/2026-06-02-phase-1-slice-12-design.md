@@ -113,7 +113,7 @@ Ship `charter fix` (architecture M1.4 T1.4.2): a diff-first repair engine that a
 ## Success criteria
 
 - `charter fix` previews unified diffs and, on apply, backs up existing targets to `.charter/backups/` before writing; never deletes; never fixes secrets; `--rule`/`--dry-run` work; exit codes correct.
-- `AE-CTX-001`/`AE-CTX-004`/`AE-CI-002` fixers produce correct files; integration test shows AE-CTX-004 + AE-CI-002 cleared after `fix` on a non-moon repo with normal CI.
+- `AE-CTX-001`/`AE-CTX-004`/`AE-CI-002` fixers produce correct files; integration test shows AE-CTX-004 + AE-CI-002 cleared after `fix` on a non-moon repo with normal CI (measured: `fix` raises a representative non-moon repo from 91 to 96).
 - `AE-CI-002` recognizes direct/action CI forms + exempts the first-party action; Charter's own scan stays 100; spec/audit updated.
 - ADR-0020 + this spec + the plan committed; AGENTS/README/ARCHITECTURE + architecture §1.8/T1.4.2 reflect `charter fix`; `moon run :check` green.
 

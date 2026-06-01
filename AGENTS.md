@@ -5,13 +5,13 @@ Last reviewed: 2026-06-01
 ## Current State
 
 - Offline-first Go CLI scoring repos for AI-agent readiness (deterministic).
-- Phase: Phase 1 Slice 11 implemented on top of the real `charter doctor` path.
+- Phase: Phase 1 Slice 12 implemented on top of the real `charter doctor` path.
 - Stack: Go 1.26.3, Moonrepo, mise, hk, GitHub Actions, Bun TS scripts.
 - License: Apache-2.0 OSS core; DCO-first contribution model
 - Product truth: `docs/internal/architecture/charter-architecture-2026.md`; module: `go.use-charter.dev/charter`
-- CLI: `charter init`, `charter doctor` (`--path --threshold --quiet --format text|json|markdown|sarif --out`), `charter suppress`, `charter version`
+- CLI: `charter init`, `charter doctor` (`--path --threshold --quiet --format text|json|markdown|sarif --out`), `charter fix`, `charter suppress`, `charter version`
 - Gate: `charter.yaml` `policy.profile`/`policy.threshold`; `--threshold` overrides
-- Implemented rules (full v1 set): AE-CTX-001/002/004, AE-ENV-001, AE-CI-002, AE-SEC-001/002, AE-MCP-001/002/003, AE-CC-001/002, AE-SUPPRESS-001/002/003
+- Rules (v1): AE-CTX-001/002/004, AE-ENV-001, AE-CI-002, AE-SEC-001/002, AE-MCP-001/002/003, AE-CC-001/002, AE-SUPPRESS-001/002/003
 - GitHub Action in `action/` (`use-charter/charter-action`); `moon run :perf` validates the 50k-file perf budget
 
 ## Documentation
