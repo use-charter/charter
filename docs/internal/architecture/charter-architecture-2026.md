@@ -859,6 +859,7 @@ gitleaks      = "8.30.1"
 **Given:** a repo with uses: use-charter/charter-action@v1 in a workflow  
 **When:** a PR is opened  
 **Then:** Charter runs, findings are uploaded to the GitHub Security tab as code scanning alerts, and the workflow exits non-zero if the score is below the configured threshold  
+**As built:** the composite action downloads the signed release binary, verifies it (cosign keyless + sha256 against `checksums.txt`), runs `charter doctor --format sarif`, and uploads via `github/codeql-action/upload-sarif@v4`; below-threshold gating fails after the alerts upload. Developed in `action/`, seeded to `use-charter/charter-action@v1` at launch.  
 
 
 #### T1.5.2 Release Pipeline (GoReleaser + Supply Chain) `⚡ AI`
@@ -879,6 +880,7 @@ gitleaks      = "8.30.1"
 **Given:** a 50,000-file synthetic fixture monorepo  
 **When:** charter doctor --path testdata/repos/large-monorepo runs  
 **Then:** the command completes in ≤ 2,000 ms wall-clock time, allocates ≤ 256 MB RSS, and exits with the correct score  
+**As built:** validated by `moon run :perf` — a build-tagged test synthesizes a ~50,000-file repo at test time (not committed) and asserts `charter doctor` ≤ 2 s wall-clock / (Linux) ≤ 256 MiB peak RSS, race-clean.  
 
 
 ### M1.6 — MCP Catalog v1 — The Recurring Engagement Loop

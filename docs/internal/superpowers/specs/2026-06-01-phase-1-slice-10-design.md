@@ -51,7 +51,7 @@ The Action is the surface Phase-1 adoption is measured on (`uses: use-charter/ch
   5. **Run** `charter doctor --path <path> --format <format> --out <sarif-file>` (+ `--threshold <n>` only when provided); capture the exit code (don't fail the step yet).
   6. **Upload** (`if upload && format == sarif`): `github/codeql-action/upload-sarif@<sha v4>` with `sarif_file: <sarif-file>` and `category` if set.
   7. **Gate**: if the captured doctor exit is 1 and `fail-below`, exit 1 (so alerts upload first, then the gate fails); exit 2 on scan error.
-- **Outputs:** `score`, `sarif-file`, `exit-code` (for downstream steps).
+- **Outputs:** `exit-code`, `sarif-file` (for downstream steps). (`score` deferred — not shipped.)
 - **Pinning:** `cosign-installer`, `upload-sarif`, and any `checkout` pinned to full SHAs.
 
 ## Action validator (`action/moon.yml` + Bun TS)

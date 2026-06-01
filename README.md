@@ -6,7 +6,7 @@ This repository started as the AI-ready bootstrap baseline and now contains the 
 
 ## Current State
 
-- Phase: Phase 1 Slice 9 implemented; real `charter doctor` path with the full 15-rule v1 set, governance, suppression, SARIF output, policy profiles, the `charter version` command, and a signed GoReleaser release pipeline
+- Phase: Phase 1 Slice 10 implemented; real `charter doctor` path with the full 15-rule v1 set, governance, suppression, SARIF output, policy profiles, the `charter version` command, a signed GoReleaser release pipeline, a composite GitHub Action, and validated performance budgets
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
 - Module path: `go.use-charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
@@ -47,6 +47,20 @@ Documentation authority ladder:
 - Homebrew (recommended): `brew install use-charter/tap/charter` installs the signed Homebrew cask.
 - Signed binary: download from the GitHub Releases page. Each release ships SHA-256 checksums, a cosign keyless signature bundle, an SPDX-2.3 SBOM, and SLSA Build L3 provenance.
 - `go install go.use-charter.dev/charter/cmd/charter@latest` is pending the vanity-path `go-import` redirect host (not yet available).
+
+## GitHub Action
+
+Run Charter in CI with the composite GitHub Action (developed in [`action/`](./action/README.md), published as `use-charter/charter-action`):
+
+```yaml
+- uses: use-charter/charter-action@v1
+```
+
+It downloads the signed `charter` binary, verifies it (cosign keyless + sha256), runs `charter doctor --format sarif`, and uploads the report to GitHub Code Scanning. See [`action/README.md`](./action/README.md) for inputs and required permissions.
+
+## Performance
+
+`charter doctor` scans a 50,000-file repository in ≤ 2 s wall-clock and ≤ 256 MiB RSS (Linux), validated by `moon run :perf` against a synthesized fixture (build-tagged, kept out of the default `:test`).
 
 ## Golden Path
 
