@@ -47,6 +47,9 @@ outputs:
   exit-code:
     description: "charter doctor exit code (0 pass, 1 below threshold, 2 error)."
     value: ${{ steps.run.outputs.exit-code }}
+  score:
+    description: "Charter score (0-100)."
+    value: ${{ steps.run.outputs.score }}
   sarif-file:
     description: "Path to the written SARIF report."
     value: ${{ steps.run.outputs.sarif-file }}
@@ -118,8 +121,17 @@ runs:
         args=(doctor --path "$IN_PATH" --format "$IN_FORMAT" --out "$IN_SARIF")
         [ -n "$IN_THRESHOLD" ] && args+=(--threshold "$IN_THRESHOLD")
         "$CHARTER_BIN" "${args[@]}"; code=$?
+        # Capture the score via a fast JSON scan (threshold-independent). jq is
+        # preinstalled on GitHub runners; fall back to a portable grep.
+        score=""
+        scorejson="$(mktemp)"
+        if "$CHARTER_BIN" doctor --path "$IN_PATH" --format json > "$scorejson" 2>/dev/null || true; then
+          score="$(jq -r '.score.final // empty' "$scorejson" 2>/dev/null || true)"
+          [ -z "$score" ] && score="$(grep -o '"final"[^0-9]*[0-9][0-9]*' "$scorejson" | grep -o '[0-9][0-9]*$' | head -1)"
+        fi
         {
           echo "exit-code=${code}"
+          echo "score=${score}"
           echo "sarif-file<<CHARTER_EOF"
           echo "${IN_SARIF}"
           echo "CHARTER_EOF"

@@ -35,6 +35,7 @@ steps:
 | Output | Description |
 | --- | --- |
 | `exit-code` | `charter doctor` exit code (`0` pass, `1` below threshold, `2` error). |
+| `score` | Charter score (`0`–`100`). |
 | `sarif-file` | Path to the written SARIF report. |
 
 ## Permissions
