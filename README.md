@@ -6,7 +6,7 @@ This repository started as the AI-ready bootstrap baseline and now contains the 
 
 ## Current State
 
-- Phase: Phase 1 Slice 10 implemented; real `charter doctor` path with the full 15-rule v1 set, governance, suppression, SARIF output, policy profiles, the `charter version` command, a signed GoReleaser release pipeline, a composite GitHub Action, and validated performance budgets
+- Phase: Phase 1 Slice 11 implemented; the `charter init` scaffold plus the real `charter doctor` path with the full 15-rule v1 set, governance, suppression, SARIF output, policy profiles, the `charter version` command, a signed GoReleaser release pipeline, a composite GitHub Action, and validated performance budgets
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
 - Module path: `go.use-charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
@@ -17,6 +17,7 @@ Current implemented scope:
 - file inventory scanner (git-aware, respects .gitignore)
 - finding model with structured locations (path:line, 1-based)
 - score engine with hard caps (blocker ≤59, secret ≤49)
+- `charter init` scaffolds the missing agent-context files (`AGENTS.md`, `charter.yaml`, `.gitignore`, `ARCHITECTURE.md`, `.env.example`, plus `.claude/settings.json` when Claude is detected) so a blank repo reaches a passing scan (≥ 80, measured 95 on a blank Go repo) in seconds; create-missing-only — it never overwrites or deletes, and `--dry-run` previews the file plan
 - `charter doctor` output with `--path`, `--threshold`, `--quiet`, `--format text|json|markdown|sarif`, and `--out` for file output
 - 15 implemented rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`, `AE-SEC-001`, `AE-SEC-002`, `AE-MCP-001`, `AE-MCP-002`, `AE-MCP-003`, `AE-CC-001`, `AE-CC-002`, `AE-SUPPRESS-001`, `AE-SUPPRESS-002`, `AE-SUPPRESS-003`
 - agent context registry (`agentcontext` — shared source for context and secret scanning, drift guard)

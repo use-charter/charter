@@ -16,7 +16,7 @@
 - Repo-internal engineering docs live under `docs/internal/`.
 - Future customer-facing docs live under `docs/product/`.
 
-- `cmd/`: binary entrypoints and command wiring (includes `cmd/charter/version.go`, the `charter version` command)
+- `cmd/`: binary entrypoints and command wiring (includes `cmd/charter/init.go`, the `charter init` scaffold command, and `cmd/charter/version.go`, the `charter version` command)
 - `internal/`: non-public implementation details
   - `agentcontext`: canonical agent-visible context file registry (drift guard for context and secret rules)
   - `config`: `charter.yaml` loader (MCP trusted-remote allowlist; policy profile/threshold resolution)
@@ -24,6 +24,7 @@
   - `findings`: finding model with Location support (path:line)
   - `repository`: repo resolution and file inventory
   - `rules/`: rule implementations (context, environment, ci, secrets, mcp, agentconfig, governance) and `catalog` (static rule metadata for SARIF/explain)
+  - `scaffold`: pure offline detection (language/CI/agents) + agent-context templates + a create/skip file plan behind `charter init` (create-missing-only, never overwrites or deletes; imported by `cmd/charter/init.go`)
   - `scoring`: score calculation and caps (skips informational findings)
   - `render/`: output formatters (text, JSON, Markdown, SARIF 2.1.0)
   - `secrets`: secret pattern detection and redaction

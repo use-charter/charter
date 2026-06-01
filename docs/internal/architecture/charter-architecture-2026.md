@@ -119,7 +119,7 @@ Six core commands ship in v1.0: `charter init`, `charter doctor`, `charter repor
 
 ### charter init — Getting Started
 
-Scaffold all required agent context files from a blank repo in under 2 minutes. Charter detects your language, CI platform, and agent tools automatically. Running `charter init` then `charter doctor` immediately after scores ≥ 80 out of the box for Go projects.
+Scaffold the *missing* agent context files from a blank repo in under 2 minutes — create-missing-only, never overwriting or deleting a user file (`--dry-run` previews the file plan). Charter detects your language, CI platform, and agent tools automatically and writes `AGENTS.md`, `charter.yaml`, `.gitignore`, `ARCHITECTURE.md`, `.env.example`, and `.claude/settings.json` (when Claude is detected or requested). Running `charter init` then `charter doctor` immediately after scores ≥ 80 out of the box for Go projects — measured 95 on a blank Go repo (residual AE-ENV-001/AE-CI-002 only).
 
 ```
 ❯ charter init
@@ -834,6 +834,7 @@ gitleaks      = "8.30.1"
 **Given:** a repo with no agent context files  
 **When:** charter init runs interactively  
 **Then:** it creates AGENTS.md , ARCHITECTURE.md , SECURITY.md , CONTRIBUTING.md , TESTING.md , and a charter.yaml with the project's detected language and policy profile  
+**As built:** non-interactive and deterministic (create-missing-only; `--dry-run` previews the plan, `--yes` is the implicit default) — it writes the missing `AGENTS.md`, `charter.yaml`, `.gitignore`, `ARCHITECTURE.md`, `.env.example`, and (when Claude is detected/requested) `.claude/settings.json`, never overwriting or deleting; `SECURITY.md`/`CONTRIBUTING.md`/`TESTING.md` are not scaffolded. A subsequent `charter doctor` scores ≥ 80 out of the box (measured 95 on a blank Go repo, residual AE-ENV-001/AE-CI-002 only). See ADR-0019.  
 
 
 #### T1.4.2 Fix Planner & Diff Engine (charter fix) `⚡ AI`
