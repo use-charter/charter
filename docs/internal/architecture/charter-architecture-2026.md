@@ -845,6 +845,7 @@ gitleaks      = "8.30.1"
 **Given:** a scan with 3 auto-fixable findings (AGENTS.md token overrun, missing .gitignore entry for .env, outdated Go version in mise.toml)  
 **When:** charter fix --dry-run runs  
 **Then:** a unified diff is printed to stdout for each fixable finding; no files are modified; exit code reflects whether fixes are available  
+**As built:** the v1 fixers are `AE-CTX-001` (create AGENTS.md), `AE-CTX-004` (create-or-append .gitignore), and `AE-CI-002` (create `.github/workflows/charter.yaml`) — complex/present-but-weak rewrites are deferred and secret/dangerous rules (AE-SEC-001/002, AE-CC-001) are never fixable. `charter fix --dry-run` prints unified diffs and writes nothing; on apply the engine backs up any existing target to `.charter/backups/<ts>/` before each write and never deletes or overwrites a Create target (measured: `fix` raises a representative non-moon repo from 91 to 96). See ADR-0020.  
 
 
 ### M1.5 — CI Integration & Distribution
