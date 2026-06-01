@@ -19,17 +19,18 @@
 - `cmd/`: binary entrypoints and command wiring
 - `internal/`: non-public implementation details
   - `agentcontext`: canonical agent-visible context file registry (drift guard for context and secret rules)
-  - `config`: `charter.yaml` loader (MCP trusted-remote allowlist)
-  - `doctor`: scan orchestration pipeline
+  - `config`: `charter.yaml` loader (MCP trusted-remote allowlist; policy profile/threshold resolution)
+  - `doctor`: scan orchestration pipeline (resolves the effective threshold)
   - `findings`: finding model with Location support (path:line)
   - `repository`: repo resolution and file inventory
-  - `rules/`: rule implementations (context, environment, ci, secrets, mcp, agentconfig, governance)
+  - `rules/`: rule implementations (context, environment, ci, secrets, mcp, agentconfig, governance) and `catalog` (static rule metadata for SARIF/explain)
   - `scoring`: score calculation and caps (skips informational findings)
-  - `render/`: output formatters (text, JSON, Markdown)
+  - `render/`: output formatters (text, JSON, Markdown, SARIF 2.1.0)
   - `secrets`: secret pattern detection and redaction
   - `suppress`: suppression loading (`.charter-suppress.yml` + inline `charter:ignore`) and the active/suppressed partition
+  - `version`: build version (`runtime/debug` + ldflags fallback) for SARIF `tool.driver.version`
 - `api/openapi/`: future API contracts before implementation
-- `schemas/`: machine-readable config and report contracts (includes `doctor-result.schema.json`)
+- `schemas/`: machine-readable config and report contracts (includes `doctor-result.schema.json`, `charter-config.schema.json`)
 - `docs/internal/specs/`: rule-level behavior contracts
 - `docs/internal/decisions/`: accepted ADRs
 - `docs/internal/rfcs/`: proposals for cross-cutting or risky changes

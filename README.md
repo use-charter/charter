@@ -6,7 +6,7 @@ This repository started as the AI-ready bootstrap baseline and now contains the 
 
 ## Current State
 
-- Phase: Phase 1 Slice 7 implemented; real `charter doctor` path with the full 15-rule v1 set, governance, and suppression
+- Phase: Phase 1 Slice 8 implemented; real `charter doctor` path with the full 15-rule v1 set, governance, suppression, SARIF output, and policy profiles
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
 - Module path: `go.use-charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
@@ -24,7 +24,8 @@ Current implemented scope:
 - MCP config scanning of `.mcp.json` / `mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`: server pinning (`AE-MCP-001`), trusted-remote allowlist via `charter.yaml` (`AE-MCP-002`), and remote auth declaration (`AE-MCP-003`)
 - agent-config scanning of JSON hook configs (`.claude/settings.json`, `.cursor/hooks.json`): dangerous shell commands (`AE-CC-001`, Blocker) and explicit edit-scope declaration (`AE-CC-002`)
 - suppression engine with governance: `.charter-suppress.yml` and inline `charter:ignore` directives, with `charter suppress <RULE>` to author entries; suppressed findings are excluded from the score and listed separately, and the governance rules `AE-SUPPRESS-001` (missing reason), `AE-SUPPRESS-002` (permanent waiver without approver), and `AE-SUPPRESS-003` (high suppression rate, informational) audit them
-- text, JSON, and Markdown (PR-comment) output with structured `path:line` finding locations
+- text, JSON, Markdown (PR-comment), and SARIF 2.1.0 output with structured `path:line` finding locations; `--out <file>` writes any format to a file. SARIF is backed by a rule catalog (`internal/rules/catalog`) and carries GitHub Code Scanning metadata (`security-severity`, `tags`, `automationDetails`) so findings rank correctly in the Security tab
+- policy profiles in `charter.yaml`: `policy.profile` (strict=90 / standard=80 / relaxed=60) or `policy.threshold`, with precedence `--threshold` flag > `policy.threshold` > `policy.profile` > default 80 (see `schemas/charter-config.schema.json`)
 
 Documentation topology:
 
