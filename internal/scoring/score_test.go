@@ -6,6 +6,29 @@ import (
 	"go.use-charter.dev/charter/internal/findings"
 )
 
+func TestByCategoryGroupsAndSortsByDeduction(t *testing.T) {
+	all := []findings.Finding{
+		{RuleID: "AE-CTX-001", Severity: findings.SeverityBlocker, Category: "Context"},
+		{RuleID: "AE-CTX-006", Severity: findings.SeverityLow, Category: "Context", Informational: true},
+		{RuleID: "AE-TEST-001", Severity: findings.SeverityHigh, Category: "Testing"},
+		{RuleID: "AE-CI-002", Severity: findings.SeverityLow, Category: "CI"},
+	}
+	got := ByCategory(all)
+	if len(got) != 3 {
+		t.Fatalf("expected 3 categories, got %d: %+v", len(got), got)
+	}
+	// Sorted by deduction desc: Context (20, informational adds 0) > Testing (10) > CI (1).
+	if got[0].Category != "Context" || got[0].Deduction != 20 || got[0].Findings != 2 || got[0].WorstSeverity != findings.SeverityBlocker {
+		t.Fatalf("Context row wrong: %+v", got[0])
+	}
+	if got[1].Category != "Testing" || got[1].Deduction != 10 {
+		t.Fatalf("Testing row wrong: %+v", got[1])
+	}
+	if got[2].Category != "CI" || got[2].Deduction != 1 {
+		t.Fatalf("CI row wrong: %+v", got[2])
+	}
+}
+
 func TestCalculateSkipsInformational(t *testing.T) {
 	all := []findings.Finding{
 		{Severity: findings.SeverityMedium, Informational: true},

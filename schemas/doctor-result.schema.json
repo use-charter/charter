@@ -26,8 +26,18 @@
       "description": "All findings in deterministic order: severity weight descending, then rule_id ascending.",
       "items": { "$ref": "#/$defs/finding" }
     },
+    "suppressed": {
+      "type": "array",
+      "description": "Findings suppressed this scan (see the suppression governance model).",
+      "items": { "$ref": "#/$defs/suppressed" }
+    },
     "summary": { "$ref": "#/$defs/severitySummary" },
-    "score": { "$ref": "#/$defs/score" }
+    "score": { "$ref": "#/$defs/score" },
+    "categories": {
+      "type": "array",
+      "description": "Per-category readiness breakdown, sorted by deduction descending then category ascending. A presentation aid over the same findings; does not change the score formula.",
+      "items": { "$ref": "#/$defs/categoryScore" }
+    }
   },
   "$defs": {
     "finding": {
@@ -73,6 +83,31 @@
           "minimum": 0,
           "description": "1-based line number; 0 means file-level (no specific line). Maps to SARIF region.startLine."
         }
+      }
+    },
+    "suppressed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule_id", "severity", "source", "locations"],
+      "properties": {
+        "rule_id": { "type": "string", "pattern": "^AE-[A-Z]+-[0-9]{3}$" },
+        "severity": { "type": "string", "enum": ["BLOCKER", "HIGH", "MEDIUM", "LOW"] },
+        "source": { "type": "string" },
+        "reason": { "type": "string" },
+        "approver": { "type": "string" },
+        "expires": { "type": "string" },
+        "locations": { "type": "array", "items": { "$ref": "#/$defs/location" } }
+      }
+    },
+    "categoryScore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "findings", "deduction", "worst_severity"],
+      "properties": {
+        "category": { "type": "string" },
+        "findings": { "type": "integer", "minimum": 0 },
+        "deduction": { "type": "integer", "minimum": 0 },
+        "worst_severity": { "type": "string", "enum": ["BLOCKER", "HIGH", "MEDIUM", "LOW"] }
       }
     },
     "severitySummary": {

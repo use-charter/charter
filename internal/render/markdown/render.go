@@ -7,6 +7,7 @@ import (
 
 	"go.use-charter.dev/charter/internal/doctor"
 	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/scoring"
 	"go.use-charter.dev/charter/internal/suppress"
 )
 
@@ -38,8 +39,22 @@ func Render(result doctor.Result) ([]byte, error) {
 		}
 	}
 
+	writeCategoryBreakdown(&b, result.Findings)
 	writeSuppressed(&b, result.Suppressed)
 	return []byte(b.String()), nil
+}
+
+func writeCategoryBreakdown(b *strings.Builder, all []findings.Finding) {
+	breakdown := scoring.ByCategory(all)
+	if len(breakdown) == 0 {
+		return
+	}
+	b.WriteString("\n**Readiness by category**\n\n")
+	b.WriteString("| Category | Findings | Deduction | Worst |\n")
+	b.WriteString("| --- | --- | --- | --- |\n")
+	for _, c := range breakdown {
+		fmt.Fprintf(b, "| %s | %d | −%d | %s |\n", c.Category, c.Findings, c.Deduction, c.WorstSeverity)
+	}
 }
 
 func writeSuppressed(b *strings.Builder, list []suppress.Suppressed) {

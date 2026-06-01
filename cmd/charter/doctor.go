@@ -10,6 +10,7 @@ import (
 	renderjson "go.use-charter.dev/charter/internal/render/json"
 	rendermarkdown "go.use-charter.dev/charter/internal/render/markdown"
 	rendersarif "go.use-charter.dev/charter/internal/render/sarif"
+	"go.use-charter.dev/charter/internal/scoring"
 )
 
 type commandExitError struct {
@@ -101,6 +102,12 @@ func newDoctorCommand() *cobra.Command {
 					fmt.Fprintf(&buf, " — %s", s.Reason)
 				}
 				fmt.Fprintln(&buf)
+			}
+			if breakdown := scoring.ByCategory(result.Findings); len(breakdown) > 0 {
+				fmt.Fprintln(&buf, "readiness by category:")
+				for _, c := range breakdown {
+					fmt.Fprintf(&buf, "  %-12s −%-3d (%d finding(s), worst %s)\n", c.Category, c.Deduction, c.Findings, c.WorstSeverity)
+				}
 			}
 			fmt.Fprintf(&buf, "score: %d (threshold %d)\n", result.Score.Final, result.Threshold)
 
