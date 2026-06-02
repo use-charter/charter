@@ -1,0 +1,241 @@
+
+<h2 class="sr-only">Charter CLI remaining Phase 1 commands — suppress, report, version with fixed package table alignment</h2>
+
+<style>
+.tt{background:transparent;border:none;border-bottom:2px solid transparent;padding:9px 15px;font-family:var(--font-mono);font-size:11.5px;color:var(--color-text-secondary);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tt.act{color:var(--color-text-info);border-bottom-color:var(--color-text-info);}
+.tt:hover:not(.act){color:var(--color-text-primary);}
+.g{color:var(--color-text-success);}.r{color:var(--color-text-danger);}.y{color:var(--color-text-warning);}.b{color:var(--color-text-info);}.d2{color:var(--color-text-secondary);}.d3{color:var(--color-text-tertiary);}
+.sv{display:inline-block;padding:0 7px;font-size:10.5px;font-weight:500;letter-spacing:.06em;border-radius:3px;border:0.5px solid;line-height:20px;}
+.ifmt{background:transparent;border:0.5px solid var(--color-border-tertiary);border-radius:3px;padding:3px 10px;font-family:var(--font-mono);font-size:11px;color:var(--color-text-secondary);cursor:pointer;transition:all .12s;}
+.ifmt.on{background:var(--color-background-tertiary);color:var(--color-text-primary);border-color:var(--color-border-secondary);}
+.kv{display:grid;grid-template-columns:110px 1fr;row-gap:3px;margin-bottom:12px;}
+.kl{color:var(--color-text-secondary);font-size:12px;}.kv2{color:var(--color-text-primary);font-size:12px;}
+.strow{display:grid;grid-template-columns:100px 1fr 110px 100px;gap:0 12px;padding:4px 0;font-size:12px;border-top:0.5px solid var(--color-border-tertiary);}
+/* PATCH: minmax(0,1fr) prevents 1fr from ignoring overflow; columns now match header */
+.pkg{display:grid;grid-template-columns:minmax(0,1fr) 110px 70px;gap:0 12px;padding:4px 0;font-size:12px;border-top:0.5px solid var(--color-border-tertiary);}
+.da{display:block;padding:2px 8px;font-size:12px;}
+</style>
+
+<div style="font-family:var(--font-mono);font-size:13px;line-height:1.65;">
+
+  <div style="display:flex;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-bottom:none;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;overflow-x:auto;">
+    <button class="tt act" onclick="st(0)">suppress</button>
+    <button class="tt" onclick="st(1)">report</button>
+    <button class="tt" onclick="st(2)">version</button>
+  </div>
+
+  <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:0 0 var(--border-radius-lg) var(--border-radius-lg);overflow:hidden;">
+
+    <div style="display:flex;align-items:center;gap:7px;padding:9px 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-tertiary);">
+      <span style="width:11px;height:11px;border-radius:50%;background:var(--color-text-danger);opacity:.7;display:inline-block;flex-shrink:0;"></span>
+      <span style="width:11px;height:11px;border-radius:50%;background:var(--color-text-warning);opacity:.7;display:inline-block;flex-shrink:0;"></span>
+      <span style="width:11px;height:11px;border-radius:50%;background:var(--color-text-success);opacity:.7;display:inline-block;flex-shrink:0;"></span>
+      <span style="flex:1;text-align:center;font-size:11px;" class="d3">charter — zsh</span>
+    </div>
+
+    <!-- ── SCREEN 0: suppress ── -->
+    <div id="s0" style="padding:20px 24px;min-height:500px;display:flex;flex-direction:column;">
+      <div style="margin-bottom:4px;"><span class="g">❯</span>&nbsp;charter suppress AE-CI-002 \</div>
+      <div class="d2" style="margin-bottom:4px;padding-left:16px;">--reason <span style="color:var(--color-text-primary);">"Charter CI lives in platform-repo, not per-service"</span> \</div>
+      <div class="d2" style="margin-bottom:14px;padding-left:16px;">--expires <span style="color:var(--color-text-primary);">90d</span></div>
+      <div style="margin-bottom:4px;"><span class="b" style="font-weight:500;">✦ charter</span><span class="d2">&nbsp; v1.0.0</span></div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin:12px 0;"></div>
+      <div class="kv">
+        <span class="kl">Suppressing</span>
+        <span class="kv2"><span class="b" style="font-weight:500;">AE-CI-002</span>&nbsp;<span class="d2">· Charter CI job absent</span>&nbsp;<span class="sv" style="background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info);font-size:9.5px;">LOW</span></span>
+        <span class="kl">Reason</span>
+        <span class="kv2">Charter CI lives in platform-repo, not per-service</span>
+        <span class="kl">Expires</span>
+        <span class="kv2">2026-08-16 <span class="d3">(90 days)</span></span>
+        <span class="kl">Approver</span>
+        <span class="kv2 d3">— &nbsp;<span style="font-size:11px;">(required only for permanent suppressions)</span></span>
+      </div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin:4px 0 12px;"></div>
+      <div style="margin-bottom:4px;"><span class="g"><i class="ti ti-check" style="font-size:13px;" aria-hidden="true"></i> Written</span><span class="d2">&nbsp; .charter-suppress.yml</span></div>
+      <div class="d2" style="margin-bottom:2px;font-size:12px;">AE-CI-002 suppressed until 2026-08-16. Re-surfaces automatically on expiry.</div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin:16px 0 10px;"></div>
+      <div class="d2" style="margin-bottom:8px;font-size:12px;">Active suppressions (2)</div>
+      <div style="display:grid;grid-template-columns:100px 1fr 110px 100px;gap:0 12px;padding:4px 0;font-size:11px;" class="d3">
+        <span>Rule</span><span>Reason</span><span>Expires</span><span>Status</span>
+      </div>
+      <div class="strow">
+        <span class="b" style="font-weight:500;">AE-CI-002</span>
+        <span class="d2">Charter CI in platform-repo</span>
+        <span class="d2">2026-08-16</span>
+        <span class="g" style="font-size:11px;"><i class="ti ti-check" style="font-size:11px;" aria-hidden="true"></i> active</span>
+      </div>
+      <div class="strow">
+        <span class="b" style="font-weight:500;">AE-CTX-006</span>
+        <span class="d2">Accepted low-emphasis policy</span>
+        <span class="d3">permanent</span>
+        <span class="y" style="font-size:11px;"><i class="ti ti-alert-triangle" style="font-size:11px;" aria-hidden="true"></i> no approver</span>
+      </div>
+      <div style="margin-top:12px;border-left:2px solid var(--color-border-warning);border-radius:0;padding:8px 12px;background:var(--color-background-tertiary);">
+        <div class="y" style="font-size:12px;margin-bottom:2px;"><i class="ti ti-alert-triangle" style="font-size:12px;" aria-hidden="true"></i>&nbsp; <span style="font-weight:500;">AE-SUPPRESS-002</span> will fire on next scan</div>
+        <div class="d2" style="font-size:11.5px;">AE-CTX-006 permanent suppression has no <span class="b">--approver</span> field. Add one:</div>
+        <div class="d3" style="font-size:11.5px;margin-top:3px;">charter suppress AE-CTX-006 --approver tashfiqul.islam@fieldnation.com --permanent</div>
+      </div>
+      <div style="margin-top:auto;padding-top:12px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;" class="d3">
+        [--list] show all suppressions &nbsp;·&nbsp; [--expire &lt;id&gt;] remove early &nbsp;·&nbsp; [q] quit
+      </div>
+    </div>
+
+    <!-- ── SCREEN 1: report ── -->
+    <div id="s1" style="padding:20px 24px;min-height:500px;display:none;flex-direction:column;">
+      <div style="margin-bottom:14px;" id="rep-cmd"><span class="g">❯</span>&nbsp;charter report --format spdx --out sbom.spdx</div>
+      <div style="margin-bottom:16px;"><span class="b" style="font-weight:500;">✦ charter</span><span class="d2" id="rep-hdr">&nbsp; v1.0.0 &nbsp;·&nbsp; SPDX 2.3</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="ifmt on" onclick="rfmt('spdx',this)">spdx</button>
+        <button class="ifmt" onclick="rfmt('md',this)">markdown</button>
+      </div>
+
+      <!-- SPDX view -->
+      <div id="rf-spdx">
+        <div class="d2" style="margin-bottom:8px;font-size:12px;">Agent tool inventory &nbsp;·&nbsp; 3 packages</div>
+        <!-- PATCH: header columns now match .pkg class (minmax(0,1fr) 110px 70px) -->
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 70px;gap:0 12px;padding:4px 0;font-size:11px;" class="d3">
+          <span>Package</span><span>Version</span><span>Source</span>
+        </div>
+        <!-- PATCH: first span gets explicit color:var(--color-text-primary) + overflow handling -->
+        <div class="pkg">
+          <span style="color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">mcp-server-git</span>
+          <span class="d2">2026.1.14</span>
+          <span class="d3" style="font-size:11px;">npm</span>
+        </div>
+        <div class="pkg">
+          <span style="color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@modelcontextprotocol/server-fs</span>
+          <span class="d2">2026.1.1</span>
+          <span class="d3" style="font-size:11px;">npm</span>
+        </div>
+        <div class="pkg">
+          <span style="color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">github/github-mcp-server</span>
+          <span class="d2">0.6.2</span>
+          <span class="d3" style="font-size:11px;">go</span>
+        </div>
+        <div style="border-top:0.5px solid var(--color-border-tertiary);margin:14px 0;"></div>
+        <div style="margin-bottom:4px;"><span class="g"><i class="ti ti-check" style="font-size:13px;" aria-hidden="true"></i> Written</span><span class="d2">&nbsp; sbom.spdx &nbsp;(4.1 KB)</span></div>
+        <div class="d3" style="margin-bottom:4px;font-size:12px;">Exit &nbsp;0</div>
+        <div style="margin-top:6px;"><span class="b" style="font-weight:500;">›</span>&nbsp;<span class="d2" style="font-size:12px;">Upload: github/actions/upload-artifact@v4</span></div>
+      </div>
+
+      <!-- Markdown view -->
+      <div id="rf-md" style="display:none;">
+        <div class="d2" style="font-size:12px;margin-bottom:8px;">Preview</div>
+        <div style="background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;margin-bottom:14px;">
+          <div class="da" style="font-weight:500;color:var(--color-text-primary);"># Charter Report — my-repo</div>
+          <div class="da d3">&nbsp;</div>
+          <div class="da"><span class="d2">**Score** </span><span class="g">94/100</span><span class="d2"> · **Gate** </span><span class="g">PASS</span><span class="d2"> · **Threshold** 80</span></div>
+          <div class="da d3">&nbsp;</div>
+          <div class="da d2">## Summary</div>
+          <div class="da d2">18 rules checked · 0 findings · 8 categories · 31ms</div>
+          <div class="da d3">&nbsp;</div>
+          <div class="da d2">## Categories</div>
+          <div class="da d3">| Category &nbsp;&nbsp;&nbsp;&nbsp; | Rules | Status &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |</div>
+          <div class="da d3">|-------------|-------|--------------|</div>
+          <div class="da d3">| context &nbsp;&nbsp;&nbsp;&nbsp; | 4 &nbsp;&nbsp;&nbsp; | ✓ all passed |</div>
+          <div class="da d3">| secrets &nbsp;&nbsp;&nbsp;&nbsp; | 2 &nbsp;&nbsp;&nbsp; | ✓ all passed |</div>
+          <div class="da d3">| mcp-safety &nbsp; | 3 &nbsp;&nbsp;&nbsp; | ✓ all passed |</div>
+          <div class="da d3">| governance &nbsp; | 3 &nbsp;&nbsp;&nbsp; | ✓ all passed |</div>
+          <div class="da d3">&nbsp;</div>
+          <div class="da d3" style="font-size:11px;">Generated 2026-06-02T18:24:37Z · charter v1.0.0</div>
+        </div>
+        <div style="margin-bottom:4px;"><span class="g"><i class="ti ti-check" style="font-size:13px;" aria-hidden="true"></i> Written</span><span class="d2">&nbsp; charter-report.md &nbsp;(2.8 KB)</span></div>
+        <div class="d3" style="font-size:12px;">Exit &nbsp;0</div>
+      </div>
+
+      <div style="margin-top:auto;padding-top:12px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;" class="d3">
+        [--format spdx|markdown|json] &nbsp;·&nbsp; [--out &lt;file&gt;] &nbsp;·&nbsp; [q] quit
+      </div>
+    </div>
+
+    <!-- ── SCREEN 2: version ── -->
+    <div id="s2" style="padding:20px 24px;min-height:500px;display:none;flex-direction:column;">
+      <div style="margin-bottom:14px;" id="ver-cmd"><span class="g">❯</span>&nbsp;charter version</div>
+      <div style="margin-bottom:16px;"><span class="b" style="font-weight:500;">✦ charter</span><span class="d2">&nbsp; v1.0.0</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="ifmt on" onclick="vmode('full',this)">full</button>
+        <button class="ifmt" onclick="vmode('short',this)">--short</button>
+        <button class="ifmt" onclick="vmode('json',this)">--format json</button>
+      </div>
+      <div id="vm-full">
+        <div class="kv">
+          <span class="kl">charter</span><span class="kv2" style="font-weight:500;">1.0.0</span>
+          <span class="kl">commit</span><span class="kv2">abc1234f</span>
+          <span class="kl">built</span><span class="kv2">2026-05-18T09:42:00Z</span>
+          <span class="kl">go</span><span class="kv2">1.26.3</span>
+          <span class="kl">platform</span><span class="kv2">darwin/arm64</span>
+        </div>
+        <div style="border-top:0.5px solid var(--color-border-tertiary);margin:4px 0 12px;"></div>
+        <div class="d2" style="font-size:12px;margin-bottom:6px;">Supply chain</div>
+        <div class="kv">
+          <span class="kl">signature</span>
+          <span class="kv2">cosign keyless &nbsp;·&nbsp; <span class="g">verified <i class="ti ti-check" style="font-size:11px;" aria-hidden="true"></i></span></span>
+          <span class="kl">provenance</span>
+          <span class="kv2">SLSA Level 3 &nbsp;·&nbsp; <span class="d3" style="font-size:11px;">slsa-framework/slsa-github-generator</span></span>
+          <span class="kl">sbom</span>
+          <span class="kv2">SPDX 2.3 &nbsp;·&nbsp; <span class="d3" style="font-size:11px;">sbom.spdx (attached to release)</span></span>
+          <span class="kl">checksums</span>
+          <span class="kv2 d3" style="font-size:11.5px;">checksums.txt &nbsp;·&nbsp; sha256 verified</span>
+        </div>
+        <div style="border-top:0.5px solid var(--color-border-tertiary);margin:10px 0 8px;"></div>
+        <div class="d3" style="font-size:11.5px;">Exit &nbsp;0</div>
+      </div>
+      <div id="vm-short" style="display:none;">
+        <div style="font-size:28px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px;">1.0.0</div>
+        <div class="d3" style="font-size:12px;">Exit &nbsp;0</div>
+      </div>
+      <div id="vm-json" style="display:none;">
+        <div style="background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;margin-bottom:12px;">
+          <div class="da d3">{</div>
+          <div class="da"><span class="d3">&nbsp; "version": &nbsp;</span><span class="g">"1.0.0"</span><span class="d3">,</span></div>
+          <div class="da"><span class="d3">&nbsp; "commit": &nbsp;&nbsp;</span><span class="g">"abc1234f"</span><span class="d3">,</span></div>
+          <div class="da"><span class="d3">&nbsp; "date": &nbsp;&nbsp;&nbsp;&nbsp;</span><span class="g">"2026-05-18T09:42:00Z"</span><span class="d3">,</span></div>
+          <div class="da"><span class="d3">&nbsp; "go": &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="g">"1.26.3"</span><span class="d3">,</span></div>
+          <div class="da"><span class="d3">&nbsp; "platform": </span><span class="g">"darwin/arm64"</span></div>
+          <div class="da d3">}</div>
+        </div>
+        <div class="d3" style="font-size:12px;">Exit &nbsp;0</div>
+      </div>
+      <div style="margin-top:auto;padding-top:12px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;" class="d3">
+        [--short] version only &nbsp;·&nbsp; [--format json] machine-readable &nbsp;·&nbsp; [q] quit
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function st(n){
+  for(var i=0;i<3;i++){
+    document.getElementById('s'+i).style.display=i===n?'flex':'none';
+    document.querySelectorAll('.tt')[i].classList[i===n?'add':'remove']('act');
+  }
+}
+function rfmt(f,btn){
+  document.querySelectorAll('#s1 .ifmt').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  var spdx=document.getElementById('rf-spdx'),md=document.getElementById('rf-md');
+  var cmd=document.getElementById('rep-cmd'),hdr=document.getElementById('rep-hdr');
+  if(f==='spdx'){
+    spdx.style.display='block';md.style.display='none';
+    cmd.innerHTML='<span class="g">❯</span>&nbsp;charter report --format spdx --out sbom.spdx';
+    hdr.textContent=' v1.0.0 · SPDX 2.3';
+  } else {
+    spdx.style.display='none';md.style.display='block';
+    cmd.innerHTML='<span class="g">❯</span>&nbsp;charter report --format markdown --out charter-report.md';
+    hdr.textContent=' v1.0.0 · Markdown';
+  }
+}
+function vmode(m,btn){
+  document.querySelectorAll('#s2 .ifmt').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  var full=document.getElementById('vm-full'),sh=document.getElementById('vm-short'),js=document.getElementById('vm-json');
+  var cmd=document.getElementById('ver-cmd');
+  full.style.display=sh.style.display=js.style.display='none';
+  if(m==='full'){full.style.display='block';cmd.innerHTML='<span class="g">❯</span>&nbsp;charter version';}
+  else if(m==='short'){sh.style.display='block';cmd.innerHTML='<span class="g">❯</span>&nbsp;charter version --short';}
+  else{js.style.display='block';cmd.innerHTML='<span class="g">❯</span>&nbsp;charter version --format json';}
+}
+['s1','s2'].forEach(function(id){document.getElementById(id).style.display='none';});
+</script>
