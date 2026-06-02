@@ -13,3 +13,19 @@ commits = [
   '''db3a6f7bafa6c2c522e0d09eb8d5d3c28b59e479''',
 ]
 paths = ['''^internal/secrets/detect_test\.go$''']
+
+# Gitignored build-tool caches and local state. These are never committed (the
+# `gitleaks git` history scan already covers the committed tree) and are fully
+# regenerable, so the `gitleaks dir` working-tree scan must skip them. In
+# particular, Moon's cache hash manifests under .moon/cache/ store 64-char
+# content hashes that trip the default generic-api-key rule (false positives).
+[[allowlists]]
+description = "Gitignored build/tool caches (not part of the committed tree)"
+paths = [
+  '''^\.moon/''',
+  '''^node_modules/''',
+  '''^\.charter/''',
+  '''^bin/''',
+  '''^dist/''',
+  '''^coverage/''',
+]
