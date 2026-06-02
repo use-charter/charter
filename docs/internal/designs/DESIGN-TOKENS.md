@@ -15,6 +15,53 @@ Light/dark via `prefers-color-scheme`; in the TUI each maps to a Lipgloss `Adapt
 
 Severity mapping: `BLOCKER → danger`, `HIGH → warning`, `MEDIUM → warning (dimmed)`, `LOW → info`, `PASS/✓ → success`, rule-id/accent → `info`. **Severity always carries a text label — never color alone** (WCAG 1.4.1 / 1.3.1).
 
+## Concrete palette
+
+Canonical concrete values for the semantic tokens above, defined by the terminal layer (Slice 15, `internal/terminal`) and reused by the HTML report (Slice 16). The mockups (`*.html`) reference token *names*; these are the values they resolve to. Each token carries a light and a dark 24-bit hex (the Lipgloss v2 LightDark pair), an ANSI-16 fallback, and a Mono attribute fallback. ANSI-256 is **not** enumerated — it is computed at runtime as the nearest xterm-256 index to the selected hex (`internal/terminal.nearestANSI256`).
+
+**Text**
+
+| Token | Light | Dark | ANSI-16 (light / dark) | Mono |
+|---|---|---|---|---|
+| `text-primary` | `#111827` | `#f9fafb` | terminal default fg | — |
+| `text-secondary` | `#4b5563` | `#d1d5db` | terminal default fg | faint |
+| `text-tertiary` | `#646b78` | `#9ca3af` | terminal default fg | faint |
+| `text-success` | `#15803d` | `#4ade80` | green `2` / `10` | bold |
+| `text-danger` | `#b91c1c` | `#f87171` | red `1` / `9` | bold |
+| `text-warning` | `#b45309` | `#fbbf24` | yellow `3` / `11` | bold |
+| `text-info` | `#1d4ed8` | `#60a5fa` | blue `4` / `12` | bold |
+
+**Background** (surfaces; subtle tints in truecolor/256, vivid hue only in the lossy ANSI-16)
+
+| Token | Light | Dark | ANSI-16 (light / dark) | Mono |
+|---|---|---|---|---|
+| `background-primary` | `#ffffff` | `#0d1117` | terminal default (no fill) | — |
+| `background-secondary` | `#f9fafb` | `#161b22` | terminal default (no fill) | — |
+| `background-tertiary` | `#f3f4f6` | `#1f2937` | terminal default (no fill) | — |
+| `background-success` | `#f0fdf4` | `#052e16` | green `2` / `10` | reverse |
+| `background-danger` | `#fef2f2` | `#450a0a` | red `1` / `9` | reverse |
+| `background-warning` | `#fffbeb` | `#422006` | yellow `3` / `11` | reverse |
+| `background-info` | `#eff6ff` | `#172554` | blue `4` / `12` | reverse |
+
+**Border** (intentionally subtle; severity is always carried by a text label per WCAG 1.4.1, so borders are never the sole state indicator)
+
+| Token | Light | Dark | ANSI-16 (light / dark) | Mono |
+|---|---|---|---|---|
+| `border-primary` | `#d1d5db` | `#374151` | terminal default | — |
+| `border-secondary` | `#e5e7eb` | `#2b3240` | terminal default | — |
+| `border-tertiary` | `#eceef1` | `#21262d` | terminal default | faint |
+| `border-success` | `#86efac` | `#166534` | green `2` / `10` | bold |
+| `border-danger` | `#fca5a5` | `#991b1b` | red `1` / `9` | bold |
+| `border-warning` | `#fcd34d` | `#92400e` | yellow `3` / `11` | bold |
+| `border-info` | `#93c5fd` | `#1e40af` | blue `4` / `12` | bold |
+
+Notes:
+
+- **ANSI-16 codes** are Lipgloss/ANSI indices: `1` red, `2` green, `3` yellow, `4` blue (+8 for the bright variant). The light variant uses the base index; the dark variant uses the bright index. Neutral tokens have no faithful ANSI-16 gray, so they fall back to the terminal default and rely on attributes for hierarchy.
+- **ANSI-256** examples (nearest to the hex): `text-success` → `29` (light) / `78` (dark); `text-danger` → `124` (light); `text-info` → `26` (light).
+- **Mono** drops all color (terminal default) and builds hierarchy with attributes only: primary plain, secondary/tertiary faint, semantic bold, semantic surfaces reverse-video.
+- **Contrast (WCAG 2.2 AA):** verified against light surfaces (`#ffffff`, `#f9fafb`, `#f3f4f6`) and dark surfaces (`#0d1117`, `#1e1e1e`, `#1f2937`). Every text token clears 4.5:1 on its mode's surfaces, and each semantic text token also clears 4.5:1 on its own tinted background.
+
 ## Font system (canonical — product-wide)
 
 Confirmed `:root` tokens — the single source of truth for every Charter surface (site, docs, and the audit report):
