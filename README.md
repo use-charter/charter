@@ -6,7 +6,7 @@ This repository started as the AI-ready bootstrap baseline and now contains the 
 
 ## Current State
 
-- Phase: Phase 1 Slice 12 implemented; the `charter init` scaffold plus the real `charter doctor` path with the full 15-rule v1 set, governance, suppression, SARIF output, policy profiles, the `charter version` command, the diff-first `charter fix` repair command, a signed GoReleaser release pipeline, a composite GitHub Action, and validated performance budgets
+- Phase: Phase 1 Slice 15 implemented; the `charter init` scaffold, the real `charter doctor` path with the full 18-rule v1 set, governance, suppression, SARIF output, policy profiles, the `charter version` command, the diff-first `charter fix` repair command, a signed GoReleaser release pipeline, a composite GitHub Action, validated performance budgets, and the Slice 15 terminal experience (styled TTY output, the interactive `charter doctor -i` TUI, `charter explain`, and `--rule`/`--color`/`--no-color`)
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
 - Module path: `go.use-charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
@@ -18,9 +18,10 @@ Current implemented scope:
 - finding model with structured locations (path:line, 1-based)
 - score engine with hard caps (blocker ≤59, secret ≤49)
 - `charter init` scaffolds the missing agent-context files (`AGENTS.md`, `charter.yaml`, `.gitignore`, `ARCHITECTURE.md`, `.env.example`, plus `.claude/settings.json` when Claude is detected) so a blank repo reaches a passing scan (≥ 80, measured 95 on a blank Go repo) in seconds; create-missing-only — it never overwrites or deletes, and `--dry-run` previews the file plan
-- `charter doctor` output with `--path`, `--threshold`, `--quiet`, `--format text|json|markdown|sarif`, and `--out` for file output
+- `charter doctor` with `--path`, `--threshold`, `--quiet`, `--format text|json|markdown|sarif`, `--out`, `--rule`, `--color`/`--no-color`, and an interactive `-i/--interactive` TUI — **styled** on a TTY (color tiers, OSC 8 links, the `[C] charter` mark, the readiness scorecard) and **byte-stable plain** when piped, under `NO_COLOR`, or with `--quiet`
+- `charter explain <RULE>` prints a rule's catalog metadata (name, category, description, docs URL) in `--format text|json`
 - `charter fix` is the diff-first repair command (`--rule`, `--dry-run`, `--all`, `--yes`, `--path`): it previews unified diffs and applies the v1 fixers (`AE-CTX-001` AGENTS.md, `AE-CTX-004` .gitignore, `AE-CI-002` Charter CI workflow), backing up any existing target to `.charter/backups/` before each write — it never deletes, never overwrites a create target, and never auto-fixes secrets
-- 15 implemented rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-ENV-001`, `AE-CI-002`, `AE-SEC-001`, `AE-SEC-002`, `AE-MCP-001`, `AE-MCP-002`, `AE-MCP-003`, `AE-CC-001`, `AE-CC-002`, `AE-SUPPRESS-001`, `AE-SUPPRESS-002`, `AE-SUPPRESS-003`
+- 18 implemented rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-CTX-006`, `AE-ENV-001`, `AE-CI-002`, `AE-SEC-001`, `AE-SEC-002`, `AE-MCP-001`, `AE-MCP-002`, `AE-MCP-003`, `AE-CC-001`, `AE-CC-002`, `AE-TEST-001`, `AE-AUTO-001`, `AE-SUPPRESS-001`, `AE-SUPPRESS-002`, `AE-SUPPRESS-003`
 - agent context registry (`agentcontext` — shared source for context and secret scanning, drift guard)
 - blocker-level secret detection with redacted evidence and score cap at `49`: `AE-SEC-001` (agent context), `AE-SEC-002` (MCP config)
 - MCP config scanning of `.mcp.json` / `mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`: server pinning (`AE-MCP-001`), trusted-remote allowlist via `charter.yaml` (`AE-MCP-002`), and remote auth declaration (`AE-MCP-003`)

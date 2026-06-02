@@ -336,7 +336,7 @@ final = min(base, applicable_cap)
 <h3>charter init — Getting Started</h3>
 <p>Scaffold the <em>missing</em> agent context files from a blank repo in under 2 minutes — create-missing-only, never overwriting or deleting a user file (<code>--dry-run</code> previews the file plan). Charter detects your language, CI platform, and agent tools automatically and writes <code>AGENTS.md</code>, <code>charter.yaml</code>, <code>.gitignore</code>, <code>ARCHITECTURE.md</code>, <code>.env.example</code>, and <code>.claude/settings.json</code> (when Claude is detected or requested). Running <code>charter init</code> then <code>charter doctor</code> immediately after scores ≥ 80 out of the box for Go projects — measured 95 on a blank Go repo (residual AE-ENV-001/AE-CI-002 only).</p>
 <pre><code>❯ charter init
-  ✦ Charter v1.0.0  ·  Analyzing project...
+  [C] charter v1.0.0  ·  Analyzing project...
   Detected
     language  Go 1.26
     CI        GitHub Actions
@@ -365,7 +365,7 @@ charter init --yes --profile strict --agents claude,cursor
 </ul>
 <p><strong>Passing scan:</strong></p>
 <pre><code>❯ charter doctor
-  ✦ Charter v1.0.0  ·  my-repo / HEAD  ·  31ms
+  [C] charter v1.0.0  ·  my-repo / HEAD  ·  31ms
   Detected  Go  ·  Bun  ·  Python  ·  hook  hk
   ──────────────────────────────────────────────────────────────
   Scanning
@@ -395,7 +395,7 @@ charter init --yes --profile strict --agents claude,cursor
 </code></pre>
 <p><strong>Single-rule targeted scan:</strong></p>
 <pre><code>❯ charter doctor --rule AE-SEC-001
-  ✦ Charter v1.0.0  ·  12ms  ·  secrets scan only
+  [C] charter v1.0.0  ·  12ms  ·  secrets scan only
   ✗ BLOCKER  AE-SEC-001  AGENTS.md:14
   │
   │  Secret detected in agent-visible context file
@@ -412,7 +412,7 @@ charter init --yes --profile strict --agents claude,cursor
 <pre><code>❯ charter doctor --format sarif \
       --out charter.sarif \
       --threshold 80
-  ✦ Charter v1.0.0  ·  SARIF 2.1.0
+  [C] charter v1.0.0  ·  SARIF 2.1.0
   Scanned  15 rules  ·  3 findings
   ├  AE-SEC-001  BLOCKER  AGENTS.md:14
   ├  AE-MCP-001  HIGH     .mcp.json:7
@@ -432,7 +432,7 @@ score=49 gate=FAIL threshold=80 exit=1
 </code></pre>
 <p><strong>SPDX output:</strong></p>
 <pre><code>❯ charter report --format spdx --out sbom.spdx
-  ✦ Charter v1.0.0  ·  SPDX 2.3
+  [C] charter v1.0.0  ·  SPDX 2.3
   Written  sbom.spdx  (agent tool inventory)
   Exit     0
 </code></pre>
@@ -490,7 +490,7 @@ backups: .charter/backups/20260601T212756Z
 <pre><code>❯ charter suppress AE-CC-001 \
       --reason &quot;Claude config lives in infra repo&quot; \
       --expires 90d
-  ✦ Charter v1.0.0
+  [C] charter v1.0.0
   Suppressing  AE-CC-001  Missing agent config files
   Reason       Claude config lives in infra repo
   Expires      2026-08-16 (90 days)

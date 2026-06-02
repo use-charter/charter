@@ -12,7 +12,7 @@ Make Charter's terminal surface world-class without touching its machine contrac
 ## Scope
 
 ### In scope
-- **Charm v2 stack** (`charm.land/bubbletea/v2` v2.0.7, `charm.land/lipgloss/v2` v2.0.3, `charm.land/bubbles/v2` v2.1.0) + **`charm.land/fang` v1.0.0** wrapping the Cobra root (styled help/usage/errors, `--version`, man pages). `glamour` only if markdown is rendered in-TUI.
+- **Charm v2 stack** (`charm.land/bubbletea/v2` v2.0.7, `charm.land/lipgloss/v2` v2.0.3, `charm.land/bubbles/v2` v2.1.0) + **`github.com/charmbracelet/fang` v1.0.0** wrapping the Cobra root (styled help/usage/errors, `--version`, man pages). `glamour` only if markdown is rendered in-TUI.
 - `internal/terminal` — capability detection + the adaptive palette (the design tokens → Lipgloss).
 - `internal/render/text` — the **styled** non-interactive renderer for `doctor` (TTY) + its plain/mono fallback (pipe/`NO_COLOR`/CI), matching the design references.
 - `internal/tui` — the `charter doctor -i/--interactive` master-detail browser.
