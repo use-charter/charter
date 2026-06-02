@@ -159,8 +159,13 @@ func TestRenderStyledTrueColor(t *testing.T) {
 		}
 	}
 
-	// TrueColor uses the unicode glyph set.
-	if !strings.Contains(out, "✦") || !strings.Contains(out, "✗") {
+	// The brand wordmark is the committed [C] mark on every tier.
+	if !strings.Contains(out, "[C] charter") {
+		t.Errorf("expected the [C] brand wordmark, got:\n%s", out)
+	}
+	// TrueColor still uses the unicode severity glyph set (e.g. the ✗ cross for
+	// the BLOCKER finding).
+	if !strings.Contains(out, "✗") {
 		t.Errorf("expected unicode glyphs on the TrueColor path, got:\n%s", out)
 	}
 	// Hyperlinks were disabled for this case: no OSC 8 file targets.
@@ -209,8 +214,8 @@ func TestRenderStyledANSI16(t *testing.T) {
 	if strings.Contains(out, "✦") || strings.Contains(out, "✗") {
 		t.Errorf("expected ASCII glyph fallback on ANSI16, got:\n%s", out)
 	}
-	if !strings.Contains(out, "* charter") {
-		t.Errorf("expected ASCII brand glyph on ANSI16, got:\n%s", out)
+	if !strings.Contains(out, "[C] charter") {
+		t.Errorf("expected the [C] brand wordmark on ANSI16, got:\n%s", out)
 	}
 	if !strings.Contains(out, "|") {
 		t.Errorf("expected ASCII card bar on ANSI16, got:\n%s", out)
@@ -373,5 +378,103 @@ func TestRenderStyledUnknownSeverity(t *testing.T) {
 
 	if !strings.Contains(out, "AE-X-000") || !strings.Contains(out, "WEIRD") {
 		t.Errorf("expected unknown-severity finding rendered with its label, got:\n%s", out)
+	}
+}
+
+// TestRenderFocusedPlainSingleRule pins the focused plain projection for one
+// rule: a filtered header plus that rule's plain finding block, and crucially
+// no score line and no scorecard (a partial view must not imply a verdict).
+func TestRenderFocusedPlainSingleRule(t *testing.T) {
+	t.Parallel()
+
+	const want = "charter doctor — filtered: AE-SEC-001\n" +
+		"AE-SEC-001 BLOCKER Secret detected\n" +
+		"  location: AGENTS.md:14\n" +
+		"  - OPENAI_API_KEY=...\n" +
+		"  remediation: Remove key\n"
+
+	got := RenderFocused(sampleResult(), []string{"AE-SEC-001"}, disabledCaps(), paletteFor(disabledCaps()))
+	if string(got) != want {
+		t.Fatalf("focused plain render drifted\n--- got ---\n%q\n--- want ---\n%q", got, want)
+	}
+	if bytes.IndexByte(got, 0x1b) != -1 {
+		t.Fatalf("focused plain render must contain zero ANSI escape bytes, got: %q", got)
+	}
+	out := string(got)
+	for _, unwanted := range []string{"score:", "readiness by category", "AE-MCP-001"} {
+		if strings.Contains(out, unwanted) {
+			t.Fatalf("focused plain render must omit %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+// TestRenderFocusedPlainMultiRule covers comma-joined headers and multiple
+// matched findings in scan order.
+func TestRenderFocusedPlainMultiRule(t *testing.T) {
+	t.Parallel()
+
+	got := string(RenderFocused(sampleResult(), []string{"AE-SEC-001", "AE-CI-002"}, disabledCaps(), paletteFor(disabledCaps())))
+
+	if !strings.HasPrefix(got, "charter doctor — filtered: AE-SEC-001, AE-CI-002\n") {
+		t.Fatalf("expected a comma-joined filtered header, got:\n%s", got)
+	}
+	for _, want := range []string{"AE-SEC-001 BLOCKER", "AE-CI-002 LOW"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("focused render missing %q, got:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "AE-MCP-001") || strings.Contains(got, "AE-ENV-001") {
+		t.Fatalf("focused render must include only the selected rules, got:\n%s", got)
+	}
+	// AE-SEC-001 precedes AE-CI-002 in the scan order; the focused view keeps it.
+	if strings.Index(got, "AE-SEC-001") > strings.Index(got, "AE-CI-002") {
+		t.Fatalf("focused render must preserve scan order, got:\n%s", got)
+	}
+}
+
+// TestRenderFocusedNoMatch covers the empty-match note shown when a selected
+// rule produced no finding.
+func TestRenderFocusedNoMatch(t *testing.T) {
+	t.Parallel()
+
+	const want = "charter doctor — filtered: AE-CTX-001\n" + focusedNote + "\n"
+	got := string(RenderFocused(sampleResult(), []string{"AE-CTX-001"}, disabledCaps(), paletteFor(disabledCaps())))
+	if got != want {
+		t.Fatalf("focused no-match render = %q, want %q", got, want)
+	}
+}
+
+// TestRenderFocusedStyled covers the styled focused path: ANSI present, the
+// brand + filtered header, the selected finding, and no score/scorecard.
+func TestRenderFocusedStyled(t *testing.T) {
+	t.Parallel()
+
+	caps := trueColorCaps(false)
+	got := RenderFocused(sampleResult(), []string{"AE-SEC-001"}, caps, paletteFor(caps))
+
+	if bytes.IndexByte(got, 0x1b) == -1 {
+		t.Fatalf("focused styled render must contain ANSI escape bytes, got: %q", got)
+	}
+	out := string(got)
+	for _, want := range []string{"[C] charter", "filtered:", "AE-SEC-001", "Secret detected", "Remove key"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("focused styled render missing %q\nfull output:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{"readiness by category", "/100", "AE-MCP-001"} {
+		if strings.Contains(out, unwanted) {
+			t.Errorf("focused styled render must omit %q, got:\n%s", unwanted, out)
+		}
+	}
+}
+
+// TestRenderFocusedStyledNoMatch covers the styled empty-match note.
+func TestRenderFocusedStyledNoMatch(t *testing.T) {
+	t.Parallel()
+
+	caps := trueColorCaps(false)
+	out := string(RenderFocused(sampleResult(), []string{"AE-CTX-001"}, caps, paletteFor(caps)))
+	if !strings.Contains(out, focusedNote) {
+		t.Errorf("expected the empty-match note in the styled focused view, got:\n%s", out)
 	}
 }

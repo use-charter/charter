@@ -42,6 +42,73 @@ func Render(result doctor.Result, caps terminal.Capabilities, pal terminal.Palet
 	return renderStyled(result, caps, pal)
 }
 
+// RenderFocused renders a filtered projection of result limited to the findings
+// whose RuleID is in ruleIDs (ruleIDs also drives the filtered header, in the
+// caller's order). It is the focused counterpart of Render for `doctor --rule`
+// and DELIBERATELY omits the score and the readiness scorecard: a partial view
+// must never imply a 0–100 verdict. Like Render it branches solely on
+// caps.ColorEnabled() — plain (ANSI-free) when disabled, styled otherwise.
+func RenderFocused(result doctor.Result, ruleIDs []string, caps terminal.Capabilities, pal terminal.Palette) []byte {
+	if !caps.ColorEnabled() {
+		return renderFocusedPlain(result, ruleIDs)
+	}
+	return renderFocusedStyled(result, ruleIDs, caps, pal)
+}
+
+// filterFindings keeps the findings whose RuleID is in ruleIDs, preserving the
+// scan order so the focused view stays deterministic.
+func filterFindings(all []findings.Finding, ruleIDs []string) []findings.Finding {
+	want := make(map[string]bool, len(ruleIDs))
+	for _, id := range ruleIDs {
+		want[id] = true
+	}
+	matched := make([]findings.Finding, 0, len(all))
+	for _, f := range all {
+		if want[f.RuleID] {
+			matched = append(matched, f)
+		}
+	}
+	return matched
+}
+
+// focusedNote is shown when none of the selected rules produced a finding.
+const focusedNote = "no findings for the selected rule(s)"
+
+func renderFocusedPlain(result doctor.Result, ruleIDs []string) []byte {
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, "charter doctor — filtered: %s\n", strings.Join(ruleIDs, ", "))
+	matched := filterFindings(result.Findings, ruleIDs)
+	if len(matched) == 0 {
+		fmt.Fprintln(&buf, focusedNote)
+		return buf.Bytes()
+	}
+	for _, f := range matched {
+		writePlainFinding(&buf, f)
+	}
+	return buf.Bytes()
+}
+
+func renderFocusedStyled(result doctor.Result, ruleIDs []string, caps terminal.Capabilities, pal terminal.Palette) []byte {
+	r := newStyler(caps, pal)
+
+	var b bytes.Buffer
+	heading := r.style(terminal.TextInfo).Bold(true).Render(r.g.brand+" charter") +
+		r.style(terminal.TextTertiary).Render(" — filtered: ") +
+		r.style(terminal.TextInfo).Bold(true).Render(strings.Join(ruleIDs, ", "))
+	fmt.Fprintln(&b, heading)
+	fmt.Fprintln(&b, r.divider())
+
+	matched := filterFindings(result.Findings, ruleIDs)
+	if len(matched) == 0 {
+		fmt.Fprintln(&b, r.style(terminal.TextSuccess).Render(focusedNote))
+		return b.Bytes()
+	}
+	for _, f := range matched {
+		r.writeFinding(&b, result.Root, f)
+	}
+	return b.Bytes()
+}
+
 // renderPlain reproduces Charter's historical text output verbatim. Any change
 // here breaks the byte-identical non-TTY contract; the containment test guards
 // it. Keep it a pure projection with the standard library only.
@@ -49,18 +116,7 @@ func renderPlain(result doctor.Result) []byte {
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, "charter doctor: %s\n", result.Root)
 	for _, finding := range result.Findings {
-		fmt.Fprintf(&buf, "%s %s %s\n", finding.RuleID, finding.Severity, finding.Summary)
-		for _, loc := range finding.Locations {
-			if loc.Line > 0 {
-				fmt.Fprintf(&buf, "  location: %s:%d\n", loc.Path, loc.Line)
-			} else {
-				fmt.Fprintf(&buf, "  location: %s\n", loc.Path)
-			}
-		}
-		for _, evidence := range finding.Evidence {
-			fmt.Fprintf(&buf, "  - %s\n", evidence)
-		}
-		fmt.Fprintf(&buf, "  remediation: %s\n", finding.Remediation)
+		writePlainFinding(&buf, finding)
 	}
 	for _, s := range result.Suppressed {
 		fmt.Fprintf(&buf, "suppressed: %s (%s)", s.Finding.RuleID, s.Source)
@@ -77,6 +133,25 @@ func renderPlain(result doctor.Result) []byte {
 	}
 	fmt.Fprintf(&buf, "score: %d (threshold %d)\n", result.Score.Final, result.Threshold)
 	return buf.Bytes()
+}
+
+// writePlainFinding emits one finding in the historical plain format (rule line,
+// locations, evidence, remediation). It is the shared projection used by both
+// renderPlain and the focused plain view; changing it changes the byte-identical
+// non-TTY contract, which the containment test guards.
+func writePlainFinding(buf *bytes.Buffer, finding findings.Finding) {
+	fmt.Fprintf(buf, "%s %s %s\n", finding.RuleID, finding.Severity, finding.Summary)
+	for _, loc := range finding.Locations {
+		if loc.Line > 0 {
+			fmt.Fprintf(buf, "  location: %s:%d\n", loc.Path, loc.Line)
+		} else {
+			fmt.Fprintf(buf, "  location: %s\n", loc.Path)
+		}
+	}
+	for _, evidence := range finding.Evidence {
+		fmt.Fprintf(buf, "  - %s\n", evidence)
+	}
+	fmt.Fprintf(buf, "  remediation: %s\n", finding.Remediation)
 }
 
 // dividerWidth is the fixed rule length under the header and above the score.
@@ -104,20 +179,31 @@ type glyphs struct {
 	barEmpty string
 }
 
+// brandMark is Charter's committed wordmark glyph (docs/internal/designs/brand/
+// mark.svg). It is plain ASCII so it renders on every terminal, hence it is the
+// brand on every tier rather than degrading like the decorative glyphs.
+const brandMark = "[C]"
+
 var (
-	unicodeGlyphs = glyphs{brand: "✦", divider: "─", bar: "│", pass: "✓", fail: "✗", warn: "⚠", bullet: "•", barFull: "█", barEmpty: "░"}
-	asciiGlyphs   = glyphs{brand: "*", divider: "-", bar: "|", pass: "+", fail: "x", warn: "!", bullet: "-", barFull: "#", barEmpty: "-"}
+	unicodeGlyphs = glyphs{brand: brandMark, divider: "─", bar: "│", pass: "✓", fail: "✗", warn: "⚠", bullet: "•", barFull: "█", barEmpty: "░"}
+	asciiGlyphs   = glyphs{brand: brandMark, divider: "-", bar: "|", pass: "+", fail: "x", warn: "!", bullet: "-", barFull: "#", barEmpty: "-"}
 )
 
-func renderStyled(result doctor.Result, caps terminal.Capabilities, pal terminal.Palette) []byte {
-	// Unicode glyphs are only assumed on TrueColor terminals; everything poorer
-	// falls back to ASCII so the layout stays intact on conservative emulators.
+// newStyler resolves the presentation context for a styled render: the unicode
+// glyph set on TrueColor, the ASCII fallback on every poorer tier so the layout
+// stays intact on conservative emulators.
+func newStyler(caps terminal.Capabilities, pal terminal.Palette) styler {
 	r := styler{caps: caps, pal: pal, unicode: caps.Tier == terminal.TrueColor}
 	if r.unicode {
 		r.g = unicodeGlyphs
 	} else {
 		r.g = asciiGlyphs
 	}
+	return r
+}
+
+func renderStyled(result doctor.Result, caps terminal.Capabilities, pal terminal.Palette) []byte {
+	r := newStyler(caps, pal)
 
 	var b bytes.Buffer
 
