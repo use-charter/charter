@@ -1,0 +1,31 @@
+<!--
+  Charter PWA maskable icon - 512x512 source.
+  Opaque background plus the [C] mark inside the 80% safe zone, so Android's
+  circular mask never clips it (mark corners sit about 194px from centre,
+  within the 205px safe radius). Export to icon-maskable-512.png and reference
+  it with purpose "maskable" in manifest.json.
+  Geometry reused from mark.svg (64 grid), scaled 5.5x and centred via
+  translate(80 80).
+-->
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"
+     role="img" aria-label="Charter">
+  <title>Charter</title>
+
+  <!-- Opaque background (required for maskable) -->
+  <rect width="512" height="512" fill="#0D1117"/>
+
+  <!-- [C] mark, padded into the maskable safe zone -->
+  <g transform="translate(80 80) scale(5.5)" fill="#FFFFFF">
+    <!-- Left bracket -->
+    <rect x="3"  y="12" width="4"  height="40"/>
+    <rect x="3"  y="12" width="11" height="4"/>
+    <rect x="3"  y="48" width="11" height="4"/>
+    <!-- Right bracket -->
+    <rect x="57" y="12" width="4"  height="40"/>
+    <rect x="50" y="12" width="11" height="4"/>
+    <rect x="50" y="48" width="11" height="4"/>
+    <!-- Geometric C -->
+    <path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5"
+          fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="butt"/>
+  </g>
+</svg>
