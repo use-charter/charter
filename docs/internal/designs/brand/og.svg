@@ -1,0 +1,76 @@
+<!--
+  Charter OpenGraph image — 1200×630 design source (1.91:1 aspect).
+  This SVG is the canonical layout reference; generate the production og.png via:
+    • takumi (github.com/kane50613/takumi) — a fast Rust, next/og-compatible
+      engine. Port this layout to a takumi template and render to PNG. Preferred.
+    • Or rasterize this SVG with a browser engine (Playwright page.screenshot)
+      so the Google Fonts @import below resolves.
+  Keep og.png ≤ 300 KB (WhatsApp drops larger). Fonts: Ruda 900 + IBM Plex Mono.
+-->
+<svg viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Charter — AI-agent readiness, scored.</title>
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Ruda:wght@900&amp;display=swap');
+    </style>
+  </defs>
+
+  <!-- Background: Charter Dark -->
+  <rect width="1200" height="630" fill="#0D1117"/>
+
+  <!-- Subtle grid accent — 60px grid, 3% opacity -->
+  <defs>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M60,0 L0,0 0,60" fill="none" stroke="#FFFFFF" stroke-width="0.5" opacity="0.04"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- ── Mark [C] centred, ~160px scale ── -->
+  <!--
+    bw=10, cl=25, bh=100
+    Centre: x=600, y=235
+    left outer: 520, right outer: 680
+  -->
+
+  <!-- Left bracket [ -->
+  <rect x="520" y="185" width="10"  height="100" fill="#FFFFFF"/>
+  <rect x="520" y="185" width="25"  height="10"  fill="#FFFFFF"/>
+  <rect x="520" y="275" width="25"  height="10"  fill="#FFFFFF"/>
+
+  <!-- Right bracket ] -->
+  <rect x="670" y="185" width="10"  height="100" fill="#FFFFFF"/>
+  <rect x="655" y="185" width="25"  height="10"  fill="#FFFFFF"/>
+  <rect x="655" y="275" width="25"  height="10"  fill="#FFFFFF"/>
+
+  <!--
+    Geometric C · centre (600,235) · r=27 · stroke-width=18.5 · 300° arc
+    Start −30°: (600 + 27·0.866, 235 − 27·0.5) = (623.4, 221.5)
+    End   +30°: (623.4, 248.5)
+  -->
+  <path d="M623.4,221.5 A27,27 0 1 0 623.4,248.5"
+        fill="none" stroke="#FFFFFF"
+        stroke-width="18.5" stroke-linecap="butt"/>
+
+  <!-- ── Wordmark ── -->
+  <text x="600" y="360"
+        font-family="'Ruda', system-ui, sans-serif"
+        font-weight="900" font-size="80"
+        fill="#FFFFFF" text-anchor="middle" dominant-baseline="middle"
+        letter-spacing="-3.2">Charter</text>
+
+  <!-- ── Tagline ── -->
+  <text x="600" y="430"
+        font-family="'IBM Plex Mono', ui-monospace, monospace"
+        font-weight="400" font-size="20"
+        fill="#9CA3AF" text-anchor="middle" dominant-baseline="middle"
+        letter-spacing="0.5">AI-agent readiness, scored.</text>
+
+  <!-- ── Footer: URL + version ── -->
+  <text x="600" y="590"
+        font-family="'IBM Plex Mono', ui-monospace, monospace"
+        font-weight="400" font-size="14"
+        fill="#6B7280" text-anchor="middle" dominant-baseline="middle"
+        letter-spacing="0.5">use-charter.dev · v1.0.0 · Apache-2.0</text>
+</svg>
