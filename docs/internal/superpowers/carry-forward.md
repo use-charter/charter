@@ -4,8 +4,8 @@ Last reviewed: 2026-06-02 (carry-forward cleanup pass — all code-resolvable it
 
 Durable record of items deliberately **deferred** during slice execution, so they're followed up when their trigger arrives. This is the cross-slice hygiene/debt list — distinct from:
 
-- the **launch roadmap** (`2026-06-01-v1-launch-roadmap.md`) — the slice sequence and the Slice 17 production-release checklist (tap→public, seed `use-charter/charter-action`, first signed tag, branch protection, etc.);
-- the roadmap's **"Deferred to Phase 1.5 / v1.1"** note (`charter serve`, `--format toon|json-compact`, `--for-agent`, standalone `charter report --format spdx`, AE-SEC-001 → full Gitleaks ruleset, deep multi-agent conflict detection).
+- the **launch roadmap** (`2026-06-01-v1-launch-roadmap.md`) — the slice sequence and the Slice 20 production-release checklist (tap→public, seed `use-charter/charter-action`, first signed tag, branch protection, etc.);
+- the roadmap's **"Deferred to Phase 1.5 / v1.1"** note (`charter serve`, `--format toon|json-compact`, `--for-agent`, `charter report --serve` + `charter report --format spdx`, AE-SEC-001 → full Gitleaks ruleset, deep multi-agent conflict detection, always-on TUI watch mode).
 
 When an item is resolved, strike it (or move it to a "Done" note) in the slice that closes it.
 
@@ -15,18 +15,19 @@ All **code-resolvable** carry-forward debt was cleared in the 2026-06-02 cleanup
 
 | # | Item | Why it can't be code-closed now | Trigger / target | Source |
 |---|---|---|---|---|
-| CF-4 | `go install go.use-charter.dev/charter/cmd/charter@…` won't resolve until `go.use-charter.dev` serves a `go-import` meta tag. | Needs the live web host + DNS (the meta file can be built in-repo, but resolution requires deployment). Binaries + Homebrew cover install meanwhile. | Slice 16 (web) build + go-public DNS/deploy | Slice 9 |
-| CF-9 | SARIF `helpUri`s point at `https://use-charter.dev/rules/AE-*`, dead until the rule docs pages are **deployed**. | The page *content* can be built in Slice 15; the links only resolve once the docs site is live at the domain. | **Hard launch dependency** — Slice 15 build + deploy | Slice 8 |
-| CF-10 | `use-charter` GitHub org hardening: verify the `use-charter.dev` domain (DNS TXT) and require 2FA for members. | Pure GitHub org-admin UI action; no repo code involved. | go-public ops / Slice 17 checklist | Org migration |
+| CF-4 | `go install go.use-charter.dev/charter/cmd/charter@…` won't resolve until `go.use-charter.dev` serves a `go-import` meta tag. | Needs the live web host + DNS (the meta file can be built in-repo, but resolution requires deployment). Binaries + Homebrew cover install meanwhile. | Slice 18/19 (web) build + go-public DNS/deploy | Slice 9 |
+| CF-9 | SARIF `helpUri`s point at `https://use-charter.dev/rules/AE-*`, dead until the rule docs pages are **deployed**. | The page *content* can be built in Slice 18; the links only resolve once the docs site is live at the domain. | **Hard launch dependency** — Slice 18 build + deploy | Slice 8 |
+| CF-10 | `use-charter` GitHub org hardening: verify the `use-charter.dev` domain (DNS TXT) and require 2FA for members. | Pure GitHub org-admin UI action; no repo code involved. | go-public ops / Slice 20 checklist | Org migration |
 | CF-11 | macOS release binaries are cosign-signed but **not Apple-notarized** (the Homebrew cask strips `com.apple.quarantine` interim). | Notarization needs an Apple Developer cert we don't have. | Post-launch, when an Apple Developer cert is available | Slice 9 |
-| CF-12 | MCP catalog curation is an ongoing founder duty. **Done so far:** T1.6.3 FP-validation (11 real repos, **0% FP**), ~24 servers + 60+ vendor hosts, real `mcp-server-git` CVEs. **Ongoing:** broaden the FP run, keep advisories/versions current; behind-stable version data is only seeded for `filesystem`. | Human curation against a fast-moving ecosystem (real CVE IDs only, ADR-0021). | Refresh + re-run FP validation at the **Slice 17** release gate; ongoing via T1.6.2 | Slice 13 |
+| CF-12 | MCP catalog curation is an ongoing founder duty. **Done so far:** T1.6.3 FP-validation (11 real repos, **0% FP**), ~24 servers + 60+ vendor hosts, real `mcp-server-git` CVEs. **Ongoing:** broaden the FP run, keep advisories/versions current; behind-stable version data is only seeded for `filesystem`. | Human curation against a fast-moving ecosystem (real CVE IDs only, ADR-0021). | Refresh + re-run FP validation at the **Slice 20** release gate; ongoing via T1.6.2 | Slice 13 |
 
 ## Phase 1.5 / post-launch product backlog
 
 Canonical list of feature-level deferrals (supersedes the roadmap's short "Deferred to Phase 1.5" note). Not launch blockers; pulled by Phase 1 validation signals.
 
-- **Commands:** `charter serve` (MCP server exposing `charter_doctor`/`charter_score`/`charter_fix`/`charter_explain`); `charter explain <RULE>` (reuses the rule catalog); standalone `charter report --format spdx`.
-- **Output:** `--format toon`, `--format json-compact`, `--for-agent`; `--no-color`/plain-CI text variant.
+- **Commands:** `charter serve` (MCP server exposing `charter_doctor`/`charter_score`/`charter_fix`/`charter_explain`); `charter report --serve` (hardened loopback report viewer — `127.0.0.1` + Host-allowlist + token + auto-shutdown, ADR-0025) and `charter report --format spdx` (SBOM). *(`charter explain` and the HTML `charter report` shipped in Slices 15/16.)*
+- **Output:** `--format toon`, `--format json-compact`, `--for-agent`. *(`--no-color` + styled/plain TTY-aware `doctor` output shipped in Slice 15.)*
+- **Terminal/report:** always-on TUI watch / live re-scan + `$EDITOR` spawn from the `doctor -i` TUI (Slice 15 deferred).
 - **SARIF:** 2.2 upgrade; `artifacts[]`/`invocation` enrichment; content-based (line-shift-resilient) `partialFingerprints` (today's are position-based).
 - **Policy/CLI:** `charter doctor --rule` filtering; rule-level enable/disable, per-rule severity overrides, `rules.ignore`, `rules.AE-CTX-001.token_budget` (see CF-3).
 - **Rules:** `AE-SEC-001` → full Gitleaks ruleset (160+ detectors); full 7-agent config parsing (T1.2.1) + deep multi-agent conflict detection (T1.2.2) — current coverage is lighter than the architecture envisions.

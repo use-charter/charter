@@ -26,6 +26,13 @@ tmp/
 .hk/
 node_modules/
 
+# Local agent skills — kept local, never committed; agents still read them
+# from disk (no .cursorignore, so file access is unaffected) and the harness
+# surfaces .agents/skills/ independently of git.
+.agents/
+skills-lock.json
+.claude/
+
 # Editors
 .idea/
 .vscode/

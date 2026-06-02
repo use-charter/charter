@@ -116,7 +116,7 @@ final = min(base, applicable_cap)
 
 ## §1.8 Command Gallery
 
-Six core commands ship in v1.0: `charter init`, `charter doctor`, `charter report`, `charter fix`, `charter suppress`, and `charter version`. The examples below show the v1 launch surface first, then a clearly labeled Phase 1.5 / v1.1 preview addendum for `charter serve`, `--for-agent`, `--format toon`, and `--format json-compact`.
+Six core commands ship in v1.0: `charter init`, `charter doctor`, `charter report`, `charter fix`, `charter suppress`, and `charter version`. `charter doctor` renders **pristine styled output** in a TTY (color-tier / `NO_COLOR`-aware, OSC 8 hyperlinks, the category scorecard) and a **plain, byte-stable** stream when piped or driven by CI/agents; `charter doctor -i/--interactive` opens an interactive TUI (filter / search / drill-in / rescan), and `charter doctor` also accepts `--rule`, `--color`, and `--no-color` (ADR-0024). `charter report --format html` (default) writes a **self-contained, offline single-file HTML report** (`--out`, `--open`; `--format markdown`/`json` reuse the doctor renderers; `--format spdx` is Phase 1.5) (ADR-0025). `charter explain <RULE>` prints a rule's rationale, remediation, and references. The interactive TUI and report visual language is canonical in `docs/internal/designs/*.html` + `docs/internal/designs/DESIGN-TOKENS.md`. The examples below show the v1 launch surface first, then a clearly labeled Phase 1.5 / v1.1 preview addendum for `charter serve`, `--for-agent`, `--format toon`, and `--format json-compact`.
 
 ---
 

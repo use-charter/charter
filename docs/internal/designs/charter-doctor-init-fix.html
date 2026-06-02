@@ -1,0 +1,339 @@
+
+<h2 class="sr-only">Enhanced Charter CLI TUI — four screens with fixed vertical stepper alignment in init screen</h2>
+
+<style>
+.tt{background:transparent;border:none;border-bottom:2px solid transparent;padding:9px 15px;font-family:var(--font-mono);font-size:11.5px;color:var(--color-text-secondary);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tt.act{color:var(--color-text-info);border-bottom-color:var(--color-text-info);}
+.tt:hover:not(.act){color:var(--color-text-primary);}
+.g{color:var(--color-text-success);}.r{color:var(--color-text-danger);}.y{color:var(--color-text-warning);}.b{color:var(--color-text-info);}.d2{color:var(--color-text-secondary);}.d3{color:var(--color-text-tertiary);}
+.sv{display:inline-block;padding:0 7px;font-size:10.5px;font-weight:500;letter-spacing:.06em;border-radius:3px;border:0.5px solid;line-height:20px;}
+.fin{border-left:2px solid;border-radius:0;padding:10px 14px;margin:7px 0;background:var(--color-background-tertiary);}
+.da{display:block;padding:2px 8px;font-size:12px;}
+.abtn{font-family:var(--font-mono);font-size:12px;border-radius:3px;padding:3px 10px;cursor:pointer;border:0.5px solid;}
+</style>
+
+<div style="font-family:var(--font-mono);font-size:13px;line-height:1.65;">
+
+  <div style="display:flex;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-bottom:none;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;overflow-x:auto;">
+    <button class="tt act" onclick="st(0)">doctor · scan</button>
+    <button class="tt" onclick="st(1)">doctor · fail</button>
+    <button class="tt" onclick="st(2)">init · stepper</button>
+    <button class="tt" onclick="st(3)">fix · apply</button>
+  </div>
+
+  <div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:0 0 var(--border-radius-lg) var(--border-radius-lg);overflow:hidden;">
+
+    <div style="display:flex;align-items:center;gap:7px;padding:9px 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-tertiary);">
+      <span style="width:11px;height:11px;border-radius:50%;background:var(--color-text-danger);opacity:.7;display:inline-block;flex-shrink:0;"></span>
+      <span style="width:11px;height:11px;border-radius:50%;background:var(--color-text-warning);opacity:.7;display:inline-block;flex-shrink:0;"></span>
+      <span style="width:11px;height:11px;border-radius:50%;background:var(--color-text-success);opacity:.7;display:inline-block;flex-shrink:0;"></span>
+      <span style="flex:1;text-align:center;font-size:11px;" class="d3">charter — zsh</span>
+    </div>
+
+    <!-- ── SCREEN 0: doctor animated scan ── -->
+    <div id="s0" style="padding:20px 24px;min-height:500px;display:flex;flex-direction:column;">
+      <div style="margin-bottom:14px;"><span class="g">❯</span>&nbsp;charter doctor</div>
+      <div style="margin-bottom:3px;"><span class="b" style="font-weight:500;">✦ charter</span><span class="d2">&nbsp; v1.0.0 &nbsp;·&nbsp; my-repo / HEAD</span></div>
+      <div class="d2" style="margin-bottom:16px;">Detected&nbsp;&nbsp; <span style="color:var(--color-text-primary);">Go 1.26.3 · Bun 1.3.14 · Python 3.12.4</span> · <span class="b">hook hk</span></div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin-bottom:12px;"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <span class="d2" id="slabel">Scanning</span>
+        <span class="d3" style="font-size:11px;" id="stimer"></span>
+        <button onclick="rescan()" class="tt d3" style="margin-left:auto;font-size:11px;padding:2px 8px;border:0.5px solid var(--color-border-tertiary);border-radius:3px;">↺ rescan</button>
+      </div>
+      <div id="srows" style="padding-left:4px;margin-bottom:10px;"></div>
+      <div id="sfooter" style="display:none;">
+        <div class="d2" style="margin-bottom:4px;">Checked 18 rules across 8 groups &nbsp;·&nbsp; <span class="g">0 findings <i class="ti ti-check" style="font-size:12px;vertical-align:-1px;" aria-hidden="true"></i></span></div>
+        <div style="border-top:0.5px solid var(--color-border-tertiary);margin:10px 0;"></div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:5px;">
+          <span class="d2" style="width:50px;flex-shrink:0;">Score</span>
+          <span style="font-size:30px;font-weight:500;line-height:1;" class="g">94</span>
+          <span class="d3" style="font-size:14px;">/100</span>
+          <div style="flex:1;max-width:200px;height:6px;background:var(--color-border-tertiary);border-radius:4px;overflow:hidden;">
+            <div style="width:94%;height:100%;background:var(--color-text-success);"></div>
+          </div>
+          <span class="sv" style="background:var(--color-background-success);color:var(--color-text-success);border-color:var(--color-border-success);">PASS &nbsp;<i class="ti ti-check" style="font-size:11px;vertical-align:-1px;" aria-hidden="true"></i></span>
+        </div>
+        <div class="d2" style="margin-left:62px;">Gate &nbsp;&nbsp;&nbsp;threshold 80 &nbsp;·&nbsp; <span class="g">all clear</span></div>
+        <div class="d3" style="margin-left:62px;margin-top:2px;">Exit &nbsp;&nbsp;&nbsp;&nbsp;0</div>
+      </div>
+      <div style="margin-top:auto;padding-top:12px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;" class="d3">
+        [?] help &nbsp;·&nbsp; [q] quit &nbsp;·&nbsp; [↑↓] scroll &nbsp;·&nbsp; [--quiet] silent mode
+      </div>
+    </div>
+
+    <!-- ── SCREEN 1: doctor FAIL ── -->
+    <div id="s1" style="padding:20px 24px;min-height:500px;display:none;flex-direction:column;">
+      <div style="margin-bottom:14px;"><span class="g">❯</span>&nbsp;charter doctor</div>
+      <div style="margin-bottom:3px;"><span class="b" style="font-weight:500;">✦ charter</span><span class="d2">&nbsp; v1.0.0 &nbsp;·&nbsp; my-repo / HEAD &nbsp;·&nbsp; 47ms</span></div>
+      <div class="d2" style="margin-bottom:16px;">Detected&nbsp;&nbsp; <span style="color:var(--color-text-primary);">Go 1.26.3 · Bun 1.3.14</span></div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin-bottom:12px;"></div>
+      <div class="d2" style="margin-bottom:8px;">Findings</div>
+      <div class="fin" style="border-color:var(--color-border-danger);">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:8px;">
+          <span class="r"><i class="ti ti-x" style="font-size:14px;" aria-hidden="true"></i></span>
+          <span class="sv" style="background:var(--color-background-danger);color:var(--color-text-danger);border-color:var(--color-border-danger);">BLOCKER</span>
+          <span class="b" style="font-weight:500;">AE-SEC-001</span>
+          <span class="d3">AGENTS.md:14</span>
+        </div>
+        <div style="color:var(--color-text-primary);margin-bottom:7px;">Secret detected in agent-visible context file</div>
+        <div class="d2" style="font-size:12px;margin-bottom:2px;">Evidence&nbsp; <span style="color:var(--color-text-primary);">OPENAI_API_KEY=sk-proj-••••••••••••••••</span></div>
+        <div class="d2" style="font-size:12px;margin-bottom:2px;">Fix&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Remove key; use <span class="b">$OPENAI_API_KEY</span> env var instead</div>
+        <div class="d2" style="font-size:12px;">Auto-fix&nbsp;&nbsp; <span class="r"><i class="ti ti-x" style="font-size:12px;" aria-hidden="true"></i> no — remediate manually</span></div>
+      </div>
+      <div class="fin" style="border-color:var(--color-border-warning);">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:8px;">
+          <span class="y"><i class="ti ti-alert-triangle" style="font-size:14px;" aria-hidden="true"></i></span>
+          <span class="sv" style="background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning);">HIGH</span>
+          <span class="b" style="font-weight:500;">AE-MCP-001</span>
+          <span class="d3">.mcp.json:7</span>
+          <span style="font-size:10px;padding:1px 5px;border-radius:3px;background:var(--color-background-info);color:var(--color-text-info);border:0.5px solid var(--color-border-info);">OWASP MCP04</span>
+        </div>
+        <div style="color:var(--color-text-primary);margin-bottom:7px;">MCP server not pinned — supply chain risk</div>
+        <div class="d2" style="font-size:12px;margin-bottom:2px;">Evidence&nbsp; <span style="color:var(--color-text-primary);">"mcp-server-git@latest"</span></div>
+        <div class="d2" style="font-size:12px;margin-bottom:2px;">Fix&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="b">charter fix --rule AE-MCP-001</span></div>
+        <div class="d2" style="font-size:12px;">Auto-fix&nbsp;&nbsp; <span class="g"><i class="ti ti-check" style="font-size:12px;" aria-hidden="true"></i> yes</span></div>
+      </div>
+      <div class="fin" style="border-color:var(--color-border-warning);">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:8px;">
+          <span class="y"><i class="ti ti-alert-triangle" style="font-size:14px;" aria-hidden="true"></i></span>
+          <span class="sv" style="background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning);">MEDIUM</span>
+          <span class="b" style="font-weight:500;">AE-ENV-001</span>
+          <span class="d3">toolchain (incomplete)</span>
+        </div>
+        <div style="color:var(--color-text-primary);margin-bottom:7px;">Bun and Python runtimes active but unpinned</div>
+        <div class="d2" style="font-size:12px;margin-bottom:2px;">Fix&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pin in <span class="b">mise.toml</span> or <span class="b">.nvmrc / pyproject.toml</span></div>
+        <div class="d2" style="font-size:12px;">Auto-fix&nbsp;&nbsp; <span class="r"><i class="ti ti-x" style="font-size:12px;" aria-hidden="true"></i> no</span></div>
+      </div>
+      <div class="d2" style="margin:4px 0;">Checked 18 rules &nbsp;·&nbsp; <span class="r">3 findings</span> &nbsp;·&nbsp; 1 BLOCKER &nbsp;·&nbsp; 1 HIGH &nbsp;·&nbsp; 1 MEDIUM</div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin:10px 0;"></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:5px;">
+        <span class="d2" style="width:50px;flex-shrink:0;">Score</span>
+        <span style="font-size:30px;font-weight:500;line-height:1;" class="r">49</span>
+        <span class="d3" style="font-size:14px;">/100</span>
+        <div style="flex:1;max-width:200px;height:6px;background:var(--color-border-tertiary);border-radius:4px;overflow:hidden;">
+          <div style="width:49%;height:100%;background:var(--color-text-danger);"></div>
+        </div>
+        <span class="sv" style="background:var(--color-background-danger);color:var(--color-text-danger);border-color:var(--color-border-danger);">FAIL &nbsp;<i class="ti ti-x" style="font-size:11px;vertical-align:-1px;" aria-hidden="true"></i></span>
+      </div>
+      <div class="d2" style="margin-left:62px;margin-bottom:2px;">Cap&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="r">raw-secret cap active — score ≤ 49</span></div>
+      <div class="d2" style="margin-left:62px;margin-bottom:2px;">Gate&nbsp;&nbsp;&nbsp;&nbsp; threshold 80 &nbsp;·&nbsp; <span class="r">FAIL</span></div>
+      <div class="d3" style="margin-left:62px;margin-bottom:12px;">Exit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1</div>
+      <div style="margin-top:auto;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;" class="d3">
+        [f] filter by severity &nbsp;·&nbsp; [↑↓] scroll &nbsp;·&nbsp; [enter] finding detail &nbsp;·&nbsp; [q] quit
+      </div>
+    </div>
+
+    <!-- ── SCREEN 2: init STEPPER — PATCHED with CSS Grid ── -->
+    <div id="s2" style="padding:20px 24px;min-height:500px;display:none;flex-direction:column;">
+      <div style="margin-bottom:14px;"><span class="g">❯</span>&nbsp;charter init</div>
+      <div style="margin-bottom:16px;"><span class="b" style="font-weight:500;">✦ charter</span><span class="d2">&nbsp; v1.0.0</span></div>
+
+      <!-- PATCH: CSS grid — circles auto-align, connectors auto-stretch to row height -->
+      <div style="display:grid;grid-template-columns:14px 1fr;column-gap:12px;margin-bottom:6px;">
+
+        <!-- Step 1 left: circle + stretching connector -->
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="g" style="font-size:13px;line-height:1;flex-shrink:0;">●</div>
+          <div style="width:1px;flex:1;background:var(--color-border-secondary);margin-top:4px;"></div>
+        </div>
+        <!-- Step 1 right -->
+        <div style="padding-bottom:18px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="font-weight:500;">Detected</span>
+            <span class="d3" style="font-size:11px;">8ms</span>
+          </div>
+          <div style="padding-left:2px;font-size:12px;">
+            <div style="display:flex;gap:14px;padding:2px 0;"><span class="d3" style="width:70px;flex-shrink:0;">language</span><span>Go 1.26.3</span></div>
+            <div style="display:flex;gap:14px;padding:2px 0;"><span class="d3" style="width:70px;flex-shrink:0;">CI</span><span>GitHub Actions</span></div>
+            <div style="display:flex;gap:14px;padding:2px 0;"><span class="d3" style="width:70px;flex-shrink:0;">agents</span><span class="b">Claude Code</span><span class="d3">&nbsp;·&nbsp;</span><span class="b">Cursor</span></div>
+          </div>
+        </div>
+
+        <!-- Step 2 left: circle + stretching connector -->
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="g" style="font-size:13px;line-height:1;flex-shrink:0;">●</div>
+          <div style="width:1px;flex:1;background:var(--color-border-secondary);margin-top:4px;"></div>
+        </div>
+        <!-- Step 2 right -->
+        <div style="padding-bottom:18px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="font-weight:500;">Created</span>
+            <span class="d3" style="font-size:11px;">5 files · 23ms</span>
+          </div>
+          <div style="padding-left:2px;font-size:12px;">
+            <div style="display:flex;align-items:center;padding:3px 0;">
+              <span style="width:190px;flex-shrink:0;">AGENTS.md</span>
+              <span class="d3" style="font-size:9.5px;letter-spacing:3px;flex:1;overflow:hidden;white-space:nowrap;">··········</span>
+              <span class="g" style="flex-shrink:0;margin-left:6px;"><i class="ti ti-check" style="font-size:12px;" aria-hidden="true"></i></span>
+              <span class="d3" style="flex-shrink:0;margin-left:6px;font-size:11px;">universal context</span>
+            </div>
+            <div style="display:flex;align-items:center;padding:3px 0;">
+              <span style="width:190px;flex-shrink:0;">ARCHITECTURE.md</span>
+              <span class="d3" style="font-size:9.5px;letter-spacing:3px;flex:1;overflow:hidden;white-space:nowrap;">··········</span>
+              <span class="g" style="flex-shrink:0;margin-left:6px;"><i class="ti ti-check" style="font-size:12px;" aria-hidden="true"></i></span>
+              <span class="d3" style="flex-shrink:0;margin-left:6px;font-size:11px;">repo overview template</span>
+            </div>
+            <div style="display:flex;align-items:center;padding:3px 0;">
+              <span style="width:190px;flex-shrink:0;">.claude/settings.json</span>
+              <span class="d3" style="font-size:9.5px;letter-spacing:3px;flex:1;overflow:hidden;white-space:nowrap;">··········</span>
+              <span class="g" style="flex-shrink:0;margin-left:6px;"><i class="ti ti-check" style="font-size:12px;" aria-hidden="true"></i></span>
+              <span class="d3" style="flex-shrink:0;margin-left:6px;font-size:11px;">no MCP bootstrap</span>
+            </div>
+            <div style="display:flex;align-items:center;padding:3px 0;">
+              <span style="width:190px;flex-shrink:0;">.env.example</span>
+              <span class="d3" style="font-size:9.5px;letter-spacing:3px;flex:1;overflow:hidden;white-space:nowrap;">··········</span>
+              <span class="g" style="flex-shrink:0;margin-left:6px;"><i class="ti ti-check" style="font-size:12px;" aria-hidden="true"></i></span>
+              <span class="d3" style="flex-shrink:0;margin-left:6px;font-size:11px;">env refs from codebase</span>
+            </div>
+            <div style="display:flex;align-items:center;padding:3px 0;">
+              <span style="width:190px;flex-shrink:0;">charter.yaml</span>
+              <span class="d3" style="font-size:9.5px;letter-spacing:3px;flex:1;overflow:hidden;white-space:nowrap;">··········</span>
+              <span class="g" style="flex-shrink:0;margin-left:6px;"><i class="ti ti-check" style="font-size:12px;" aria-hidden="true"></i></span>
+              <span class="d3" style="flex-shrink:0;margin-left:6px;font-size:11px;">profile: standard</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 left: circle only, no connector -->
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="g" style="font-size:13px;line-height:1;flex-shrink:0;">●</div>
+        </div>
+        <!-- Step 3 right -->
+        <div style="padding-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="font-weight:500;">Validated</span>
+            <span class="d3" style="font-size:11px;">&lt; 50ms</span>
+          </div>
+          <div style="font-size:12px;padding-left:2px;">
+            <span class="d2">score 95/100 · threshold 80 · </span><span class="g">PASS</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin:12px 0 8px;"></div>
+      <div class="d2" style="margin-bottom:8px;"><span class="g">5 files created</span> · 0 skipped · 0 overwritten</div>
+      <div style="margin-bottom:16px;"><span class="b" style="font-weight:500;">›</span>&nbsp;<span class="d2">Next:</span>&nbsp;charter doctor</div>
+      <div style="margin-top:auto;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;" class="d3">
+        [↑↓] scroll &nbsp;·&nbsp; [--yes] non-interactive &nbsp;·&nbsp; [--dry-run] preview plan &nbsp;·&nbsp; [q] quit
+      </div>
+    </div>
+
+    <!-- ── SCREEN 3: fix + apply prompt ── -->
+    <div id="s3" style="padding:20px 24px;min-height:500px;display:none;flex-direction:column;">
+      <div style="margin-bottom:14px;"><span class="g">❯</span>&nbsp;charter fix --dry-run</div>
+      <div style="margin-bottom:3px;"><span class="b" style="font-weight:500;">✦ charter</span><span class="d2">&nbsp; v1.0.0 &nbsp;·&nbsp; 2 fixable findings &nbsp;·&nbsp; dry run — nothing written</span></div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin:12px 0;"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+        <span class="sv" style="background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning);">HIGH</span>
+        <span class="b" style="font-weight:500;">AE-MCP-001</span>
+        <span class="d3">.mcp.json &nbsp;·&nbsp;</span>
+        <span style="font-size:10px;padding:1px 5px;border-radius:3px;background:var(--color-background-info);color:var(--color-text-info);border:0.5px solid var(--color-border-info);">OWASP MCP04</span>
+      </div>
+      <div style="background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;margin-bottom:12px;">
+        <div class="da d3">--- a/.mcp.json</div>
+        <div class="da d3">+++ b/.mcp.json</div>
+        <div class="da b">@@ -7,1 +7,1 @@</div>
+        <div class="da" style="color:var(--color-text-danger);background:var(--color-background-danger);">-&nbsp;&nbsp;&nbsp;&nbsp; "git": { "command": "uvx", "args": ["mcp-server-git@latest"] }</div>
+        <div class="da" style="color:var(--color-text-success);background:var(--color-background-success);">+&nbsp;&nbsp;&nbsp;&nbsp; "git": { "command": "uvx", "args": ["mcp-server-git@2026.1.14"] }</div>
+      </div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin:12px 0;"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+        <span class="sv" style="background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning);">MEDIUM</span>
+        <span class="b" style="font-weight:500;">AE-CTX-004</span>
+        <span class="d3">.gitignore</span>
+      </div>
+      <div style="background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;margin-bottom:12px;">
+        <div class="da d3">--- a/.gitignore</div>
+        <div class="da d3">+++ b/.gitignore</div>
+        <div class="da b">@@ -3,3 +3,7 @@</div>
+        <div class="da d2">&nbsp; .claude/local/</div>
+        <div class="da d2">&nbsp; .cursor/cache/</div>
+        <div class="da" style="color:var(--color-text-success);background:var(--color-background-success);">+# Charter / agent session artifacts</div>
+        <div class="da" style="color:var(--color-text-success);background:var(--color-background-success);">+.charter/ &nbsp;·&nbsp; *.charter-session &nbsp;·&nbsp; .hk/</div>
+      </div>
+      <div style="border-top:0.5px solid var(--color-border-tertiary);margin:12px 0 8px;"></div>
+      <div class="d2" style="margin-bottom:10px;font-size:12px;"><span class="g">2 fixes available</span> &nbsp;·&nbsp; <span class="r">AE-SEC-001 not auto-fixable — remediate manually</span></div>
+      <div id="fixprompt" style="background:var(--color-background-tertiary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:10px;">
+        <div class="d2" style="font-size:12px;margin-bottom:8px;">Apply fixes? Originals backed up to <span class="b">.charter/backups/</span> before each write.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button onclick="doApply()" class="abtn" style="background:var(--color-background-success);color:var(--color-text-success);border-color:var(--color-border-success);">[a] apply all</button>
+          <button class="abtn d2" style="background:transparent;border-color:var(--color-border-secondary);">[s] skip</button>
+          <button class="abtn r" style="background:transparent;border-color:var(--color-border-danger);">[q] quit</button>
+        </div>
+      </div>
+      <div id="applydone" style="display:none;border-left:2px solid var(--color-border-success);border-radius:0;padding:10px 14px;background:var(--color-background-tertiary);">
+        <div class="g" style="margin-bottom:4px;"><i class="ti ti-check" style="font-size:13px;" aria-hidden="true"></i>&nbsp; 2 fixed &nbsp;·&nbsp; <span class="d3" style="font-size:11px;">wrote .mcp.json &nbsp;·&nbsp; wrote .gitignore</span></div>
+        <div class="d2" style="font-size:12px;margin-bottom:2px;">Backups &nbsp;→&nbsp; <span class="b">.charter/backups/20260602T182437Z</span></div>
+        <div class="d3" style="font-size:12px;">AE-SEC-001 skipped — requires manual remediation</div>
+        <div style="margin-top:8px;"><span class="b" style="font-weight:500;">›</span>&nbsp;<span class="d2">Re-run:</span>&nbsp;charter doctor</div>
+      </div>
+      <div style="margin-top:auto;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;" class="d3">
+        [a] apply all &nbsp;·&nbsp; [s] skip &nbsp;·&nbsp; [1-9] apply single &nbsp;·&nbsp; [q] quit
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var CATS=[
+  {l:'context',r:4,ms:8},{l:'secrets',r:2,ms:3},{l:'mcp-safety',r:3,ms:5},
+  {l:'agent-config',r:2,ms:4},{l:'toolchain',r:1,ms:2},{l:'ci',r:1,ms:6},
+  {l:'testing',r:2,ms:2},{l:'governance',r:3,ms:1}
+];
+var FR=['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+var BAR='██████████',PND='··········';
+var cur=0,fr=0,elapsed=0,sT,spinT,elT;
+
+function row(i,state){
+  var c=CATS[i],rw=c.r===1?'rule':'rules';
+  if(state==='d') return '<div style="display:flex;align-items:center;gap:10px;padding:2px 0;"><span style="width:108px;flex-shrink:0;color:var(--color-text-secondary);">'+c.l+'</span><span style="font-size:11px;letter-spacing:-0.5px;color:var(--color-text-success);">'+BAR+'</span><span style="color:var(--color-text-success);"><i class="ti ti-check" style="font-size:12px;" aria-hidden="true"></i></span><span style="font-size:11.5px;color:var(--color-text-tertiary);">'+c.r+' '+rw+' · '+c.ms+'ms</span></div>';
+  if(state==='r') return '<div style="display:flex;align-items:center;gap:10px;padding:2px 0;"><span style="width:108px;flex-shrink:0;color:var(--color-text-secondary);">'+c.l+'</span><span style="font-size:11px;letter-spacing:-0.5px;color:var(--color-text-info);">'+BAR+'</span><span id="sc" style="color:var(--color-text-info);">⠋</span><span style="font-size:11.5px;color:var(--color-text-tertiary);">'+c.r+' '+rw+' · scanning</span></div>';
+  return '<div style="display:flex;align-items:center;gap:10px;padding:2px 0;"><span style="width:108px;flex-shrink:0;color:var(--color-text-tertiary);">'+c.l+'</span><span style="font-size:11px;letter-spacing:-0.5px;color:var(--color-text-tertiary);">'+PND+'</span><span style="color:var(--color-text-tertiary);">·</span><span style="font-size:11.5px;color:var(--color-text-tertiary);">'+c.r+' '+rw+'</span></div>';
+}
+
+function renderRows(){
+  var h='';
+  for(var i=0;i<CATS.length;i++) h+=row(i,i<cur?'d':i===cur?'r':'p');
+  document.getElementById('srows').innerHTML=h;
+}
+
+function rescan(){
+  clearInterval(sT);clearInterval(spinT);clearInterval(elT);
+  cur=0;fr=0;elapsed=0;
+  document.getElementById('sfooter').style.display='none';
+  document.getElementById('slabel').textContent='Scanning';
+  document.getElementById('stimer').textContent='';
+  renderRows();
+  elT=setInterval(function(){elapsed+=11;var t=document.getElementById('stimer');if(t)t.textContent=elapsed+'ms';},11);
+  spinT=setInterval(function(){fr=(fr+1)%FR.length;var sc=document.getElementById('sc');if(sc)sc.textContent=FR[fr];},80);
+  sT=setInterval(function(){
+    cur++;
+    if(cur>=CATS.length){
+      clearInterval(sT);clearInterval(spinT);clearInterval(elT);
+      var h='';for(var i=0;i<CATS.length;i++)h+=row(i,'d');
+      document.getElementById('srows').innerHTML=h;
+      document.getElementById('slabel').textContent='Scanned';
+      document.getElementById('sfooter').style.display='block';
+    } else { renderRows(); }
+  },340);
+}
+
+function st(n){
+  for(var i=0;i<4;i++){
+    document.getElementById('s'+i).style.display=i===n?'flex':'none';
+    document.querySelectorAll('.tt')[i].classList[i===n?'add':'remove']('act');
+  }
+  if(n===0)rescan();
+}
+
+function doApply(){
+  document.getElementById('fixprompt').style.display='none';
+  document.getElementById('applydone').style.display='block';
+}
+
+['s1','s2','s3'].forEach(function(id){document.getElementById(id).style.display='none';});
+rescan();
+</script>

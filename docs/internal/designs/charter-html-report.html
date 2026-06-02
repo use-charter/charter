@@ -1,0 +1,540 @@
+
+<h2 class="sr-only">Charter HTML report — my-repo, score 49 of 100, FAIL, 3 active findings, generated 2026-06-02. Interactive: filter, search, expand findings.</h2>
+
+<style>
+/* ── Reset ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+
+/* ── Semantic colour aliases ── */
+.g{color:var(--color-text-success)}.r{color:var(--color-text-danger)}.y{color:var(--color-text-warning)}.b{color:var(--color-text-info)}.d2{color:var(--color-text-secondary)}.d3{color:var(--color-text-tertiary)}
+
+/* ── Typography ── */
+.mono{font-family:var(--font-mono)}
+.label-caps{font-size:10.5px;font-weight:600;letter-spacing:.08em;color:var(--color-text-tertiary);margin-bottom:5px;display:block;}
+
+/* ── Severity badge ── */
+.sv{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;font-size:10.5px;font-weight:600;letter-spacing:.06em;border-radius:3px;border:0.5px solid;line-height:18px;white-space:nowrap;}
+.sv-b{background:var(--color-background-danger);color:var(--color-text-danger);border-color:var(--color-border-danger);}
+.sv-h{background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning);}
+.sv-m{background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning);opacity:.8;}
+
+/* ── Filter pills — min-height 44px for WCAG 2.5.5 touch target ── */
+.fp{border:0.5px solid var(--color-border-secondary);border-radius:20px;padding:0 14px;min-height:36px;font-size:12.5px;cursor:pointer;background:transparent;color:var(--color-text-secondary);transition:background .12s,color .12s,border-color .12s;font-family:var(--font-sans);display:inline-flex;align-items:center;}
+.fp.on{background:var(--color-background-tertiary);color:var(--color-text-primary);border-color:var(--color-border-primary);}
+.fp:disabled{opacity:.38;cursor:not-allowed;pointer-events:none;}
+.fp:hover:not(:disabled):not(.on){background:var(--color-background-secondary);}
+
+/* ── Finding cards — severity left border + hover ── */
+.fc{border:0.5px solid var(--color-border-tertiary);border-left-width:3px;border-radius:var(--border-radius-lg);margin-bottom:8px;overflow:hidden;transition:border-color .12s,box-shadow .12s;}
+.fc[data-sev="BLOCKER"]{border-left-color:var(--color-border-danger);}
+.fc[data-sev="HIGH"]{border-left-color:var(--color-border-warning);}
+.fc[data-sev="MEDIUM"]{border-left-color:var(--color-border-warning);--fc-left:0.7;}
+.fc:hover{border-color:var(--color-border-secondary);}
+.fc[data-sev="MEDIUM"]{border-left-color:var(--color-border-warning);}
+
+/* ── Finding header — role=button, min 56px tall, keyboard accessible ── */
+.fc-hdr{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;cursor:pointer;user-select:none;min-height:56px;background:var(--color-background-primary);}
+.fc-hdr:hover{background:var(--color-background-secondary);}
+.fc-body{display:none;padding:0 16px 18px;border-top:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);}
+.fc-body.open{display:block;}
+
+/* ── Category cards ── */
+.cc{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-left-width:3px;border-radius:var(--border-radius-md);padding:12px 14px;}
+
+/* ── Section header ── */
+.sec{margin-bottom:28px;}
+.sec-hdr{font-size:11.5px;font-weight:600;color:var(--color-text-secondary);letter-spacing:.05em;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:8px;}
+
+/* ── Inline code / path ── */
+.path{font-family:var(--font-mono);font-size:12px;color:var(--color-text-secondary);}
+
+/* ── Copy button ── */
+.copy-btn{border:0.5px solid var(--color-border-tertiary);border-radius:3px;padding:2px 8px;font-size:11px;cursor:pointer;background:transparent;color:var(--color-text-tertiary);font-family:var(--font-mono);transition:all .1s;display:inline-flex;align-items:center;gap:3px;}
+.copy-btn:hover{color:var(--color-text-secondary);border-color:var(--color-border-secondary);}
+
+/* ── Metric card ── */
+.metric{background:var(--color-background-tertiary);border-radius:var(--border-radius-md);padding:14px;}
+
+/* ── Chevron ── */
+.chev{font-size:16px;color:var(--color-text-tertiary);transition:transform .15s;flex-shrink:0;margin-top:2px;}
+
+/* ── WCAG 2.4.7 Visible focus indicator ── */
+.fc-hdr:focus-visible,.fp:focus-visible,.copy-btn:focus-visible,input:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--color-text-info);outline-offset:2px;border-radius:3px;}
+</style>
+
+<div style="font-family:var(--font-sans);font-size:14px;line-height:1.6;color:var(--color-text-primary);">
+
+  <!-- ────────────────── TOP BAR ────────────────── -->
+  <!-- design-critique: remove score duplication; top bar = branding + nav, not score -->
+  <header role="banner" style="display:flex;align-items:center;gap:10px;padding:10px 18px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+    <span class="mono b" style="font-size:13px;font-weight:500;">✦ charter</span>
+    <span class="d3 mono" style="font-size:11.5px;">v1.0.0</span>
+    <span style="width:1px;height:14px;background:var(--color-border-tertiary);display:inline-block;flex-shrink:0;"></span>
+    <span style="font-size:13px;font-weight:500;">my-repo</span>
+    <!-- ux-copy: nav label, not score duplication -->
+    <nav aria-label="Report sections" style="margin-left:auto;display:flex;gap:12px;font-size:12px;" class="d3">
+      <a href="#score" onclick="return false;" style="color:var(--color-text-tertiary);text-decoration:none;">Score</a>
+      <a href="#findings" onclick="return false;" style="color:var(--color-text-tertiary);text-decoration:none;">Findings <span class="r mono" style="font-size:11px;">3</span></a>
+      <a href="#suppressions" onclick="return false;" style="color:var(--color-text-tertiary);text-decoration:none;">Suppressions</a>
+    </nav>
+  </header>
+
+  <!-- PROVENANCE STRIP -->
+  <div style="padding:7px 18px;background:var(--color-background-tertiary);border-left:0.5px solid var(--color-border-tertiary);border-right:0.5px solid var(--color-border-tertiary);border-bottom:0.5px solid var(--color-border-tertiary);">
+    <div style="display:flex;flex-wrap:wrap;gap:3px 18px;font-size:11.5px;font-family:var(--font-mono);" class="d3">
+      <span>my-repo · HEAD · abc1234f</span>
+      <span>2026-06-02T18:24:37Z</span>
+      <span>threshold 80 · profile standard</span>
+      <span>47ms</span>
+    </div>
+  </div>
+
+  <main style="padding:24px 18px;border:0.5px solid var(--color-border-tertiary);border-top:none;border-radius:0 0 var(--border-radius-lg) var(--border-radius-lg);">
+
+    <!-- ────────────────── SCORE HERO ────────────────── -->
+    <section id="score" class="sec" aria-label="Score">
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <span class="r mono" style="font-size:60px;font-weight:700;line-height:1;" aria-label="Score: 49 out of 100">49</span>
+        <span class="d3 mono" style="font-size:22px;">/100</span>
+        <div style="display:flex;flex-direction:column;gap:4px;padding-top:4px;">
+          <span class="sv sv-b" style="font-size:12px;padding:4px 14px;">FAIL</span>
+          <!-- ux-copy: zone label — helps non-Charter users understand the score -->
+          <span class="d3" style="font-size:11px;">Critical zone · 0–49</span>
+        </div>
+      </div>
+
+      <!-- Score bar — role=progressbar per WCAG 4.1.2 -->
+      <div style="max-width:440px;margin-bottom:8px;">
+        <div role="progressbar" aria-valuenow="49" aria-valuemin="0" aria-valuemax="100" aria-label="Score 49 of 100" style="width:100%;height:8px;background:var(--color-border-tertiary);border-radius:4px;overflow:hidden;margin-bottom:5px;">
+          <div style="width:49%;height:100%;background:var(--color-text-danger);border-radius:4px;" aria-hidden="true"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10.5px;font-family:var(--font-mono);" class="d3" aria-hidden="true">
+          <span>0 critical</span><span>50</span><span>60</span><span>80 ship-ready</span><span>100</span>
+        </div>
+      </div>
+
+      <!-- Score formula -->
+      <p class="d3 mono" style="font-size:11.5px;margin-bottom:12px;" aria-label="Score calculation: 100 minus 20 blocker minus 10 high minus 4 medium equals 66, then raw-secret cap applies giving 49">
+        100 − 20<span class="r">B</span> − 10<span class="y">H</span> − 4<span class="y">M</span> = 66 &nbsp;→&nbsp; raw-secret cap &nbsp;→&nbsp; <strong class="r">49</strong>
+      </p>
+
+      <!-- Cap notice — design-handoff: error state with what happened + why + how to fix -->
+      <div role="alert" style="display:flex;gap:10px;padding:12px 14px;background:var(--color-background-danger);border:0.5px solid var(--color-border-danger);border-radius:var(--border-radius-md);max-width:520px;">
+        <i class="ti ti-lock" style="font-size:16px;color:var(--color-text-danger);flex-shrink:0;margin-top:2px;" aria-hidden="true"></i>
+        <div>
+          <p style="font-size:13px;font-weight:600;margin-bottom:3px;" class="r">Raw-secret cap active</p>
+          <!-- ux-copy: What happened + Why + How to fix -->
+          <p style="font-size:12.5px;" class="d2">AE-SEC-001 detected a credential in an agent-visible file. Score is hard-capped at ≤ 49 until the secret is removed. Revoke the exposed key immediately — assume it is compromised.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ────────────────── CATEGORY SCORECARD ────────────────── -->
+    <section id="scorecard" class="sec" aria-label="Category scorecard">
+      <h2 class="sec-hdr">
+        <i class="ti ti-layout-grid" style="font-size:14px;" aria-hidden="true"></i>
+        Category scorecard
+      </h2>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;" role="list" aria-label="Score by category">
+
+        <article class="cc" style="border-left-color:var(--color-border-danger);" role="listitem" aria-label="Secrets: 1 blocker, minus 20 points">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><i class="ti ti-lock" style="font-size:13px;" aria-hidden="true"></i><span style="font-size:12px;font-weight:500;">Secrets</span></div>
+          <div class="d3" style="font-size:11px;margin-bottom:3px;">2 rules</div>
+          <div class="r" style="font-size:11px;font-weight:500;">1 BLOCKER</div>
+          <div class="r" style="font-size:11px;">−20 pts</div>
+        </article>
+
+        <article class="cc" style="border-left-color:var(--color-border-warning);" role="listitem" aria-label="MCP Safety: 1 high severity finding, minus 10 points">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><i class="ti ti-shield" style="font-size:13px;" aria-hidden="true"></i><span style="font-size:12px;font-weight:500;">MCP Safety</span></div>
+          <div class="d3" style="font-size:11px;margin-bottom:3px;">3 rules</div>
+          <div class="y" style="font-size:11px;font-weight:500;">1 HIGH</div>
+          <div class="y" style="font-size:11px;">−10 pts</div>
+        </article>
+
+        <article class="cc" style="border-left-color:var(--color-border-warning);" role="listitem" aria-label="Environment: 1 medium severity finding, minus 4 points">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><i class="ti ti-tool" style="font-size:13px;" aria-hidden="true"></i><span style="font-size:12px;font-weight:500;">Environment</span></div>
+          <div class="d3" style="font-size:11px;margin-bottom:3px;">1 rule</div>
+          <div class="y" style="font-size:11px;font-weight:500;opacity:.85;">1 MEDIUM</div>
+          <div class="y" style="font-size:11px;opacity:.85;">−4 pts</div>
+        </article>
+
+        <article class="cc" style="border-left-color:var(--color-border-tertiary);" role="listitem" aria-label="CI: suppressed, no deduction">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><i class="ti ti-git-branch" style="font-size:13px;" aria-hidden="true"></i><span style="font-size:12px;font-weight:500;">CI</span></div>
+          <div class="d3" style="font-size:11px;margin-bottom:3px;">1 rule</div>
+          <div class="d3" style="font-size:11px;">— suppressed</div>
+          <div class="d3" style="font-size:11px;">0 pts</div>
+        </article>
+
+        <article class="cc" style="border-left-color:var(--color-border-success);" role="listitem" aria-label="Context: all 4 rules passed">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><i class="ti ti-file-text" style="font-size:13px;" aria-hidden="true"></i><span style="font-size:12px;font-weight:500;">Context</span></div>
+          <div class="d3" style="font-size:11px;margin-bottom:3px;">4 rules</div>
+          <div class="g" style="font-size:11px;"><i class="ti ti-check" style="font-size:10px;" aria-hidden="true"></i> all passed</div>
+        </article>
+
+        <article class="cc" style="border-left-color:var(--color-border-success);" role="listitem" aria-label="Agent Config: all 2 rules passed">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><i class="ti ti-settings" style="font-size:13px;" aria-hidden="true"></i><span style="font-size:12px;font-weight:500;">Agent Config</span></div>
+          <div class="d3" style="font-size:11px;margin-bottom:3px;">2 rules</div>
+          <div class="g" style="font-size:11px;"><i class="ti ti-check" style="font-size:10px;" aria-hidden="true"></i> all passed</div>
+        </article>
+
+        <article class="cc" style="border-left-color:var(--color-border-success);" role="listitem" aria-label="Testing: all 2 rules passed">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><i class="ti ti-test-pipe" style="font-size:13px;" aria-hidden="true"></i><span style="font-size:12px;font-weight:500;">Testing</span></div>
+          <div class="d3" style="font-size:11px;margin-bottom:3px;">2 rules</div>
+          <div class="g" style="font-size:11px;"><i class="ti ti-check" style="font-size:10px;" aria-hidden="true"></i> all passed</div>
+        </article>
+
+        <article class="cc" style="border-left-color:var(--color-border-success);" role="listitem" aria-label="Governance: all 3 rules passed">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><i class="ti ti-shield-check" style="font-size:13px;" aria-hidden="true"></i><span style="font-size:12px;font-weight:500;">Governance</span></div>
+          <div class="d3" style="font-size:11px;margin-bottom:3px;">3 rules</div>
+          <div class="g" style="font-size:11px;"><i class="ti ti-check" style="font-size:10px;" aria-hidden="true"></i> all passed</div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ────────────────── FINDINGS ────────────────── -->
+    <section id="findings" class="sec" aria-label="Findings">
+      <h2 class="sec-hdr">
+        <i class="ti ti-bug" style="font-size:14px;" aria-hidden="true"></i>
+        Findings
+        <span class="mono" style="font-size:11px;background:var(--color-background-danger);color:var(--color-text-danger);border:0.5px solid var(--color-border-danger);border-radius:20px;padding:1px 8px;" aria-label="3 findings">3</span>
+        <!-- design-handoff: expand/collapse all control -->
+        <button onclick="toggleAll()" id="expandbtn" style="margin-left:auto;font-size:12px;border:0.5px solid var(--color-border-tertiary);border-radius:3px;padding:3px 10px;background:transparent;color:var(--color-text-secondary);cursor:pointer;font-family:var(--font-sans);">Expand all</button>
+      </h2>
+
+      <!-- ux-copy: quick-action CTA strip — surfaces the one auto-fix prominently -->
+      <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;background:var(--color-background-success);border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-md);margin-bottom:14px;" role="note" aria-label="Auto-fix available">
+        <i class="ti ti-bolt" style="font-size:15px;color:var(--color-text-success);flex-shrink:0;" aria-hidden="true"></i>
+        <p style="font-size:13px;margin:0;" class="d2"><strong class="g">1 finding has an auto-fix.</strong> Run <code class="mono b" style="font-size:12.5px;">charter fix</code> to apply it, or target it with <code class="mono b" style="font-size:12.5px;">charter fix --rule AE-MCP-001</code>.</p>
+      </div>
+
+      <!-- Filter bar — role=group per WCAG 1.3.1 semantic grouping, aria-pressed per 4.1.2 -->
+      <div role="group" aria-label="Filter findings by severity" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:14px;">
+        <button class="fp on" aria-pressed="true" onclick="filt('all',this)">All &thinsp;<span class="mono">3</span></button>
+        <button class="fp" aria-pressed="false" onclick="filt('BLOCKER',this)">Blocker &thinsp;<span class="mono">1</span></button>
+        <button class="fp" aria-pressed="false" onclick="filt('HIGH',this)">High &thinsp;<span class="mono">1</span></button>
+        <button class="fp" aria-pressed="false" onclick="filt('MEDIUM',this)">Medium &thinsp;<span class="mono">1</span></button>
+        <!-- design-handoff: disabled state for 0-count filter pill -->
+        <button class="fp" aria-pressed="false" disabled aria-disabled="true" aria-label="Low: 0 findings">Low &thinsp;<span class="mono">0</span></button>
+        <!-- accessibility-review: aria-label on search input per WCAG 3.3.2 -->
+        <div style="margin-left:auto;position:relative;display:flex;align-items:center;">
+          <i class="ti ti-search" style="position:absolute;left:9px;font-size:13px;pointer-events:none;" class="d3" aria-hidden="true"></i>
+          <input type="search" id="fsearch" aria-label="Search findings by rule ID, category, or description" placeholder="Search…" oninput="fsearch(this.value)" style="border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:6px 10px 6px 30px;font-size:12.5px;background:var(--color-background-secondary);color:var(--color-text-primary);font-family:var(--font-sans);width:170px;" />
+        </div>
+      </div>
+
+      <!-- Finding 1: BLOCKER — open by default -->
+      <article class="fc" data-sev="BLOCKER" id="fc0" aria-label="Finding: AE-SEC-001, Blocker severity">
+        <!-- accessibility-review: role=button + aria-expanded + keyboard per WCAG 2.1.1, 4.1.2 -->
+        <div class="fc-hdr" role="button" tabindex="0" aria-expanded="true" aria-controls="fb0" onclick="tog(0)" onkeydown="kd(event,0)">
+          <span class="sv sv-b" aria-hidden="true"><i class="ti ti-x" style="font-size:10px;"></i>BLOCKER</span>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+              <span class="mono b" style="font-size:12px;font-weight:600;">AE-SEC-001</span>
+              <span class="d3" style="font-size:11.5px;">Secrets</span>
+            </div>
+            <p style="font-size:14px;font-weight:500;margin-bottom:5px;">Secret detected in agent-visible context file</p>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span class="path">AGENTS.md:14</span>
+              <!-- ux-copy: "Copy path" not "copy" — WCAG 4.1.2 meaningful button name -->
+              <button class="copy-btn" aria-label="Copy file path: AGENTS.md:14" onclick="event.stopPropagation();cp('AGENTS.md:14',this)">
+                <i class="ti ti-copy" style="font-size:11px;" aria-hidden="true"></i> Copy path
+              </button>
+            </div>
+          </div>
+          <i class="ti ti-chevron-down chev" id="cv0" aria-hidden="true" style="transform:rotate(180deg);"></i>
+        </div>
+        <div class="fc-body open" id="fb0" role="region" aria-label="Details for AE-SEC-001">
+          <div style="padding-top:16px;display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <span class="label-caps">Evidence</span>
+              <div class="mono r" style="font-size:12.5px;background:var(--color-background-danger);border:0.5px solid var(--color-border-danger);border-radius:var(--border-radius-md);padding:9px 12px;">OPENAI_API_KEY=sk-proj-••••••••••••••••</div>
+            </div>
+            <div>
+              <span class="label-caps">Remediation</span>
+              <!-- ux-copy: What happened + Why + How to fix -->
+              <p style="font-size:13px;" class="d2">Remove the key from the file. Reference it via <code class="mono b">$OPENAI_API_KEY</code> env var instead. Revoke the exposed key immediately — assume it is already compromised.</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span class="label-caps" style="margin-bottom:0;">Auto-fix</span>
+              <span class="r" style="font-size:12.5px;"><i class="ti ti-x" style="font-size:12px;" aria-hidden="true"></i> No auto-fix — remediate manually</span>
+            </div>
+            <div>
+              <span class="label-caps">Why this matters</span>
+              <p style="font-size:13px;line-height:1.7;" class="d2">Raw credentials in agent-visible files are included verbatim in LLM context windows. This exposes secrets to the model and to any logs, traces, or tool outputs it produces. Charter detects high-confidence token prefixes (OpenAI, GitHub, AWS, Slack) and PEM private-key headers. False-positive rate is enforced at zero on all clean-repo fixtures.</p>
+            </div>
+            <a href="#" onclick="return false;" style="font-size:12px;color:var(--color-text-info);display:inline-flex;align-items:center;gap:4px;text-decoration:none;" aria-label="Rule documentation for AE-SEC-001 (opens in new tab)">use-charter.dev/rules/AE-SEC-001 <i class="ti ti-external-link" style="font-size:11px;" aria-hidden="true"></i></a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Finding 2: HIGH — with "Fix available" badge -->
+      <article class="fc" data-sev="HIGH" id="fc1" aria-label="Finding: AE-MCP-001, High severity, auto-fix available">
+        <div class="fc-hdr" role="button" tabindex="0" aria-expanded="false" aria-controls="fb1" onclick="tog(1)" onkeydown="kd(event,1)">
+          <span class="sv sv-h" aria-hidden="true"><i class="ti ti-alert-triangle" style="font-size:10px;"></i>HIGH</span>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+              <span class="mono b" style="font-size:12px;font-weight:600;">AE-MCP-001</span>
+              <span class="d3" style="font-size:11.5px;">MCP Safety</span>
+              <span style="font-size:10px;padding:1px 6px;border-radius:3px;background:var(--color-background-info);color:var(--color-text-info);border:0.5px solid var(--color-border-info);">OWASP MCP04</span>
+              <!-- design-critique: "Fix available" badge — makes auto-fixable status scannable at a glance -->
+              <span style="font-size:10px;padding:1px 6px;border-radius:3px;background:var(--color-background-success);color:var(--color-text-success);border:0.5px solid var(--color-border-success);display:inline-flex;align-items:center;gap:3px;" aria-label="Auto-fix available">
+                <i class="ti ti-bolt" style="font-size:9px;" aria-hidden="true"></i>Fix available
+              </span>
+            </div>
+            <p style="font-size:14px;font-weight:500;margin-bottom:5px;">MCP server not pinned to a specific version</p>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span class="path">.mcp.json:7</span>
+              <button class="copy-btn" aria-label="Copy file path: .mcp.json:7" onclick="event.stopPropagation();cp('.mcp.json:7',this)">
+                <i class="ti ti-copy" style="font-size:11px;" aria-hidden="true"></i> Copy path
+              </button>
+            </div>
+          </div>
+          <i class="ti ti-chevron-down chev" id="cv1" aria-hidden="true"></i>
+        </div>
+        <div class="fc-body" id="fb1" role="region" aria-label="Details for AE-MCP-001">
+          <div style="padding-top:16px;display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <span class="label-caps">Evidence</span>
+              <div class="mono" style="font-size:12.5px;background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:9px 12px;">"mcp-server-git@latest"</div>
+            </div>
+            <div>
+              <span class="label-caps">Remediation</span>
+              <p style="font-size:13px;" class="d2">Pin to an exact CalVer version. The catalog-known safe version is <code class="mono b">2026.1.14</code>. Run <code class="mono b">charter fix --rule AE-MCP-001</code> to apply automatically.</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span class="label-caps" style="margin-bottom:0;">Auto-fix</span>
+              <span class="g" style="font-size:12.5px;"><i class="ti ti-check" style="font-size:12px;" aria-hidden="true"></i> Yes —</span>
+              <code class="mono b" style="font-size:12.5px;">charter fix --rule AE-MCP-001</code>
+            </div>
+            <div>
+              <span class="label-caps">Why this matters</span>
+              <p style="font-size:13px;line-height:1.7;" class="d2">Floating version specifiers (@latest, ranges) let a compromised upstream package silently update into your agent's tool surface without a visible diff. Charter's MCP catalog tracks pinned stable versions and known CVE/GHSA advisories per MCP spec 2025-11-25. Archived packages fire HIGH; unpinned fire HIGH; behind-stable is informational only.</p>
+            </div>
+            <a href="#" onclick="return false;" style="font-size:12px;color:var(--color-text-info);display:inline-flex;align-items:center;gap:4px;text-decoration:none;" aria-label="Rule documentation for AE-MCP-001">use-charter.dev/rules/AE-MCP-001 <i class="ti ti-external-link" style="font-size:11px;" aria-hidden="true"></i></a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Finding 3: MEDIUM -->
+      <article class="fc" data-sev="MEDIUM" id="fc2" aria-label="Finding: AE-ENV-001, Medium severity">
+        <div class="fc-hdr" role="button" tabindex="0" aria-expanded="false" aria-controls="fb2" onclick="tog(2)" onkeydown="kd(event,2)">
+          <span class="sv sv-m" aria-hidden="true">MEDIUM</span>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+              <span class="mono b" style="font-size:12px;font-weight:600;">AE-ENV-001</span>
+              <span class="d3" style="font-size:11.5px;">Environment</span>
+            </div>
+            <p style="font-size:14px;font-weight:500;margin-bottom:5px;">Bun and Python runtimes active but unpinned</p>
+            <span class="path">toolchain (incomplete)</span>
+          </div>
+          <i class="ti ti-chevron-down chev" id="cv2" aria-hidden="true"></i>
+        </div>
+        <div class="fc-body" id="fb2" role="region" aria-label="Details for AE-ENV-001">
+          <div style="padding-top:16px;display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <span class="label-caps">Detail</span>
+              <p style="font-size:13px;" class="d2">Go toolchain is pinned via <code class="mono">go.mod</code>. <code class="mono">Bun 1.3.14</code> and <code class="mono">Python 3.12.4</code> are active but unpinned. Add them to <code class="mono b">mise.toml</code>, <code class="mono b">.nvmrc</code>, or <code class="mono b">pyproject.toml</code>.</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="label-caps" style="margin-bottom:0;">Auto-fix</span>
+              <span class="r" style="font-size:12.5px;"><i class="ti ti-x" style="font-size:12px;" aria-hidden="true"></i> No auto-fix — manual pinning required</span>
+            </div>
+            <div>
+              <span class="label-caps">Why this matters</span>
+              <p style="font-size:13px;line-height:1.7;" class="d2">Unpinned runtimes produce non-reproducible environments. An agent running in a non-reproducible environment may produce different results across machines, making it impossible to deterministically verify its work — a core requirement for safe autonomous operation.</p>
+            </div>
+            <a href="#" onclick="return false;" style="font-size:12px;color:var(--color-text-info);display:inline-flex;align-items:center;gap:4px;text-decoration:none;" aria-label="Rule documentation for AE-ENV-001">use-charter.dev/rules/AE-ENV-001 <i class="ti ti-external-link" style="font-size:11px;" aria-hidden="true"></i></a>
+          </div>
+        </div>
+      </article>
+
+      <!-- ux-copy: empty state — tells user how to recover, per design-critique empty-state pattern -->
+      <div id="nofindings" role="status" aria-live="polite" style="display:none;text-align:center;padding:28px 16px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);" class="d3">
+        <i class="ti ti-filter-off" style="font-size:20px;display:block;margin-bottom:8px;" aria-hidden="true"></i>
+        No findings match this filter.
+        <button onclick="filt('all',document.querySelector('.fp'))" style="margin-left:6px;font-size:12.5px;border:none;background:none;color:var(--color-text-info);cursor:pointer;font-family:var(--font-sans);">Show all 3</button>
+      </div>
+    </section>
+
+    <!-- ────────────────── SUPPRESSIONS ────────────────── -->
+    <section id="suppressions" class="sec" aria-label="Suppressions">
+      <h2 class="sec-hdr">
+        <i class="ti ti-eye-off" style="font-size:14px;" aria-hidden="true"></i>
+        Suppressions
+        <span class="mono" style="font-size:11px;background:var(--color-background-tertiary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-secondary);border-radius:20px;padding:1px 8px;">2</span>
+        <span class="d3" style="font-size:11px;font-weight:400;">excluded from score</span>
+      </h2>
+
+      <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:100px minmax(0,1fr) 100px 90px;gap:0 12px;padding:8px 16px;font-size:11px;background:var(--color-background-tertiary);border-bottom:0.5px solid var(--color-border-tertiary);" class="d3" role="row" aria-label="Table column headers">
+          <span>Rule</span><span>Reason</span><span>Expires</span><span>Status</span>
+        </div>
+        <div style="display:grid;grid-template-columns:100px minmax(0,1fr) 100px 90px;gap:0 12px;padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary);" role="row">
+          <span class="mono b" style="font-size:12px;font-weight:600;">AE-CI-002</span>
+          <span class="d2" style="font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Charter CI in platform-repo, not per-service</span>
+          <span class="d2" style="font-size:12.5px;">2026-08-16</span>
+          <span class="g" style="font-size:12px;"><i class="ti ti-check" style="font-size:11px;" aria-hidden="true"></i> active</span>
+        </div>
+        <div style="display:grid;grid-template-columns:100px minmax(0,1fr) 100px 90px;gap:0 12px;padding:12px 16px;" role="row">
+          <span class="mono b" style="font-size:12px;font-weight:600;">AE-CTX-006</span>
+          <span class="d2" style="font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Accepted low-emphasis policy</span>
+          <span class="d3" style="font-size:12.5px;">permanent</span>
+          <span class="y" style="font-size:12px;"><i class="ti ti-alert-triangle" style="font-size:11px;" aria-hidden="true"></i> no approver</span>
+        </div>
+      </div>
+
+      <!-- ux-copy: governance warning with clear resolution path -->
+      <div role="alert" style="display:flex;gap:10px;padding:12px 14px;background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);border-radius:var(--border-radius-md);">
+        <i class="ti ti-alert-triangle" style="font-size:15px;color:var(--color-text-warning);flex-shrink:0;margin-top:2px;" aria-hidden="true"></i>
+        <div>
+          <p style="font-size:13px;font-weight:600;margin-bottom:4px;" class="y">AE-SUPPRESS-002 will fire on your next scan</p>
+          <p style="font-size:12.5px;margin-bottom:6px;" class="d2">AE-CTX-006 is permanently suppressed without a named approver. Permanent suppressions require an approver for governance compliance.</p>
+          <!-- ux-copy: "To resolve:" prefix makes the action clear -->
+          <p style="font-size:12px;" class="d2">To resolve: <code class="mono b" style="font-size:11.5px;">charter suppress AE-CTX-006 --approver &lt;email&gt; --permanent</code></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ────────────────── SCAN SUMMARY (ux-copy: renamed from "Summary") ── -->
+    <section id="summary" class="sec" aria-label="Scan summary">
+      <h2 class="sec-hdr">
+        <i class="ti ti-chart-bar" style="font-size:14px;" aria-hidden="true"></i>
+        Scan summary
+      </h2>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">
+        <div class="metric" role="img" aria-label="18 rules checked across 8 categories">
+          <p class="d3" style="font-size:11px;margin-bottom:4px;">Rules checked</p>
+          <p class="mono" style="font-size:26px;font-weight:700;line-height:1;margin-bottom:2px;">18</p>
+          <p class="d3" style="font-size:11px;">8 categories</p>
+        </div>
+        <div class="metric" role="img" aria-label="3 active findings affect the score">
+          <p class="d3" style="font-size:11px;margin-bottom:4px;">Active findings</p>
+          <p class="mono r" style="font-size:26px;font-weight:700;line-height:1;margin-bottom:2px;">3</p>
+          <p class="d3" style="font-size:11px;">affect score</p>
+        </div>
+        <div class="metric" role="img" aria-label="2 suppressions excluded from score">
+          <p class="d3" style="font-size:11px;margin-bottom:4px;">Suppressed</p>
+          <p class="mono d2" style="font-size:26px;font-weight:700;line-height:1;margin-bottom:2px;">2</p>
+          <p class="d3" style="font-size:11px;">excluded from score</p>
+        </div>
+        <div class="metric" role="img" aria-label="1 finding can be auto-fixed">
+          <p class="d3" style="font-size:11px;margin-bottom:4px;">Auto-fixable</p>
+          <p class="mono b" style="font-size:26px;font-weight:700;line-height:1;margin-bottom:2px;">1</p>
+          <p class="d3" style="font-size:11px;">run charter fix</p>
+        </div>
+      </div>
+
+      <!-- Severity breakdown -->
+      <div style="background:var(--color-background-tertiary);border-radius:var(--border-radius-md);padding:14px;" role="img" aria-label="Severity breakdown: 1 blocker minus 20 points, 1 high minus 10 points, 1 medium minus 4 points, 0 low. Base score 66, capped to 49.">
+        <div style="display:flex;gap:2px;height:6px;border-radius:3px;overflow:hidden;margin-bottom:10px;" aria-hidden="true">
+          <div style="flex:20;background:var(--color-text-danger);"></div>
+          <div style="flex:10;background:var(--color-text-warning);"></div>
+          <div style="flex:4;background:var(--color-text-warning);opacity:.7;"></div>
+          <div style="flex:66;background:var(--color-border-tertiary);"></div>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;font-family:var(--font-mono);" aria-hidden="true">
+          <span class="r">1 BLOCKER (−20)</span>
+          <span class="d3">·</span>
+          <span class="y">1 HIGH (−10)</span>
+          <span class="d3">·</span>
+          <span class="y" style="opacity:.8;">1 MEDIUM (−4)</span>
+          <span class="d3">·</span>
+          <span class="d3">0 LOW</span>
+          <span class="d3" style="margin-left:auto;">base 66 → cap 49</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer style="border-top:0.5px solid var(--color-border-tertiary);padding-top:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span class="mono b" style="font-size:12px;">✦ charter v1.0.0</span>
+      <span class="d3" style="font-size:12px;">·</span>
+      <span class="d3" style="font-size:12px;">self-contained · offline · 2026-06-02T18:24:37Z</span>
+      <a href="#" onclick="return false;" style="font-size:12px;color:var(--color-text-tertiary);margin-left:auto;text-decoration:none;display:inline-flex;align-items:center;gap:3px;">
+        use-charter.dev <i class="ti ti-external-link" style="font-size:11px;" aria-hidden="true"></i>
+      </a>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+var af='all';
+
+/* WCAG 2.1.1 — keyboard activation for finding headers */
+function kd(e,i){if(e.key==='Enter'||e.key===' '){e.preventDefault();tog(i);}}
+
+function tog(i){
+  var body=document.getElementById('fb'+i);
+  var chev=document.getElementById('cv'+i);
+  var hdr=body.previousElementSibling;
+  var open=body.classList.contains('open');
+  body.classList.toggle('open');
+  chev.style.transform=open?'':'rotate(180deg)';
+  /* WCAG 4.1.2 — keep aria-expanded in sync */
+  hdr.setAttribute('aria-expanded', open?'false':'true');
+  updateExpandBtn();
+}
+
+/* design-handoff: expand/collapse all visible finding cards */
+function toggleAll(){
+  var visible=Array.from(document.querySelectorAll('.fc')).filter(function(c){return c.style.display!=='none';});
+  var allOpen=visible.every(function(c){return c.querySelector('.fc-body').classList.contains('open');});
+  visible.forEach(function(c,idx){
+    var body=c.querySelector('.fc-body');
+    var chev=c.querySelector('.chev');
+    var hdr=c.querySelector('.fc-hdr');
+    if(allOpen){body.classList.remove('open');chev.style.transform='';hdr.setAttribute('aria-expanded','false');}
+    else{body.classList.add('open');chev.style.transform='rotate(180deg)';hdr.setAttribute('aria-expanded','true');}
+  });
+  updateExpandBtn();
+}
+
+function updateExpandBtn(){
+  var visible=Array.from(document.querySelectorAll('.fc')).filter(function(c){return c.style.display!=='none';});
+  var allOpen=visible.every(function(c){return c.querySelector('.fc-body').classList.contains('open');});
+  var btn=document.getElementById('expandbtn');
+  if(btn)btn.textContent=allOpen?'Collapse all':'Expand all';
+}
+
+/* design-critique: filter + ux-copy: aria-pressed in sync */
+function filt(s,btn){
+  af=s;
+  document.querySelectorAll('[role="group"] .fp').forEach(function(b){
+    b.classList.remove('on');
+    b.setAttribute('aria-pressed','false');
+  });
+  if(btn){btn.classList.add('on');btn.setAttribute('aria-pressed','true');}
+  applyF();
+}
+
+function fsearch(q){applyF(q);}
+
+function applyF(q){
+  var query=(q!==undefined?q:document.getElementById('fsearch').value).toLowerCase();
+  var any=false;
+  document.querySelectorAll('.fc').forEach(function(c){
+    var sev=c.dataset.sev;
+    var text=c.textContent.toLowerCase();
+    var sm=af==='all'||sev===af;
+    var qm=!query||text.indexOf(query)!==-1;
+    c.style.display=(sm&&qm)?'block':'none';
+    if(sm&&qm)any=true;
+  });
+  var nf=document.getElementById('nofindings');
+  if(nf)nf.style.display=any?'none':'block';
+  updateExpandBtn();
+}
+
+/* ux-copy: "Copy path" with "Copied ✓" feedback */
+function cp(txt,btn){
+  var orig=btn.innerHTML;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(txt).then(function(){
+      btn.innerHTML='<i class="ti ti-check" style="font-size:11px;"></i> Copied';
+      setTimeout(function(){btn.innerHTML=orig;},1400);
+    });
+  }
+}
+</script>
