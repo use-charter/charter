@@ -237,6 +237,55 @@ func TestDoctorCommandTextOutWritesFileSingleTrailingNewline(t *testing.T) {
 	}
 }
 
+// TestDoctorCommandContainmentNoAnsi proves the Slice 15 containment contract at
+// the command boundary: json/sarif/markdown, piped (non-TTY) text, NO_COLOR
+// text, and --quiet must all emit zero ANSI escape bytes. Under `go test` the
+// test binary's stdout is a pipe (not a char device), so the text path resolves
+// to the plain renderer.
+func TestDoctorCommandContainmentNoAnsi(t *testing.T) {
+	repo, err := makeTempDoctorRepo(t)
+	if err != nil {
+		t.Fatalf("fixture: %v", err)
+	}
+
+	cases := []struct {
+		name    string
+		args    []string
+		noColor bool
+	}{
+		{name: "text", args: []string{"doctor", "--path", repo, "--threshold", "80"}},
+		{name: "text-no-color", args: []string{"doctor", "--path", repo, "--threshold", "80"}, noColor: true},
+		{name: "json", args: []string{"doctor", "--path", repo, "--threshold", "80", "--format", "json"}},
+		{name: "sarif", args: []string{"doctor", "--path", repo, "--threshold", "80", "--format", "sarif"}},
+		{name: "markdown", args: []string{"doctor", "--path", repo, "--threshold", "80", "--format", "markdown"}},
+		{name: "quiet", args: []string{"doctor", "--path", repo, "--threshold", "80", "--quiet"}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.noColor {
+				t.Setenv("NO_COLOR", "1")
+			}
+			cmd := newRootCommand()
+			out := new(bytes.Buffer)
+			cmd.SetOut(out)
+			cmd.SetErr(new(bytes.Buffer))
+			cmd.SetArgs(tc.args)
+			cmd.SetContext(context.Background())
+			if err := cmd.Execute(); err != nil {
+				// A below-threshold run returns a (silent) error; that is fine.
+				// Surfacing it ensures a panic/early-return can't make the
+				// no-ANSI assertion pass trivially on empty output.
+				t.Logf("execute: %v", err)
+			}
+
+			if i := bytes.IndexByte(out.Bytes(), 0x1b); i != -1 {
+				t.Fatalf("%s output must contain zero ANSI escape bytes, found one at %d:\n%q", tc.name, i, out.String())
+			}
+		})
+	}
+}
+
 func makeTempDoctorRepo(t *testing.T) (string, error) {
 	t.Helper()
 

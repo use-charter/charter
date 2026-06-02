@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"os"
 
+	"charm.land/lipgloss/v2"
 	"github.com/spf13/cobra"
 	"go.use-charter.dev/charter/internal/doctor"
 	renderjson "go.use-charter.dev/charter/internal/render/json"
 	rendermarkdown "go.use-charter.dev/charter/internal/render/markdown"
 	rendersarif "go.use-charter.dev/charter/internal/render/sarif"
-	"go.use-charter.dev/charter/internal/scoring"
+	rendertext "go.use-charter.dev/charter/internal/render/text"
+	"go.use-charter.dev/charter/internal/terminal"
 )
 
 type commandExitError struct {
@@ -80,43 +82,40 @@ func newDoctorCommand() *cobra.Command {
 				return nil
 			}
 
-			var buf bytes.Buffer
-			fmt.Fprintf(&buf, "charter doctor: %s\n", result.Root)
-			for _, finding := range result.Findings {
-				fmt.Fprintf(&buf, "%s %s %s\n", finding.RuleID, finding.Severity, finding.Summary)
-				for _, loc := range finding.Locations {
-					if loc.Line > 0 {
-						fmt.Fprintf(&buf, "  location: %s:%d\n", loc.Path, loc.Line)
-					} else {
-						fmt.Fprintf(&buf, "  location: %s\n", loc.Path)
+			// Slice 15: route every --format text render through the single
+			// canonical renderer, which branches plain vs styled internally on
+			// caps.ColorEnabled(). Detect color from the ACTUAL write target so
+			// styling stays consistent with where the bytes land: --out (a file)
+			// and any non-*os.File writer are treated as non-TTY, i.e. plain.
+			var ttyFile *os.File
+			isTTY := false
+			if out == "" {
+				if f, ok := cmd.OutOrStdout().(*os.File); ok {
+					ttyFile = f
+					if fi, statErr := f.Stat(); statErr == nil {
+						isTTY = fi.Mode()&os.ModeCharDevice != 0
 					}
 				}
-				for _, evidence := range finding.Evidence {
-					fmt.Fprintf(&buf, "  - %s\n", evidence)
-				}
-				fmt.Fprintf(&buf, "  remediation: %s\n", finding.Remediation)
 			}
-			for _, s := range result.Suppressed {
-				fmt.Fprintf(&buf, "suppressed: %s (%s)", s.Finding.RuleID, s.Source)
-				if s.Reason != "" {
-					fmt.Fprintf(&buf, " — %s", s.Reason)
-				}
-				fmt.Fprintln(&buf)
+			caps := terminal.Detect(terminal.Env{
+				NoColor:   os.Getenv("NO_COLOR"),
+				ColorTerm: os.Getenv("COLORTERM"),
+				Term:      os.Getenv("TERM"),
+			}, isTTY, terminal.ColorAuto)
+			// Querying the terminal background only makes sense (and only avoids
+			// stray stdin reads) when color is actually enabled.
+			darkBackground := false
+			if caps.ColorEnabled() {
+				darkBackground = lipgloss.HasDarkBackground(os.Stdin, ttyFile)
 			}
-			if breakdown := scoring.ByCategory(result.Findings); len(breakdown) > 0 {
-				fmt.Fprintln(&buf, "readiness by category:")
-				for _, c := range breakdown {
-					fmt.Fprintf(&buf, "  %-12s −%-3d (%d finding(s), worst %s)\n", c.Category, c.Deduction, c.Findings, c.WorstSeverity)
-				}
-			}
-			fmt.Fprintf(&buf, "score: %d (threshold %d)\n", result.Score.Final, result.Threshold)
+			rendered := rendertext.Render(result, caps, terminal.NewPalette(caps, darkBackground))
 
 			if out != "" {
-				if err := emit(cmd, out, buf.Bytes()); err != nil {
+				if err := emit(cmd, out, rendered); err != nil {
 					return commandExitError{message: err.Error(), exitCode: 2}
 				}
 			} else {
-				_, _ = cmd.OutOrStdout().Write(buf.Bytes())
+				_, _ = cmd.OutOrStdout().Write(rendered)
 			}
 			return passFail(result)
 		},
