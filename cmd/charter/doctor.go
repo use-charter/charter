@@ -15,6 +15,7 @@ import (
 	rendertext "go.use-charter.dev/charter/internal/render/text"
 	"go.use-charter.dev/charter/internal/rules/catalog"
 	"go.use-charter.dev/charter/internal/terminal"
+	"go.use-charter.dev/charter/internal/tui"
 )
 
 type commandExitError struct {
@@ -44,6 +45,7 @@ func newDoctorCommand() *cobra.Command {
 	var colorFlag string
 	var noColor bool
 	var ruleFlag string
+	var interactive bool
 
 	cmd := &cobra.Command{
 		Use:   "doctor",
@@ -65,6 +67,14 @@ func newDoctorCommand() *cobra.Command {
 			mode, err := resolveColorMode(colorFlag, noColor)
 			if err != nil {
 				return commandExitError{message: err.Error(), exitCode: 2}
+			}
+
+			// --interactive is the opt-in TUI: it has its own gating (TTY-only,
+			// text-format-only) and runs the scan itself, so it short-circuits
+			// before any non-interactive rendering. When -i is unset the command
+			// behaves exactly as before.
+			if interactive {
+				return runInteractive(cmd, path, threshold, cmd.Flags().Changed("threshold"), quiet, format, out, ruleFlag, mode)
 			}
 
 			result, err := doctor.Run(path, threshold, cmd.Flags().Changed("threshold"))
@@ -136,8 +146,67 @@ func newDoctorCommand() *cobra.Command {
 	cmd.Flags().StringVar(&colorFlag, "color", "auto", "color output: auto, always, or never")
 	cmd.Flags().BoolVar(&noColor, "no-color", false, "disable color (equivalent to --color=never; wins over --color)")
 	cmd.Flags().StringVar(&ruleFlag, "rule", "", "comma-separated rule IDs to focus on (filtered text view; omits the score)")
+	cmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "browse findings in an interactive TUI (requires a terminal)")
 
 	return cmd
+}
+
+// runInteractive launches the `charter doctor -i` browser. It is the only path
+// to the TUI, and it is deliberately narrow: the full-screen, human-only view
+// is incompatible with every machine-readable or headless mode (all of which
+// carry the score by contract), so those combinations are rejected with exit 2.
+// The TUI must NEVER run on a non-TTY (piped, redirected, CI, or --out) — there
+// it would emit control sequences into a file or hang waiting on input — so the
+// command gates on a real terminal first and fails fast. None of this touches
+// the non-interactive output contract.
+func runInteractive(cmd *cobra.Command, path string, threshold int, thresholdSet, quiet bool, format, out, ruleFlag string, mode terminal.ColorMode) error {
+	switch {
+	case format != "text":
+		return commandExitError{message: "--interactive cannot be combined with --format " + format, exitCode: 2}
+	case quiet:
+		return commandExitError{message: "--interactive cannot be combined with --quiet", exitCode: 2}
+	case out != "":
+		return commandExitError{message: "--interactive cannot be combined with --out", exitCode: 2}
+	case ruleFlag != "":
+		return commandExitError{message: "--interactive cannot be combined with --rule", exitCode: 2}
+	}
+
+	ttyFile, ok := stdoutTTY(cmd)
+	if !ok {
+		return commandExitError{message: "--interactive requires a terminal", exitCode: 2}
+	}
+
+	result, err := doctor.Run(path, threshold, thresholdSet)
+	if err != nil {
+		return commandExitError{message: err.Error(), exitCode: 2}
+	}
+
+	// Detect color/background from the real TTY (out is "" here: the TUI always
+	// renders to stdout). scan re-runs the identical scan for the `r` rescan key.
+	caps, pal := terminalContext(cmd, "", mode)
+	scan := func() (doctor.Result, error) { return doctor.Run(path, threshold, thresholdSet) }
+	if err := tui.Run(result, scan, caps, pal, ttyFile); err != nil {
+		return commandExitError{message: err.Error(), exitCode: 2}
+	}
+	return nil
+}
+
+// stdoutTTY returns the command's stdout as an *os.File when it is a character
+// device (a real terminal), reporting false for a pipe, file, or any non-file
+// writer. It is the single TTY gate for the interactive browser.
+func stdoutTTY(cmd *cobra.Command) (*os.File, bool) {
+	f, ok := cmd.OutOrStdout().(*os.File)
+	if !ok {
+		return nil, false
+	}
+	fi, err := f.Stat()
+	if err != nil {
+		return nil, false
+	}
+	if fi.Mode()&os.ModeCharDevice == 0 {
+		return nil, false
+	}
+	return f, true
 }
 
 // runFocused renders the filtered `--rule` view: the full scan result projected
