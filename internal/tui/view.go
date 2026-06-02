@@ -173,7 +173,7 @@ func (m Model) layout() Model {
 	m.detail.SetHeight(innerH)
 
 	m.help.SetWidth(m.width)
-	m.search.SetWidth(maxInt(8, m.width-4))
+	m.search.SetWidth(max(8, m.width-4))
 	return m
 }
 
@@ -276,7 +276,7 @@ func (m Model) headerView() string {
 	if card := m.scorecardLine(); card != "" {
 		lines = append(lines, card)
 	}
-	lines = append(lines, m.th.style(terminal.TextTertiary).Render(strings.Repeat(m.th.g.divider, maxInt(8, m.width))))
+	lines = append(lines, m.th.style(terminal.TextTertiary).Render(strings.Repeat(m.th.g.divider, max(8, m.width))))
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
 
@@ -299,7 +299,7 @@ func (m Model) scorecardLine() string {
 
 // scoreBar renders a fixed-width progress bar proportional to score/100.
 func (m Model) scoreBar(score int, tok terminal.Token) string {
-	filled := maxInt(0, minInt(scoreBarWidth, score*scoreBarWidth/100))
+	filled := max(0, min(scoreBarWidth, score*scoreBarWidth/100))
 	var b strings.Builder
 	if filled > 0 {
 		b.WriteString(m.th.style(tok).Render(strings.Repeat(m.th.g.barFull, filled)))
@@ -483,18 +483,4 @@ func locationText(loc findings.Location) string {
 		return fmt.Sprintf("%s:%d", loc.Path, loc.Line)
 	}
 	return loc.Path
-}
-
-func maxInt(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

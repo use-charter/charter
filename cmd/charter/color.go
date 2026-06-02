@@ -30,7 +30,7 @@ func resolveColorMode(colorFlag string, noColor bool) (terminal.ColorMode, error
 // --color=always exactly as terminal.Detect documents.
 //
 // Background polarity is queried only for a real, color-enabled TTY; a forced
-// color mode on a pipe or file defaults to the dark variant rather than reading
+// color mode on a pipe or file defaults to the light variant rather than reading
 // stdin, keeping the path deterministic and free of stray terminal queries.
 func terminalContext(cmd *cobra.Command, out string, mode terminal.ColorMode) (terminal.Capabilities, terminal.Palette) {
 	var ttyFile *os.File
