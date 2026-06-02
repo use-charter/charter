@@ -126,7 +126,7 @@ Scaffold the *missing* agent context files from a blank repo in under 2 minutes 
 
 ```
 ❯ charter init
-  ✦ Charter v1.0.0  ·  Analyzing project...
+  [C] charter v1.0.0  ·  Analyzing project...
   Detected
     language  Go 1.26
     CI        GitHub Actions
@@ -160,7 +160,7 @@ The primary command. Run it before committing, in CI, and in agent sessions.
 **Passing scan:**
 ```
 ❯ charter doctor
-  ✦ Charter v1.0.0  ·  my-repo / HEAD  ·  31ms
+  [C] charter v1.0.0  ·  my-repo / HEAD  ·  31ms
   Detected  Go  ·  Bun  ·  Python  ·  hook  hk
   ──────────────────────────────────────────────────────────────
   Scanning
@@ -194,7 +194,7 @@ The primary command. Run it before committing, in CI, and in agent sessions.
 **Single-rule targeted scan:**
 ```
 ❯ charter doctor --rule AE-SEC-001
-  ✦ Charter v1.0.0  ·  12ms  ·  secrets scan only
+  [C] charter v1.0.0  ·  12ms  ·  secrets scan only
   ✗ BLOCKER  AE-SEC-001  AGENTS.md:14
   │
   │  Secret detected in agent-visible context file
@@ -216,7 +216,7 @@ In GitHub Actions, pipe findings directly into Code Scanning via SARIF. The GitH
 ❯ charter doctor --format sarif \
       --out charter.sarif \
       --threshold 80
-  ✦ Charter v1.0.0  ·  SARIF 2.1.0
+  [C] charter v1.0.0  ·  SARIF 2.1.0
   Scanned  15 rules  ·  3 findings
   ├  AE-SEC-001  BLOCKER  AGENTS.md:14
   ├  AE-MCP-001  HIGH     .mcp.json:7
@@ -240,7 +240,7 @@ score=49 gate=FAIL threshold=80 exit=1
 **SPDX output:**
 ```
 ❯ charter report --format spdx --out sbom.spdx
-  ✦ Charter v1.0.0  ·  SPDX 2.3
+  [C] charter v1.0.0  ·  SPDX 2.3
   Written  sbom.spdx  (agent tool inventory)
   Exit     0
 ```
@@ -314,7 +314,7 @@ When a finding is a confirmed false positive or accepted risk, suppress it with 
 ❯ charter suppress AE-CC-001 \
       --reason "Claude config lives in infra repo" \
       --expires 90d
-  ✦ Charter v1.0.0
+  [C] charter v1.0.0
   Suppressing  AE-CC-001  Missing agent config files
   Reason       Claude config lives in infra repo
   Expires      2026-08-16 (90 days)
