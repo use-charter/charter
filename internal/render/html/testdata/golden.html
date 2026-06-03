@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="en" data-charter-report>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="generator" content="Charter v1.0.0">
+<meta name="robots" content="noindex">
+<title>Charter report — my-repo — 49/100 FAIL</title>
+<style>/* Charter HTML report — self-contained, offline, WCAG 2.2 AA.
+   Tokens mirror docs/internal/designs/DESIGN-TOKENS.md. Severity always carries a
+   text label, never colour alone (WCAG 1.4.1 / 1.3.1). No url() / @font-face here:
+   woff2 embedding is a later task — every font stack ends in a system fallback. */
+
+/* ── Font system (DESIGN-TOKENS.md). System fallbacks only — no woff2 yet. ── */
+:root {
+  --font-site:  "Ruda", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-audit: "Ruda", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-code:  "Atkinson Hyperlegible Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --font-meta:  "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --font-accent:"Share Tech", system-ui, -apple-system, sans-serif;
+}
+
+/* ── Colour tokens — light (default) ── */
+:root {
+  --color-text-primary:#111827; --color-text-secondary:#4b5563; --color-text-tertiary:#646b78;
+  --color-text-success:#15803d; --color-text-danger:#b91c1c; --color-text-warning:#b45309; --color-text-info:#1d4ed8;
+
+  --color-background-primary:#ffffff; --color-background-secondary:#f9fafb; --color-background-tertiary:#f3f4f6;
+  --color-background-success:#f0fdf4; --color-background-danger:#fef2f2; --color-background-warning:#fffbeb; --color-background-info:#eff6ff;
+
+  --color-border-primary:#d1d5db; --color-border-secondary:#e5e7eb; --color-border-tertiary:#eceef1;
+  --color-border-success:#86efac; --color-border-danger:#fca5a5; --color-border-warning:#fcd34d; --color-border-info:#93c5fd;
+
+  --border-radius-md:6px; --border-radius-lg:10px;
+  --shadow-sm:0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06);
+  --shadow-md:0 4px 12px rgba(15,23,42,.08), 0 2px 4px rgba(15,23,42,.05);
+  --ring:var(--color-text-info);
+}
+
+/* ── Colour tokens — dark ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-text-primary:#f9fafb; --color-text-secondary:#d1d5db; --color-text-tertiary:#9ca3af;
+    --color-text-success:#4ade80; --color-text-danger:#f87171; --color-text-warning:#fbbf24; --color-text-info:#60a5fa;
+
+    --color-background-primary:#0d1117; --color-background-secondary:#161b22; --color-background-tertiary:#1f2937;
+    --color-background-success:#052e16; --color-background-danger:#450a0a; --color-background-warning:#422006; --color-background-info:#172554;
+
+    --color-border-primary:#374151; --color-border-secondary:#2b3240; --color-border-tertiary:#21262d;
+    --color-border-success:#166534; --color-border-danger:#991b1b; --color-border-warning:#92400e; --color-border-info:#1e40af;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 6px 18px rgba(0,0,0,.5);
+  }
+}
+/* Manual override (theme toggle) — same dark palette, independent of OS setting. */
+:root[data-theme="dark"] {
+  --color-text-primary:#f9fafb; --color-text-secondary:#d1d5db; --color-text-tertiary:#9ca3af;
+  --color-text-success:#4ade80; --color-text-danger:#f87171; --color-text-warning:#fbbf24; --color-text-info:#60a5fa;
+
+  --color-background-primary:#0d1117; --color-background-secondary:#161b22; --color-background-tertiary:#1f2937;
+  --color-background-success:#052e16; --color-background-danger:#450a0a; --color-background-warning:#422006; --color-background-info:#172554;
+
+  --color-border-primary:#374151; --color-border-secondary:#2b3240; --color-border-tertiary:#21262d;
+  --color-border-success:#166534; --color-border-danger:#991b1b; --color-border-warning:#92400e; --color-border-info:#1e40af;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 6px 18px rgba(0,0,0,.5);
+}
+
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:var(--font-audit);
+  font-size:14px; line-height:1.6;
+  color:var(--color-text-primary);
+  background:var(--color-background-secondary);
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  padding:24px 16px 56px;
+}
+@media (max-width:640px){ body{padding:12px 8px 40px;} }
+
+/* ── Layout shell ── */
+.report{
+  max-width:880px; margin:0 auto;
+  background:var(--color-background-primary);
+  border:1px solid var(--color-border-tertiary);
+  border-radius:var(--border-radius-lg);
+  box-shadow:var(--shadow-md);
+  overflow:hidden;
+}
+
+/* ── Typography helpers ── */
+.mono{font-family:var(--font-code);}
+.meta{font-family:var(--font-meta);}
+.accent{font-family:var(--font-accent);letter-spacing:.04em;}
+.g{color:var(--color-text-success);} .r{color:var(--color-text-danger);}
+.y{color:var(--color-text-warning);} .b{color:var(--color-text-info);}
+.d2{color:var(--color-text-secondary);} .d3{color:var(--color-text-tertiary);}
+.label-caps{font-family:var(--font-accent);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-tertiary);display:block;margin-bottom:6px;}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+
+/* ── Icons (inline SVG, currentColor) ── */
+.icon{width:1em;height:1em;display:inline-block;vertical-align:-0.125em;flex-shrink:0;}
+.icon svg{width:100%;height:100%;display:block;}
+
+/* ── Skip link (WCAG 2.4.1) ── */
+.skip-link{position:absolute;left:8px;top:-48px;z-index:20;background:var(--color-background-info);color:var(--color-text-info);
+  border:1px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:8px 14px;font-weight:600;transition:top .15s;}
+.skip-link:focus{top:8px;}
+
+/* ── Top bar (sticky) ── */
+.topbar{
+  position:sticky; top:0; z-index:10;
+  display:flex; align-items:center; gap:10px;
+  padding:11px 18px;
+  background:var(--color-background-secondary); /* fallback for browsers without color-mix() */
+  background:color-mix(in srgb, var(--color-background-secondary) 88%, transparent);
+  -webkit-backdrop-filter:saturate(1.4) blur(8px); backdrop-filter:saturate(1.4) blur(8px);
+  border-bottom:1px solid var(--color-border-tertiary);
+}
+.brand{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:14px;color:var(--color-text-primary);}
+.brand .mark{width:18px;height:18px;color:var(--color-text-info);}
+.brand .mark svg{width:100%;height:100%;display:block;}
+.topbar .ver{font-family:var(--font-meta);font-size:11.5px;color:var(--color-text-tertiary);}
+.topbar .div{width:1px;height:15px;background:var(--color-border-secondary);flex-shrink:0;}
+.topbar .repo{font-weight:600;font-size:13.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.nav{margin-left:auto;display:flex;gap:4px;align-items:center;}
+.nav a{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--color-text-tertiary);text-decoration:none;
+  padding:6px 9px;border-radius:var(--border-radius-md);transition:background .12s,color .12s;min-height:32px;}
+.nav a:hover{background:var(--color-background-tertiary);color:var(--color-text-primary);}
+.pill-count{font-family:var(--font-meta);font-size:11px;padding:0 6px;border-radius:20px;background:var(--color-background-tertiary);border:1px solid var(--color-border-tertiary);}
+.theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--border-radius-md);
+  border:1px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer;font-size:16px;transition:background .12s,color .12s,border-color .12s;}
+.theme-toggle:hover{background:var(--color-background-tertiary);color:var(--color-text-primary);}
+.theme-toggle .icon-moon{display:none;}
+:root[data-theme="dark"] .theme-toggle .icon-sun{display:none;}
+:root[data-theme="dark"] .theme-toggle .icon-moon{display:inline-block;}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .theme-toggle .icon-sun{display:none;}
+  :root:not([data-theme="light"]) .theme-toggle .icon-moon{display:inline-block;}
+}
+
+/* ── Provenance strip ── */
+.provenance{padding:8px 18px;background:var(--color-background-tertiary);border-bottom:1px solid var(--color-border-tertiary);}
+.provenance .row{display:flex;flex-wrap:wrap;gap:4px 18px;font-family:var(--font-meta);font-size:11.5px;color:var(--color-text-tertiary);}
+.provenance b{color:var(--color-text-secondary);font-weight:500;}
+
+/* ── Main + sections ── */
+main{padding:26px 22px;display:flex;flex-direction:column;gap:30px;}
+@media (max-width:640px){ main{padding:18px 14px;gap:24px;} }
+.sec{scroll-margin-top:64px;}
+.sec-hdr{display:flex;align-items:center;gap:8px;font-family:var(--font-accent);font-size:12px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--color-text-secondary);padding-bottom:9px;margin-bottom:16px;border-bottom:1px solid var(--color-border-tertiary);}
+.sec-hdr .icon{font-size:15px;color:var(--color-text-tertiary);}
+.sec-hdr .count{font-family:var(--font-meta);font-size:11px;font-weight:500;padding:1px 9px;border-radius:20px;
+  background:var(--color-background-tertiary);border:1px solid var(--color-border-secondary);color:var(--color-text-secondary);}
+.sec-hdr .count.alarm{background:var(--color-background-danger);border-color:var(--color-border-danger);color:var(--color-text-danger);}
+.sec-hdr .note{margin-left:auto;font-family:var(--font-site);font-size:11px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--color-text-tertiary);}
+
+/* ── Severity badge — always TEXT, never colour-only (WCAG 1.4.1) ── */
+.sv{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;font-family:var(--font-accent);font-size:10.5px;font-weight:600;
+  letter-spacing:.07em;border-radius:4px;border:1px solid;line-height:18px;white-space:nowrap;}
+.sv .icon{font-size:11px;}
+.sv-BLOCKER{background:var(--color-background-danger);color:var(--color-text-danger);border-color:var(--color-border-danger);}
+.sv-HIGH{background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning);}
+.sv-MEDIUM{background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning);}
+.sv-LOW{background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info);}
+
+/* ── Score hero ── */
+.hero{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;}
+.hero-score{display:flex;align-items:baseline;gap:8px;}
+.hero-num{font-family:var(--font-code);font-size:clamp(56px,11vw,84px);font-weight:700;line-height:.9;letter-spacing:-.02em;}
+.hero-num.zone-success{color:var(--color-text-success);} .hero-num.zone-warning{color:var(--color-text-warning);} .hero-num.zone-danger{color:var(--color-text-danger);}
+.hero-den{font-family:var(--font-code);font-size:22px;color:var(--color-text-tertiary);}
+.hero-meta{display:flex;flex-direction:column;gap:6px;padding-top:6px;}
+.status-pill{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;padding:4px 14px;font-family:var(--font-accent);font-size:12px;font-weight:700;
+  letter-spacing:.08em;border-radius:20px;border:1px solid;}
+.status-pill.pass{background:var(--color-background-success);color:var(--color-text-success);border-color:var(--color-border-success);}
+.status-pill.fail{background:var(--color-background-danger);color:var(--color-text-danger);border-color:var(--color-border-danger);}
+.zone-label{font-size:11.5px;color:var(--color-text-tertiary);}
+.hero-bar{flex:1;min-width:260px;max-width:460px;}
+.bar-track{position:relative;width:100%;height:9px;background:var(--color-border-tertiary);border-radius:5px;overflow:hidden;margin-bottom:6px;}
+.bar-fill{height:100%;border-radius:5px;transition:width .5s cubic-bezier(.16,1,.3,1);}
+.bar-fill.zone-success{background:var(--color-text-success);} .bar-fill.zone-warning{background:var(--color-text-warning);} .bar-fill.zone-danger{background:var(--color-text-danger);}
+.bar-ticks{display:flex;justify-content:space-between;font-family:var(--font-meta);font-size:10px;color:var(--color-text-tertiary);}
+.formula{font-family:var(--font-meta);font-size:11.5px;color:var(--color-text-tertiary);margin-top:14px;}
+.formula strong{color:var(--color-text-primary);}
+
+/* ── Callout (alert / note) ── */
+.callout{display:flex;gap:11px;padding:12px 14px;border-radius:var(--border-radius-md);border:1px solid;margin-top:16px;}
+.callout .icon{font-size:17px;flex-shrink:0;margin-top:1px;}
+.callout-title{font-size:13px;font-weight:700;margin-bottom:3px;}
+.callout-body{font-size:12.5px;color:var(--color-text-secondary);}
+.callout-body code{font-family:var(--font-code);color:var(--color-text-info);font-size:12px;}
+.callout.danger{background:var(--color-background-danger);border-color:var(--color-border-danger);}
+.callout.danger .icon,.callout.danger .callout-title{color:var(--color-text-danger);}
+.callout.warning{background:var(--color-background-warning);border-color:var(--color-border-warning);}
+.callout.warning .icon,.callout.warning .callout-title{color:var(--color-text-warning);}
+.callout.info{background:var(--color-background-info);border-color:var(--color-border-info);}
+.callout.info .icon,.callout.info .callout-title{color:var(--color-text-info);}
+
+/* ── Category scorecard ── */
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+.cc{background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-left-width:3px;
+  border-radius:var(--border-radius-md);padding:13px 14px;transition:border-color .12s,box-shadow .12s,transform .12s;}
+.cc:hover{box-shadow:var(--shadow-sm);}
+.cc[data-state="danger"]{border-left-color:var(--color-border-danger);}
+.cc[data-state="warning"]{border-left-color:var(--color-border-warning);}
+.cc[data-state="info"]{border-left-color:var(--color-border-info);}
+.cc[data-state="pass"]{border-left-color:var(--color-border-success);}
+.cc[data-state="muted"]{border-left-color:var(--color-border-secondary);}
+.cc-name{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;margin-bottom:5px;}
+.cc-name .icon{font-size:14px;color:var(--color-text-tertiary);}
+.cc-rules{font-size:11px;color:var(--color-text-tertiary);margin-bottom:4px;}
+.cc-stat{font-size:11.5px;font-weight:500;display:flex;align-items:center;gap:4px;}
+.cc-ded{font-family:var(--font-meta);font-size:11px;margin-top:1px;}
+
+/* ── Findings toolbar ── */
+.toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:16px;}
+.fp{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;font-family:var(--font-site);font-size:12.5px;
+  border:1px solid var(--color-border-secondary);border-radius:20px;background:transparent;color:var(--color-text-secondary);cursor:pointer;
+  transition:background .12s,color .12s,border-color .12s;}
+.fp .num{font-family:var(--font-meta);font-size:11px;}
+.fp:hover:not(:disabled):not([aria-pressed="true"]){background:var(--color-background-secondary);border-color:var(--color-border-primary);}
+.fp[aria-pressed="true"]{background:var(--color-background-tertiary);color:var(--color-text-primary);border-color:var(--color-border-primary);font-weight:600;}
+.fp:disabled{opacity:.4;cursor:not-allowed;}
+.search-wrap{margin-left:auto;position:relative;display:flex;align-items:center;}
+.search-wrap .icon{position:absolute;left:10px;font-size:14px;color:var(--color-text-tertiary);pointer-events:none;}
+.search-wrap input{width:180px;max-width:42vw;min-height:36px;padding:6px 12px 6px 32px;font-family:var(--font-site);font-size:12.5px;
+  border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-primary);}
+.search-wrap input::placeholder{color:var(--color-text-tertiary);}
+.btn-ghost{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:5px 11px;font-family:var(--font-site);font-size:12px;
+  border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-secondary);cursor:pointer;transition:background .12s,color .12s;}
+.btn-ghost:hover{background:var(--color-background-tertiary);color:var(--color-text-primary);}
+
+/* ── Finding cards ── */
+.findings-list{display:flex;flex-direction:column;gap:9px;}
+.fc{border:1px solid var(--color-border-tertiary);border-left-width:3px;border-radius:var(--border-radius-lg);overflow:hidden;
+  background:var(--color-background-primary);transition:border-color .12s,box-shadow .12s;}
+.fc:hover{box-shadow:var(--shadow-sm);}
+.fc[data-sev="BLOCKER"]{border-left-color:var(--color-border-danger);}
+.fc[data-sev="HIGH"]{border-left-color:var(--color-border-warning);}
+.fc[data-sev="MEDIUM"]{border-left-color:var(--color-border-warning);}
+.fc[data-sev="LOW"]{border-left-color:var(--color-border-info);}
+.fc-hdr{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;cursor:pointer;user-select:none;min-height:56px;background:transparent;width:100%;text-align:left;border:none;font:inherit;color:inherit;}
+.fc-hdr:hover{background:var(--color-background-secondary);}
+.fc-head-main{flex:1;min-width:0;}
+.fc-tags{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+.fc-rule{font-family:var(--font-meta);font-size:12px;font-weight:600;color:var(--color-text-info);}
+.fc-cat{font-size:11.5px;color:var(--color-text-tertiary);}
+.tag{font-family:var(--font-accent);font-size:9.5px;font-weight:600;letter-spacing:.05em;padding:1px 6px;border-radius:4px;
+  background:var(--color-background-info);color:var(--color-text-info);border:1px solid var(--color-border-info);}
+.tag.info-tag{background:var(--color-background-tertiary);color:var(--color-text-secondary);border-color:var(--color-border-secondary);}
+.fc-summary{font-size:14px;font-weight:500;margin-bottom:6px;line-height:1.45;}
+.fc-loc{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.path{font-family:var(--font-meta);font-size:12px;color:var(--color-text-secondary);word-break:break-all;}
+.copy-btn{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-family:var(--font-meta);font-size:11px;cursor:pointer;
+  border:1px solid var(--color-border-tertiary);border-radius:4px;background:transparent;color:var(--color-text-tertiary);transition:color .12s,border-color .12s;}
+.copy-btn:hover{color:var(--color-text-secondary);border-color:var(--color-border-secondary);}
+.copy-btn.copied{color:var(--color-text-success);border-color:var(--color-border-success);}
+.chev{font-size:18px;color:var(--color-text-tertiary);transition:transform .18s ease;margin-top:2px;}
+.fc-hdr[aria-expanded="true"] .chev{transform:rotate(180deg);}
+.fc-body{display:none;padding:2px 16px 18px;border-top:1px solid var(--color-border-tertiary);background:var(--color-background-secondary);}
+.fc-body.open{display:block;}
+.fc-body-inner{padding-top:15px;display:flex;flex-direction:column;gap:14px;}
+.evidence{font-family:var(--font-code);font-size:12.5px;border-radius:var(--border-radius-md);padding:9px 12px;white-space:pre-wrap;word-break:break-word;
+  background:var(--color-background-tertiary);border:1px solid var(--color-border-tertiary);color:var(--color-text-secondary);}
+.fc[data-sev="BLOCKER"] .evidence{background:var(--color-background-danger);border-color:var(--color-border-danger);color:var(--color-text-danger);}
+.evidence + .evidence{margin-top:6px;}
+.fc-text{font-size:13px;color:var(--color-text-secondary);line-height:1.65;}
+.fc-text code{font-family:var(--font-code);color:var(--color-text-info);}
+.loc-list{display:flex;flex-direction:column;gap:5px;}
+.doc-link{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;font-size:12px;color:var(--color-text-info);text-decoration:none;font-family:var(--font-meta);}
+.doc-link:hover{text-decoration:underline;}
+.doc-link .icon{font-size:12px;}
+
+/* ── Empty state ── */
+.empty{display:none;text-align:center;padding:30px 16px;border:1px dashed var(--color-border-secondary);border-radius:var(--border-radius-lg);color:var(--color-text-tertiary);}
+.empty.show{display:block;}
+.empty .icon{font-size:22px;display:block;margin:0 auto 8px;}
+.empty .link-btn{margin-left:6px;}
+.link-btn{border:none;background:none;color:var(--color-text-info);cursor:pointer;font-family:var(--font-site);font-size:12.5px;padding:0;text-decoration:underline;}
+
+/* ── Suppressions table ── */
+.table{border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;}
+.table .trow{display:grid;grid-template-columns:110px minmax(0,1fr) 110px 96px;gap:0 14px;padding:11px 16px;align-items:center;}
+.table .trow + .trow{border-top:1px solid var(--color-border-tertiary);}
+.table .thead{background:var(--color-background-tertiary);font-family:var(--font-accent);font-size:10.5px;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--color-text-tertiary);}
+.table .rule{font-family:var(--font-meta);font-size:12px;font-weight:600;color:var(--color-text-info);}
+.table .reason{font-size:12.5px;color:var(--color-text-secondary);overflow:hidden;text-overflow:ellipsis;}
+.table .exp{font-family:var(--font-meta);font-size:12px;color:var(--color-text-secondary);}
+.table .stat{font-size:12px;display:inline-flex;align-items:center;gap:4px;}
+@media (max-width:560px){
+  .table .trow{grid-template-columns:1fr 1fr;gap:6px 12px;}
+  .table .thead{display:none;}
+  .table .reason{grid-column:1 / -1;}
+}
+
+/* ── Scan summary ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;}
+.metric{background:var(--color-background-tertiary);border-radius:var(--border-radius-md);padding:14px 16px;}
+.metric .k{font-size:11px;color:var(--color-text-tertiary);margin-bottom:5px;}
+.metric .v{font-family:var(--font-code);font-size:27px;font-weight:700;line-height:1;margin-bottom:3px;}
+.metric .s{font-size:11px;color:var(--color-text-tertiary);}
+.breakdown{background:var(--color-background-tertiary);border-radius:var(--border-radius-md);padding:15px 16px;}
+.bd-bar{display:flex;gap:2px;height:7px;border-radius:4px;overflow:hidden;margin-bottom:11px;}
+.bd-seg{min-width:2px;}
+.bd-seg.danger{background:var(--color-text-danger);} .bd-seg.warning{background:var(--color-text-warning);}
+.bd-seg.info{background:var(--color-text-info);} .bd-seg.remaining{background:var(--color-border-secondary);}
+.bd-legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--font-meta);font-size:12px;}
+.bd-legend .base{margin-left:auto;color:var(--color-text-tertiary);}
+
+/* ── Footer ── */
+footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:16px 22px;border-top:1px solid var(--color-border-tertiary);
+  background:var(--color-background-secondary);font-size:12px;color:var(--color-text-tertiary);}
+footer .brand{font-size:12.5px;}
+footer .sep{color:var(--color-border-primary);}
+footer .home{margin-left:auto;display:inline-flex;align-items:center;gap:4px;color:var(--color-text-tertiary);text-decoration:none;}
+footer .home:hover{color:var(--color-text-secondary);}
+
+/* ── Focus visibility (WCAG 2.4.7 / 2.4.11) ── */
+:focus-visible{outline:2px solid var(--ring);outline-offset:2px;border-radius:4px;}
+.fc-hdr:focus-visible{outline-offset:-2px;}
+
+/* ── Motion preferences (WCAG 2.3.3) ── */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important;}
+}
+html{scroll-behavior:smooth;}
+
+/* ── Print: expand everything, drop interactive chrome ── */
+@media print{
+  body{background:#fff;padding:0;color:#000;}
+  .report{box-shadow:none;border:none;max-width:none;}
+  .topbar{position:static;backdrop-filter:none;}
+  .nav,.theme-toggle,.toolbar,.copy-btn,.chev,.btn-ghost{display:none!important;}
+  .fc-body{display:block!important;}
+  .fc,.cc{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#findings">Skip to findings</a>
+<p class="sr-only">Charter report for my-repo. Readiness score 49 of 100, FAIL, threshold 80. 5 active findings, 2 suppressed. Interactive: filter by severity, search, and expand findings.</p>
+
+<div class="report">
+
+  <header class="topbar" role="banner">
+    <span class="brand"><span class="mark"><svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true" focusable="false"><rect x="3" y="12" width="4" height="40"/><rect x="3" y="12" width="11" height="4"/><rect x="3" y="48" width="11" height="4"/><rect x="57" y="12" width="4" height="40"/><rect x="50" y="12" width="11" height="4"/><rect x="50" y="48" width="11" height="4"/><path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="butt"/></svg></span>charter</span>
+    <span class="ver meta">v1.0.0</span>
+    <span class="div" aria-hidden="true"></span>
+    <span class="repo" title="my-repo">my-repo</span>
+    <nav class="nav" aria-label="Report sections">
+      <a href="#score">Score</a>
+      <a href="#findings">Findings <span class="pill-count alarm">5</span></a>
+      <a href="#suppressions">Suppressions</a>
+      <a href="#summary">Summary</a>
+    </nav>
+    <button type="button" class="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false">
+      <span class="icon icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg></span><span class="icon icon-moon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 12.5A8.5 8.5 0 1 1 11.5 3a6.5 6.5 0 0 0 9.5 9.5z"/></svg></span>
+    </button>
+  </header>
+
+  <div class="provenance">
+    <div class="row">
+      <span><b>my-repo</b> · abc1234fdead</span>
+      <span>2026-06-02T18:24:37Z</span>
+      <span>threshold <b>80</b> · FAIL</span>
+    </div>
+  </div>
+
+  <main id="main">
+
+    
+    <section id="score" class="sec" aria-labelledby="score-h">
+      <h2 id="score-h" class="sr-only">Score</h2>
+      <div class="hero">
+        <div>
+          <div class="hero-score">
+            <span class="hero-num zone-danger" aria-label="Score 49 out of 100">49</span>
+            <span class="hero-den" aria-hidden="true">/100</span>
+            <div class="hero-meta">
+              <span class="status-pill fail">
+                <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg></span>FAIL
+              </span>
+              <span class="zone-label">Critical · 0–59</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-bar">
+          <div class="bar-track" role="progressbar" aria-valuenow="49" aria-valuemin="0" aria-valuemax="100" aria-label="Readiness score 49 of 100">
+            <div class="bar-fill zone-danger" style="width:49%" aria-hidden="true"></div>
+          </div>
+          <div class="bar-ticks" aria-hidden="true">
+            <span>0</span><span>60</span><span>80</span><span>100</span>
+          </div>
+          <p class="formula" aria-label="Score calculation">
+            100 − 20×1<span class="r">B</span> − 10×1<span class="y">H</span> − 4×1<span class="y">M</span> − 1×1<span class="b">L</span> = <strong>65</strong> &nbsp;→&nbsp; cap &nbsp;→&nbsp; <strong class="r">49</strong>
+          </p>
+        </div>
+      </div>
+
+      
+      <div class="callout danger" role="alert">
+        <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <div>
+          <p class="callout-title">AE-SEC-001 caps the score at 49</p>
+          <p class="callout-body">Secret detected in agent-visible context file. Remove the key and reference it via an env var. Revoke the exposed key immediately.</p>
+        </div>
+      </div>
+      
+    </section>
+
+    
+    <section id="scorecard" class="sec" aria-labelledby="scorecard-h">
+      <h2 id="scorecard-h" class="sec-hdr"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></span>Category scorecard</h2>
+      <div class="grid-cards" role="list" aria-label="Readiness by category">
+        
+        <article class="cc" data-state="danger" role="listitem" aria-label="Secrets: 1 finding, worst BLOCKER, minus 20 points">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>Secrets</div>
+          <div class="cc-rules">2 rules</div>
+          
+            <div class="cc-stat r">1 BLOCKER</div>
+            <div class="cc-ded r">−20 pts</div>
+          
+        </article>
+        
+        <article class="cc" data-state="warning" role="listitem" aria-label="MCP Safety: 1 finding, worst HIGH, minus 10 points">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 3v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg></span>MCP Safety</div>
+          <div class="cc-rules">3 rules</div>
+          
+            <div class="cc-stat y">1 HIGH</div>
+            <div class="cc-ded y">−10 pts</div>
+          
+        </article>
+        
+        <article class="cc" data-state="warning" role="listitem" aria-label="Environment: 1 finding, worst MEDIUM, minus 4 points">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4"/><path d="M12 11v10"/></svg></span>Environment</div>
+          <div class="cc-rules">1 rule</div>
+          
+            <div class="cc-stat y">1 MEDIUM</div>
+            <div class="cc-ded y">−4 pts</div>
+          
+        </article>
+        
+        <article class="cc" data-state="info" role="listitem" aria-label="Context: 1 finding, worst LOW, minus 1 point">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8 13h8M8 17h6"/></svg></span>Context</div>
+          <div class="cc-rules">4 rules</div>
+          
+            <div class="cc-stat b">1 LOW</div>
+            <div class="cc-ded b">−1 pts</div>
+          
+        </article>
+        
+        <article class="cc" data-state="muted" role="listitem" aria-label="Governance: 1 informational, no deduction">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 3v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span>Governance</div>
+          <div class="cc-rules">3 rules</div>
+          
+            <div class="cc-stat d2">1 informational</div>
+            <div class="cc-ded d3">0 pts</div>
+          
+        </article>
+        
+        <article class="cc" data-state="pass" role="listitem" aria-label="Agent Config: all 2 rules passed">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg></span>Agent Config</div>
+          <div class="cc-rules">2 rules</div>
+          
+            <div class="cc-stat g"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>all passed</div>
+          
+        </article>
+        
+        <article class="cc" data-state="pass" role="listitem" aria-label="Autonomy: all 1 rule passed">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span>Autonomy</div>
+          <div class="cc-rules">1 rule</div>
+          
+            <div class="cc-stat g"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>all passed</div>
+          
+        </article>
+        
+        <article class="cc" data-state="pass" role="listitem" aria-label="CI: all 1 rule passed">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="8" r="2.2"/><path d="M6 8.2v7.6"/><path d="M18 10.2c0 4-6 2-6 6"/></svg></span>CI</div>
+          <div class="cc-rules">1 rule</div>
+          
+            <div class="cc-stat g"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>all passed</div>
+          
+        </article>
+        
+        <article class="cc" data-state="pass" role="listitem" aria-label="Testing: all 1 rule passed">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 3h6"/><path d="M10 3v7l-5 8a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-8V3"/></svg></span>Testing</div>
+          <div class="cc-rules">1 rule</div>
+          
+            <div class="cc-stat g"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>all passed</div>
+          
+        </article>
+        
+      </div>
+    </section>
+
+    
+    <section id="findings" class="sec" aria-labelledby="findings-h">
+      <h2 id="findings-h" class="sec-hdr">
+        <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="8" y="8" width="8" height="11" rx="4"/><path d="M9 8a3 3 0 0 1 6 0"/><path d="M4 12h4M16 12h4M5 7l3 2M19 7l-3 2M5 17l3-2M19 17l-3-2"/></svg></span>Findings
+        <span class="count alarm">5</span>
+        
+        <button type="button" id="expand-all" class="btn-ghost" style="margin-left:auto" aria-pressed="false">
+          <span class="label">Expand all</span>
+        </button>
+        
+      </h2>
+
+      
+      <div class="toolbar">
+        <div role="group" aria-label="Filter findings by severity" style="display:flex;flex-wrap:wrap;gap:7px;">
+          
+          <button type="button" class="fp" data-filter="all" aria-pressed="true"
+             aria-label="All: 5 findings">
+            All <span class="num">5</span>
+          </button>
+          
+          <button type="button" class="fp" data-filter="BLOCKER" aria-pressed="false"
+             aria-label="Blocker: 1 finding">
+            Blocker <span class="num">1</span>
+          </button>
+          
+          <button type="button" class="fp" data-filter="HIGH" aria-pressed="false"
+             aria-label="High: 1 finding">
+            High <span class="num">1</span>
+          </button>
+          
+          <button type="button" class="fp" data-filter="MEDIUM" aria-pressed="false"
+             aria-label="Medium: 1 finding">
+            Medium <span class="num">1</span>
+          </button>
+          
+          <button type="button" class="fp" data-filter="LOW" aria-pressed="false"
+             aria-label="Low: 2 findings">
+            Low <span class="num">2</span>
+          </button>
+          
+        </div>
+        <div class="search-wrap">
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
+          <input type="search" id="charter-search" placeholder="Search…" aria-label="Search findings by rule ID, category, or description" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="findings-list">
+        
+        <article class="fc" data-sev="BLOCKER" data-search="AE-SEC-001 Secrets BLOCKER Secret detected in agent-visible context file Remove the key and reference it via an env var. Revoke the exposed key immediately. OPENAI_API_KEY=sk-proj-•••• &lt;redacted&gt; &amp; rotated AGENTS.md:14" aria-label="Finding AE-SEC-001, BLOCKER severity">
+          <div class="fc-hdr" role="button" tabindex="0" aria-expanded="true"
+            aria-controls="fb-0" aria-label="AE-SEC-001: Secret detected in agent-visible context file — toggle details">
+            <span class="sv sv-BLOCKER" aria-hidden="true"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg></span>BLOCKER</span>
+            <div class="fc-head-main">
+              <div class="fc-tags">
+                <span class="fc-rule">AE-SEC-001</span>
+                <span class="fc-cat">Secrets</span>
+                
+              </div>
+              <p class="fc-summary">Secret detected in agent-visible context file</p>
+              
+              <div class="fc-loc">
+                <span class="path">AGENTS.md:14</span>
+                <button type="button" class="copy-btn" data-copy="AGENTS.md:14" aria-label="Copy file location AGENTS.md:14">
+                  <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></span><span class="label">Copy</span>
+                </button>
+              </div>
+              
+            </div>
+            <span class="icon chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></span>
+          </div>
+          <div class="fc-body open" id="fb-0" role="region" aria-label="Details for AE-SEC-001">
+            <div class="fc-body-inner">
+              
+              <div>
+                <span class="label-caps">Evidence</span>
+                <div class="evidence">OPENAI_API_KEY=sk-proj-•••• &lt;redacted&gt; &amp; rotated</div>
+              </div>
+              
+              
+              
+              <div>
+                <span class="label-caps">Remediation</span>
+                <p class="fc-text">Remove the key and reference it via an env var. Revoke the exposed key immediately.</p>
+              </div>
+              
+              
+              <div>
+                <span class="label-caps">Why this matters</span>
+                <p class="fc-text">No raw secret patterns in agent-visible files.</p>
+              </div>
+              
+              
+              <a class="doc-link" href="https://use-charter.dev/rules/AE-SEC-001" target="_blank" rel="noopener noreferrer" aria-label="Rule documentation for AE-SEC-001 (opens in a new tab)">
+                use-charter.dev/rules/AE-SEC-001 <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M19 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"/></svg></span>
+              </a>
+              
+            </div>
+          </div>
+        </article>
+        
+        <article class="fc" data-sev="HIGH" data-search="AE-MCP-001 MCP Safety HIGH MCP server not pinned to a specific version Pin to an exact CalVer version from the MCP catalog. &#34;mcp-server-git@latest&#34; .mcp.json:7 .mcp.json:12" aria-label="Finding AE-MCP-001, HIGH severity">
+          <div class="fc-hdr" role="button" tabindex="0" aria-expanded="false"
+            aria-controls="fb-1" aria-label="AE-MCP-001: MCP server not pinned to a specific version — toggle details">
+            <span class="sv sv-HIGH" aria-hidden="true"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3.5l9 15.5H3z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg></span>HIGH</span>
+            <div class="fc-head-main">
+              <div class="fc-tags">
+                <span class="fc-rule">AE-MCP-001</span>
+                <span class="fc-cat">MCP Safety</span>
+                
+              </div>
+              <p class="fc-summary">MCP server not pinned to a specific version</p>
+              
+              <div class="fc-loc">
+                <span class="path">.mcp.json:7</span>
+                <button type="button" class="copy-btn" data-copy=".mcp.json:7" aria-label="Copy file location .mcp.json:7">
+                  <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></span><span class="label">Copy</span>
+                </button>
+              </div>
+              
+            </div>
+            <span class="icon chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></span>
+          </div>
+          <div class="fc-body" id="fb-1" role="region" aria-label="Details for AE-MCP-001">
+            <div class="fc-body-inner">
+              
+              <div>
+                <span class="label-caps">Evidence</span>
+                <div class="evidence">&#34;mcp-server-git@latest&#34;</div>
+              </div>
+              
+              
+              <div>
+                <span class="label-caps">Locations</span>
+                <div class="loc-list">
+                  
+                  <div class="fc-loc">
+                    <span class="path">.mcp.json:7</span>
+                    <button type="button" class="copy-btn" data-copy=".mcp.json:7" aria-label="Copy file location .mcp.json:7">
+                      <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></span><span class="label">Copy</span>
+                    </button>
+                  </div>
+                  
+                  <div class="fc-loc">
+                    <span class="path">.mcp.json:12</span>
+                    <button type="button" class="copy-btn" data-copy=".mcp.json:12" aria-label="Copy file location .mcp.json:12">
+                      <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></span><span class="label">Copy</span>
+                    </button>
+                  </div>
+                  
+                </div>
+              </div>
+              
+              
+              <div>
+                <span class="label-caps">Remediation</span>
+                <p class="fc-text">Pin to an exact CalVer version from the MCP catalog.</p>
+              </div>
+              
+              
+              <div>
+                <span class="label-caps">Why this matters</span>
+                <p class="fc-text">Every MCP server is pinned to an exact, current, non-deprecated version per the MCP catalog.</p>
+              </div>
+              
+              
+              <a class="doc-link" href="https://use-charter.dev/rules/AE-MCP-001" target="_blank" rel="noopener noreferrer" aria-label="Rule documentation for AE-MCP-001 (opens in a new tab)">
+                use-charter.dev/rules/AE-MCP-001 <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M19 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"/></svg></span>
+              </a>
+              
+            </div>
+          </div>
+        </article>
+        
+        <article class="fc" data-sev="MEDIUM" data-search="AE-ENV-001 Environment MEDIUM Runtimes active but unpinned Pin runtimes in mise.toml." aria-label="Finding AE-ENV-001, MEDIUM severity">
+          <div class="fc-hdr" role="button" tabindex="0" aria-expanded="false"
+            aria-controls="fb-2" aria-label="AE-ENV-001: Runtimes active but unpinned — toggle details">
+            <span class="sv sv-MEDIUM" aria-hidden="true"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3.5l9 15.5H3z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg></span>MEDIUM</span>
+            <div class="fc-head-main">
+              <div class="fc-tags">
+                <span class="fc-rule">AE-ENV-001</span>
+                <span class="fc-cat">Environment</span>
+                
+              </div>
+              <p class="fc-summary">Runtimes active but unpinned</p>
+              
+            </div>
+            <span class="icon chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></span>
+          </div>
+          <div class="fc-body" id="fb-2" role="region" aria-label="Details for AE-ENV-001">
+            <div class="fc-body-inner">
+              
+              
+              
+              <div>
+                <span class="label-caps">Remediation</span>
+                <p class="fc-text">Pin runtimes in mise.toml.</p>
+              </div>
+              
+              
+              <div>
+                <span class="label-caps">Why this matters</span>
+                <p class="fc-text">A reproducible toolchain declaration is present.</p>
+              </div>
+              
+              
+              <a class="doc-link" href="https://use-charter.dev/rules/AE-ENV-001" target="_blank" rel="noopener noreferrer" aria-label="Rule documentation for AE-ENV-001 (opens in a new tab)">
+                use-charter.dev/rules/AE-ENV-001 <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M19 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"/></svg></span>
+              </a>
+              
+            </div>
+          </div>
+        </article>
+        
+        <article class="fc" data-sev="LOW" data-search="AE-CTX-004 Context LOW Agent session artifacts are not git-ignored  .gitignore" aria-label="Finding AE-CTX-004, LOW severity">
+          <div class="fc-hdr" role="button" tabindex="0" aria-expanded="false"
+            aria-controls="fb-3" aria-label="AE-CTX-004: Agent session artifacts are not git-ignored — toggle details">
+            <span class="sv sv-LOW" aria-hidden="true"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/></svg></span>LOW</span>
+            <div class="fc-head-main">
+              <div class="fc-tags">
+                <span class="fc-rule">AE-CTX-004</span>
+                <span class="fc-cat">Context</span>
+                
+              </div>
+              <p class="fc-summary">Agent session artifacts are not git-ignored</p>
+              
+              <div class="fc-loc">
+                <span class="path">.gitignore</span>
+                <button type="button" class="copy-btn" data-copy=".gitignore" aria-label="Copy file location .gitignore">
+                  <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></span><span class="label">Copy</span>
+                </button>
+              </div>
+              
+            </div>
+            <span class="icon chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></span>
+          </div>
+          <div class="fc-body" id="fb-3" role="region" aria-label="Details for AE-CTX-004">
+            <div class="fc-body-inner">
+              
+              
+              
+              
+              <div>
+                <span class="label-caps">Why this matters</span>
+                <p class="fc-text">Local agent session artifacts are git-ignored.</p>
+              </div>
+              
+              
+              <a class="doc-link" href="https://use-charter.dev/rules/AE-CTX-004" target="_blank" rel="noopener noreferrer" aria-label="Rule documentation for AE-CTX-004 (opens in a new tab)">
+                use-charter.dev/rules/AE-CTX-004 <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M19 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"/></svg></span>
+              </a>
+              
+            </div>
+          </div>
+        </article>
+        
+        <article class="fc" data-sev="LOW" data-search="AE-SUPPRESS-003 Governance LOW Suppression rate is elevated " aria-label="Finding AE-SUPPRESS-003, LOW severity">
+          <div class="fc-hdr" role="button" tabindex="0" aria-expanded="false"
+            aria-controls="fb-4" aria-label="AE-SUPPRESS-003: Suppression rate is elevated — toggle details">
+            <span class="sv sv-LOW" aria-hidden="true"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/></svg></span>LOW</span>
+            <div class="fc-head-main">
+              <div class="fc-tags">
+                <span class="fc-rule">AE-SUPPRESS-003</span>
+                <span class="fc-cat">Governance</span>
+                <span class="tag info-tag">informational</span>
+              </div>
+              <p class="fc-summary">Suppression rate is elevated</p>
+              
+            </div>
+            <span class="icon chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></span>
+          </div>
+          <div class="fc-body" id="fb-4" role="region" aria-label="Details for AE-SUPPRESS-003">
+            <div class="fc-body-inner">
+              
+              
+              
+              
+              <div>
+                <span class="label-caps">Why this matters</span>
+                <p class="fc-text">Suppression rate is within a healthy range (informational).</p>
+              </div>
+              
+              
+              <a class="doc-link" href="https://use-charter.dev/rules/AE-SUPPRESS-003" target="_blank" rel="noopener noreferrer" aria-label="Rule documentation for AE-SUPPRESS-003 (opens in a new tab)">
+                use-charter.dev/rules/AE-SUPPRESS-003 <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M19 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"/></svg></span>
+              </a>
+              
+            </div>
+          </div>
+        </article>
+        
+      </div>
+
+      <div id="findings-empty" class="empty" role="status" aria-live="polite">
+        <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg></span>
+        No findings match this filter.
+        <button type="button" class="link-btn" data-filter-reset aria-label="Clear filters and show all findings">Show all 5</button>
+      </div>
+      
+    </section>
+
+    
+    
+    <section id="suppressions" class="sec" aria-labelledby="suppressions-h">
+      <h2 id="suppressions-h" class="sec-hdr">
+        <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.4 5.2A9 9 0 0 1 21 12a14 14 0 0 1-2.2 3M6.3 6.3A14 14 0 0 0 3 12a9 9 0 0 0 12 5"/></svg></span>Suppressions
+        <span class="count">2</span>
+        <span class="note">excluded from score</span>
+      </h2>
+      <div class="table" role="table" aria-label="Suppressed findings">
+        <div class="trow thead" role="row">
+          <span role="columnheader">Rule</span><span role="columnheader">Reason</span><span role="columnheader">Expires</span><span role="columnheader">Status</span>
+        </div>
+        
+        <div class="trow" role="row">
+          <span class="rule" role="cell">AE-CI-002</span>
+          <span class="reason" role="cell" title="Charter CI runs in the platform repo, not per-service">Charter CI runs in the platform repo, not per-service</span>
+          <span class="exp" role="cell">2026-08-16</span>
+          <span class="stat g" role="cell"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>active</span>
+        </div>
+        
+        <div class="trow" role="row">
+          <span class="rule" role="cell">AE-CTX-006</span>
+          <span class="reason" role="cell" title="Accepted low-emphasis policy">Accepted low-emphasis policy</span>
+          <span class="exp" role="cell">permanent</span>
+          <span class="stat d2" role="cell"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 3v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span>permanent</span>
+        </div>
+        
+      </div>
+      <div class="callout info" role="note" style="margin-top:12px">
+        <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/></svg></span>
+        <div>
+          <p class="callout-body">Suppressed findings are excluded from the score. Charter governance rules
+          (<code>AE-SUPPRESS-001/002/003</code>) audit them for a reason, an approver on permanent waivers, and a healthy suppression rate.</p>
+        </div>
+      </div>
+    </section>
+    
+
+    
+    <section id="summary" class="sec" aria-labelledby="summary-h">
+      <h2 id="summary-h" class="sec-hdr"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 21h18"/><rect x="5" y="11" width="3" height="7"/><rect x="11" y="6" width="3" height="12"/><rect x="17" y="9" width="3" height="9"/></svg></span>Scan summary</h2>
+      <div class="metrics">
+        <div class="metric" role="group" aria-label="18 rules checked across 9 categories">
+          <p class="k">Rules checked</p><p class="v">18</p><p class="s">9 categories</p>
+        </div>
+        <div class="metric" role="group" aria-label="5 active findings">
+          <p class="k">Active findings</p><p class="v r">5</p><p class="s">affect score</p>
+        </div>
+        <div class="metric" role="group" aria-label="2 suppressed findings">
+          <p class="k">Suppressed</p><p class="v d2">2</p><p class="s">excluded from score</p>
+        </div>
+        <div class="metric" role="group" aria-label="Final readiness score 49 of 100">
+          <p class="k">Readiness</p><p class="v zone-danger">49</p><p class="s">FAIL · threshold 80</p>
+        </div>
+      </div>
+      <div class="breakdown" role="group" aria-label="Severity breakdown: 1 blocker, 1 high, 1 medium, 1 low. Base score 65, final 49.">
+        <div class="bd-bar" aria-hidden="true">
+          <div class="bd-seg danger" style="flex:20"></div><div class="bd-seg warning" style="flex:10"></div><div class="bd-seg warning" style="flex:4"></div><div class="bd-seg info" style="flex:1"></div><div class="bd-seg remaining" style="flex:49"></div>
+        </div>
+        <div class="bd-legend" aria-hidden="true">
+          <span class="r">1 BLOCKER (−20)</span><span class="y">1 HIGH (−10)</span><span class="y">1 MEDIUM (−4)</span><span class="b">1 LOW (−1)</span>
+          <span class="base">base 65 → 49</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <span class="brand"><span class="mark"><svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true" focusable="false"><rect x="3" y="12" width="4" height="40"/><rect x="3" y="12" width="11" height="4"/><rect x="3" y="48" width="11" height="4"/><rect x="57" y="12" width="4" height="40"/><rect x="50" y="12" width="11" height="4"/><rect x="50" y="48" width="11" height="4"/><path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="butt"/></svg></span>charter <span class="meta d3" style="font-weight:400">v1.0.0</span></span>
+    <span class="sep" aria-hidden="true">·</span>
+    <span>self-contained · offline · 2026-06-02T18:24:37Z</span>
+    <a class="home" href="https://use-charter.dev" target="_blank" rel="noopener noreferrer">use-charter.dev <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M19 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"/></svg></span></a>
+  </footer>
+
+</div>
+<script>/* Charter HTML report — client interactivity.
+   Vanilla, zero network. Filter by severity, full-text search, expand/collapse,
+   copy path:line, light/dark toggle. Keyboard-operable; aria-* kept in sync. */
+(function () {
+  "use strict";
+
+  var root = document.documentElement;
+  var activeSeverity = "all";
+
+  function findingCards() {
+    return Array.prototype.slice.call(document.querySelectorAll(".fc"));
+  }
+  function searchInput() {
+    return document.getElementById("charter-search");
+  }
+
+  /* ── Expand / collapse a single card ── */
+  function setOpen(card, open) {
+    var hdr = card.querySelector(".fc-hdr");
+    var body = card.querySelector(".fc-body");
+    if (!hdr || !body) return;
+    body.classList.toggle("open", open);
+    hdr.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+  function toggleCard(card) {
+    var body = card.querySelector(".fc-body");
+    setOpen(card, !body.classList.contains("open"));
+    syncExpandAll();
+  }
+
+  /* ── Expand / collapse all currently visible cards ── */
+  function visibleCards() {
+    return findingCards().filter(function (c) {
+      return c.style.display !== "none";
+    });
+  }
+  function allVisibleOpen() {
+    var vis = visibleCards();
+    return vis.length > 0 && vis.every(function (c) {
+      return c.querySelector(".fc-body").classList.contains("open");
+    });
+  }
+  function syncExpandAll() {
+    var btn = document.getElementById("expand-all");
+    if (!btn) return;
+    var open = allVisibleOpen();
+    btn.setAttribute("aria-pressed", open ? "true" : "false");
+    var label = btn.querySelector(".label");
+    if (label) label.textContent = open ? "Collapse all" : "Expand all";
+  }
+  function toggleAll() {
+    var open = !allVisibleOpen();
+    visibleCards().forEach(function (c) {
+      setOpen(c, open);
+    });
+    syncExpandAll();
+  }
+
+  /* ── Filter + search ── */
+  function applyFilter() {
+    var input = searchInput();
+    var query = (input ? input.value : "").trim().toLowerCase();
+    var anyVisible = false;
+    findingCards().forEach(function (c) {
+      var sevMatch = activeSeverity === "all" || c.getAttribute("data-sev") === activeSeverity;
+      var haystack = (c.getAttribute("data-search") || c.textContent).toLowerCase();
+      var queryMatch = query === "" || haystack.indexOf(query) !== -1;
+      var show = sevMatch && queryMatch;
+      c.style.display = show ? "" : "none";
+      if (show) anyVisible = true;
+    });
+    var empty = document.getElementById("findings-empty");
+    if (empty) empty.classList.toggle("show", !anyVisible && findingCards().length > 0);
+    syncExpandAll();
+  }
+  function setSeverity(sev) {
+    activeSeverity = sev;
+    document.querySelectorAll(".fp").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-filter") === sev ? "true" : "false");
+    });
+    applyFilter();
+  }
+
+  /* ── Copy path:line ── */
+  function copyPath(btn) {
+    var text = btn.getAttribute("data-copy");
+    if (!text) return;
+    var done = function () {
+      var label = btn.querySelector(".label");
+      var prev = label ? label.textContent : "";
+      btn.classList.add("copied");
+      if (label) label.textContent = "Copied";
+      window.setTimeout(function () {
+        btn.classList.remove("copied");
+        if (label) label.textContent = prev || "Copy";
+      }, 1400);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () {});
+    } else {
+      done();
+    }
+  }
+
+  /* ── Theme toggle (overrides prefers-color-scheme) ── */
+  function prefersDark() {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function currentTheme() {
+    return root.getAttribute("data-theme") || (prefersDark() ? "dark" : "light");
+  }
+  function toggleTheme(btn) {
+    var next = currentTheme() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    if (btn) btn.setAttribute("aria-pressed", next === "dark" ? "true" : "false");
+  }
+
+  /* ── Wire events (delegation where practical) ── */
+  function init() {
+    document.addEventListener("click", function (e) {
+      var copy = e.target.closest ? e.target.closest(".copy-btn") : null;
+      if (copy) { e.stopPropagation(); copyPath(copy); return; }
+
+      var fp = e.target.closest ? e.target.closest(".fp") : null;
+      if (fp && !fp.disabled) { setSeverity(fp.getAttribute("data-filter")); return; }
+
+      var reset = e.target.closest ? e.target.closest("[data-filter-reset]") : null;
+      if (reset) {
+        var input = searchInput();
+        if (input) input.value = "";
+        setSeverity("all");
+        return;
+      }
+
+      var expandAll = e.target.closest ? e.target.closest("#expand-all") : null;
+      if (expandAll) { toggleAll(); return; }
+
+      var theme = e.target.closest ? e.target.closest(".theme-toggle") : null;
+      if (theme) { toggleTheme(theme); return; }
+
+      var hdr = e.target.closest ? e.target.closest(".fc-hdr") : null;
+      if (hdr) { toggleCard(hdr.closest(".fc")); return; }
+    });
+
+    /* Keyboard activation for finding headers (Enter / Space) — WCAG 2.1.1 */
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      var hdr = e.target.closest ? e.target.closest(".fc-hdr") : null;
+      if (hdr) { e.preventDefault(); toggleCard(hdr.closest(".fc")); }
+    });
+
+    var input = searchInput();
+    if (input) input.addEventListener("input", applyFilter);
+
+    /* Reflect the live OS colour preference so screen readers announce the
+       correct toggle state before any click (the static default is "false"). */
+    var themeBtn = document.querySelector(".theme-toggle");
+    if (themeBtn) themeBtn.setAttribute("aria-pressed", currentTheme() === "dark" ? "true" : "false");
+
+    syncExpandAll();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

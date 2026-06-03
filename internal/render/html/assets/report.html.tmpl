@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en" data-charter-report>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="generator" content="Charter {{.Provenance.Version}}">
+<meta name="robots" content="noindex">
+<title>{{.Title}}</title>
+<style>{{.CSS}}</style>
+</head>
+<body>
+<a class="skip-link" href="#findings">Skip to findings</a>
+<p class="sr-only">{{.A11ySummary}}</p>
+
+<div class="report">
+
+  <header class="topbar" role="banner">
+    <span class="brand"><span class="mark">{{icon "brandmark"}}</span>charter</span>
+    <span class="ver meta">{{.Provenance.Version}}</span>
+    <span class="div" aria-hidden="true"></span>
+    <span class="repo" title="{{.Repo}}">{{.Repo}}</span>
+    <nav class="nav" aria-label="Report sections">
+      <a href="#score">Score</a>
+      <a href="#findings">Findings <span class="pill-count {{if .Nav.FindingsAlarm}}alarm{{end}}">{{.Nav.FindingsCount}}</span></a>
+      {{if .HasSuppressions}}<a href="#suppressions">Suppressions</a>{{end}}
+      <a href="#summary">Summary</a>
+    </nav>
+    <button type="button" class="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false">
+      <span class="icon icon-sun" aria-hidden="true">{{icon "sun"}}</span><span class="icon icon-moon" aria-hidden="true">{{icon "moon"}}</span>
+    </button>
+  </header>
+
+  <div class="provenance">
+    <div class="row">
+      <span><b>{{.Repo}}</b> · {{.Provenance.Commit}}</span>
+      <span>{{.Provenance.Timestamp}}</span>
+      <span>threshold <b>{{.Provenance.Threshold}}</b> · {{.Provenance.Status}}</span>
+    </div>
+  </div>
+
+  <main id="main">
+
+    <!-- SCORE HERO -->
+    <section id="score" class="sec" aria-labelledby="score-h">
+      <h2 id="score-h" class="sr-only">Score</h2>
+      <div class="hero">
+        <div>
+          <div class="hero-score">
+            <span class="hero-num zone-{{.Score.Zone}}" aria-label="Score {{.Score.Value}} out of 100">{{.Score.Value}}</span>
+            <span class="hero-den" aria-hidden="true">/100</span>
+            <div class="hero-meta">
+              <span class="status-pill {{if .Score.Pass}}pass{{else}}fail{{end}}">
+                <span class="icon" aria-hidden="true">{{if .Score.Pass}}{{icon "check"}}{{else}}{{icon "x"}}{{end}}</span>{{.Score.StatusText}}
+              </span>
+              <span class="zone-label">{{.Score.ZoneLabel}}</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-bar">
+          <div class="bar-track" role="progressbar" aria-valuenow="{{.Score.Value}}" aria-valuemin="0" aria-valuemax="100" aria-label="Readiness score {{.Score.Value}} of 100">
+            <div class="bar-fill zone-{{.Score.Zone}}" style="width:{{.Score.Value}}%" aria-hidden="true"></div>
+          </div>
+          <div class="bar-ticks" aria-hidden="true">
+            <span>0</span><span>60</span><span>80</span><span>100</span>
+          </div>
+          <p class="formula" aria-label="Score calculation">
+            100{{range .Formula.Parts}} − {{.Per}}×{{.Count}}<span class="{{.Class}}">{{.Letter}}</span>{{end}} = <strong>{{.Formula.Base}}</strong>{{if .Formula.Capped}} &nbsp;→&nbsp; cap &nbsp;→&nbsp; <strong class="r">{{.Formula.Final}}</strong>{{end}}
+          </p>
+        </div>
+      </div>
+
+      {{if .Cap.Active}}
+      <div class="callout danger" role="alert">
+        <span class="icon" aria-hidden="true">{{icon "lock"}}</span>
+        <div>
+          <p class="callout-title">{{.Cap.Title}}</p>
+          <p class="callout-body">{{.Cap.Detail}}</p>
+        </div>
+      </div>
+      {{end}}
+    </section>
+
+    <!-- CATEGORY SCORECARD -->
+    <section id="scorecard" class="sec" aria-labelledby="scorecard-h">
+      <h2 id="scorecard-h" class="sec-hdr"><span class="icon" aria-hidden="true">{{icon "grid"}}</span>Category scorecard</h2>
+      <div class="grid-cards" role="list" aria-label="Readiness by category">
+        {{range .Categories}}
+        <article class="cc" data-state="{{.State}}" role="listitem" aria-label="{{.A11y}}">
+          <div class="cc-name"><span class="icon" aria-hidden="true">{{icon .IconKey}}</span>{{.Name}}</div>
+          <div class="cc-rules">{{.RuleCount}} rule{{if ne .RuleCount 1}}s{{end}}</div>
+          {{if .Passed}}
+            <div class="cc-stat g"><span class="icon" aria-hidden="true">{{icon "check"}}</span>all passed</div>
+          {{else if .Informational}}
+            <div class="cc-stat d2">{{.FindingsCount}} informational</div>
+            <div class="cc-ded d3">0 pts</div>
+          {{else}}
+            <div class="cc-stat {{.WorstClass}}">{{.FindingsCount}} {{.WorstSeverity}}</div>
+            <div class="cc-ded {{.WorstClass}}">−{{.Deduction}} pts</div>
+          {{end}}
+        </article>
+        {{end}}
+      </div>
+    </section>
+
+    <!-- FINDINGS -->
+    <section id="findings" class="sec" aria-labelledby="findings-h">
+      <h2 id="findings-h" class="sec-hdr">
+        <span class="icon" aria-hidden="true">{{icon "bug"}}</span>Findings
+        <span class="count {{if .Nav.FindingsAlarm}}alarm{{end}}">{{.FindingsTotal}}</span>
+        {{if .HasFindings}}
+        <button type="button" id="expand-all" class="btn-ghost" style="margin-left:auto" aria-pressed="false">
+          <span class="label">Expand all</span>
+        </button>
+        {{end}}
+      </h2>
+
+      {{if .HasFindings}}
+      <div class="toolbar">
+        <div role="group" aria-label="Filter findings by severity" style="display:flex;flex-wrap:wrap;gap:7px;">
+          {{range .Severities}}
+          <button type="button" class="fp" data-filter="{{.Key}}" aria-pressed="{{if .Pressed}}true{{else}}false{{end}}"
+            {{if .Disabled}}disabled aria-disabled="true"{{end}} aria-label="{{.Label}}: {{.Count}} {{plural .Count "finding"}}">
+            {{.Label}} <span class="num">{{.Count}}</span>
+          </button>
+          {{end}}
+        </div>
+        <div class="search-wrap">
+          <span class="icon" aria-hidden="true">{{icon "search"}}</span>
+          <input type="search" id="charter-search" placeholder="Search…" aria-label="Search findings by rule ID, category, or description" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="findings-list">
+        {{range .Findings}}
+        <article class="fc" data-sev="{{.Severity}}" data-search="{{.Search}}" aria-label="Finding {{.RuleID}}, {{.Severity}} severity">
+          <div class="fc-hdr" role="button" tabindex="0" aria-expanded="{{if .OpenByDefault}}true{{else}}false{{end}}"
+            aria-controls="fb-{{.Index}}" aria-label="{{.RuleID}}: {{.Summary}} — toggle details">
+            <span class="sv sv-{{.Severity}}" aria-hidden="true"><span class="icon">{{icon .SevIcon}}</span>{{.Severity}}</span>
+            <div class="fc-head-main">
+              <div class="fc-tags">
+                <span class="fc-rule">{{.RuleID}}</span>
+                <span class="fc-cat">{{.Category}}</span>
+                {{if .Informational}}<span class="tag info-tag">informational</span>{{end}}
+              </div>
+              <p class="fc-summary">{{.Summary}}</p>
+              {{if .HasLoc}}
+              <div class="fc-loc">
+                <span class="path">{{.PrimaryLoc}}</span>
+                <button type="button" class="copy-btn" data-copy="{{.PrimaryLoc}}" aria-label="Copy file location {{.PrimaryLoc}}">
+                  <span class="icon" aria-hidden="true">{{icon "copy"}}</span><span class="label">Copy</span>
+                </button>
+              </div>
+              {{end}}
+            </div>
+            <span class="icon chev" aria-hidden="true">{{icon "chevron-down"}}</span>
+          </div>
+          <div class="fc-body{{if .OpenByDefault}} open{{end}}" id="fb-{{.Index}}" role="region" aria-label="Details for {{.RuleID}}">
+            <div class="fc-body-inner">
+              {{if .Evidence}}
+              <div>
+                <span class="label-caps">Evidence</span>
+                {{range .Evidence}}<div class="evidence">{{.}}</div>{{end}}
+              </div>
+              {{end}}
+              {{if gt (len .Locations) 1}}
+              <div>
+                <span class="label-caps">Locations</span>
+                <div class="loc-list">
+                  {{range .Locations}}
+                  <div class="fc-loc">
+                    <span class="path">{{.}}</span>
+                    <button type="button" class="copy-btn" data-copy="{{.}}" aria-label="Copy file location {{.}}">
+                      <span class="icon" aria-hidden="true">{{icon "copy"}}</span><span class="label">Copy</span>
+                    </button>
+                  </div>
+                  {{end}}
+                </div>
+              </div>
+              {{end}}
+              {{if .Remediation}}
+              <div>
+                <span class="label-caps">Remediation</span>
+                <p class="fc-text">{{.Remediation}}</p>
+              </div>
+              {{end}}
+              {{if .WhyMatters}}
+              <div>
+                <span class="label-caps">Why this matters</span>
+                <p class="fc-text">{{.WhyMatters}}</p>
+              </div>
+              {{end}}
+              {{if .HelpURI}}
+              <a class="doc-link" href="{{.HelpURI}}" target="_blank" rel="noopener noreferrer" aria-label="Rule documentation for {{.RuleID}} (opens in a new tab)">
+                {{.DocLabel}} <span class="icon" aria-hidden="true">{{icon "external-link"}}</span>
+              </a>
+              {{end}}
+            </div>
+          </div>
+        </article>
+        {{end}}
+      </div>
+
+      <div id="findings-empty" class="empty" role="status" aria-live="polite">
+        <span class="icon" aria-hidden="true">{{icon "filter"}}</span>
+        No findings match this filter.
+        <button type="button" class="link-btn" data-filter-reset aria-label="Clear filters and show all findings">Show all {{.FindingsTotal}}</button>
+      </div>
+      {{else}}
+      <div class="callout info" role="status">
+        <span class="icon" aria-hidden="true">{{icon "check"}}</span>
+        <div>
+          <p class="callout-title g">No active findings</p>
+          <p class="callout-body">Every Charter rule passed. This repository is ready for autonomous AI-agent work.</p>
+        </div>
+      </div>
+      {{end}}
+    </section>
+
+    {{if .HasSuppressions}}
+    <!-- SUPPRESSIONS -->
+    <section id="suppressions" class="sec" aria-labelledby="suppressions-h">
+      <h2 id="suppressions-h" class="sec-hdr">
+        <span class="icon" aria-hidden="true">{{icon "eye-off"}}</span>Suppressions
+        <span class="count">{{len .Suppressions}}</span>
+        <span class="note">excluded from score</span>
+      </h2>
+      <div class="table" role="table" aria-label="Suppressed findings">
+        <div class="trow thead" role="row">
+          <span role="columnheader">Rule</span><span role="columnheader">Reason</span><span role="columnheader">Expires</span><span role="columnheader">Status</span>
+        </div>
+        {{range .Suppressions}}
+        <div class="trow" role="row">
+          <span class="rule" role="cell">{{.RuleID}}</span>
+          <span class="reason" role="cell" title="{{.Reason}}">{{.Reason}}</span>
+          <span class="exp" role="cell">{{.Expires}}</span>
+          <span class="stat {{.StatusClass}}" role="cell"><span class="icon" aria-hidden="true">{{icon .StatusIcon}}</span>{{.Status}}</span>
+        </div>
+        {{end}}
+      </div>
+      <div class="callout info" role="note" style="margin-top:12px">
+        <span class="icon" aria-hidden="true">{{icon "info"}}</span>
+        <div>
+          <p class="callout-body">Suppressed findings are excluded from the score. Charter governance rules
+          (<code>AE-SUPPRESS-001/002/003</code>) audit them for a reason, an approver on permanent waivers, and a healthy suppression rate.</p>
+        </div>
+      </div>
+    </section>
+    {{end}}
+
+    <!-- SCAN SUMMARY -->
+    <section id="summary" class="sec" aria-labelledby="summary-h">
+      <h2 id="summary-h" class="sec-hdr"><span class="icon" aria-hidden="true">{{icon "chart"}}</span>Scan summary</h2>
+      <div class="metrics">
+        <div class="metric" role="group" aria-label="{{.Summary.RulesChecked}} rules checked across {{.Summary.Categories}} categories">
+          <p class="k">Rules checked</p><p class="v">{{.Summary.RulesChecked}}</p><p class="s">{{.Summary.Categories}} categories</p>
+        </div>
+        <div class="metric" role="group" aria-label="{{.Summary.ActiveFindings}} active findings">
+          <p class="k">Active findings</p><p class="v {{if .Nav.FindingsAlarm}}r{{end}}">{{.Summary.ActiveFindings}}</p><p class="s">affect score</p>
+        </div>
+        <div class="metric" role="group" aria-label="{{.Summary.Suppressed}} suppressed findings">
+          <p class="k">Suppressed</p><p class="v d2">{{.Summary.Suppressed}}</p><p class="s">excluded from score</p>
+        </div>
+        <div class="metric" role="group" aria-label="Final readiness score {{.Score.Value}} of 100">
+          <p class="k">Readiness</p><p class="v zone-{{.Score.Zone}}">{{.Score.Value}}</p><p class="s">{{.Score.StatusText}} · threshold {{.Provenance.Threshold}}</p>
+        </div>
+      </div>
+      <div class="breakdown" role="group" aria-label="{{.Breakdown.A11y}}">
+        <div class="bd-bar" aria-hidden="true">
+          {{range .Breakdown.Segments}}<div class="bd-seg {{.Class}}" style="flex:{{.Flex}}"></div>{{end}}
+        </div>
+        <div class="bd-legend" aria-hidden="true">
+          {{range .Breakdown.Legend}}<span class="{{.Class}}">{{.Text}}</span>{{end}}
+          <span class="base">{{.Breakdown.BaseText}}</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <span class="brand"><span class="mark">{{icon "brandmark"}}</span>charter <span class="meta d3" style="font-weight:400">{{.Footer.Version}}</span></span>
+    <span class="sep" aria-hidden="true">·</span>
+    <span>self-contained · offline · {{.Footer.Timestamp}}</span>
+    <a class="home" href="https://use-charter.dev" target="_blank" rel="noopener noreferrer">use-charter.dev <span class="icon" aria-hidden="true">{{icon "external-link"}}</span></a>
+  </footer>
+
+</div>
+<script>{{.JS}}</script>
+</body>
+</html>

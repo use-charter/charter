@@ -1,0 +1,703 @@
+// Package html renders a doctor.Result as a single, self-contained, offline HTML
+// document (Slice 16, ADR-0025). The output references zero external resources:
+// all CSS and JS are embedded via go:embed and inlined into <style>/<script>, and
+// icons are inline SVG. The only absolute URLs are navigational anchors to the
+// public rule docs (https://use-charter.dev/...), never loaded assets.
+//
+// Rendering is deterministic: findings, suppressions, and categories are sorted by
+// stable keys, and the one non-deterministic input — the generation timestamp — is
+// injected through renderWith so golden tests stay byte-stable. The renderer is a
+// pure projection of the already-redacted result: no disk I/O, no network, no LLM.
+package html
+
+import (
+	"bytes"
+	"embed"
+	"fmt"
+	"html/template"
+	"path/filepath"
+	"sort"
+	"strings"
+	"time"
+
+	"go.use-charter.dev/charter/internal/doctor"
+	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/rules/catalog"
+	"go.use-charter.dev/charter/internal/scoring"
+	"go.use-charter.dev/charter/internal/suppress"
+	"go.use-charter.dev/charter/internal/version"
+)
+
+//go:embed assets/report.css assets/report.js assets/report.html.tmpl
+var assets embed.FS
+
+// reportCSS and reportJS are the embedded, author-controlled assets inlined into
+// the report. They are trusted by construction (compiled into the binary, never
+// user input), so the html/template "safe" conversions are intentional.
+var (
+	reportCSS = template.CSS(mustAsset("assets/report.css")) //nolint:gosec // static embedded asset, not user input
+	reportJS  = template.JS(mustAsset("assets/report.js"))   //nolint:gosec // static embedded asset, not user input
+	tmpl      = template.Must(template.New("report").
+			Funcs(template.FuncMap{"icon": icon, "plural": pluralize}).
+			Parse(string(mustAsset("assets/report.html.tmpl"))))
+)
+
+func mustAsset(name string) []byte {
+	b, err := assets.ReadFile(name)
+	if err != nil {
+		panic("charter: missing embedded report asset " + name + ": " + err.Error())
+	}
+	return b
+}
+
+// meta carries the non-deterministic provenance the renderer stamps onto the
+// report. Render derives it from time.Now and the version package; tests inject a
+// fixed value via renderWith for byte-stable golden output.
+type meta struct {
+	generatedAt time.Time
+	version     string
+	commit      string
+}
+
+// Render projects a doctor.Result into one self-contained HTML document.
+func Render(result doctor.Result) ([]byte, error) {
+	return renderWith(result, meta{
+		generatedAt: time.Now().UTC(),
+		version:     version.Version(),
+		commit:      version.Commit(),
+	})
+}
+
+func renderWith(result doctor.Result, m meta) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, buildView(result, m)); err != nil {
+		return nil, fmt.Errorf("render html report: %w", err)
+	}
+	return buf.Bytes(), nil
+}
+
+// ── View model ──────────────────────────────────────────────────────────────
+
+type view struct {
+	Title       string
+	A11ySummary string
+	Repo        string
+	CSS         template.CSS
+	JS          template.JS
+
+	Nav        navVM
+	Provenance provenanceVM
+	Score      scoreVM
+	Formula    formulaVM
+	Cap        capVM
+	Categories []categoryVM
+
+	HasFindings   bool
+	FindingsTotal int
+	Severities    []severityPill
+	Findings      []findingVM
+
+	HasSuppressions bool
+	Suppressions    []suppressionVM
+
+	Summary   summaryVM
+	Breakdown breakdownVM
+	Footer    footerVM
+}
+
+type navVM struct {
+	FindingsCount int
+	FindingsAlarm bool
+}
+
+type provenanceVM struct {
+	Version   string
+	Commit    string
+	Timestamp string
+	Threshold int
+	Status    string
+}
+
+type scoreVM struct {
+	Value      int
+	Zone       string
+	ZoneLabel  string
+	Pass       bool
+	StatusText string
+}
+
+type formulaPart struct {
+	Per    int
+	Count  int
+	Class  string
+	Letter string
+}
+
+type formulaVM struct {
+	Parts  []formulaPart
+	Base   int
+	Capped bool
+	Final  int
+}
+
+type capVM struct {
+	Active bool
+	Title  string
+	Detail string
+}
+
+type categoryVM struct {
+	Name          string
+	IconKey       string
+	RuleCount     int
+	State         string
+	Passed        bool
+	Informational bool
+	WorstSeverity string
+	WorstClass    string
+	Deduction     int
+	FindingsCount int
+	A11y          string
+}
+
+type severityPill struct {
+	Key      string
+	Label    string
+	Count    int
+	Pressed  bool
+	Disabled bool
+}
+
+type findingVM struct {
+	Index         int
+	RuleID        string
+	Severity      string
+	SevIcon       string
+	Category      string
+	Summary       string
+	PrimaryLoc    string
+	HasLoc        bool
+	Locations     []string
+	Evidence      []string
+	Remediation   string
+	WhyMatters    string
+	HelpURI       string
+	DocLabel      string
+	Informational bool
+	OpenByDefault bool
+	Search        string
+}
+
+type suppressionVM struct {
+	RuleID      string
+	Reason      string
+	Expires     string
+	Status      string
+	StatusClass string
+	StatusIcon  string
+}
+
+type summaryVM struct {
+	RulesChecked   int
+	Categories     int
+	ActiveFindings int
+	Suppressed     int
+}
+
+type breakdownSeg struct {
+	Class string
+	Flex  int
+}
+
+type breakdownLegend struct {
+	Class string
+	Text  string
+}
+
+type breakdownVM struct {
+	Segments []breakdownSeg
+	Legend   []breakdownLegend
+	BaseText string
+	A11y     string
+}
+
+type footerVM struct {
+	Version   string
+	Timestamp string
+}
+
+// ── Builders ─────────────────────────────────────────────────────────────────
+
+func buildView(result doctor.Result, m meta) view {
+	s := result.Score
+	repo := repoName(result.Root)
+	statusText := passText(result.Passed)
+	timestamp := m.generatedAt.Format(time.RFC3339)
+	zone, zoneLabel := zoneOf(s.Final)
+
+	ordered := sortFindings(result.Findings)
+	scoringCount := 0
+	for _, f := range result.Findings {
+		if !f.Informational {
+			scoringCount++
+		}
+	}
+
+	catRuleCount, categoriesChecked := catalogCategories()
+
+	return view{
+		Title:       fmt.Sprintf("Charter report — %s — %d/100 %s", repo, s.Final, statusText),
+		A11ySummary: a11ySummary(repo, s.Final, statusText, result.Threshold, len(result.Findings), len(result.Suppressed)),
+		Repo:        repo,
+		CSS:         reportCSS,
+		JS:          reportJS,
+
+		Nav: navVM{FindingsCount: len(result.Findings), FindingsAlarm: scoringCount > 0},
+		Provenance: provenanceVM{
+			Version:   m.version,
+			Commit:    shortCommit(m.commit),
+			Timestamp: timestamp,
+			Threshold: result.Threshold,
+			Status:    statusText,
+		},
+		Score:   scoreVM{Value: s.Final, Zone: zone, ZoneLabel: zoneLabel, Pass: result.Passed, StatusText: statusText},
+		Formula: buildFormula(s),
+		Cap:     buildCap(result),
+
+		Categories: buildCategories(result.Findings, catRuleCount),
+
+		HasFindings:   len(ordered) > 0,
+		FindingsTotal: len(ordered),
+		Severities:    buildSeverityPills(ordered),
+		Findings:      buildFindings(ordered),
+
+		HasSuppressions: len(result.Suppressed) > 0,
+		Suppressions:    buildSuppressions(result.Suppressed),
+
+		Summary: summaryVM{
+			RulesChecked:   len(catalog.IDs()),
+			Categories:     categoriesChecked,
+			ActiveFindings: len(result.Findings),
+			Suppressed:     len(result.Suppressed),
+		},
+		Breakdown: buildBreakdown(s),
+		Footer:    footerVM{Version: m.version, Timestamp: timestamp},
+	}
+}
+
+func sortFindings(in []findings.Finding) []findings.Finding {
+	out := append([]findings.Finding(nil), in...)
+	sort.SliceStable(out, func(i, j int) bool {
+		if wi, wj := out[i].Severity.Weight(), out[j].Severity.Weight(); wi != wj {
+			return wi > wj
+		}
+		return out[i].RuleID < out[j].RuleID
+	})
+	return out
+}
+
+func buildFormula(s scoring.Result) formulaVM {
+	parts := []formulaPart{}
+	if s.Blocker > 0 {
+		parts = append(parts, formulaPart{Per: 20, Count: s.Blocker, Class: "r", Letter: "B"})
+	}
+	if s.High > 0 {
+		parts = append(parts, formulaPart{Per: 10, Count: s.High, Class: "y", Letter: "H"})
+	}
+	if s.Medium > 0 {
+		parts = append(parts, formulaPart{Per: 4, Count: s.Medium, Class: "y", Letter: "M"})
+	}
+	if s.Low > 0 {
+		parts = append(parts, formulaPart{Per: 1, Count: s.Low, Class: "b", Letter: "L"})
+	}
+	return formulaVM{Parts: parts, Base: s.Base, Capped: s.Final < s.Base, Final: s.Final}
+}
+
+// buildCap mirrors scoring.Calculate's cap logic to explain a capped score: it
+// finds the binding constraint (a finding's hard Cap, or the blocker ceiling of
+// 59) so the report can name what is holding the score down.
+func buildCap(result doctor.Result) capVM {
+	s := result.Score
+	if s.Final >= s.Base {
+		return capVM{}
+	}
+
+	capVal := s.Base
+	reason := ""
+	var capFinding findings.Finding
+	if s.Blocker > 0 && capVal > 59 {
+		capVal = 59
+		reason = "blocker"
+	}
+	for _, f := range result.Findings {
+		if f.Informational || f.Cap <= 0 {
+			continue
+		}
+		if f.Cap < capVal {
+			capVal = f.Cap
+			reason = "rule"
+			capFinding = f
+		}
+	}
+
+	switch reason {
+	case "rule":
+		detail := capFinding.Summary
+		if r := strings.TrimSpace(capFinding.Remediation); r != "" {
+			detail = strings.TrimRight(detail, ".") + ". " + r
+		}
+		return capVM{
+			Active: true,
+			Title:  fmt.Sprintf("%s caps the score at %d", capFinding.RuleID, capVal),
+			Detail: detail,
+		}
+	default:
+		return capVM{
+			Active: true,
+			Title:  fmt.Sprintf("Blocker present — score capped at %d", capVal),
+			Detail: "A BLOCKER finding hard-caps the readiness score regardless of other deductions. Resolve every blocker to lift the cap.",
+		}
+	}
+}
+
+func buildCategories(all []findings.Finding, catRuleCount map[string]int) []categoryVM {
+	out := []categoryVM{}
+	seen := map[string]bool{}
+	for _, c := range scoring.ByCategory(all) {
+		seen[c.Category] = true
+		ruleCount := catRuleCount[c.Category]
+		if ruleCount == 0 {
+			ruleCount = distinctRules(all, c.Category)
+		}
+		vm := categoryVM{
+			Name:          c.Category,
+			IconKey:       categoryIcon(c.Category),
+			RuleCount:     ruleCount,
+			FindingsCount: c.Findings,
+			Deduction:     c.Deduction,
+			WorstSeverity: string(c.WorstSeverity),
+		}
+		if c.Deduction == 0 {
+			vm.Informational = true
+			vm.State = "muted"
+			vm.A11y = fmt.Sprintf("%s: %d informational, no deduction", c.Category, c.Findings)
+		} else {
+			vm.State = stateForSeverity(c.WorstSeverity)
+			vm.WorstClass = severityClass(c.WorstSeverity)
+			vm.A11y = fmt.Sprintf("%s: %d %s, worst %s, minus %d %s",
+				c.Category, c.Findings, pluralize(c.Findings, "finding"), c.WorstSeverity, c.Deduction, pluralize(c.Deduction, "point"))
+		}
+		out = append(out, vm)
+	}
+
+	passed := []string{}
+	for cat := range catRuleCount {
+		if !seen[cat] {
+			passed = append(passed, cat)
+		}
+	}
+	sort.Strings(passed)
+	for _, name := range passed {
+		out = append(out, categoryVM{
+			Name:      name,
+			IconKey:   categoryIcon(name),
+			RuleCount: catRuleCount[name],
+			State:     "pass",
+			Passed:    true,
+			A11y:      fmt.Sprintf("%s: all %d %s passed", name, catRuleCount[name], pluralize(catRuleCount[name], "rule")),
+		})
+	}
+	return out
+}
+
+func buildSeverityPills(ordered []findings.Finding) []severityPill {
+	counts := map[findings.Severity]int{}
+	for _, f := range ordered {
+		counts[f.Severity]++
+	}
+	mk := func(sev findings.Severity, label string) severityPill {
+		return severityPill{Key: string(sev), Label: label, Count: counts[sev], Disabled: counts[sev] == 0}
+	}
+	return []severityPill{
+		{Key: "all", Label: "All", Count: len(ordered), Pressed: true},
+		mk(findings.SeverityBlocker, "Blocker"),
+		mk(findings.SeverityHigh, "High"),
+		mk(findings.SeverityMedium, "Medium"),
+		mk(findings.SeverityLow, "Low"),
+	}
+}
+
+func buildFindings(ordered []findings.Finding) []findingVM {
+	out := make([]findingVM, 0, len(ordered))
+	for i, f := range ordered {
+		locs := locationStrings(f)
+		primary := ""
+		if len(locs) > 0 {
+			primary = locs[0]
+		}
+		why, help, docLabel := "", "", ""
+		if e, ok := catalog.Lookup(f.RuleID); ok {
+			why = e.ShortDescription
+			help = e.HelpURI
+			docLabel = strings.TrimPrefix(help, "https://")
+		}
+		out = append(out, findingVM{
+			Index:         i,
+			RuleID:        f.RuleID,
+			Severity:      string(f.Severity),
+			SevIcon:       severityIcon(f.Severity),
+			Category:      f.Category,
+			Summary:       f.Summary,
+			PrimaryLoc:    primary,
+			HasLoc:        primary != "",
+			Locations:     locs,
+			Evidence:      f.Evidence,
+			Remediation:   f.Remediation,
+			WhyMatters:    why,
+			HelpURI:       help,
+			DocLabel:      docLabel,
+			Informational: f.Informational,
+			OpenByDefault: i == 0,
+			Search:        searchText(f),
+		})
+	}
+	return out
+}
+
+func buildSuppressions(list []suppress.Suppressed) []suppressionVM {
+	ordered := append([]suppress.Suppressed(nil), list...)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		if wi, wj := ordered[i].Finding.Severity.Weight(), ordered[j].Finding.Severity.Weight(); wi != wj {
+			return wi > wj
+		}
+		return ordered[i].Finding.RuleID < ordered[j].Finding.RuleID
+	})
+
+	out := make([]suppressionVM, 0, len(ordered))
+	for _, sup := range ordered {
+		reason := strings.TrimSpace(sup.Reason)
+		expires := strings.TrimSpace(sup.Expires)
+		vm := suppressionVM{RuleID: sup.Finding.RuleID, Reason: reason, Expires: expiresLabel(expires)}
+		if reason == "" {
+			vm.Reason = "—"
+		}
+
+		switch {
+		case strings.EqualFold(expires, "permanent") && strings.TrimSpace(sup.Approver) == "":
+			vm.Status, vm.StatusClass, vm.StatusIcon = "no approver", "y", "alert-triangle"
+		case strings.EqualFold(expires, "permanent"):
+			vm.Status, vm.StatusClass, vm.StatusIcon = "permanent", "d2", "shield-check"
+		case reason == "":
+			vm.Status, vm.StatusClass, vm.StatusIcon = "no reason", "y", "alert-triangle"
+		default:
+			vm.Status, vm.StatusClass, vm.StatusIcon = "active", "g", "check"
+		}
+		out = append(out, vm)
+	}
+	return out
+}
+
+func buildBreakdown(s scoring.Result) breakdownVM {
+	bd := breakdownVM{}
+	add := func(count, per int, class, label string) {
+		if count <= 0 {
+			return
+		}
+		bd.Segments = append(bd.Segments, breakdownSeg{Class: class, Flex: count * per})
+		bd.Legend = append(bd.Legend, breakdownLegend{Class: classToColor(class), Text: fmt.Sprintf("%d %s (−%d)", count, label, count*per)})
+	}
+	add(s.Blocker, 20, "danger", "BLOCKER")
+	add(s.High, 10, "warning", "HIGH")
+	add(s.Medium, 4, "warning", "MEDIUM")
+	add(s.Low, 1, "info", "LOW")
+	remaining := s.Final
+	if remaining < 0 {
+		remaining = 0
+	}
+	bd.Segments = append(bd.Segments, breakdownSeg{Class: "remaining", Flex: remaining})
+
+	bd.BaseText = fmt.Sprintf("base %d", s.Base)
+	if s.Final < s.Base {
+		bd.BaseText = fmt.Sprintf("base %d → %d", s.Base, s.Final)
+	}
+	bd.A11y = fmt.Sprintf("Severity breakdown: %d blocker, %d high, %d medium, %d low. Base score %d, final %d.",
+		s.Blocker, s.High, s.Medium, s.Low, s.Base, s.Final)
+	return bd
+}
+
+// ── Small helpers ────────────────────────────────────────────────────────────
+
+func repoName(root string) string {
+	root = strings.TrimRight(root, "/\\")
+	if root == "" {
+		return "repository"
+	}
+	return filepath.Base(root)
+}
+
+func pluralize(n int, word string) string {
+	if n == 1 {
+		return word
+	}
+	return word + "s"
+}
+
+func passText(passed bool) string {
+	if passed {
+		return "PASS"
+	}
+	return "FAIL"
+}
+
+func zoneOf(score int) (zone, label string) {
+	switch {
+	case score >= 80:
+		return "success", "Ship-ready · 80–100"
+	case score >= 60:
+		return "warning", "Caution · 60–79"
+	default:
+		return "danger", "Critical · 0–59"
+	}
+}
+
+func severityIcon(sev findings.Severity) string {
+	switch sev {
+	case findings.SeverityBlocker:
+		return "x"
+	case findings.SeverityHigh, findings.SeverityMedium:
+		return "alert-triangle"
+	default:
+		return "info"
+	}
+}
+
+func severityClass(sev findings.Severity) string {
+	switch sev {
+	case findings.SeverityBlocker:
+		return "r"
+	case findings.SeverityHigh, findings.SeverityMedium:
+		return "y"
+	default:
+		return "b"
+	}
+}
+
+func stateForSeverity(sev findings.Severity) string {
+	switch sev {
+	case findings.SeverityBlocker:
+		return "danger"
+	case findings.SeverityHigh, findings.SeverityMedium:
+		return "warning"
+	default:
+		return "info"
+	}
+}
+
+func classToColor(class string) string {
+	switch class {
+	case "danger":
+		return "r"
+	case "warning":
+		return "y"
+	case "info":
+		return "b"
+	default:
+		return "d3"
+	}
+}
+
+func shortCommit(commit string) string {
+	commit = strings.TrimSpace(commit)
+	if commit == "" {
+		return "unknown"
+	}
+	if len(commit) > 12 {
+		return commit[:12]
+	}
+	return commit
+}
+
+func expiresLabel(expires string) string {
+	switch {
+	case expires == "":
+		return "default"
+	case strings.EqualFold(expires, "permanent"):
+		return "permanent"
+	default:
+		return expires
+	}
+}
+
+func locationStrings(f findings.Finding) []string {
+	out := make([]string, 0, len(f.Locations))
+	for _, l := range f.Locations {
+		if l.Path == "" {
+			continue
+		}
+		if l.Line > 0 {
+			out = append(out, fmt.Sprintf("%s:%d", l.Path, l.Line))
+		} else {
+			out = append(out, l.Path)
+		}
+	}
+	return out
+}
+
+func searchText(f findings.Finding) string {
+	parts := []string{f.RuleID, f.Category, string(f.Severity), f.Summary, f.Remediation}
+	parts = append(parts, f.Evidence...)
+	parts = append(parts, locationStrings(f)...)
+	return strings.Join(parts, " ")
+}
+
+func distinctRules(all []findings.Finding, category string) int {
+	seen := map[string]bool{}
+	for _, f := range all {
+		if f.Category == category {
+			seen[f.RuleID] = true
+		}
+	}
+	return len(seen)
+}
+
+func catalogCategories() (counts map[string]int, total int) {
+	counts = map[string]int{}
+	for _, id := range catalog.IDs() {
+		if e, ok := catalog.Lookup(id); ok {
+			counts[e.Category]++
+		}
+	}
+	return counts, len(counts)
+}
+
+func categoryIcon(category string) string {
+	switch category {
+	case "Context":
+		return "file-text"
+	case "Secrets":
+		return "lock"
+	case "MCP Safety":
+		return "shield"
+	case "Agent Config":
+		return "settings"
+	case "Environment":
+		return "package"
+	case "CI":
+		return "git-branch"
+	case "Governance":
+		return "shield-check"
+	case "Testing":
+		return "test-pipe"
+	case "Autonomy":
+		return "bolt"
+	default:
+		return "dot"
+	}
+}
+
+func a11ySummary(repo string, score int, status string, threshold, active, suppressed int) string {
+	return fmt.Sprintf(
+		"Charter report for %s. Readiness score %d of 100, %s, threshold %d. %d active findings, %d suppressed. Interactive: filter by severity, search, and expand findings.",
+		repo, score, status, threshold, active, suppressed,
+	)
+}
