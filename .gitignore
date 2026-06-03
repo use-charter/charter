@@ -11,6 +11,8 @@ bin/
 dist/
 coverage/
 *.coverprofile
+cov*.out
+cov*.html
 
 # Tool caches and local state
 .moon/cache/
