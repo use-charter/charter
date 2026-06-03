@@ -10,12 +10,16 @@
 // (scripts/, tools/, testdata/, …). The manifest gate rejects a stray secondary
 // file (e.g. a single Homebrew `.rb` formula in a Rust repo); the source-outside-
 // tooling gate rejects a tooling-only manifest (e.g. a package.json that only
-// drives build scripts in a Go repo). Both are core false-positive guards.
+// drives build scripts in a Go repo); and the embedded-asset gate drops files
+// referenced by a //go:embed directive — a bundled resource of the host program,
+// not an independent language surface (e.g. a web report.js embedded into a Go
+// binary). All three are core false-positive guards.
 package operability
 
 import (
 	"encoding/json"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -42,7 +46,7 @@ type stackInfo struct{ source, tests int }
 
 // Run evaluates AE-TEST-001 and AE-AUTO-001 over the repository.
 func Run(root string, inv repository.Inventory) []findings.Finding {
-	stacks := scanStacks(inv)
+	stacks := scanStacks(root, inv)
 	active := activeLanguages(stacks, inv)
 	if len(active) == 0 {
 		// No real code surface: both rules are N/A (a docs/config/tooling-only
@@ -78,11 +82,17 @@ func inToolingDir(p string) bool {
 }
 
 // scanStacks classifies every tracked source file by language and whether it is
-// a test, skipping tooling directories.
-func scanStacks(inv repository.Inventory) map[string]*stackInfo {
+// a test, skipping tooling directories and //go:embed'd assets.
+func scanStacks(root string, inv repository.Inventory) map[string]*stackInfo {
+	embedded := embeddedAssets(root, inv)
 	m := map[string]*stackInfo{}
 	for _, p := range inv.Paths {
 		if inToolingDir(p) {
+			continue
+		}
+		if _, ok := embedded[p]; ok {
+			// A //go:embed'd file is a bundled resource of the host program,
+			// not an independent language source surface — skip it.
 			continue
 		}
 		lang, isTest, ok := classifySource(p)
@@ -101,6 +111,114 @@ func scanStacks(inv repository.Inventory) map[string]*stackInfo {
 	return m
 }
 
+// embeddedAssets returns the set of inventory paths referenced by any //go:embed
+// directive in a tracked .go file. Such a file is a bundled resource compiled
+// into the host program (e.g. a web report.js embedded into a Go binary), not an
+// independent language surface, so it must not make a language "active" — the
+// embedded-asset false-positive guard. Resolution is offline and deterministic
+// over the inventory; real JS/Python apps do not //go:embed their own source, so
+// the manifest and source-outside-tooling gates remain the primary activators.
+func embeddedAssets(root string, inv repository.Inventory) map[string]struct{} {
+	// //go:embed is Go-only, so the host program is always Go and only a
+	// *secondary* (non-Go) language's manifest can be falsely activated by an
+	// embedded asset. A language with no manifest is never active, so without a
+	// non-Go manifest the gate cannot change any outcome — skip the .go scan
+	// entirely (also keeps a pure-Go monorepo off the per-file read path).
+	if !hasNonGoManifest(inv) {
+		return nil
+	}
+	embedded := map[string]struct{}{}
+	for _, p := range inv.Paths {
+		if !strings.HasSuffix(p, ".go") {
+			continue
+		}
+		content, ok := readRepoFile(root, inv, p)
+		if !ok || !strings.Contains(content, "//go:embed") {
+			continue // skip quickly: no directive in this file
+		}
+		dir := pathDir(p)
+		for _, line := range strings.Split(content, "\n") {
+			// A real //go:embed directive must sit at column 0 (no leading
+			// whitespace) — the Go compiler ignores indented //go:embed comments
+			// inside function bodies, so we must too, or we would over-exclude a
+			// genuine source file. Strip only a trailing \r for Windows endings.
+			rest, ok := strings.CutPrefix(strings.TrimRight(line, "\r"), "//go:embed")
+			if !ok || rest == "" || (rest[0] != ' ' && rest[0] != '\t') {
+				continue
+			}
+			for _, pat := range splitEmbedPatterns(rest) {
+				pat = strings.TrimPrefix(pat, "all:")
+				if pat == "" {
+					continue
+				}
+				resolved := path.Join(dir, pat)
+				for _, candidate := range inv.Paths {
+					if matchesEmbedPattern(resolved, candidate) {
+						embedded[candidate] = struct{}{}
+					}
+				}
+			}
+		}
+	}
+	return embedded
+}
+
+// matchesEmbedPattern reports whether an inventory path is covered by a resolved
+// //go:embed pattern: an exact file, any file under an embedded directory subtree
+// (go:embed of a directory embeds it recursively), or a path.Match glob (slash-
+// based, like the stdlib embed matcher; '*' does not cross '/').
+func matchesEmbedPattern(pattern, candidate string) bool {
+	if candidate == pattern {
+		return true
+	}
+	if strings.HasPrefix(candidate, pattern+"/") {
+		return true
+	}
+	if ok, err := path.Match(pattern, candidate); err == nil && ok {
+		return true
+	}
+	return false
+}
+
+// splitEmbedPatterns splits a //go:embed argument list into individual patterns,
+// honoring Go's "..." and `...` quoting so a pattern containing spaces stays a
+// single token. Surrounding quotes are stripped from the returned patterns.
+func splitEmbedPatterns(s string) []string {
+	var out []string
+	for i, n := 0, len(s); i < n; {
+		for i < n && (s[i] == ' ' || s[i] == '\t') {
+			i++
+		}
+		if i >= n {
+			break
+		}
+		switch s[i] {
+		case '"':
+			j := i + 1
+			for j < n && s[j] != '"' {
+				j++
+			}
+			out = append(out, s[i+1:j])
+			i = j + 1
+		case '`':
+			j := i + 1
+			for j < n && s[j] != '`' {
+				j++
+			}
+			out = append(out, s[i+1:j])
+			i = j + 1
+		default:
+			j := i
+			for j < n && s[j] != ' ' && s[j] != '\t' {
+				j++
+			}
+			out = append(out, s[i:j])
+			i = j
+		}
+	}
+	return out
+}
+
 func activeLanguages(stacks map[string]*stackInfo, inv repository.Inventory) []string {
 	var out []string
 	for lang, info := range stacks {
@@ -110,6 +228,22 @@ func activeLanguages(stacks map[string]*stackInfo, inv repository.Inventory) []s
 	}
 	sort.Strings(out)
 	return out
+}
+
+// nonGoLangs are the languages whose source could be //go:embed'd into a Go
+// binary and thus need the embedded-asset gate (Go itself is never embedded as a
+// language surface — its package files build the host).
+var nonGoLangs = []string{langJS, langPython, langRust, langJVM, langRuby, langCSharp, langPHP}
+
+// hasNonGoManifest reports whether any non-Go language manifest is present. It is
+// a cheap, file-read-free gate (path lookups only) on the embedded-asset scan.
+func hasNonGoManifest(inv repository.Inventory) bool {
+	for _, lang := range nonGoLangs {
+		if hasManifest(inv, lang) {
+			return true
+		}
+	}
+	return false
 }
 
 // hasManifest reports whether a language's project manifest is present — the
@@ -340,6 +474,15 @@ func pathBase(p string) string {
 		return p[i+1:]
 	}
 	return p
+}
+
+// pathDir returns the slash-based directory of p ("" for a root-level file), so
+// a //go:embed pattern can be resolved relative to its .go file's directory.
+func pathDir(p string) string {
+	if i := strings.LastIndex(p, "/"); i >= 0 {
+		return p[:i]
+	}
+	return ""
 }
 
 func hasAnySuffix(s string, suffixes ...string) bool {
