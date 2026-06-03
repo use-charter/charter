@@ -30,7 +30,7 @@ Canonical list of feature-level deferrals (supersedes the roadmap's short "Defer
 - **Terminal/report:** always-on TUI watch / live re-scan + `$EDITOR` spawn from the `doctor -i` TUI (Slice 15 deferred).
 - **SARIF:** 2.2 upgrade; `artifacts[]`/`invocation` enrichment; content-based (line-shift-resilient) `partialFingerprints` (today's are position-based).
 - **Policy/CLI:** `charter doctor --rule` filtering; rule-level enable/disable, per-rule severity overrides, `rules.ignore`, `rules.AE-CTX-001.token_budget` (see CF-3).
-- **Rules:** `AE-SEC-001` → full Gitleaks ruleset (160+ detectors); full 7-agent config parsing (T1.2.1) + deep multi-agent conflict detection (T1.2.2) — current coverage is lighter than the architecture envisions.
+- **Rules:** `AE-SEC-001` → full Gitleaks ruleset (160+ detectors); full 7-agent config parsing (T1.2.1) + deep multi-agent conflict detection (T1.2.2) — current coverage is lighter than the architecture envisions; `AE-TEST-001` active-language detection now ignores `//go:embed`'d assets (the embedded HTML-report fonts/templates) — **non-embedded** asset-dir web files served from disk by a Go server still activate a language, so revisit the heuristic if real false-positive reports arise.
 - **`charter fix`:** `AE-ENV-001`/`AE-MCP-001` fixers (CF-5/CF-6); present-but-weak-file rewrites; content-aware/3-way diffs; interactive selection.
 - **`charter init`:** `.cursor/rules` scaffolding, `.env.example` codebase env-scanning, interactive prompts.
 - **Distribution:** GHCR/container images, Scoop, Nix, apt, winget; charter-action Marketplace listing + automated monorepo→action-repo sync (today: manual seed at launch).

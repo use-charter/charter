@@ -23,7 +23,7 @@ Canonical numbering is **9–22** below; the post-launch "go-public ops → tag 
 | 13 | MCP Catalog v1 + FP-validation gate (≤10%) | M1.6 / T1.6.1–3 | Pure-Go engine | Should-have | — |
 | 14 | Agent-operability rule expansion (AE-TEST-001, AE-AUTO-001, AE-CTX-006 + category scorecard) | ADR-0023 | Pure-Go engine | Should-have (top-tier) | Slices 9–13 landed |
 | 15 | Terminal experience — styled output + interactive TUI (`doctor -i`) + `charter explain` + `doctor --rule` | ADR-0024 | Pure-Go engine | Should-have (top-tier) | Slices 9–14 landed |
-| 16 | HTML report — self-contained single file (`charter report --format html`) | ADR-0025 | Pure-Go engine | Should-have | Slice 15 |
+| 16 | HTML report — self-contained single file (`charter report --format html`) — ✅ **shipped** | ADR-0025 | Pure-Go engine | Should-have | Slice 15 |
 | 17 | Full codebase review + 2026 architecture/doc alignment | hardening | Review pass | Quality gate | Slices 9–16 landed |
 | 18 | External docs on Mintlify (live, incl. `/rules/AE-*` pages) | distribution | Docs/web | **Hard** | rule catalog helpUris (8/13/14) + new command surface (15/16) |
 | 19 | Launch website (design → build) + docs wiring | distribution | Web | Should-have | Slice 18 (docs to link) |
@@ -94,6 +94,7 @@ Pure-deterministic/offline engine work (no CI secrets): **11, 12, 13, 14, 15, 16
 
 ## Slice 16 — HTML report (self-contained single file)
 
+- **Status:** ✅ shipped on `main` (ADR-0025) — new `internal/render/html` renderer + `charter report` command (`--format html|markdown|json`, `--out`, `--open`), brand fonts embedded, and AE-TEST-001 refined so `go:embed`'d assets no longer activate a language. Charter dogfoods to 100.
 - **Goal:** give the already-promised `charter report` command its v1.0 purpose — one portable, offline HTML file a human can read, keep, and share.
 - **Scope:** `charter report --format html` (default) → a self-contained single file (data/CSS/JS/fonts **inlined**, opens from `file://`, zero network); `--out`, `--open`; `--format markdown|json` reuse the existing renderers. New `internal/render/html`. Implements ADR-0025; inspiration `docs/internal/designs/charter-html-report.html`, built with the installed `.agents/skills/` design set (see `DESIGN-TOKENS.md`), WCAG 2.2 AA, fonts per `DESIGN-TOKENS.md`. `--serve` (hardening checklist recorded), `--format spdx`, and hosted reports are **out of scope** (Phase 1.5 / rejected).
 - **Depends on:** Slice 15 (finding/category model + `charter explain` + design tokens).
