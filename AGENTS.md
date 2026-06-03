@@ -1,18 +1,18 @@
 # AGENTS.md
 
-Last reviewed: 2026-06-01
+Last reviewed: 2026-06-03
 
 ## Current State
 
 - Offline-first Go CLI scoring repos for AI-agent readiness (deterministic).
-- Phase: Phase 1 Slice 12 implemented on top of the real `charter doctor` path.
+- Phase: Phase 1 Slice 16 (self-contained HTML report) on `charter doctor`/`report`.
 - Stack: Go 1.26.3, Moonrepo, mise, hk, GitHub Actions, Bun TS scripts.
-- License: Apache-2.0 OSS core; DCO-first contribution model
-- Product truth: `docs/internal/architecture/charter-architecture-2026.md`; module: `go.use-charter.dev/charter`
-- CLI: `charter init`, `charter doctor` (`--path --threshold --quiet --format text|json|markdown|sarif --out`), `charter fix`, `charter suppress`, `charter version`
+- License: Apache-2.0 OSS core; DCO-first
+- Product truth: `docs/internal/architecture/charter-architecture-2026.md`
+- CLI: `charter init`, `charter doctor` (`--format`, `--rule`, `-i`), `charter explain`, `charter report` (`--format html|markdown|json`, `--out`), `charter fix`, `charter suppress`, `charter version`
 - Gate: `charter.yaml` `policy.profile`/`policy.threshold`; `--threshold` overrides
-- Rules (v1): AE-CTX-001/002/004, AE-ENV-001, AE-CI-002, AE-SEC-001/002, AE-MCP-001/002/003, AE-CC-001/002, AE-SUPPRESS-001/002/003
-- GitHub Action in `action/` (`use-charter/charter-action`); `moon run :perf` validates the 50k-file perf budget
+- Rules (v1, 18): AE-CTX-001/002/004/006, AE-ENV-001, AE-CI-002, AE-SEC-001/002, AE-MCP-001/002/003, AE-CC-001/002, AE-TEST-001, AE-AUTO-001, AE-SUPPRESS-001/002/003
+- GitHub Action in `action/` (`use-charter/charter-action`); `moon run :perf` checks the 50k-file budget
 
 ## Documentation
 

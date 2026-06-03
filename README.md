@@ -2,11 +2,11 @@
 
 Charter is an offline-first AI-agent-readiness scanner for software repositories. It audits agent context, MCP safety, reproducibility, CI posture, and governance so teams can safely adopt coding agents without guesswork.
 
-This repository started as the AI-ready bootstrap baseline and now contains the first real `charter doctor` path with both text and JSON output. The repo itself remains the first dogfood target.
+This repository started as the AI-ready bootstrap baseline and now contains the real `charter doctor` path (text, JSON, Markdown, and SARIF output) plus `charter report`, which writes a self-contained, offline HTML report. The repo itself remains the first dogfood target.
 
 ## Current State
 
-- Phase: Phase 1 Slice 15 implemented; the `charter init` scaffold, the real `charter doctor` path with the full 18-rule v1 set, governance, suppression, SARIF output, policy profiles, the `charter version` command, the diff-first `charter fix` repair command, a signed GoReleaser release pipeline, a composite GitHub Action, validated performance budgets, and the Slice 15 terminal experience (styled TTY output, the interactive `charter doctor -i` TUI, `charter explain`, and `--rule`/`--color`/`--no-color`)
+- Phase: Phase 1 Slice 16 implemented; the `charter init` scaffold, the real `charter doctor` path with the full 18-rule v1 set, governance, suppression, SARIF output, policy profiles, the `charter version` command, the diff-first `charter fix` repair command, a signed GoReleaser release pipeline, a composite GitHub Action, validated performance budgets, the Slice 15 terminal experience (styled TTY output, the interactive `charter doctor -i` TUI, `charter explain`, and `--rule`/`--color`/`--no-color`), and the Slice 16 `charter report` command — a self-contained, offline, single-file HTML report
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
 - Module path: `go.use-charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
@@ -20,6 +20,7 @@ Current implemented scope:
 - `charter init` scaffolds the missing agent-context files (`AGENTS.md`, `charter.yaml`, `.gitignore`, `ARCHITECTURE.md`, `.env.example`, plus `.claude/settings.json` when Claude is detected) so a blank repo reaches a passing scan (≥ 80, measured 95 on a blank Go repo) in seconds; create-missing-only — it never overwrites or deletes, and `--dry-run` previews the file plan
 - `charter doctor` with `--path`, `--threshold`, `--quiet`, `--format text|json|markdown|sarif`, `--out`, `--rule`, `--color`/`--no-color`, and an interactive `-i/--interactive` TUI — **styled** on a TTY (color tiers, OSC 8 links, the `[C] charter` mark, the readiness scorecard) and **byte-stable plain** when piped, under `NO_COLOR`, or with `--quiet`
 - `charter explain <RULE>` prints a rule's catalog metadata (name, category, description, docs URL) in `--format text|json`
+- `charter report` writes a self-contained, offline, single-file HTML report (`--format html` default, or `markdown`/`json` reusing the doctor renderers; `--out`, `--open`) — WCAG 2.2 AA, embedded brand fonts, zero network; it always exits 0 on a successful write (`charter doctor` stays the gate)
 - `charter fix` is the diff-first repair command (`--rule`, `--dry-run`, `--all`, `--yes`, `--path`): it previews unified diffs and applies the v1 fixers (`AE-CTX-001` AGENTS.md, `AE-CTX-004` .gitignore, `AE-CI-002` Charter CI workflow), backing up any existing target to `.charter/backups/` before each write — it never deletes, never overwrites a create target, and never auto-fixes secrets
 - 18 implemented rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-CTX-006`, `AE-ENV-001`, `AE-CI-002`, `AE-SEC-001`, `AE-SEC-002`, `AE-MCP-001`, `AE-MCP-002`, `AE-MCP-003`, `AE-CC-001`, `AE-CC-002`, `AE-TEST-001`, `AE-AUTO-001`, `AE-SUPPRESS-001`, `AE-SUPPRESS-002`, `AE-SUPPRESS-003`
 - agent context registry (`agentcontext` — shared source for context and secret scanning, drift guard)

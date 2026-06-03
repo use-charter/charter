@@ -237,7 +237,24 @@ AE-ENV-001  MEDIUM   (repo root)    No toolchain declaration
 score=49 gate=FAIL threshold=80 exit=1
 ```
 
-**SPDX output:**
+---
+
+### charter report — Shareable Offline Report
+
+`charter report` renders the same scan as `charter doctor` into a portable artifact you can keep, attach to a PR, or hand to a teammate. `--format html` (default) writes a **self-contained, offline, single-file** report; `--format markdown`/`json` reuse the doctor renderers. `--out` sets the path (defaults to `charter-report.{html,md,json}`), and `--open` launches it in the OS default browser. Unlike `doctor`, `report` always exits 0 on a successful write — `charter doctor` stays the CI gate (ADR-0025).
+
+**HTML report (default):**
+```
+❯ charter report
+  [C] charter v1.0.0  ·  my-repo / HEAD  ·  38ms
+  Written  charter-report.html  (~143 KB · self-contained · offline)
+  Score    100/100  ████████████████████  PASS
+  Exit     0
+  › Open: charter report --open
+```
+One offline file — scan data, CSS, JS, and the brand fonts are all inlined, so it opens straight from `file://` with **zero network**, and the markup is **WCAG 2.2 AA**.
+
+**SPDX output (`charter report --format spdx` — Phase 1.5 / v1.1 preview):**
 ```
 ❯ charter report --format spdx --out sbom.spdx
   [C] charter v1.0.0  ·  SPDX 2.3
