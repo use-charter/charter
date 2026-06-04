@@ -3,7 +3,6 @@ package secrets
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
@@ -49,13 +48,12 @@ func checkSEC001(root string, inv repository.Inventory) (findings.Finding, bool,
 	}
 
 	for _, target := range targets {
-		// #nosec G304 -- target is constrained to agent-visible inventory paths.
-		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(target)))
-		if err != nil {
+		content, ok := repository.ReadTrackedFile(root, inv, target)
+		if !ok {
 			continue
 		}
 
-		for i, line := range strings.Split(string(data), "\n") {
+		for i, line := range strings.Split(content, "\n") {
 			match := sharedsecrets.DetectLine(line)
 			if !match.Found {
 				continue

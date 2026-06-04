@@ -2,7 +2,6 @@ package environment
 
 import (
 	"encoding/json"
-	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -94,7 +93,7 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 		if hasPinnedVersionFile(root, inv, ".go-version") {
 			return ".go-version"
 		}
-		content, ok := readRepoFile(root, inv, "go.mod")
+		content, ok := repository.ReadTrackedFile(root, inv, "go.mod")
 		if ok && (strings.Contains(content, "\ntoolchain go") || strings.Contains(content, "\ngo ")) {
 			return "go.mod"
 		}
@@ -105,7 +104,7 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 		if hasPinnedVersionFile(root, inv, ".node-version") {
 			return ".node-version"
 		}
-		content, ok := readRepoFile(root, inv, "package.json")
+		content, ok := repository.ReadTrackedFile(root, inv, "package.json")
 		if ok && hasJavaScriptRuntimePin(content) {
 			return "package.json"
 		}
@@ -113,12 +112,12 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 		if hasPinnedVersionFile(root, inv, ".python-version") {
 			return ".python-version"
 		}
-		content, ok := readRepoFile(root, inv, "pyproject.toml")
+		content, ok := repository.ReadTrackedFile(root, inv, "pyproject.toml")
 		if ok && strings.Contains(strings.ToLower(content), "requires-python") {
 			return "pyproject.toml"
 		}
 	case "rust":
-		if content, ok := readRepoFile(root, inv, "rust-toolchain.toml"); ok && hasPinnedRustToolchainTOML(content) {
+		if content, ok := repository.ReadTrackedFile(root, inv, "rust-toolchain.toml"); ok && hasPinnedRustToolchainTOML(content) {
 			return "rust-toolchain.toml"
 		}
 		if hasPinnedVersionFile(root, inv, "rust-toolchain") {
@@ -128,7 +127,7 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 		if hasPinnedVersionFile(root, inv, ".swift-version") {
 			return ".swift-version"
 		}
-		content, ok := readRepoFile(root, inv, "Package.swift")
+		content, ok := repository.ReadTrackedFile(root, inv, "Package.swift")
 		if ok && strings.Contains(strings.ToLower(content), "swift-tools-version") {
 			return "Package.swift"
 		}
@@ -136,7 +135,7 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 		if hasPinnedVersionFile(root, inv, ".ruby-version") {
 			return ".ruby-version"
 		}
-		content, ok := readRepoFile(root, inv, "Gemfile")
+		content, ok := repository.ReadTrackedFile(root, inv, "Gemfile")
 		if ok && hasPinnedGemfileRubyVersion(content) {
 			return "Gemfile"
 		}
@@ -144,13 +143,13 @@ func toolchainSignalSource(root string, language string, inv repository.Inventor
 		if hasPinnedVersionFile(root, inv, ".java-version") {
 			return ".java-version"
 		}
-		if content, ok := readRepoFile(root, inv, "gradle/wrapper/gradle-wrapper.properties"); ok && hasPinnedGradleDistributionURL(content) {
+		if content, ok := repository.ReadTrackedFile(root, inv, "gradle/wrapper/gradle-wrapper.properties"); ok && hasPinnedGradleDistributionURL(content) {
 			return "gradle/wrapper/gradle-wrapper.properties"
 		}
-		if content, ok := readRepoFile(root, inv, "build.gradle.kts"); ok && hasPinnedGradleToolchainSignal(content) {
+		if content, ok := repository.ReadTrackedFile(root, inv, "build.gradle.kts"); ok && hasPinnedGradleToolchainSignal(content) {
 			return "build.gradle.kts"
 		}
-		if content, ok := readRepoFile(root, inv, "build.gradle"); ok && hasPinnedGradleToolchainSignal(content) {
+		if content, ok := repository.ReadTrackedFile(root, inv, "build.gradle"); ok && hasPinnedGradleToolchainSignal(content) {
 			return "build.gradle"
 		}
 	}
@@ -175,7 +174,7 @@ var rubyVersionPattern = regexp.MustCompile(`(?m)^\s*ruby\s+["']([^"']+)["']`)
 
 func hasMiseSignalForLanguage(root string, language string, inv repository.Inventory) bool {
 	for _, path := range []string{"mise.toml", ".mise.toml"} {
-		if content, ok := readRepoFile(root, inv, path); ok && hasMiseRuntimePin(content, language) {
+		if content, ok := repository.ReadTrackedFile(root, inv, path); ok && hasMiseRuntimePin(content, language) {
 			return true
 		}
 	}
@@ -183,13 +182,13 @@ func hasMiseSignalForLanguage(root string, language string, inv repository.Inven
 }
 
 func hasToolVersionsPinForLanguage(root string, language string, inv repository.Inventory) bool {
-	content, ok := readRepoFile(root, inv, ".tool-versions")
+	content, ok := repository.ReadTrackedFile(root, inv, ".tool-versions")
 	return ok && hasToolVersionsPin(content, language)
 }
 
 func hasDevcontainerSignal(root string, inv repository.Inventory) bool {
 	for _, configPath := range []string{"devcontainer.json", ".devcontainer/devcontainer.json"} {
-		content, ok := readRepoFile(root, inv, configPath)
+		content, ok := repository.ReadTrackedFile(root, inv, configPath)
 		if !ok {
 			continue
 		}
@@ -204,20 +203,8 @@ func hasFlakeSignal(root string, inv repository.Inventory) bool {
 	if !inv.Has("flake.nix") || !inv.Has("flake.lock") {
 		return false
 	}
-	content, ok := readRepoFile(root, inv, "flake.lock")
+	content, ok := repository.ReadTrackedFile(root, inv, "flake.lock")
 	return ok && strings.TrimSpace(content) != ""
-}
-
-func readRepoFile(root string, inv repository.Inventory, path string) (string, bool) {
-	if !inv.Has(path) {
-		return "", false
-	}
-	// #nosec G304 -- path is a fixed repo-relative path selected from known toolchain files.
-	data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(path)))
-	if err != nil {
-		return "", false
-	}
-	return string(data), true
 }
 
 func hasMiseRuntimePin(content string, language string) bool {
@@ -333,7 +320,7 @@ func hasJavaScriptRuntimePin(content string) bool {
 }
 
 func hasPinnedVersionFile(root string, inv repository.Inventory, path string) bool {
-	content, ok := readRepoFile(root, inv, path)
+	content, ok := repository.ReadTrackedFile(root, inv, path)
 	if !ok {
 		return false
 	}
@@ -517,12 +504,10 @@ func requiresLockfile(language string, root string, inv repository.Inventory) bo
 		if !inv.Has("go.mod") {
 			return false
 		}
-		// #nosec G304 -- go.mod is read from the resolved repository root and the file name is fixed.
-		data, err := os.ReadFile(filepath.Join(root, "go.mod"))
-		if err != nil {
+		text, ok := repository.ReadTrackedFile(root, inv, "go.mod")
+		if !ok {
 			return true
 		}
-		text := string(data)
 		return strings.Contains(text, "require ") || strings.Contains(text, "replace ") || strings.Contains(text, "exclude ")
 	case "javascript":
 		return inv.Has("package.json")
@@ -574,17 +559,15 @@ func hasHookSignal(root string, inv repository.Inventory) bool {
 	if !inv.Has("package.json") {
 		return false
 	}
-	// #nosec G304 -- package.json is read from the resolved repository root and the file name is fixed.
-	data, err := os.ReadFile(filepath.Join(root, "package.json"))
-	if err != nil {
+	text, ok := repository.ReadTrackedFile(root, inv, "package.json")
+	if !ok {
 		return false
 	}
-	text := string(data)
 	return strings.Contains(text, "simple-git-hooks") || strings.Contains(text, "lint-staged")
 }
 
 func hasPinnedRequirementsLockfile(inv repository.Inventory, root string) bool {
-	content, ok := readRepoFile(root, inv, "requirements.txt")
+	content, ok := repository.ReadTrackedFile(root, inv, "requirements.txt")
 	if !ok {
 		return false
 	}

@@ -25,11 +25,10 @@ func checkCTX006(root string, inv repository.Inventory) (findings.Finding, bool)
 		return findings.Finding{}, false // absence is AE-CTX-001's concern
 	}
 	candidate := locations[0]
-	data, err := readContextCandidate(root, candidate)
-	if err != nil {
+	content, ok := readContextCandidate(root, inv, candidate)
+	if !ok {
 		return findings.Finding{}, false
 	}
-	content := string(data)
 	words := len(strings.Fields(content))
 	if words == 0 {
 		return findings.Finding{}, false

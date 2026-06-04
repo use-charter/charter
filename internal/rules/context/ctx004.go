@@ -1,8 +1,6 @@
 package context
 
 import (
-	"os"
-	"path/filepath"
 	"slices"
 	"sort"
 	"strings"
@@ -21,9 +19,8 @@ var requiredGitignorePatterns = []string{
 }
 
 func checkCTX004(root string, inv repository.Inventory) (findings.Finding, bool) {
-	// #nosec G304 -- .gitignore is a fixed repo-relative contract path.
-	data, err := os.ReadFile(filepath.Join(root, ".gitignore"))
-	if err != nil {
+	content, ok := repository.ReadTrackedFile(root, inv, ".gitignore")
+	if !ok {
 		return findings.Finding{
 			RuleID:      "AE-CTX-004",
 			Severity:    findings.SeverityMedium,
@@ -35,7 +32,7 @@ func checkCTX004(root string, inv repository.Inventory) (findings.Finding, bool)
 	}
 
 	var evidence []string
-	patterns := parseGitignorePatterns(string(data))
+	patterns := parseGitignorePatterns(content)
 	for _, pattern := range requiredGitignorePatterns {
 		if !slices.Contains(patterns, pattern) {
 			evidence = append(evidence, "missing ignore pattern: "+pattern)
