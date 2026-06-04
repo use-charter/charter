@@ -1,10 +1,6 @@
 package mcp
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-
 	"go.use-charter.dev/charter/internal/catalog"
 	"go.use-charter.dev/charter/internal/config"
 	"go.use-charter.dev/charter/internal/findings"
@@ -31,9 +27,11 @@ func isMCPConfigPath(p string) bool {
 	return false
 }
 
-// Run evaluates AE-MCP-001/002/003 across all MCP config files in the repo. It
-// fails fast (returns a wrapped error) when a discovered MCP config or
-// charter.yaml is unreadable or malformed, mirroring gosecrets.RunSecretRules.
+// Run evaluates AE-MCP-001/002/003 across all MCP config files in the repo.
+// Each MCP config is read through repository.ReadTrackedFile (inventory-gated,
+// symlink-contained, size-capped); a tracked config that fails a safety gate is
+// skipped, while a malformed config or an unreadable/malformed charter.yaml
+// still fails fast with a wrapped error, mirroring gosecrets.RunSecretRules.
 func Run(root string, inv repository.Inventory) ([]findings.Finding, error) {
 	var paths []string
 	for _, p := range inv.Paths {
@@ -47,12 +45,11 @@ func Run(root string, inv repository.Inventory) ([]findings.Finding, error) {
 
 	files := make([]ConfigFile, 0, len(paths))
 	for _, rel := range paths {
-		// #nosec G304 -- rel is a fixed MCP config path from the tracked inventory.
-		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(rel)))
-		if err != nil {
-			return nil, fmt.Errorf("read %s: %w", rel, err)
+		content, ok := repository.ReadTrackedFile(root, inv, rel)
+		if !ok {
+			continue
 		}
-		cf, err := parseConfigFile(rel, data)
+		cf, err := parseConfigFile(rel, []byte(content))
 		if err != nil {
 			return nil, err
 		}

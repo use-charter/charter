@@ -1,8 +1,6 @@
 package context
 
 import (
-	"os"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -35,8 +33,8 @@ func checkCTX001(root string, inv repository.Inventory) (findings.Finding, bool)
 	locations := supportedContextLocations(inv)
 	if len(locations) > 0 {
 		candidate := locations[0]
-		data, err := readContextCandidate(root, candidate)
-		if err != nil {
+		content, ok := readContextCandidate(root, inv, candidate)
+		if !ok {
 			return findings.Finding{
 				RuleID:      "AE-CTX-001",
 				Severity:    findings.SeverityBlocker,
@@ -48,7 +46,6 @@ func checkCTX001(root string, inv repository.Inventory) (findings.Finding, bool)
 			}, true
 		}
 
-		content := string(data)
 		if isMeaningfulContext(content) {
 			return findings.Finding{}, false
 		}
@@ -105,31 +102,36 @@ func hasCursorRules(inv repository.Inventory) bool {
 	return false
 }
 
-func readContextCandidate(root string, candidate string) ([]byte, error) {
+// readContextCandidate returns the content of a single-file context candidate,
+// or the concatenation of the tracked .cursor/rules files for the directory
+// candidate. Every read is routed through repository.ReadTrackedFile so it is
+// inventory-gated, symlink-contained, and size-capped. The .cursor/rules tree
+// is enumerated from the inventory (mirroring cursorRuleFiles in
+// internal/rules/agentconfig/cc002.go) rather than walked on disk, so a tracked
+// rule file that fails a safety gate is simply skipped — matching the standard
+// rule contract — instead of failing the whole check.
+func readContextCandidate(root string, inv repository.Inventory, candidate string) (string, bool) {
 	if candidate != agentcontext.CursorRulesDir {
-		// #nosec G304 -- candidate is constrained to the supported root context file set.
-		return os.ReadFile(filepath.Join(root, filepath.FromSlash(candidate)))
+		return repository.ReadTrackedFile(root, inv, candidate)
 	}
+
+	var rels []string
+	prefix := agentcontext.CursorRulesDir + "/"
+	for _, p := range inv.Paths {
+		if strings.HasPrefix(p, prefix) {
+			rels = append(rels, p)
+		}
+	}
+	sort.Strings(rels)
 
 	var chunks []string
-	entries, err := os.ReadDir(filepath.Join(root, ".cursor", "rules"))
-	if err != nil {
-		return nil, err
+	for _, rel := range rels {
+		if content, ok := repository.ReadTrackedFile(root, inv, rel); ok {
+			chunks = append(chunks, content)
+		}
 	}
 
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		// #nosec G304 -- file names come from the tracked .cursor/rules directory entries.
-		data, err := os.ReadFile(filepath.Join(root, ".cursor", "rules", entry.Name()))
-		if err != nil {
-			return nil, err
-		}
-		chunks = append(chunks, string(data))
-	}
-
-	return []byte(strings.Join(chunks, "\n")), nil
+	return strings.Join(chunks, "\n"), true
 }
 
 func isMeaningfulContext(content string) bool {

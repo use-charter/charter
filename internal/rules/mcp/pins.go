@@ -1,9 +1,6 @@
 package mcp
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
 
 	"go.use-charter.dev/charter/internal/catalog"
@@ -34,12 +31,11 @@ func PlanPins(root string, inv repository.Inventory, cat *catalog.Catalog) ([]Pi
 		if !isMCPConfigPath(rel) {
 			continue
 		}
-		// #nosec G304 -- rel is a fixed MCP config path from the tracked inventory.
-		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(rel)))
-		if err != nil {
-			return nil, fmt.Errorf("read %s: %w", rel, err)
+		content, ok := repository.ReadTrackedFile(root, inv, rel)
+		if !ok {
+			continue
 		}
-		cf, err := parseConfigFile(rel, data)
+		cf, err := parseConfigFile(rel, []byte(content))
 		if err != nil {
 			return nil, err
 		}

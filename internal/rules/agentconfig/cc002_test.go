@@ -75,25 +75,38 @@ func TestCheckEditScope(t *testing.T) {
 		}
 	})
 
-	t.Run("unreadable context file fails fast", func(t *testing.T) {
+	t.Run("unreadable context file is skipped as undeclared", func(t *testing.T) {
 		dir := t.TempDir()
-		// Make AGENTS.md a directory so os.ReadFile returns an error.
+		// Make AGENTS.md a directory so it cannot be read as a file. Reads now go
+		// through repository.ReadTrackedFile, which returns ("", false) on any
+		// failed gate, so an unreadable tracked context file is skipped (standard
+		// rule contract) rather than aborting the whole scan with an error.
 		if err := os.Mkdir(filepath.Join(dir, "AGENTS.md"), 0o755); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := checkEditScope(dir, repository.New([]string{"AGENTS.md"})); err == nil {
-			t.Fatal("expected a read error for an unreadable context file")
+		got, err := checkEditScope(dir, repository.New([]string{"AGENTS.md"}))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(got) != 1 || got[0].RuleID != "AE-CC-002" {
+			t.Fatalf("expected one AE-CC-002 finding for an unreadable context file, got %+v", got)
 		}
 	})
 
-	t.Run("unreadable .cursor/rules file fails fast", func(t *testing.T) {
+	t.Run("unreadable .cursor/rules file is skipped as undeclared", func(t *testing.T) {
 		dir := t.TempDir()
-		// Make the .mdc path a directory so os.ReadFile returns an error.
+		// Make the .mdc path a directory so it cannot be read as a file; the
+		// tracked-but-unreadable rule file is skipped, leaving the directory
+		// present with no off-limits declaration.
 		if err := os.MkdirAll(filepath.Join(dir, ".cursor", "rules", "scope.mdc"), 0o755); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := checkEditScope(dir, repository.New([]string{".cursor/rules/scope.mdc"})); err == nil {
-			t.Fatal("expected a read error for an unreadable .cursor/rules file")
+		got, err := checkEditScope(dir, repository.New([]string{".cursor/rules/scope.mdc"}))
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(got) != 1 || got[0].RuleID != "AE-CC-002" {
+			t.Fatalf("expected one AE-CC-002 finding for an unreadable .cursor/rules file, got %+v", got)
 		}
 	})
 

@@ -1,9 +1,6 @@
 package agentconfig
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -30,8 +27,10 @@ func declaresOffLimits(text string) bool {
 
 // checkEditScope returns an AE-CC-002 finding when an agent context source
 // exists but none declares concrete off-limits paths. Absence of any context
-// source is owned by AE-CTX-001 (Blocker) and is not duplicated here. An
-// unreadable tracked context file fails fast with a wrapped error.
+// source is owned by AE-CTX-001 (Blocker) and is not duplicated here. Every
+// context file is read through repository.ReadTrackedFile (inventory-gated,
+// symlink-contained, size-capped); a tracked file that fails a safety gate is
+// skipped, matching the standard rule contract.
 func checkEditScope(root string, inv repository.Inventory) ([]findings.Finding, error) {
 	var present []string
 	declared := false
@@ -43,12 +42,11 @@ func checkEditScope(root string, inv repository.Inventory) ([]findings.Finding, 
 			continue
 		}
 		present = append(present, rel)
-		// #nosec G304 -- rel is a fixed context/permissions path from the tracked inventory.
-		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(rel)))
-		if err != nil {
-			return nil, fmt.Errorf("read %s: %w", rel, err)
+		content, ok := repository.ReadTrackedFile(root, inv, rel)
+		if !ok {
+			continue
 		}
-		if declaresOffLimits(string(data)) {
+		if declaresOffLimits(content) {
 			declared = true
 		}
 	}
@@ -56,12 +54,11 @@ func checkEditScope(root string, inv repository.Inventory) ([]findings.Finding, 
 	if cursorRules := cursorRuleFiles(inv); len(cursorRules) > 0 {
 		present = append(present, agentcontext.CursorRulesDir)
 		for _, rel := range cursorRules {
-			// #nosec G304 -- rel is a tracked path under the .cursor/rules directory.
-			data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(rel)))
-			if err != nil {
-				return nil, fmt.Errorf("read %s: %w", rel, err)
+			content, ok := repository.ReadTrackedFile(root, inv, rel)
+			if !ok {
+				continue
 			}
-			if declaresOffLimits(string(data)) {
+			if declaresOffLimits(content) {
 				declared = true
 			}
 		}
@@ -84,9 +81,9 @@ func checkEditScope(root string, inv repository.Inventory) ([]findings.Finding, 
 
 // cursorRuleFiles returns the tracked files under the .cursor/rules directory,
 // sorted. It enumerates from the inventory (tracked, non-ignored) rather than
-// the filesystem so scanning stays tracked-only and deterministic — distinct
-// from AE-CTX-001, which reads the same directory via os.ReadDir for its
-// present-but-weak content check.
+// the filesystem so scanning stays tracked-only and deterministic; AE-CTX-001
+// enumerates the same directory the same way for its present-but-weak content
+// check.
 func cursorRuleFiles(inv repository.Inventory) []string {
 	var out []string
 	prefix := agentcontext.CursorRulesDir + "/"

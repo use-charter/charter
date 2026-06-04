@@ -1,8 +1,6 @@
 package ci
 
 import (
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -38,14 +36,13 @@ func Run(root string, inv repository.Inventory) []findings.Finding {
 	var evidence []string
 
 	for _, rel := range workflowPaths {
-		// #nosec G304 -- rel comes from the inventory's tracked workflow paths under .github/workflows/.
-		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(rel)))
-		if err != nil {
+		content, ok := repository.ReadTrackedFile(root, inv, rel)
+		if !ok {
 			evidence = append(evidence, "workflow unreadable: "+rel)
 			continue
 		}
 
-		executable := extractWorkflowExecutables(string(data))
+		executable := extractWorkflowExecutables(content)
 		markCoverage(executable, coverage)
 		evidence = append(evidence, unpinnedActionEvidence(executable.Uses, rel)...)
 	}
@@ -390,13 +387,9 @@ func hasDeferredProductGateDocumentation(root string, inv repository.Inventory) 
 }
 
 func hasDocMarker(root string, inv repository.Inventory, path string, marker string) bool {
-	if !inv.Has(path) {
+	content, ok := repository.ReadTrackedFile(root, inv, path)
+	if !ok {
 		return false
 	}
-	// #nosec G304 -- path is constrained to a fixed documentation file checked by this rule.
-	data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(path)))
-	if err != nil {
-		return false
-	}
-	return strings.Contains(strings.ToLower(string(data)), marker)
+	return strings.Contains(strings.ToLower(content), marker)
 }

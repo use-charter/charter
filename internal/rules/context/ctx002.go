@@ -1,8 +1,6 @@
 package context
 
 import (
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -15,9 +13,8 @@ func checkCTX002(root string, inv repository.Inventory) (findings.Finding, bool)
 		return findings.Finding{}, false
 	}
 
-	// #nosec G304 -- AGENTS.md is a fixed repo-relative contract path.
-	data, err := os.ReadFile(filepath.Join(root, "AGENTS.md"))
-	if err != nil {
+	content, ok := repository.ReadTrackedFile(root, inv, "AGENTS.md")
+	if !ok {
 		return findings.Finding{
 			RuleID:      "AE-CTX-002",
 			Severity:    findings.SeverityMedium,
@@ -29,7 +26,6 @@ func checkCTX002(root string, inv repository.Inventory) (findings.Finding, bool)
 		}, true
 	}
 
-	content := string(data)
 	missing := missingRepoTruthMarkers(content, inv)
 	if len(missing) == 0 {
 		return findings.Finding{}, false

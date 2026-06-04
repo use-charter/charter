@@ -1,10 +1,6 @@
 package agentconfig
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-
 	"go.use-charter.dev/charter/internal/findings"
 	"go.use-charter.dev/charter/internal/repository"
 )
@@ -18,20 +14,21 @@ func isHookConfigPath(p string) bool {
 }
 
 // Run evaluates AE-CC-001 (dangerous hook commands) and AE-CC-002 (edit scope).
-// It fails fast (wrapped error) when a discovered JSON hook config is unreadable
-// or malformed, mirroring the MCP scanner.
+// Each hook config is read through repository.ReadTrackedFile (inventory-gated,
+// symlink-contained, size-capped); a tracked config that fails a safety gate is
+// skipped, while a malformed one still fails fast with a wrapped error,
+// mirroring the MCP scanner.
 func Run(root string, inv repository.Inventory) ([]findings.Finding, error) {
 	var files []ConfigFile
 	for _, p := range inv.Paths {
 		if !isHookConfigPath(p) {
 			continue
 		}
-		// #nosec G304 -- p is a fixed hook-config path from the tracked inventory.
-		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(p)))
-		if err != nil {
-			return nil, fmt.Errorf("read %s: %w", p, err)
+		content, ok := repository.ReadTrackedFile(root, inv, p)
+		if !ok {
+			continue
 		}
-		cf, err := parseHookConfig(p, data)
+		cf, err := parseHookConfig(p, []byte(content))
 		if err != nil {
 			return nil, err
 		}

@@ -18,9 +18,7 @@ package operability
 
 import (
 	"encoding/json"
-	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -132,7 +130,7 @@ func embeddedAssets(root string, inv repository.Inventory) map[string]struct{} {
 		if !strings.HasSuffix(p, ".go") {
 			continue
 		}
-		content, ok := readRepoFile(root, inv, p)
+		content, ok := repository.ReadTrackedFile(root, inv, p)
 		if !ok || !strings.Contains(content, "//go:embed") {
 			continue // skip quickly: no directive in this file
 		}
@@ -357,7 +355,7 @@ func rustHasInlineTests(root string, inv repository.Inventory) bool {
 		if !strings.HasSuffix(p, ".rs") || inToolingDir(p) {
 			continue
 		}
-		if c, ok := readRepoFile(root, inv, p); ok && (strings.Contains(c, "#[test]") || strings.Contains(c, "#[cfg(test)]")) {
+		if c, ok := repository.ReadTrackedFile(root, inv, p); ok && (strings.Contains(c, "#[test]") || strings.Contains(c, "#[cfg(test)]")) {
 			return true
 		}
 	}
@@ -408,10 +406,10 @@ func pytestConfigured(root string, inv repository.Inventory) bool {
 	if inv.Has("pytest.ini") || inv.Has("tox.ini") {
 		return true
 	}
-	if c, ok := readRepoFile(root, inv, "pyproject.toml"); ok && strings.Contains(c, "[tool.pytest") {
+	if c, ok := repository.ReadTrackedFile(root, inv, "pyproject.toml"); ok && strings.Contains(c, "[tool.pytest") {
 		return true
 	}
-	if c, ok := readRepoFile(root, inv, "setup.cfg"); ok && strings.Contains(c, "[tool:pytest]") {
+	if c, ok := repository.ReadTrackedFile(root, inv, "setup.cfg"); ok && strings.Contains(c, "[tool:pytest]") {
 		return true
 	}
 	return false
@@ -424,21 +422,21 @@ var (
 )
 
 func runnerHasTestTarget(root string, inv repository.Inventory) bool {
-	if c, ok := readRepoFile(root, inv, "Makefile"); ok && makeTestTarget.MatchString(c) {
+	if c, ok := repository.ReadTrackedFile(root, inv, "Makefile"); ok && makeTestTarget.MatchString(c) {
 		return true
 	}
 	for _, p := range []string{"justfile", ".justfile"} {
-		if c, ok := readRepoFile(root, inv, p); ok && justRecipe.MatchString(c) {
+		if c, ok := repository.ReadTrackedFile(root, inv, p); ok && justRecipe.MatchString(c) {
 			return true
 		}
 	}
 	for _, p := range []string{"Taskfile.yml", "Taskfile.yaml", "moon.yml"} {
-		if c, ok := readRepoFile(root, inv, p); ok && yamlTestKey.MatchString(c) {
+		if c, ok := repository.ReadTrackedFile(root, inv, p); ok && yamlTestKey.MatchString(c) {
 			return true
 		}
 	}
 	for _, p := range []string{"mise.toml", ".mise.toml"} {
-		if c, ok := readRepoFile(root, inv, p); ok && (strings.Contains(c, "[tasks.test") || strings.Contains(c, "[tasks.check")) {
+		if c, ok := repository.ReadTrackedFile(root, inv, p); ok && (strings.Contains(c, "[tasks.test") || strings.Contains(c, "[tasks.check")) {
 			return true
 		}
 	}
@@ -446,7 +444,7 @@ func runnerHasTestTarget(root string, inv repository.Inventory) bool {
 }
 
 func packageJSONHasTestScript(root string, inv repository.Inventory) bool {
-	content, ok := readRepoFile(root, inv, "package.json")
+	content, ok := repository.ReadTrackedFile(root, inv, "package.json")
 	if !ok {
 		return false
 	}
@@ -502,16 +500,4 @@ func hasSegment(p, name string) bool {
 		}
 	}
 	return false
-}
-
-func readRepoFile(root string, inv repository.Inventory, path string) (string, bool) {
-	if !inv.Has(path) {
-		return "", false
-	}
-	// #nosec G304 -- path is a tracked inventory path joined to the resolved root.
-	data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(path)))
-	if err != nil {
-		return "", false
-	}
-	return string(data), true
 }

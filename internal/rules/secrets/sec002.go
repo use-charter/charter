@@ -1,7 +1,6 @@
 package secrets
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -25,7 +24,7 @@ func checkSEC002(root string, inv repository.Inventory) (findings.Finding, bool)
 			continue
 		}
 
-		if finding, ok := scanSEC002File(root, target); ok {
+		if finding, ok := scanSEC002File(root, target, inv); ok {
 			return finding, true
 		}
 	}
@@ -35,7 +34,7 @@ func checkSEC002(root string, inv repository.Inventory) (findings.Finding, bool)
 			continue
 		}
 
-		if finding, ok := scanSEC002File(root, path); ok {
+		if finding, ok := scanSEC002File(root, path, inv); ok {
 			return finding, true
 		}
 	}
@@ -43,14 +42,13 @@ func checkSEC002(root string, inv repository.Inventory) (findings.Finding, bool)
 	return findings.Finding{}, false
 }
 
-func scanSEC002File(root, rel string) (findings.Finding, bool) {
-	// #nosec G304 -- rel is constrained to inventory-backed MCP/config paths.
-	data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(rel)))
-	if err != nil {
+func scanSEC002File(root, rel string, inv repository.Inventory) (findings.Finding, bool) {
+	content, ok := repository.ReadTrackedFile(root, inv, rel)
+	if !ok {
 		return findings.Finding{}, false
 	}
 
-	for i, line := range strings.Split(string(data), "\n") {
+	for i, line := range strings.Split(content, "\n") {
 		match := sharedsecrets.DetectLine(line)
 		if !match.Found {
 			continue
