@@ -120,8 +120,8 @@ func openWithOS(path string) error {
 	case "darwin":
 		name, args = "open", []string{path}
 	case "windows":
-		// The empty "" is start's title argument; the path follows it.
-		name, args = "cmd", []string{"/c", "start", "", path}
+		// explorer.exe opens the file without re-parsing the path through cmd.exe.
+		name, args = "explorer.exe", []string{path}
 	default:
 		name, args = "xdg-open", []string{path}
 	}

@@ -359,8 +359,7 @@ func (m Model) applyRescan(msg rescanDoneMsg) Model {
 	m.categories = uniqueCategories(m.items)
 	m.selected = 0
 	m.status = "rescanned"
-	m.refresh()
-	return m
+	return m.refresh()
 }
 
 // refresh recomputes the filtered/sorted item set, rebuilds the table rows,

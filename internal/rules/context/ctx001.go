@@ -46,6 +46,21 @@ func checkCTX001(root string, inv repository.Inventory) (findings.Finding, bool)
 			}, true
 		}
 
+		if estimatedTokenCount(content) > 600 {
+			evidence := []string{"context location: " + candidate}
+			evidence = append(evidence, contextBudgetEvidence(content)...)
+			evidence = append(evidence, contextShapeEvidence(content)...)
+			return findings.Finding{
+				RuleID:      "AE-CTX-001",
+				Severity:    findings.SeverityBlocker,
+				Category:    "Context",
+				Summary:     "Agent context file exceeds the 600-token budget",
+				Remediation: "Trim the root context file to ≤600 tokens while keeping project guidance and a verification command.",
+				Evidence:    evidence,
+				Locations:   []findings.Location{{Path: candidate}},
+			}, true
+		}
+
 		if isMeaningfulContext(content) {
 			return findings.Finding{}, false
 		}
@@ -54,7 +69,6 @@ func checkCTX001(root string, inv repository.Inventory) (findings.Finding, bool)
 		evidence = append(evidence, contextShapeEvidence(content)...)
 		evidence = append(evidence, firstSubstantiveLineEvidence(content))
 		evidence = append(evidence, missingContextSignals(content)...)
-		evidence = append(evidence, contextBudgetEvidence(content)...)
 
 		return findings.Finding{
 			RuleID:      "AE-CTX-001",
@@ -137,10 +151,6 @@ func readContextCandidate(root string, inv repository.Inventory, candidate strin
 func isMeaningfulContext(content string) bool {
 	trimmed := strings.TrimSpace(content)
 	if trimmed == "" {
-		return false
-	}
-
-	if estimatedTokenCount(trimmed) > 600 {
 		return false
 	}
 
@@ -250,6 +260,9 @@ func firstSubstantiveLineEvidence(content string) string {
 }
 
 func lineNeedsRedaction(line string) bool {
+	if strings.Contains(line, "-----BEGIN") && strings.Contains(line, "PRIVATE KEY-----") {
+		return true
+	}
 	lower := strings.ToLower(line)
 	for _, token := range []string{"api_key", "apikey", "token", "secret", "password", "passwd", "private key", "bearer ", "authorization:"} {
 		if strings.Contains(lower, token) {

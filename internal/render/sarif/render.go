@@ -138,10 +138,7 @@ func collect(res doctor.Result) []item {
 		items = append(items, item{f: s.Finding, suppressed: true, source: s.Source})
 	}
 	sort.SliceStable(items, func(i, j int) bool {
-		if wi, wj := items[i].f.Severity.Weight(), items[j].f.Severity.Weight(); wi != wj {
-			return wi > wj
-		}
-		return items[i].f.RuleID < items[j].f.RuleID
+		return findings.LessByPriority(items[i].f, items[j].f)
 	})
 	return items
 }

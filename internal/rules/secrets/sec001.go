@@ -1,10 +1,6 @@
 package secrets
 
 import (
-	"bytes"
-	"fmt"
-	"os/exec"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -42,12 +38,7 @@ func RunSecretRules(root string, inv repository.Inventory) ([]findings.Finding, 
 }
 
 func checkSEC001(root string, inv repository.Inventory) (findings.Finding, bool, error) {
-	targets, err := sec001Targets(root, inv)
-	if err != nil {
-		return findings.Finding{}, false, fmt.Errorf("AE-SEC-001: %w", err)
-	}
-
-	for _, target := range targets {
+	for _, target := range sec001Targets(inv) {
 		content, ok := repository.ReadTrackedFile(root, inv, target)
 		if !ok {
 			continue
@@ -75,44 +66,18 @@ func checkSEC001(root string, inv repository.Inventory) (findings.Finding, bool,
 	return findings.Finding{}, false, nil
 }
 
-func sec001Targets(root string, inv repository.Inventory) ([]string, error) {
-	tracked, err := trackedSEC001Paths(root)
-	if err != nil {
-		return nil, err
-	}
-
+func sec001Targets(inv repository.Inventory) []string {
 	targets := make([]string, 0, len(agentVisibleFileTargets))
 	for _, candidate := range agentVisibleFileTargets {
-		if inv.Has(candidate) && tracked[candidate] {
+		if inv.Has(candidate) {
 			targets = append(targets, candidate)
 		}
 	}
 	for _, path := range inv.Paths {
-		if strings.HasPrefix(path, ".cursor/rules/") && tracked[path] {
+		if strings.HasPrefix(path, ".cursor/rules/") {
 			targets = append(targets, path)
 		}
 	}
 	sort.Strings(targets)
-	return targets, nil
-}
-
-func trackedSEC001Paths(root string) (map[string]bool, error) {
-	// #nosec G204 -- root is the resolved repository root for the active scan target.
-	cmd := exec.Command("git", "-C", root, "ls-files", "-z", "--cached", "--full-name")
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	output, err := cmd.Output()
-	if err != nil {
-		return nil, fmt.Errorf("list tracked agent-visible files: %w: %s", err, strings.TrimSpace(stderr.String()))
-	}
-
-	tracked := make(map[string]bool)
-	for _, raw := range strings.Split(string(output), "\x00") {
-		if raw == "" {
-			continue
-		}
-		tracked[filepath.ToSlash(raw)] = true
-	}
-
-	return tracked, nil
+	return targets
 }

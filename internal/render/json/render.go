@@ -2,7 +2,6 @@ package json
 
 import (
 	encodingjson "encoding/json"
-	"sort"
 
 	"go.use-charter.dev/charter/internal/doctor"
 	"go.use-charter.dev/charter/internal/findings"
@@ -67,15 +66,7 @@ type scoreSummary struct {
 }
 
 func Render(result doctor.Result) ([]byte, error) {
-	ordered := append([]findings.Finding(nil), result.Findings...)
-	sort.SliceStable(ordered, func(i, j int) bool {
-		wi, wj := ordered[i].Severity.Weight(), ordered[j].Severity.Weight()
-		if wi != wj {
-			return wi > wj
-		}
-
-		return ordered[i].RuleID < ordered[j].RuleID
-	})
+	ordered := findings.SortedByPriority(result.Findings)
 
 	return encodingjson.Marshal(payload{
 		RepoPath:   result.Root,
@@ -112,14 +103,7 @@ func toCategoryDTOs(all []findings.Finding) []categoryDTO {
 }
 
 func toSuppressedDTOs(list []suppress.Suppressed) []suppressedDTO {
-	ordered := append([]suppress.Suppressed(nil), list...)
-	sort.SliceStable(ordered, func(i, j int) bool {
-		wi, wj := ordered[i].Finding.Severity.Weight(), ordered[j].Finding.Severity.Weight()
-		if wi != wj {
-			return wi > wj
-		}
-		return ordered[i].Finding.RuleID < ordered[j].Finding.RuleID
-	})
+	ordered := suppress.SortedByPriority(list)
 
 	dtos := make([]suppressedDTO, 0, len(ordered))
 	for _, s := range ordered {

@@ -2,7 +2,6 @@ package markdown
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"go.use-charter.dev/charter/internal/doctor"
@@ -13,13 +12,7 @@ import (
 
 // Render projects a doctor.Result into GitHub-PR-comment-friendly Markdown.
 func Render(result doctor.Result) ([]byte, error) {
-	ordered := append([]findings.Finding(nil), result.Findings...)
-	sort.SliceStable(ordered, func(i, j int) bool {
-		if wi, wj := ordered[i].Severity.Weight(), ordered[j].Severity.Weight(); wi != wj {
-			return wi > wj
-		}
-		return ordered[i].RuleID < ordered[j].RuleID
-	})
+	ordered := findings.SortedByPriority(result.Findings)
 
 	var b strings.Builder
 	status := "FAIL"
@@ -61,13 +54,7 @@ func writeSuppressed(b *strings.Builder, list []suppress.Suppressed) {
 	if len(list) == 0 {
 		return
 	}
-	ordered := append([]suppress.Suppressed(nil), list...)
-	sort.SliceStable(ordered, func(i, j int) bool {
-		if wi, wj := ordered[i].Finding.Severity.Weight(), ordered[j].Finding.Severity.Weight(); wi != wj {
-			return wi > wj
-		}
-		return ordered[i].Finding.RuleID < ordered[j].Finding.RuleID
-	})
+	ordered := suppress.SortedByPriority(list)
 
 	fmt.Fprintf(b, "\n**Suppressed (%d)**\n\n", len(ordered))
 	b.WriteString("| Rule | Source | Reason | Expires |\n")

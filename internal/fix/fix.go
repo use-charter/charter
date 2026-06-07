@@ -224,7 +224,9 @@ func writeFile(target string, data []byte) error {
 }
 
 // withinRoot reports whether target resolves to a path at or below root,
-// rejecting any `..` traversal smuggled through a plan path.
+// rejecting any `..` traversal smuggled through a plan path and any symlink
+// that escapes the repository root (so charter fix cannot follow a malicious
+// tracked symlink to overwrite an arbitrary host file).
 func withinRoot(root, target string) bool {
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
@@ -238,5 +240,45 @@ func withinRoot(root, target string) bool {
 	if err != nil {
 		return false
 	}
-	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return false
+	}
+
+	realRoot, err := filepath.EvalSymlinks(absRoot)
+	if err != nil {
+		return false
+	}
+	return pathWithinResolvedRoot(realRoot, filepath.ToSlash(rel))
+}
+
+// pathWithinResolvedRoot walks relSlash (repo-relative, from the unresolved root)
+// under realRoot, resolving symlinks at each existing component. A missing tail
+// (a file charter fix is about to create) is allowed when every resolved prefix
+// stays inside realRoot. relSlash must already be vetted by withinRoot's .. check.
+func pathWithinResolvedRoot(realRoot, relSlash string) bool {
+	if relSlash == "." {
+		return true
+	}
+
+	sep := string(os.PathSeparator)
+	cur := realRoot
+	segments := strings.Split(relSlash, "/")
+	for i, seg := range segments {
+		if seg == "" || seg == "." {
+			continue
+		}
+		candidate := filepath.Join(cur, seg)
+		resolved, err := filepath.EvalSymlinks(candidate)
+		if err != nil {
+			return cur == realRoot || strings.HasPrefix(cur, realRoot+sep)
+		}
+		if resolved != realRoot && !strings.HasPrefix(resolved, realRoot+sep) {
+			return false
+		}
+		cur = resolved
+		if i == len(segments)-1 {
+			return true
+		}
+	}
+	return true
 }

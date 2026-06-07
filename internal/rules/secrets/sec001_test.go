@@ -81,7 +81,7 @@ func TestAESEC001FindsSecretInAgentFile(t *testing.T) {
 	t.Fatalf("expected AE-SEC-001 finding")
 }
 
-func TestAESEC001IgnoresUntrackedAgentFileInInventory(t *testing.T) {
+func TestAESEC001FindsSecretInUntrackedAgentFileInInventory(t *testing.T) {
 	fixture := filepath.Join("..", "..", "..", "testdata", "repos", "pass-secrets-agent")
 	root, err := makeTempGitRepoFromFixture(t, fixture)
 	if err != nil {
@@ -108,11 +108,7 @@ func TestAESEC001IgnoresUntrackedAgentFileInInventory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("run secret rules: %v", err)
 	}
-	for _, finding := range findings {
-		if finding.RuleID == "AE-SEC-001" {
-			t.Fatalf("expected untracked agent-visible file to be ignored, got %#v", finding)
-		}
-	}
+	findAESEC001(t, findings)
 }
 
 func TestAESEC001FindsSecretInCursorRulesFile(t *testing.T) {
@@ -216,13 +212,15 @@ func TestAESEC001IgnoresIgnoredCursorRulesFileOutsideInventory(t *testing.T) {
 	}
 }
 
-func TestRunSecretRulesPropagatesTrackedFileError(t *testing.T) {
-	// A non-git directory makes the tracked-file listing fail. The error must
-	// surface (fail fast) rather than being silently swallowed.
+func TestRunSecretRulesEmptyInventoryIsClean(t *testing.T) {
 	root := t.TempDir()
 
-	if _, err := RunSecretRules(root, repository.Inventory{}); err == nil {
-		t.Fatal("expected error when tracked-file listing fails, got nil")
+	findings, err := RunSecretRules(root, repository.Inventory{})
+	if err != nil {
+		t.Fatalf("expected no error on empty inventory, got %v", err)
+	}
+	if len(findings) != 0 {
+		t.Fatalf("expected no findings on empty inventory, got %#v", findings)
 	}
 }
 
