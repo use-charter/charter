@@ -43,8 +43,9 @@ final = min(base, applicable_cap)
 |---|---|
 | Raw secret detected in any agent-visible file | score ≤ 49 |
 | Any Blocker-severity finding present | score ≤ 59 |
-| Unscanned or unknown repo state | score ≤ 79 |
 | Suppressed findings | excluded from score, listed separately |
+
+> **Phase 1.5 (not implemented):** a hard cap ≤ 79 for unscanned/unknown repo state was considered but is not wired in `scoring.Calculate` for v1.0.
 
 
 ### Design Principles
@@ -111,12 +112,12 @@ final = min(base, applicable_cap)
 | AE-AUTO-001 | Autonomy | The project's test command is discoverable — via a task runner (Makefile/justfile/Taskfile/npm scripts/mise/moon) or the language's conventional toolchain (`go test`/`cargo test`/configured `pytest`) (ADR-0023) | **Medium** |
 | AE-SUPPRESS-001 | Governance | Suppression comment missing required `reason="…"` field | **Medium** |
 | AE-SUPPRESS-002 | Governance | Permanent suppression present without `approver="…"` field | **High** |
-| AE-SUPPRESS-003 | Governance | High suppression rate (informational — does **not** deduct points or affect score) | **Medium** |
+| AE-SUPPRESS-003 | Governance | High suppression rate (informational — does **not** deduct points or affect score) | **Informational** |
 
 
 ## §1.8 Command Gallery
 
-Six core commands ship in v1.0: `charter init`, `charter doctor`, `charter report`, `charter fix`, `charter suppress`, and `charter version`. `charter doctor` renders **pristine styled output** in a TTY (color-tier / `NO_COLOR`-aware, OSC 8 hyperlinks, the category scorecard) and a **plain, byte-stable** stream when piped or driven by CI/agents; `charter doctor -i/--interactive` opens an interactive TUI (filter / search / drill-in / rescan), and `charter doctor` also accepts `--rule`, `--color`, and `--no-color` (ADR-0024). `charter report --format html` (default) writes a **self-contained, offline single-file HTML report** (`--out`, `--open`; `--format markdown`/`json` reuse the doctor renderers; `--format spdx` is Phase 1.5) (ADR-0025). `charter explain <RULE>` prints a rule's rationale, remediation, and references. The interactive TUI and report visual language is canonical in `docs/internal/designs/*.html` + `docs/internal/designs/DESIGN-TOKENS.md`. The examples below show the v1 launch surface first, then a clearly labeled Phase 1.5 / v1.1 preview addendum for `charter serve`, `--for-agent`, `--format toon`, and `--format json-compact`.
+Seven commands ship in v1.0: `charter init`, `charter doctor`, `charter explain`, `charter report`, `charter fix`, `charter suppress`, and `charter version`. `charter doctor` renders **pristine styled output** in a TTY (color-tier / `NO_COLOR`-aware, OSC 8 hyperlinks, the category scorecard) and a **plain, byte-stable** stream when piped or driven by CI/agents; `charter doctor -i/--interactive` opens an interactive TUI (filter / search / drill-in / rescan), and `charter doctor` also accepts `--rule`, `--color`, and `--no-color` (ADR-0024). `charter report --format html` (default) writes a **self-contained, offline single-file HTML report** (`--out`, `--open`; `--format markdown`/`json` reuse the doctor renderers; `--format spdx` is Phase 1.5) (ADR-0025). `charter explain <RULE>` prints catalog metadata (id, name, category, short summary, docs URL); full rationale/remediation lives at `https://use-charter.dev/rules/<RULE>` until rule pages ship (Slice 18). The interactive TUI and report visual language is canonical in `docs/internal/designs/*.html` + `docs/internal/designs/DESIGN-TOKENS.md`. The examples below show the v1 launch surface first, then a clearly labeled Phase 1.5 / v1.1 preview addendum for `charter serve`, `--for-agent`, `--format toon`, and `--format json-compact`.
 
 ---
 
@@ -153,9 +154,9 @@ charter init --yes --profile strict --agents claude,cursor
 ### charter doctor — Daily Development
 
 The primary command. Run it before committing, in CI, and in agent sessions.
-- Exit 0 = pass (score ≥ threshold)
-- Exit 1 = fail
-- Exit 2 = scan error
+- Exit 0 = pass (score ≥ threshold), or successful non-gating commands (`report`, `explain`, interactive `doctor -i`)
+- Exit 1 = fail (score < threshold), or `doctor --rule` when a named rule fired
+- Exit 2 = usage/validation error, I/O failure, or scan/setup error (invalid flags, unknown rule ID, not a TTY for `-i`, etc.)
 
 **Passing scan:**
 ```
@@ -171,7 +172,7 @@ The primary command. Run it before committing, in CI, and in agent sessions.
     toolchain ··········  ████████  ✓  1 rule    all passed
     ci ·················  ████████  ✓  1 rule    all passed
     governance ·········  ████████  ✓  3 rules   all passed
-  Checked 15 rules across 7 groups  ·  0 findings  ✓
+  Checked 18 rules across 9 categories  ·  0 findings  ✓
   ──────────────────────────────────────────────────────────────
   Score  94/100  ███████████████████░  PASS
   Gate   threshold 80  ·  all clear
@@ -217,7 +218,7 @@ In GitHub Actions, pipe findings directly into Code Scanning via SARIF. The GitH
       --out charter.sarif \
       --threshold 80
   [C] charter v1.0.0  ·  SARIF 2.1.0
-  Scanned  15 rules  ·  3 findings
+  Scanned  18 rules  ·  3 findings
   ├  AE-SEC-001  BLOCKER  AGENTS.md:14
   ├  AE-MCP-001  HIGH     .mcp.json:7
   └  AE-ENV-001  MEDIUM   toolchain (missing)
@@ -874,7 +875,7 @@ gitleaks      = "8.30.1"
 **Given:** a scan with 3 auto-fixable findings (AGENTS.md token overrun, missing .gitignore entry for .env, outdated Go version in mise.toml)  
 **When:** charter fix --dry-run runs  
 **Then:** a unified diff is printed to stdout for each fixable finding; no files are modified; exit code reflects whether fixes are available  
-**As built:** the v1 fixers are `AE-CTX-001` (create AGENTS.md), `AE-CTX-004` (create-or-append .gitignore), and `AE-CI-002` (create `.github/workflows/charter.yaml`) — complex/present-but-weak rewrites are deferred and secret/dangerous rules (AE-SEC-001/002, AE-CC-001) are never fixable. `charter fix --dry-run` prints unified diffs and writes nothing; on apply the engine backs up any existing target to `.charter/backups/<ts>/` before each write and never deletes or overwrites a Create target (measured: `fix` raises a representative non-moon repo from 91 to 96). See ADR-0020.  
+**As built:** the v1 fixers are `AE-CTX-001` (create AGENTS.md), `AE-CTX-004` (create-or-append .gitignore), `AE-CI-002` (create `.github/workflows/charter.yaml`), and `AE-MCP-001` (catalog-aware MCP pin bump via `Replace`; never archived packages) — complex/present-but-weak rewrites are deferred and secret/dangerous rules (AE-SEC-001/002, AE-CC-001) are never fixable. `charter fix --dry-run` prints unified diffs and writes nothing; on apply the engine backs up any existing target to `.charter/backups/<ts>/` before each write and never deletes or overwrites a Create target (measured: `fix` raises a representative non-moon repo from 91 to 96). See ADR-0020.  
 
 
 ### M1.5 — CI Integration & Distribution

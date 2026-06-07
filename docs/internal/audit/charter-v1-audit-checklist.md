@@ -1,6 +1,6 @@
 # Charter v1 — Rule Audit Checklist
 
-15 rules: 12 core + 3 governance. Pass all three signals (toolchain + lockfile + hook config) for AE-ENV-001.
+18 rules across context, secrets, MCP, agent-config, environment, CI, testing, autonomy, and governance. Pass all three signals (toolchain + lockfile + hook config) for AE-ENV-001.
 
 `charter-architecture-2026` is the canonical source for Charter product behavior, command surface, transports, output formats, and roadmap. This checklist is the v1 audit companion and must stay aligned with the architecture source. It does not redefine canonical behavior, and HTML mirrors remain presentation-only.
 
@@ -32,8 +32,9 @@ final = min(base, applicable_cap)
 |---|---|
 | Raw secret in any agent-visible file (AE-SEC-001/002) | score ≤ 49 |
 | Any Blocker-severity finding | score ≤ 59 |
-| Unscanned or unknown repo state | score ≤ 79 |
 | Suppressed findings | excluded from score, listed separately |
+
+> Phase 1.5 (not implemented): unscanned/unknown repo state cap ≤ 79.
 
 > ⚠ AE-SUPPRESS-003 is informational — failing it does **not** deduct points or affect the score.
 
@@ -250,11 +251,11 @@ final = min(base, applicable_cap)
 ## AE-TEST-001 — Automated Tests Missing
 **Severity:** 🟠 HIGH  
 
-**Check:** For each **active** code language — one with **both** a project manifest (`go.mod`/`package.json`/`Cargo.toml`/`Gemfile`/`pyproject.toml`/etc.) **and** non-test source outside tooling directories (`scripts/`, `tools/`, `testdata/`, `examples/`, `vendor/`, `node_modules/`, `dist/`, `build/`, `.github/`, `gen/`) — confirm ≥1 recognized test artifact: a file under a `test/`/`tests/`/`spec/`/`__tests__/` segment (any language), or a name convention (Go `*_test.go`; JS/TS `*.{test,spec}.*`; Python `test_*.py`/`*_test.py`/`conftest.py`; Rust inline `#[test]`/`#[cfg(test)]`; Java/Kotlin `*Test.*`/`*Spec.kt`; Ruby `*_spec.rb`/`*_test.rb`; C# `*Tests.cs`; PHP `*Test.php`). Flag HIGH for any active language with no tests.  
+**Check:** For each **active** code language — one with **both** a project manifest (`go.mod`/`package.json`/`Cargo.toml`/`Gemfile`/`pyproject.toml`/etc.) **and** non-test source outside tooling directories (`scripts/`, `tools/`, `testdata/`, `examples/`, `vendor/`, `node_modules/`, `dist/`, `build/`, `.github/`, `gen/`) **and not referenced by a column-0 `//go:embed` directive in a tracked `.go` file** (embedded web assets bundled into a compiled-language binary are not an independent language surface) — confirm ≥1 recognized test artifact: a file under a `test/`/`tests/`/`spec/`/`__tests__/` segment (any language), or a name convention (Go `*_test.go`; JS/TS `*.{test,spec}.*`; Python `test_*.py`/`*_test.py`/`conftest.py`; Rust inline `#[test]`/`#[cfg(test)]`; Java/Kotlin `*Test.*`/`*Spec.kt`; Ruby `*_spec.rb`/`*_test.rb`; C# `*Tests.cs`; PHP `*Test.php`). Flag HIGH for any active language with no tests.  
 
 **Evidence:** One finding listing each active language lacking tests (e.g., `no test files detected for active language: Go`).  
 
-**False Positive Risk:** FP Risk: Low — validated at **0% FP across 10 real public repos**. The manifest+source dual gate rejects both tooling-only manifests (a Go repo's build-script `package.json`) and stray secondary-language files (a lone Homebrew `.rb` formula with no `Gemfile`); directory-based test detection catches AVA/tap/RSpec layouts. Mark N/A if no recognized code language is active. Rust inline unit tests count.  
+**False Positive Risk:** FP Risk: Low — validated at **0% FP across 10 real public repos**. The manifest+source dual gate rejects tooling-only manifests and stray secondary-language files; the embedded-asset gate excludes `go:embed`'d web assets (e.g. a single `report.js` in a Go CLI); directory-based test detection catches AVA/tap/RSpec layouts. Mark N/A if no recognized code language is active. Rust inline unit tests count.  
 
 **Fix:** Add tests for the active language(s) so an agent can run them and self-verify before finishing a task. Covers the agent-verifiability gap (ADR-0023).  
 
