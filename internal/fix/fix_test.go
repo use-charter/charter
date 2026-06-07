@@ -617,6 +617,22 @@ func TestFixMCP001ApplyBacksUpAndRewritesInPlace(t *testing.T) {
 	}
 }
 
+func TestWithinRootRejectsSymlinkEscape(t *testing.T) {
+	root := t.TempDir()
+	outside := t.TempDir()
+	secret := filepath.Join(outside, "victim.txt")
+	writeFileT(t, secret, "original\n")
+
+	link := filepath.Join(root, ".gitignore")
+	if err := os.Symlink(secret, link); err != nil {
+		t.Fatalf("symlink: %v", err)
+	}
+
+	if withinRoot(root, link) {
+		t.Fatalf("withinRoot should reject a symlink that resolves outside the repo root")
+	}
+}
+
 func slicesEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false

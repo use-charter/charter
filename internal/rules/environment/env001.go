@@ -192,7 +192,7 @@ func hasDevcontainerSignal(root string, inv repository.Inventory) bool {
 		if !ok {
 			continue
 		}
-		if devcontainerProvidesToolchainPath(root, inv, configPath, content) {
+		if devcontainerProvidesToolchainPath(inv, configPath, content) {
 			return true
 		}
 	}
@@ -411,7 +411,7 @@ func looksPinnedVersion(value string) bool {
 	return strings.IndexFunc(value, func(r rune) bool { return r >= '0' && r <= '9' }) >= 0
 }
 
-func devcontainerProvidesToolchainPath(root string, inv repository.Inventory, configPath string, content string) bool {
+func devcontainerProvidesToolchainPath(inv repository.Inventory, configPath string, content string) bool {
 	type buildConfig struct {
 		Dockerfile string `json:"dockerfile"`
 		DockerFile string `json:"dockerFile"`
@@ -444,7 +444,6 @@ func devcontainerProvidesToolchainPath(root string, inv repository.Inventory, co
 		}
 	}
 
-	_ = root
 	return false
 }
 

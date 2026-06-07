@@ -226,6 +226,30 @@ func TestRescanTriggersCommandAndRebuilds(t *testing.T) {
 	}
 }
 
+func TestRescanRefreshesFilteredList(t *testing.T) {
+	caps, pal := testCaps()
+	clean := doctor.Result{Root: "/tmp/repo", Threshold: 80, Passed: true, Score: scoring.Calculate(nil)}
+	m := New(sampleResult(), func() (doctor.Result, error) { return clean, nil }, caps, pal)
+
+	m, _ = step(t, m, runeKey('2'))
+	if len(m.filtered) == 0 {
+		t.Fatalf("expected HIGH severity filter to match findings before rescan")
+	}
+
+	m, cmd := step(t, m, runeKey('r'))
+	if cmd == nil {
+		t.Fatalf("'r' should return a rescan command")
+	}
+	msg, ok := cmd().(rescanDoneMsg)
+	if !ok {
+		t.Fatalf("rescan command produced %T, want rescanDoneMsg", cmd())
+	}
+	m, _ = step(t, m, msg)
+	if len(m.filtered) != 0 {
+		t.Fatalf("after rescan filtered = %d, want 0 (applyRescan must call refresh)", len(m.filtered))
+	}
+}
+
 func TestRescanWithoutScanFuncIsNoop(t *testing.T) {
 	m := newTestModel(t) // scan == nil
 	m, cmd := step(t, m, runeKey('r'))

@@ -292,14 +292,7 @@ func buildView(result doctor.Result, m meta) view {
 }
 
 func sortFindings(in []findings.Finding) []findings.Finding {
-	out := append([]findings.Finding(nil), in...)
-	sort.SliceStable(out, func(i, j int) bool {
-		if wi, wj := out[i].Severity.Weight(), out[j].Severity.Weight(); wi != wj {
-			return wi > wj
-		}
-		return out[i].RuleID < out[j].RuleID
-	})
-	return out
+	return findings.SortedByPriority(in)
 }
 
 func buildFormula(s scoring.Result) formulaVM {
@@ -471,13 +464,7 @@ func buildFindings(ordered []findings.Finding) []findingVM {
 }
 
 func buildSuppressions(list []suppress.Suppressed) []suppressionVM {
-	ordered := append([]suppress.Suppressed(nil), list...)
-	sort.SliceStable(ordered, func(i, j int) bool {
-		if wi, wj := ordered[i].Finding.Severity.Weight(), ordered[j].Finding.Severity.Weight(); wi != wj {
-			return wi > wj
-		}
-		return ordered[i].Finding.RuleID < ordered[j].Finding.RuleID
-	})
+	ordered := suppress.SortedByPriority(list)
 
 	out := make([]suppressionVM, 0, len(ordered))
 	for _, sup := range ordered {

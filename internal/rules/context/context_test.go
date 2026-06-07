@@ -140,6 +140,9 @@ func TestAECTX001FailsOverBudgetContext(t *testing.T) {
 			continue
 		}
 
+		if finding.Summary != "Agent context file exceeds the 600-token budget" {
+			t.Fatalf("summary = %q, want over-budget message", finding.Summary)
+		}
 		if !containsEvidencePrefix(finding.Evidence, "context appears over budget: ~") {
 			t.Fatalf("expected over-budget evidence, got %#v", finding.Evidence)
 		}

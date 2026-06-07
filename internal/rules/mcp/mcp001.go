@@ -117,7 +117,7 @@ func checkPinning(files []ConfigFile, cat *catalog.Catalog) []findings.Finding {
 		}
 	}
 	sort.Slice(result, func(i, j int) bool {
-		li, lj := result[i].Locations[0], result[j].Locations[0]
+		li, lj := findings.FirstLocation(result[i]), findings.FirstLocation(result[j])
 		if li.Path != lj.Path {
 			return li.Path < lj.Path
 		}
