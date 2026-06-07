@@ -43,7 +43,7 @@ hr { border: 0; border-top: 1px solid #d0d7de; margin: 2rem 0; }
 <body>
 <main class="md">
 <h1>Charter v1 — Rule Audit Checklist</h1>
-<p>15 rules: 12 core + 3 governance. Pass all three signals (toolchain + lockfile + hook config) for AE-ENV-001.</p>
+<p>18 rules across context, secrets, MCP, agent-config, environment, CI, testing, autonomy, and governance. Pass all three signals (toolchain + lockfile + hook config) for AE-ENV-001.</p>
 <p><code>charter-architecture-2026</code> is the canonical source for Charter product behavior, command surface, transports, output formats, and roadmap. This checklist is the v1 audit companion and must stay aligned with the architecture source. It does not redefine canonical behavior, and HTML mirrors remain presentation-only.</p>
 <p>Documentation authority ladder:</p>
 <ol>
@@ -98,14 +98,13 @@ final = min(base, applicable_cap)
 <td>score ≤ 59</td>
 </tr>
 <tr>
-<td>Unscanned or unknown repo state</td>
-<td>score ≤ 79</td>
-</tr>
-<tr>
 <td>Suppressed findings</td>
 <td>excluded from score, listed separately</td>
 </tr>
 </tbody></table>
+<blockquote>
+<p>Phase 1.5 (not implemented): unscanned/unknown repo state cap ≤ 79.</p>
+</blockquote>
 <blockquote>
 <p>⚠ AE-SUPPRESS-003 is informational — failing it does <strong>not</strong> deduct points or affect the score.</p>
 </blockquote>
@@ -229,9 +228,9 @@ final = min(base, applicable_cap)
 <hr>
 <h2>AE-TEST-001 — Automated Tests Missing</h2>
 <p><strong>Severity:</strong> 🟠 HIGH  </p>
-<p><strong>Check:</strong> For each <strong>active</strong> code language — one with <strong>both</strong> a project manifest (<code>go.mod</code>/<code>package.json</code>/<code>Cargo.toml</code>/<code>Gemfile</code>/<code>pyproject.toml</code>/etc.) <strong>and</strong> non-test source outside tooling directories (<code>scripts/</code>, <code>tools/</code>, <code>testdata/</code>, <code>examples/</code>, <code>vendor/</code>, <code>node_modules/</code>, <code>dist/</code>, <code>build/</code>, <code>.github/</code>, <code>gen/</code>) — confirm ≥1 recognized test artifact: a file under a <code>test/</code>/<code>tests/</code>/<code>spec/</code>/<code>__tests__/</code> segment (any language), or a name convention (Go <code>*_test.go</code>; JS/TS <code>*.{test,spec}.*</code>; Python <code>test_*.py</code>/<code>*_test.py</code>/<code>conftest.py</code>; Rust inline <code>#[test]</code>/<code>#[cfg(test)]</code>; Java/Kotlin <code>*Test.*</code>/<code>*Spec.kt</code>; Ruby <code>*_spec.rb</code>/<code>*_test.rb</code>; C# <code>*Tests.cs</code>; PHP <code>*Test.php</code>). Flag HIGH for any active language with no tests.  </p>
+<p><strong>Check:</strong> For each <strong>active</strong> code language — one with <strong>both</strong> a project manifest (<code>go.mod</code>/<code>package.json</code>/<code>Cargo.toml</code>/<code>Gemfile</code>/<code>pyproject.toml</code>/etc.) <strong>and</strong> non-test source outside tooling directories (<code>scripts/</code>, <code>tools/</code>, <code>testdata/</code>, <code>examples/</code>, <code>vendor/</code>, <code>node_modules/</code>, <code>dist/</code>, <code>build/</code>, <code>.github/</code>, <code>gen/</code>) <strong>and not referenced by a column-0 <code>//go:embed</code> directive in a tracked <code>.go</code> file</strong> (embedded web assets bundled into a compiled-language binary are not an independent language surface) — confirm ≥1 recognized test artifact: a file under a <code>test/</code>/<code>tests/</code>/<code>spec/</code>/<code>__tests__/</code> segment (any language), or a name convention (Go <code>*_test.go</code>; JS/TS <code>*.{test,spec}.*</code>; Python <code>test_*.py</code>/<code>*_test.py</code>/<code>conftest.py</code>; Rust inline <code>#[test]</code>/<code>#[cfg(test)]</code>; Java/Kotlin <code>*Test.*</code>/<code>*Spec.kt</code>; Ruby <code>*_spec.rb</code>/<code>*_test.rb</code>; C# <code>*Tests.cs</code>; PHP <code>*Test.php</code>). Flag HIGH for any active language with no tests.  </p>
 <p><strong>Evidence:</strong> One finding listing each active language lacking tests (e.g., <code>no test files detected for active language: Go</code>).  </p>
-<p><strong>False Positive Risk:</strong> FP Risk: Low — validated at <strong>0% FP across 10 real public repos</strong>. The manifest+source dual gate rejects both tooling-only manifests (a Go repo&#39;s build-script <code>package.json</code>) and stray secondary-language files (a lone Homebrew <code>.rb</code> formula with no <code>Gemfile</code>); directory-based test detection catches AVA/tap/RSpec layouts. Mark N/A if no recognized code language is active. Rust inline unit tests count.  </p>
+<p><strong>False Positive Risk:</strong> FP Risk: Low — validated at <strong>0% FP across 10 real public repos</strong>. The manifest+source dual gate rejects tooling-only manifests and stray secondary-language files; the embedded-asset gate excludes <code>go:embed</code>&#39;d web assets (e.g. a single <code>report.js</code> in a Go CLI); directory-based test detection catches AVA/tap/RSpec layouts. Mark N/A if no recognized code language is active. Rust inline unit tests count.  </p>
 <p><strong>Fix:</strong> Add tests for the active language(s) so an agent can run them and self-verify before finishing a task. Covers the agent-verifiability gap (ADR-0023).  </p>
 <hr>
 <h2>AE-AUTO-001 — Verification Command Not Discoverable</h2>

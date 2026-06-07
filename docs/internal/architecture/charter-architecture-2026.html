@@ -132,14 +132,13 @@ final = min(base, applicable_cap)
 <td>score ≤ 59</td>
 </tr>
 <tr>
-<td>Unscanned or unknown repo state</td>
-<td>score ≤ 79</td>
-</tr>
-<tr>
 <td>Suppressed findings</td>
 <td>excluded from score, listed separately</td>
 </tr>
 </tbody></table>
+<blockquote>
+<p><strong>Phase 1.5 (not implemented):</strong> a hard cap ≤ 79 for unscanned/unknown repo state was considered but is not wired in <code>scoring.Calculate</code> for v1.0.</p>
+</blockquote>
 <h3>Design Principles</h3>
 <blockquote>
 <p>These are the non-negotiable architectural choices made before writing a single line of domain logic. They are the principles Charter will be held to at every build decision.</p>
@@ -327,11 +326,11 @@ final = min(base, applicable_cap)
 <td>AE-SUPPRESS-003</td>
 <td>Governance</td>
 <td>High suppression rate (informational — does <strong>not</strong> deduct points or affect score)</td>
-<td><strong>Medium</strong></td>
+<td><strong>Informational</strong></td>
 </tr>
 </tbody></table>
 <h2>§1.8 Command Gallery</h2>
-<p>Six core commands ship in v1.0: <code>charter init</code>, <code>charter doctor</code>, <code>charter report</code>, <code>charter fix</code>, <code>charter suppress</code>, and <code>charter version</code>. <code>charter doctor</code> renders <strong>pristine styled output</strong> in a TTY (color-tier / <code>NO_COLOR</code>-aware, OSC 8 hyperlinks, the category scorecard) and a <strong>plain, byte-stable</strong> stream when piped or driven by CI/agents; <code>charter doctor -i/--interactive</code> opens an interactive TUI (filter / search / drill-in / rescan), and <code>charter doctor</code> also accepts <code>--rule</code>, <code>--color</code>, and <code>--no-color</code> (ADR-0024). <code>charter report --format html</code> (default) writes a <strong>self-contained, offline single-file HTML report</strong> (<code>--out</code>, <code>--open</code>; <code>--format markdown</code>/<code>json</code> reuse the doctor renderers; <code>--format spdx</code> is Phase 1.5) (ADR-0025). <code>charter explain &lt;RULE&gt;</code> prints a rule&#39;s rationale, remediation, and references. The interactive TUI and report visual language is canonical in <code>docs/internal/designs/*.html</code> + <code>docs/internal/designs/DESIGN-TOKENS.md</code>. The examples below show the v1 launch surface first, then a clearly labeled Phase 1.5 / v1.1 preview addendum for <code>charter serve</code>, <code>--for-agent</code>, <code>--format toon</code>, and <code>--format json-compact</code>.</p>
+<p>Seven commands ship in v1.0: <code>charter init</code>, <code>charter doctor</code>, <code>charter explain</code>, <code>charter report</code>, <code>charter fix</code>, <code>charter suppress</code>, and <code>charter version</code>. <code>charter doctor</code> renders <strong>pristine styled output</strong> in a TTY (color-tier / <code>NO_COLOR</code>-aware, OSC 8 hyperlinks, the category scorecard) and a <strong>plain, byte-stable</strong> stream when piped or driven by CI/agents; <code>charter doctor -i/--interactive</code> opens an interactive TUI (filter / search / drill-in / rescan), and <code>charter doctor</code> also accepts <code>--rule</code>, <code>--color</code>, and <code>--no-color</code> (ADR-0024). <code>charter report --format html</code> (default) writes a <strong>self-contained, offline single-file HTML report</strong> (<code>--out</code>, <code>--open</code>; <code>--format markdown</code>/<code>json</code> reuse the doctor renderers; <code>--format spdx</code> is Phase 1.5) (ADR-0025). <code>charter explain &lt;RULE&gt;</code> prints catalog metadata (id, name, category, short summary, docs URL); full rationale/remediation lives at <code>https://use-charter.dev/rules/&lt;RULE&gt;</code> until rule pages ship (Slice 18). The interactive TUI and report visual language is canonical in <code>docs/internal/designs/*.html</code> + <code>docs/internal/designs/DESIGN-TOKENS.md</code>. The examples below show the v1 launch surface first, then a clearly labeled Phase 1.5 / v1.1 preview addendum for <code>charter serve</code>, <code>--for-agent</code>, <code>--format toon</code>, and <code>--format json-compact</code>.</p>
 <hr>
 <h3>charter init — Getting Started</h3>
 <p>Scaffold the <em>missing</em> agent context files from a blank repo in under 2 minutes — create-missing-only, never overwriting or deleting a user file (<code>--dry-run</code> previews the file plan). Charter detects your language, CI platform, and agent tools automatically and writes <code>AGENTS.md</code>, <code>charter.yaml</code>, <code>.gitignore</code>, <code>ARCHITECTURE.md</code>, <code>.env.example</code>, and <code>.claude/settings.json</code> (when Claude is detected or requested). Running <code>charter init</code> then <code>charter doctor</code> immediately after scores ≥ 80 out of the box for Go projects — measured 95 on a blank Go repo (residual AE-ENV-001/AE-CI-002 only).</p>
@@ -359,9 +358,9 @@ charter init --yes --profile strict --agents claude,cursor
 <h3>charter doctor — Daily Development</h3>
 <p>The primary command. Run it before committing, in CI, and in agent sessions.</p>
 <ul>
-<li>Exit 0 = pass (score ≥ threshold)</li>
-<li>Exit 1 = fail</li>
-<li>Exit 2 = scan error</li>
+<li>Exit 0 = pass (score ≥ threshold), or successful non-gating commands (<code>report</code>, <code>explain</code>, interactive <code>doctor -i</code>)</li>
+<li>Exit 1 = fail (score &lt; threshold), or <code>doctor --rule</code> when a named rule fired</li>
+<li>Exit 2 = usage/validation error, I/O failure, or scan/setup error (invalid flags, unknown rule ID, not a TTY for <code>-i</code>, etc.)</li>
 </ul>
 <p><strong>Passing scan:</strong></p>
 <pre><code>❯ charter doctor
@@ -376,7 +375,7 @@ charter init --yes --profile strict --agents claude,cursor
     toolchain ··········  ████████  ✓  1 rule    all passed
     ci ·················  ████████  ✓  1 rule    all passed
     governance ·········  ████████  ✓  3 rules   all passed
-  Checked 15 rules across 7 groups  ·  0 findings  ✓
+  Checked 18 rules across 9 categories  ·  0 findings  ✓
   ──────────────────────────────────────────────────────────────
   Score  94/100  ███████████████████░  PASS
   Gate   threshold 80  ·  all clear
@@ -413,7 +412,7 @@ charter init --yes --profile strict --agents claude,cursor
       --out charter.sarif \
       --threshold 80
   [C] charter v1.0.0  ·  SARIF 2.1.0
-  Scanned  15 rules  ·  3 findings
+  Scanned  18 rules  ·  3 findings
   ├  AE-SEC-001  BLOCKER  AGENTS.md:14
   ├  AE-MCP-001  HIGH     .mcp.json:7
   └  AE-ENV-001  MEDIUM   toolchain (missing)
@@ -847,7 +846,7 @@ gitleaks      = &quot;8.30.1&quot;
 <p><strong>Given:</strong> a repo with no agent context files<br><strong>When:</strong> charter init runs interactively<br><strong>Then:</strong> it creates AGENTS.md , ARCHITECTURE.md , SECURITY.md , CONTRIBUTING.md , TESTING.md , and a charter.yaml with the project&#39;s detected language and policy profile<br><strong>As built:</strong> non-interactive and deterministic (create-missing-only; <code>--dry-run</code> previews the plan, <code>--yes</code> is the implicit default) — it writes the missing <code>AGENTS.md</code>, <code>charter.yaml</code>, <code>.gitignore</code>, <code>ARCHITECTURE.md</code>, <code>.env.example</code>, and (when Claude is detected/requested) <code>.claude/settings.json</code>, never overwriting or deleting; <code>SECURITY.md</code>/<code>CONTRIBUTING.md</code>/<code>TESTING.md</code> are not scaffolded. A subsequent <code>charter doctor</code> scores ≥ 80 out of the box (measured 95 on a blank Go repo, residual AE-ENV-001/AE-CI-002 only). See ADR-0019.  </p>
 <h4>T1.4.2 Fix Planner &amp; Diff Engine (charter fix) <code>⚡ AI</code></h4>
 <p><strong>User story:</strong> As a developer, I want charter fix --dry-run to show a unified diff of all auto-fixable findings before applying, and charter fix to apply only safe, reversible changes, so that no file is ever silently mutated (ADR-0005).</p>
-<p><strong>Given:</strong> a scan with 3 auto-fixable findings (AGENTS.md token overrun, missing .gitignore entry for .env, outdated Go version in mise.toml)<br><strong>When:</strong> charter fix --dry-run runs<br><strong>Then:</strong> a unified diff is printed to stdout for each fixable finding; no files are modified; exit code reflects whether fixes are available<br><strong>As built:</strong> the v1 fixers are <code>AE-CTX-001</code> (create AGENTS.md), <code>AE-CTX-004</code> (create-or-append .gitignore), and <code>AE-CI-002</code> (create <code>.github/workflows/charter.yaml</code>) — complex/present-but-weak rewrites are deferred and secret/dangerous rules (AE-SEC-001/002, AE-CC-001) are never fixable. <code>charter fix --dry-run</code> prints unified diffs and writes nothing; on apply the engine backs up any existing target to <code>.charter/backups/&lt;ts&gt;/</code> before each write and never deletes or overwrites a Create target (measured: <code>fix</code> raises a representative non-moon repo from 91 to 96). See ADR-0020.  </p>
+<p><strong>Given:</strong> a scan with 3 auto-fixable findings (AGENTS.md token overrun, missing .gitignore entry for .env, outdated Go version in mise.toml)<br><strong>When:</strong> charter fix --dry-run runs<br><strong>Then:</strong> a unified diff is printed to stdout for each fixable finding; no files are modified; exit code reflects whether fixes are available<br><strong>As built:</strong> the v1 fixers are <code>AE-CTX-001</code> (create AGENTS.md), <code>AE-CTX-004</code> (create-or-append .gitignore), <code>AE-CI-002</code> (create <code>.github/workflows/charter.yaml</code>), and <code>AE-MCP-001</code> (catalog-aware MCP pin bump via <code>Replace</code>; never archived packages) — complex/present-but-weak rewrites are deferred and secret/dangerous rules (AE-SEC-001/002, AE-CC-001) are never fixable. <code>charter fix --dry-run</code> prints unified diffs and writes nothing; on apply the engine backs up any existing target to <code>.charter/backups/&lt;ts&gt;/</code> before each write and never deletes or overwrites a Create target (measured: <code>fix</code> raises a representative non-moon repo from 91 to 96). See ADR-0020.  </p>
 <h3>M1.5 — CI Integration &amp; Distribution</h3>
 <p><em>GitHub Action (primary product surface), SARIF output, GoReleaser pipeline, Homebrew tap, signed releases, supply chain provenance</em></p>
 <h4>T1.5.1 GitHub Action <code>⚡ AI</code></h4>
