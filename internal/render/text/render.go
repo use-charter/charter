@@ -472,8 +472,12 @@ func fileURL(root string, loc findings.Location) string {
 		return ""
 	}
 	path := loc.Path
-	if !filepath.IsAbs(path) {
+	if !filepath.IsAbs(path) && !strings.HasPrefix(path, "/") {
 		path = filepath.Join(root, path)
+	}
+	path = filepath.ToSlash(path)
+	if len(path) >= 2 && path[1] == ':' {
+		path = "/" + path
 	}
 	return "file://" + path
 }

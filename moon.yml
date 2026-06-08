@@ -40,7 +40,9 @@ tasks:
     inputs:
       - "@globs(goSources)"
   perf:
-    script: "go test -tags=perf -run TestDoctorPerformance -count=1 -race ./internal/perf"
+    command: "bun"
+    args:
+      - "scripts/go-perf.ts"
     options:
       cache: false
   vet:

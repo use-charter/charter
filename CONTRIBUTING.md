@@ -13,6 +13,11 @@
 ## Change Contracts
 
 - Commits: Conventional Commits
+- Commit message style:
+  - subject: `<type>[optional scope]: <specific summary>`
+  - add a body when the why is not obvious from the diff
+  - for grouped hardening/review work, summarize the batch in the subject and use bullets in the body for the concrete fixes/alignment points
+  - keep the subject descriptive, not generic (`fix: harden release and review surfaces`, not `fix: updates`)
 - Versioning: SemVer
 - License: Apache-2.0
 - Contributions: DCO sign-off required on every commit (`Signed-off-by:` trailer)

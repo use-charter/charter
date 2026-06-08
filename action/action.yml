@@ -73,7 +73,12 @@ runs:
         set -euo pipefail
         ver="$IN_VERSION"
         if [ "$ver" = "latest" ]; then
-          ver="$(gh release view --repo use-charter/charter --json tagName -q .tagName)"
+          response="$(curl --silent --show-error --fail \
+            --header \"authorization: Bearer $GH_TOKEN\" \
+            --header \"accept: application/vnd.github+json\" \
+            https://api.github.com/repos/use-charter/charter/releases/latest)"
+          ver="$(printf '%s' "$response" | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')"
+          if [ -z "$ver" ]; then echo "could not resolve latest Charter release tag" >&2; exit 1; fi
         fi
         nover="${ver#v}"
         case "$RUNNER_OS" in
