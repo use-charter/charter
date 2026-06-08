@@ -48,19 +48,18 @@ Documentation authority ladder:
 
 ## Install
 
-- Homebrew (recommended): `brew install use-charter/tap/charter` installs the signed Homebrew cask.
-- Signed binary: download from the GitHub Releases page. Each release ships SHA-256 checksums, a cosign keyless signature bundle, an SPDX-2.3 SBOM, and SLSA Build L3 provenance.
+- Release distribution is wired but launch-gated: the repo contains the signed-release pipeline, Homebrew cask config, and GitHub Action source of truth, but the first public release and tap publication are still part of the go-public checklist.
 - `go install go.use-charter.dev/charter/cmd/charter@latest` is pending the vanity-path `go-import` redirect host (not yet available).
 
 ## GitHub Action
 
-Run Charter in CI with the composite GitHub Action (developed in [`action/`](./action/README.md), published as `use-charter/charter-action`):
+Run Charter in CI with the composite GitHub Action source in [`action/`](./action/README.md). The standalone `use-charter/charter-action` repo is seeded at launch:
 
 ```yaml
 - uses: use-charter/charter-action@v1
 ```
 
-It downloads the signed `charter` binary, verifies it (cosign keyless + sha256), runs `charter doctor --format sarif`, and uploads the report to GitHub Code Scanning. See [`action/README.md`](./action/README.md) for inputs and required permissions.
+It downloads the signed `charter` binary, verifies it (cosign keyless + sha256), runs `charter doctor --format sarif`, and uploads the report to GitHub Code Scanning. See [`action/README.md`](./action/README.md) for the as-built contract and launch-state notes.
 
 ## Performance
 

@@ -34,6 +34,13 @@ const requireRecord = (value: unknown, label: string): Record<string, unknown> =
 
 const raw = readFileSync(ACTION_PATH, 'utf8');
 
+if (raw.includes('gh release view')) {
+  fail(
+    'action/action.yml must not depend on the GitHub CLI for release resolution; ' +
+      'use an authenticated REST call so the default path works on self-hosted runners too.',
+  );
+}
+
 // Critical security assertion: zizmor/actionlint never see action.yml, so this
 // script is the only authority that every `uses:` is pinned to a full commit SHA.
 // Works purely on lines so it stays valid regardless of the YAML parser.
