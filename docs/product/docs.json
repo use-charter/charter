@@ -76,7 +76,7 @@
         "anchors": [
           {
             "anchor": "Getting Started",
-            "icon": "rocket",
+            "icon": "player-play",
             "pages": ["introduction", "installation", "quickstart"]
           },
           {
@@ -92,7 +92,7 @@
           },
           {
             "anchor": "Guides",
-            "icon": "route",
+            "icon": "list-check",
             "pages": [
               "how-to/adopt-in-existing-repo",
               "how-to/run-in-github-actions",
@@ -109,7 +109,7 @@
           },
           {
             "anchor": "CI & GitHub Action",
-            "icon": "git-branch",
+            "icon": "brand-github",
             "pages": ["ci/github-action"]
           },
           {
@@ -124,12 +124,12 @@
         "anchors": [
           {
             "anchor": "Overview",
-            "icon": "terminal",
+            "icon": "square-code",
             "pages": ["cli/overview"]
           },
           {
             "anchor": "Commands",
-            "icon": "code",
+            "icon": "braces",
             "pages": [
               "cli/doctor",
               "cli/init",
