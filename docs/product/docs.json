@@ -124,12 +124,12 @@
         "anchors": [
           {
             "anchor": "Overview",
-            "icon": "square-code",
+            "icon": "apps",
             "pages": ["cli/overview"]
           },
           {
             "anchor": "Commands",
-            "icon": "braces",
+            "icon": "terminal-2",
             "pages": [
               "cli/doctor",
               "cli/init",
