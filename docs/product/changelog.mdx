@@ -1,0 +1,42 @@
+---
+title: "Changelog"
+description: "Product updates and announcements for Charter."
+rss: true
+---
+
+<Update label="June 2026" description="v1.0.0" tags={["Release"]}>
+
+## Charter v1.0.0
+
+The first stable release. Full v1 rule set, seven commands, and CI integration.
+
+### Commands
+
+- `charter doctor` — full scan with styled TTY output, interactive TUI (`-i`), SARIF/JSON/Markdown/HTML output
+- `charter init` — scaffold missing agent context files in under 2 minutes
+- `charter fix` — diff-first auto-fix for AE-CTX-001, AE-CTX-004, AE-CI-002, AE-MCP-001
+- `charter report` — self-contained offline HTML report (WCAG 2.2 AA, embedded fonts)
+- `charter explain` — rule metadata lookup by rule ID
+- `charter suppress` — governed suppression with reason, expiry, and approver fields
+- `charter version` — build metadata (version, commit, date, Go version, platform)
+
+### Rules
+
+18 rules across context, secrets, MCP safety, agent config, environment, CI, testing, autonomy, and governance. Full reference at [/rules/overview](/rules/overview).
+
+### Score formula
+
+```
+score = max(0, 100 − B×20 − H×10 − M×4 − L×1)
+final = min(score, applicable_cap)
+```
+
+Hard caps: raw secret → `≤ 49`, any blocker → `≤ 59`. Fixed for v1.
+
+### Distribution
+
+- GitHub Action: `use-charter/charter-action@v1`
+- Signed releases: cosign keyless, SLSA Level 3 provenance, SPDX 2.3 SBOM
+- Homebrew: `brew install use-charter/tap/charter`
+
+</Update>
