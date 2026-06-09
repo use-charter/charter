@@ -10,5 +10,8 @@
 - Edge cases: fires only when a context file exists (absence is AE-CTX-001's concern); empty file → no finding.
 - Remediation: prefer concise, declarative guidance over stacked emphatic directives; state constraints plainly.
 - Scoring impact: informational — listed in output, re-surfaces, but contributes **0** to the score (mirrors AE-SUPPRESS-003).
+- Why: Agents that receive a high density of emphatic directives (IMPORTANT, NEVER, MUST) show measurably reduced instruction adherence. The signal degrades into noise when every sentence demands priority.
+- Auto-fixable: No
+- Related rules: AE-CTX-001, AE-CTX-002
 - Related ADRs: ADR-0023, ADR-0013
 - Related evals: None yet

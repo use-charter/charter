@@ -9,6 +9,9 @@
 - Evidence expectations: a structured location (file path + 1-based line) for the matched secret, plus a redacted excerpt (never the raw value); scans only tracked inventory files; untracked/gitignored local files are intentionally not scanned.
 - Edge cases: file must be in repo inventory AND git-tracked to be scanned; uncommitted local scratch files are safe by design; `.gitignore`d files are never scanned.
 - Remediation: remove the literal secret, rotate it externally, reference an environment variable instead, and commit the fix.
-- Scoring impact: when any AE-SEC-001 or AE-SEC-002 finding is present, final Charter score is hard-capped at **49** (per ADR-0008, independent of other caps).
+- Scoring impact: when any AE-SEC-001 or AE-SEC-002 finding is present, final Charter score is hard-capped at **49**.
+- Why: Agent context files are read on every task. A raw credential in AGENTS.md is visible to every model, every session, and every log that captures context windows. Rotation after exposure is the only safe recovery.
+- Auto-fixable: No
+- Related rules: AE-SEC-002, AE-CTX-001
 - Related ADRs: ADR-0006, ADR-0007, ADR-0008
 - Related evals: None yet

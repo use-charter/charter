@@ -9,5 +9,8 @@
 - Evidence expectations: which toolchain file covers which language, which lockfiles exist, and which hook manager is committed.
 - Edge cases: partial language coverage is acceptable only if the uncovered language is not active in the repo; local-only helper scripts do not satisfy reproducibility for tracked task config.
 - Remediation: pin the runtime in tracked config, commit the lockfile, and ensure local/hook/CI behavior all derive from the same tracked baseline.
+- Why: An agent that cannot reproduce the project's toolchain installs the wrong version, runs tests against the wrong runtime, and produces fixes that pass locally but break in CI or on a colleague's machine.
+- Auto-fixable: No
+- Related rules: AE-CI-002, AE-AUTO-001
 - Related ADRs: ADR-0006
 - Related evals: None yet

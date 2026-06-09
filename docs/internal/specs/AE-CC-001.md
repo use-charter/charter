@@ -10,5 +10,8 @@
 - Edge cases: only the three JSON hook files are scanned in v1; Pkl (`hk.pkl`), YAML (`.pre-commit-config.yaml`, `lefthook.yml`), and shell-dir (`.husky/`) hook managers are out of scope for v1; a controlled `&&` chain (`cd app && npm test`) is not flagged (operator chaining is deferred); a malformed JSON hook file fails the scan fast with a wrapped error.
 - Remediation: replace the dangerous command with an explicit, scoped, non-destructive command; prefer array-form (`args`) execution to avoid shell expansion; review each hook against "if an agent were prompt-injected, could this hook be weaponized?", then commit the change.
 - Scoring impact: `Blocker` — engages the hard blocker score cap (final score ≤ 59 whenever any blocker finding is present); no separate per-finding cap.
+- Why: Agent hook configurations run shell commands automatically on events like file save or tool use. A destructive or injection-vulnerable hook fires without explicit user action, and in an agent session the agent may trigger it indirectly through file writes.
+- Auto-fixable: No
+- Related rules: AE-CC-002, AE-SEC-001
 - Related ADRs: ADR-0012, ADR-0006, ADR-0009
 - Related evals: None yet

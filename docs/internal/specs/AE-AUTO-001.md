@@ -10,5 +10,8 @@
 - Edge cases: **N/A** when no language is active. **FP guard:** a single-language Go/Rust/Cargo repo is never penalized for lacking a `Makefile` — its toolchain is the contract. Conventional Python detection requires a pytest config (not merely `.py` files), since `python` alone is not a zero-config test command.
 - Remediation: expose a test command via a task runner (Makefile/justfile/Taskfile/package.json scripts/mise/moon) so an agent can discover and run it.
 - Scoring impact: `Medium` (−4); no hard cap.
+- Why: Even with tests present, an agent needs to know how to run them. A discoverable command closes the agent's work loop — run, observe, fix, repeat — without guessing.
+- Auto-fixable: No
+- Related rules: AE-TEST-001, AE-ENV-001
 - Related ADRs: ADR-0023, ADR-0008
 - Related evals: None yet

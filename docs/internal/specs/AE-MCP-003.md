@@ -10,5 +10,8 @@
 - Edge cases: local/internal origins never fire (loopback, RFC1918 private, link-local, `.localhost`/`.local`/`.internal`); catalog OAuth vendor hosts never fire; an env-reference header value satisfies the presence check (Charter does not validate the credential, only its declaration); a bare `${VAR}` URL with no parseable host is skipped.
 - Remediation: declare an auth header for the remote MCP server (for example `Authorization` referencing an environment variable), or switch to a local/trusted integration mode, then commit the change.
 - Scoring impact: each finding is `High` (−10); no hard cap.
+- Why: A public remote MCP server with no declared auth boundary accepts tool calls from any agent that can reach it. Charter checks whether the config declares that auth is required — the minimum signal that the server was configured with access control in mind.
+- Auto-fixable: No
+- Related rules: AE-MCP-001, AE-MCP-002
 - Related ADRs: ADR-0021 (catalog OAuth-host exemption), ADR-0011, ADR-0006, ADR-0009
 - Related evals: None yet

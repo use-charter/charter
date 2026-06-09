@@ -9,6 +9,9 @@
 - Evidence expectations: a structured location (config file path + 1-based line) plus a redacted secret value (never the raw value); env-refs and placeholders explicitly pass.
 - Edge cases: environment variable references (both `${VAR}` and `$VAR` syntax) are intentionally safe and never flagged; only literal string values match detection.
 - Remediation: replace literal secrets with environment variable references (`"key": "${ENV_VAR_NAME}"`); move secrets to a runtime secrets manager.
-- Scoring impact: when any AE-SEC-001 or AE-SEC-002 finding is present, final Charter score is hard-capped at **49** (per ADR-0008, independent of other caps).
+- Scoring impact: when any AE-SEC-001 or AE-SEC-002 finding is present, final Charter score is hard-capped at **49**.
+- Why: MCP configurations are read by the agent runtime before tools execute. A raw credential in mcp.json is exposed to any model or log that processes the tool-call context — and unlike source code, MCP configs are intentionally agent-visible by design.
+- Auto-fixable: No
+- Related rules: AE-SEC-001, AE-MCP-001
 - Related ADRs: ADR-0006, ADR-0007, ADR-0008
 - Related evals: None yet
