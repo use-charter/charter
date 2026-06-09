@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Charter",
-  "theme": "mint",
+  "theme": "maple",
   "colors": {
     "primary": "#2563EB",
     "light": "#60A5FA",
