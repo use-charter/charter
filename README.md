@@ -6,7 +6,7 @@ This repository started as the AI-ready bootstrap baseline and now contains the 
 
 ## Current State
 
-- Phase: Phase 1 Slice 16 implemented; the `charter init` scaffold, the real `charter doctor` path with the full 18-rule v1 set, governance, suppression, SARIF output, policy profiles, the `charter version` command, the diff-first `charter fix` repair command, a signed GoReleaser release pipeline, a composite GitHub Action, validated performance budgets, the Slice 15 terminal experience (styled TTY output, the interactive `charter doctor -i` TUI, `charter explain`, and `--rule`/`--color`/`--no-color`), and the Slice 16 `charter report` command — a self-contained, offline, single-file HTML report
+- Phase: Phase 1 Slice 18 implemented; the `charter init` scaffold, the real `charter doctor` path with the full 18-rule v1 set, governance, suppression, SARIF output, policy profiles, the `charter version` command, the diff-first `charter fix` repair command, a signed GoReleaser release pipeline, a composite GitHub Action, validated performance budgets, the Slice 15 terminal experience (styled TTY output, the interactive `charter doctor -i` TUI, `charter explain`, and `--rule`/`--color`/`--no-color`), the Slice 16 `charter report` command (a self-contained, offline, single-file HTML report), Slice 17 hardening (symlink-contained, inventory-gated repo-file reads via `repository.ReadTrackedFile`; TUI rescan), and the Slice 18 public Mintlify documentation site under `docs/product/` (quickstart, CLI reference, config and CI guides, concept pages, and the generated `/rules/AE-*` reference matching the SARIF `helpUri` contract)
 - Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
 - Module path: `go.use-charter.dev/charter`
 - Repo contract: [`AGENTS.md`](./AGENTS.md)
@@ -36,7 +36,7 @@ Documentation topology:
 
 - root contract docs stay at repo root
 - internal engineering docs live under `docs/internal/`
-- future customer-facing docs live under `docs/product/`
+- customer-facing docs live under `docs/product/` (the Mintlify documentation site)
 
 Documentation authority ladder:
 
@@ -118,7 +118,7 @@ GitHub-level repo health features stay split by capability:
 - [`CONTEXT_MAP.md`](./CONTEXT_MAP.md): knowledge graph lite
 - [`PERMISSIONS.md`](./PERMISSIONS.md): edit and escalation boundaries
 - [`docs/internal/README.md`](./docs/internal/README.md): repo-internal engineering docs
-- [`docs/product/README.md`](./docs/product/README.md): future customer-facing docs home
+- [`docs/product/README.md`](./docs/product/README.md): customer-facing Mintlify documentation site
 
 ## License
 

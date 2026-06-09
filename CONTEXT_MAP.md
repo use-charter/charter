@@ -9,7 +9,7 @@
 
 - Root contract docs stay at repo root.
 - `docs/internal/` holds repo engineering knowledge.
-- `docs/product/` is reserved for future customer documentation.
+- `docs/product/` holds the customer-facing Mintlify documentation site.
 
 ## Load by Task
 
