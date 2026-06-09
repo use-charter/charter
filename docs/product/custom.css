@@ -4,7 +4,9 @@
  * Selectors: Mintlify official element / ID hooks (docs/customize/custom-scripts)
  * Tokens:    docs/internal/designs/DESIGN-TOKENS.md
  * Fonts:     Ruda (UI/headings) · Atkinson Hyperlegible Mono (code/CLI) · IBM Plex Mono (meta/IDs)
- * Standards: WCAG 2.2 AA · prefers-reduced-motion · 150-300ms transitions · 44px touch targets
+ * Standards: WCAG 2.2 AA · prefers-reduced-motion · 150-300ms transitions
+ * Lint:      No !important (lint/complexity/noImportantStyles)
+ *            Specificity achieved by nesting under parent Mintlify IDs
  */
 
 /* ── External fonts ──────────────────────────────── */
@@ -13,20 +15,20 @@
 /* ── Charter design tokens ───────────────────────── */
 :root {
   /* Backgrounds */
-  --bg-0:  #0d1117;   /* background-primary dark  */
-  --bg-1:  #161b22;   /* background-secondary dark */
-  --bg-2:  #1f2937;   /* background-tertiary dark  */
-  --bg-h:  rgba(255,255,255,0.04); /* hover tint */
+  --bg-0:  #0d1117;
+  --bg-1:  #161b22;
+  --bg-2:  #1f2937;
+  --bg-h:  rgba(255,255,255,0.04);
 
   /* Text */
-  --tx-0:  #f9fafb;   /* text-primary dark    */
-  --tx-1:  #d1d5db;   /* text-secondary dark  */
-  --tx-m:  #9ca3af;   /* text-muted / tertiary */
+  --tx-0:  #f9fafb;
+  --tx-1:  #d1d5db;
+  --tx-m:  #9ca3af;
 
   /* Borders */
-  --bd-0:  #374151;   /* border-primary dark   */
-  --bd-1:  #2b3240;   /* border-secondary dark  */
-  --bd-2:  #21262d;   /* border-tertiary dark   */
+  --bd-0:  #374151;
+  --bd-1:  #2b3240;
+  --bd-2:  #21262d;
 
   /* Severity surfaces (DESIGN-TOKENS.md) */
   --bg-danger:  #450a0a;  --bd-danger:  #991b1b;
@@ -35,11 +37,11 @@
   --bg-success: #052e16;  --bd-success: #166534;
 
   /* Charter blue accent */
-  --ac:    #2563eb;   /* primary accent    */
-  --ac-l:  #60a5fa;   /* light accent / text-info-dark */
-  --ac-g:  rgba(37,99,235,0.08); /* glow  */
-  --ac-bg: rgba(37,99,235,0.10); /* tinted bg */
-  --ac-b:  rgba(37,99,235,0.22); /* tinted border */
+  --ac:    #2563eb;
+  --ac-l:  #60a5fa;
+  --ac-g:  rgba(37,99,235,0.08);
+  --ac-bg: rgba(37,99,235,0.10);
+  --ac-b:  rgba(37,99,235,0.22);
 
   /* Fonts */
   --f-code: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -52,7 +54,7 @@
 }
 
 /* ══════════════════════════════════════════════════
-   BACKGROUND  (#background-color is the page bg element)
+   BACKGROUND
    ══════════════════════════════════════════════════ */
 
 #background-color {
@@ -74,441 +76,440 @@
 }
 
 /* ══════════════════════════════════════════════════
-   NAVBAR  (#navbar)
+   NAVBAR  — solid Charter Dark, mint-style structure
+   Parent: #navbar (ID specificity already beats Tailwind classes)
    ══════════════════════════════════════════════════ */
 
 #navbar {
-  background-color: var(--bg-0) !important;
-  border-bottom: 1px solid var(--bd-1) !important;
-  box-shadow: none !important;
-  /* Solid — mint theme is not frosted */
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  background-color: var(--bg-0);
+  border-bottom: 1px solid var(--bd-1);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
-/* Logo area */
-nav-logo {
+/* Logo */
+#navbar nav-logo {
   opacity: 1;
   transition: opacity var(--dur-fast) var(--ease);
 }
 
-nav-logo:hover { opacity: 0.85; }
+#navbar nav-logo:hover { opacity: 0.85; }
 
-/* Navbar links (GitHub etc.) */
-navbar-link {
-  color: var(--tx-m) !important;
-  font-size: 0.875rem !important;
-  font-weight: 500 !important;
-  transition: color var(--dur-fast) var(--ease) !important;
+/* Navbar links (e.g. GitHub) */
+#navbar navbar-link {
+  color: var(--tx-m);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color var(--dur-fast) var(--ease);
   cursor: pointer;
 }
 
-navbar-link:hover { color: var(--tx-1) !important; }
+#navbar navbar-link:hover { color: var(--tx-1); }
 
 /* CTA button */
 #topbar-cta-button {
-  border-radius: 8px !important;
-  font-weight: 600 !important;
-  font-size: 0.875rem !important;
-  transition: opacity var(--dur-fast) var(--ease) !important;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: opacity var(--dur-fast) var(--ease);
   cursor: pointer;
 }
 
-#topbar-cta-button:hover { opacity: 0.88 !important; }
+#topbar-cta-button:hover { opacity: 0.88; }
 
 /* Search trigger */
 #search-bar-entry {
-  background-color: var(--bg-1) !important;
-  border: 1px solid var(--bd-0) !important;
-  border-radius: 8px !important;
-  color: var(--tx-m) !important;
-  font-size: 0.875rem !important;
+  background-color: var(--bg-1);
+  border: 1px solid var(--bd-0);
+  border-radius: 8px;
+  color: var(--tx-m);
+  font-size: 0.875rem;
   transition: border-color var(--dur-fast) var(--ease),
-              box-shadow var(--dur-fast) var(--ease) !important;
+              box-shadow var(--dur-fast) var(--ease);
   cursor: pointer;
 }
 
 #search-bar-entry:hover {
-  border-color: var(--ac-l) !important;
-  box-shadow: 0 0 0 3px var(--ac-bg) !important;
+  border-color: var(--ac-l);
+  box-shadow: 0 0 0 3px var(--ac-bg);
 }
 
 /* Search modal input */
 #search-input {
-  background-color: var(--bg-1) !important;
-  border: 1px solid var(--bd-0) !important;
-  border-radius: 8px !important;
-  color: var(--tx-0) !important;
-  font-size: 0.9375rem !important;
+  background-color: var(--bg-1);
+  border: 1px solid var(--bd-0);
+  border-radius: 8px;
+  color: var(--tx-0);
+  font-size: 0.9375rem;
 }
 
 #search-input:focus {
-  border-color: var(--ac) !important;
-  box-shadow: 0 0 0 3px var(--ac-bg) !important;
-  outline: none !important;
+  border-color: var(--ac);
+  box-shadow: 0 0 0 3px var(--ac-bg);
+  outline: none;
 }
 
 /* ══════════════════════════════════════════════════
-   TAB BAR  (nav-tabs / nav-tabs-item)
-   Mint-style: underline indicator, no background pill
+   TAB BAR  — mint-style underline indicator
+   Nesting under #navbar gives (ID + element) specificity
+   Active tab: .nav-tabs-item[data-active] = class + attr selector
    ══════════════════════════════════════════════════ */
 
-nav-tabs {
-  border-bottom: 1px solid var(--bd-2) !important;
-  gap: 0 !important;
-  padding: 0 !important;
-  background: transparent !important;
+#navbar nav-tabs {
+  border-bottom: 1px solid var(--bd-2);
+  gap: 0;
+  padding: 0;
+  background: transparent;
 }
 
-nav-tabs-item {
-  font-size: 0.875rem !important;
-  font-weight: 500 !important;
-  color: var(--tx-m) !important;
-  border-bottom: 2px solid transparent !important;
-  margin-bottom: -1px !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  padding: 10px 16px !important;
+#navbar nav-tabs-item {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--tx-m);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  border-radius: 0;
+  background: transparent;
+  padding: 10px 16px;
   transition: color var(--dur-fast) var(--ease),
-              border-color var(--dur-fast) var(--ease) !important;
+              border-color var(--dur-fast) var(--ease);
   cursor: pointer;
   letter-spacing: 0.005em;
 }
 
-nav-tabs-item:hover {
-  color: var(--tx-1) !important;
-  background: var(--bg-h) !important;
+#navbar nav-tabs-item:hover {
+  color: var(--tx-1);
+  background: var(--bg-h);
 }
 
-/* Active tab: white text + Charter blue 2px underline */
-.nav-tabs-item[data-active] {
-  color: var(--tx-0) !important;
-  border-bottom-color: var(--ac) !important;
-  background: transparent !important;
+/* Active tab: Charter blue 2px underline (must use class selector per Mintlify docs) */
+#navbar .nav-tabs-item[data-active] {
+  color: var(--tx-0);
+  border-bottom-color: var(--ac);
+  background: transparent;
 }
 
-/* Mobile tabs — same pattern */
-mobile-nav-tabs-item { color: var(--tx-m) !important; }
-mobile-nav-tabs-item[data-active] { color: var(--ac-l) !important; }
+/* Mobile */
+mobile-nav-tabs-item { color: var(--tx-m); }
+mobile-nav-tabs-item[data-active] { color: var(--ac-l); }
 
 /* ══════════════════════════════════════════════════
-   SIDEBAR  (#sidebar · sidebar-* elements)
+   SIDEBAR  — #sidebar gives ID specificity throughout
    ══════════════════════════════════════════════════ */
 
 #sidebar {
-  background-color: var(--bg-0) !important;
-  border-right: 1px solid var(--bd-2) !important;
+  background-color: var(--bg-0);
+  border-right: 1px solid var(--bd-2);
 }
 
-#sidebar-content { background-color: var(--bg-0) !important; }
+#sidebar-content {
+  background-color: var(--bg-0);
+}
 
-/* Section labels ("Getting Started", "How Charter Works") */
-sidebar-group-header {
-  font-size: 0.6875rem !important;   /* 11px */
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.08em !important;
-  color: var(--tx-m) !important;
-  padding: 6px 0 4px !important;
+/* Section labels */
+#sidebar sidebar-group-header {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tx-m);
+  padding: 6px 0 4px;
 }
 
 /* Section icon */
-sidebar-group-icon {
-  color: var(--tx-m) !important;
+#sidebar sidebar-group-icon {
+  color: var(--tx-m);
   opacity: 0.7;
   transition: opacity var(--dur-fast) var(--ease);
 }
 
-sidebar-group[data-active] sidebar-group-icon { opacity: 1; }
+#sidebar sidebar-group[data-active] sidebar-group-icon { opacity: 1; }
 
-/* Sidebar nav links */
+/* Nav links */
 #sidebar-content a {
-  color: var(--tx-1) !important;
-  font-size: 0.875rem !important;
-  border-radius: 6px !important;
+  color: var(--tx-1);
+  font-size: 0.875rem;
+  border-radius: 6px;
   transition: background var(--dur-fast) var(--ease),
-              color var(--dur-fast) var(--ease) !important;
+              color var(--dur-fast) var(--ease);
   cursor: pointer;
 }
 
 #sidebar-content a:hover {
-  background: var(--bg-h) !important;
-  color: var(--tx-0) !important;
+  background: var(--bg-h);
+  color: var(--tx-0);
 }
 
-/* Active page link — Charter blue left border + tinted bg */
+/* Active page: Charter blue left border + tinted bg */
 #sidebar-content li[data-active] a {
-  color: var(--ac-l) !important;
-  background: var(--ac-bg) !important;
-  font-weight: 500 !important;
-  border-left: 2px solid var(--ac) !important;
-  padding-left: 8px !important;
+  color: var(--ac-l);
+  background: var(--ac-bg);
+  font-weight: 500;
+  border-left: 2px solid var(--ac);
+  padding-left: 8px;
 }
 
-/* Divider between groups */
-sidebar-nav-group-divider {
-  border-color: var(--bd-2) !important;
+/* Group divider */
+#sidebar sidebar-nav-group-divider {
+  border-color: var(--bd-2);
   opacity: 0.5;
 }
 
 /* ══════════════════════════════════════════════════
-   TABLE OF CONTENTS  (#table-of-contents · toc-*)
+   TABLE OF CONTENTS
    ══════════════════════════════════════════════════ */
 
 #table-of-contents {
-  border-left: 1px solid var(--bd-2) !important;
-  background: transparent !important;
+  border-left: 1px solid var(--bd-2);
+  background: transparent;
 }
 
-toc-item {
-  color: var(--tx-m) !important;
-  font-size: 0.8125rem !important;
-  transition: color var(--dur-fast) var(--ease),
-              border-color var(--dur-fast) var(--ease) !important;
+#table-of-contents-content toc-item {
+  color: var(--tx-m);
+  font-size: 0.8125rem;
+  transition: color var(--dur-fast) var(--ease);
   cursor: pointer;
 }
 
-toc-item:hover { color: var(--tx-1) !important; }
+#table-of-contents-content toc-item:hover { color: var(--tx-1); }
 
-toc-item[data-active] {
-  color: var(--ac-l) !important;
-  border-left: 2px solid var(--ac) !important;
-  padding-left: 8px !important;
-  font-weight: 500 !important;
+#table-of-contents-content toc-item[data-active] {
+  color: var(--ac-l);
+  border-left: 2px solid var(--ac);
+  padding-left: 8px;
+  font-weight: 500;
 }
 
-toc-item[data-active-deepest] {
-  color: var(--ac-l) !important;
-  font-weight: 600 !important;
+#table-of-contents-content toc-item[data-active-deepest] {
+  color: var(--ac-l);
+  font-weight: 600;
 }
 
 /* ══════════════════════════════════════════════════
-   CONTENT AREA  (#content-area · #content · mdx-content)
+   CONTENT AREA
    ══════════════════════════════════════════════════ */
 
 #content-area, #content {
-  background-color: var(--bg-0) !important;
+  background-color: var(--bg-0);
   position: relative;
   z-index: 1;
 }
 
-mdx-content { color: var(--tx-1); }
-
-/* Page eyebrow label */
-eyebrow {
-  font-size: 0.75rem !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.08em !important;
-  color: var(--ac-l) !important;
+/* Eyebrow label above page title */
+#content eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ac-l);
 }
 
 /* ══════════════════════════════════════════════════
    TYPOGRAPHY
-   Token: --font-site = Ruda (loaded via docs.json fonts config)
+   #page-title and mdx-content nesting for specificity
    ══════════════════════════════════════════════════ */
 
 #page-title {
-  font-size: clamp(1.625rem, 3.5vw, 2.125rem) !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.03em !important;
-  color: var(--tx-0) !important;
-  line-height: 1.2 !important;
+  font-size: clamp(1.625rem, 3.5vw, 2.125rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--tx-0);
+  line-height: 1.2;
 }
 
-mdx-content h2 {
-  font-weight: 700 !important;
-  letter-spacing: -0.02em !important;
-  color: var(--tx-0) !important;
+#content mdx-content h2 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--tx-0);
 }
 
-mdx-content h3, mdx-content h4 {
-  font-weight: 600 !important;
-  letter-spacing: -0.01em !important;
-  color: var(--tx-0) !important;
+#content mdx-content h3,
+#content mdx-content h4 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--tx-0);
 }
 
-mdx-content p, mdx-content li {
+#content mdx-content p,
+#content mdx-content li {
   color: var(--tx-1);
   line-height: 1.72;
 }
 
 /* Prose links */
-mdx-content a {
-  color: var(--ac-l) !important;
-  text-underline-offset: 3px !important;
-  text-decoration-color: rgba(96,165,250,0.30) !important;
+#content mdx-content a {
+  color: var(--ac-l);
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(96,165,250,0.30);
   transition: color var(--dur-fast) var(--ease),
-              text-decoration-color var(--dur-fast) var(--ease) !important;
+              text-decoration-color var(--dur-fast) var(--ease);
 }
 
-mdx-content a:hover {
-  color: #93c5fd !important;
-  text-decoration-color: rgba(147,197,253,0.50) !important;
+#content mdx-content a:hover {
+  color: #93c5fd;
+  text-decoration-color: rgba(147,197,253,0.50);
 }
 
 /* ══════════════════════════════════════════════════
-   CODE BLOCKS  (code-block · code-group elements)
-   Token: --font-code = Atkinson Hyperlegible Mono
+   CODE BLOCKS  — Atkinson Hyperlegible Mono
+   #content nesting beats Tailwind class specificity
    ══════════════════════════════════════════════════ */
 
-code-block {
-  background-color: var(--bg-1) !important;
-  border: 1px solid var(--bd-0) !important;
-  border-radius: 8px !important;
+#content code-block {
+  background-color: var(--bg-1);
+  border: 1px solid var(--bd-0);
+  border-radius: 8px;
   overflow: hidden;
 }
 
-code-block pre,
-code-block code {
-  font-family: var(--f-code) !important;
-  font-size: 0.8125rem !important;
-  line-height: 1.65 !important;
+#content code-block pre,
+#content code-block code {
+  font-family: var(--f-code);
+  font-size: 0.8125rem;
+  line-height: 1.65;
 }
 
-code-group {
-  border: 1px solid var(--bd-0) !important;
-  border-radius: 8px !important;
+#content code-group {
+  border: 1px solid var(--bd-0);
+  border-radius: 8px;
   overflow: hidden;
 }
 
 /* Inline code — IBM Plex Mono (meta/ID layer per design tokens) */
-mdx-content :not(pre) > code {
-  font-family: var(--f-meta) !important;
-  font-size: 0.82em !important;
-  color: var(--ac-l) !important;
-  background-color: var(--ac-bg) !important;
-  border: 1px solid var(--ac-b) !important;
-  border-radius: 4px !important;
-  padding: 0.1em 0.38em !important;
+#content mdx-content :not(pre) > code {
+  font-family: var(--f-meta);
+  font-size: 0.82em;
+  color: var(--ac-l);
+  background-color: var(--ac-bg);
+  border: 1px solid var(--ac-b);
+  border-radius: 4px;
+  padding: 0.1em 0.38em;
 }
 
 /* ══════════════════════════════════════════════════
-   CALLOUTS  (callout element)
-   Severity surface tokens from DESIGN-TOKENS.md
+   CALLOUTS  — severity surface tokens
    ══════════════════════════════════════════════════ */
 
-callout {
-  border-radius: 8px !important;
-  border-width: 1px !important;
-  border-style: solid !important;
+#content callout {
+  border-radius: 8px;
+  border-width: 1px;
+  border-style: solid;
 }
 
-/* Mintlify callout types via attribute */
-callout[type="warning"],
-callout[data-type="warning"] {
-  background-color: var(--bg-warning) !important;
-  border-color: var(--bd-warning) !important;
+#content callout[type="warning"],
+#content callout[data-type="warning"] {
+  background-color: var(--bg-warning);
+  border-color: var(--bd-warning);
 }
 
-callout[type="danger"],
-callout[type="error"],
-callout[data-type="danger"] {
-  background-color: var(--bg-danger) !important;
-  border-color: var(--bd-danger) !important;
+#content callout[type="danger"],
+#content callout[type="error"],
+#content callout[data-type="danger"] {
+  background-color: var(--bg-danger);
+  border-color: var(--bd-danger);
 }
 
-callout[type="info"],
-callout[type="note"],
-callout[type="tip"],
-callout[data-type="info"] {
-  background-color: var(--bg-info) !important;
-  border-color: var(--bd-info) !important;
+#content callout[type="info"],
+#content callout[type="note"],
+#content callout[type="tip"],
+#content callout[data-type="info"] {
+  background-color: var(--bg-info);
+  border-color: var(--bd-info);
 }
 
-callout[type="success"],
-callout[data-type="success"] {
-  background-color: var(--bg-success) !important;
-  border-color: var(--bd-success) !important;
+#content callout[type="success"],
+#content callout[data-type="success"] {
+  background-color: var(--bg-success);
+  border-color: var(--bd-success);
 }
 
 /* ══════════════════════════════════════════════════
-   CARDS  (card element)
+   CARDS
    ══════════════════════════════════════════════════ */
 
-card {
-  background-color: var(--bg-1) !important;
-  border: 1px solid var(--bd-0) !important;
-  border-radius: 10px !important;
+#content card {
+  background-color: var(--bg-1);
+  border: 1px solid var(--bd-0);
+  border-radius: 10px;
   transition: border-color var(--dur-base) var(--ease),
               background-color var(--dur-base) var(--ease),
-              box-shadow var(--dur-base) var(--ease) !important;
+              box-shadow var(--dur-base) var(--ease);
   cursor: pointer;
 }
 
-card:hover {
-  border-color: var(--ac) !important;
-  background-color: var(--bg-2) !important;
+#content card:hover {
+  border-color: var(--ac);
+  background-color: var(--bg-2);
   box-shadow: 0 0 0 1px var(--ac-bg),
-              0 4px 16px rgba(37,99,235,0.12) !important;
+              0 4px 16px rgba(37,99,235,0.12);
 }
 
 /* ══════════════════════════════════════════════════
-   PAGINATION  (pagination-prev · pagination-next)
-   Mint-style large cards at page bottom
+   PAGINATION  — card style matching maple reference screenshot
    ══════════════════════════════════════════════════ */
 
 #pagination {
-  border-top: 1px solid var(--bd-2) !important;
-  margin-top: 3rem !important;
-  padding-top: 2rem !important;
+  border-top: 1px solid var(--bd-2);
+  margin-top: 3rem;
+  padding-top: 2rem;
 }
 
-pagination-prev,
-pagination-next {
-  background-color: var(--bg-1) !important;
-  border: 1px solid var(--bd-0) !important;
-  border-radius: 12px !important;
-  padding: 18px 22px !important;
+#pagination pagination-prev,
+#pagination pagination-next {
+  background-color: var(--bg-1);
+  border: 1px solid var(--bd-0);
+  border-radius: 12px;
+  padding: 18px 22px;
   transition: border-color var(--dur-base) var(--ease),
               background-color var(--dur-base) var(--ease),
-              box-shadow var(--dur-base) var(--ease) !important;
+              box-shadow var(--dur-base) var(--ease);
   cursor: pointer;
 }
 
-pagination-prev:hover,
-pagination-next:hover {
-  border-color: var(--ac) !important;
-  background-color: var(--bg-2) !important;
-  box-shadow: 0 0 0 1px var(--ac-bg) !important;
+#pagination pagination-prev:hover,
+#pagination pagination-next:hover {
+  border-color: var(--ac);
+  background-color: var(--bg-2);
+  box-shadow: 0 0 0 1px var(--ac-bg);
 }
 
-pagination-title {
-  font-size: 0.9375rem !important;
-  font-weight: 600 !important;
-  color: var(--tx-0) !important;
-  letter-spacing: -0.01em !important;
-}
-
-/* ══════════════════════════════════════════════════
-   STEPS  (step · steps elements)
-   ══════════════════════════════════════════════════ */
-
-step {
-  border-left: 2px solid var(--bd-0) !important;
+#pagination pagination-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--tx-0);
+  letter-spacing: -0.01em;
 }
 
 /* ══════════════════════════════════════════════════
-   ACCORDION  (accordion element)
+   STEPS / ACCORDIONS / UPDATE
    ══════════════════════════════════════════════════ */
 
-accordion {
-  border: 1px solid var(--bd-1) !important;
-  border-radius: 8px !important;
-  background-color: var(--bg-1) !important;
-  transition: border-color var(--dur-fast) var(--ease) !important;
+#content step {
+  border-left: 2px solid var(--bd-0);
 }
 
-accordion:hover { border-color: var(--bd-0) !important; }
+#content accordion {
+  border: 1px solid var(--bd-1);
+  border-radius: 8px;
+  background-color: var(--bg-1);
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+#content accordion:hover { border-color: var(--bd-0); }
+
+#content update {
+  border-left: 2px solid var(--bd-0);
+  padding-left: 1.5rem;
+}
 
 /* ══════════════════════════════════════════════════
-   FOOTER  (#footer · footer element)
+   FOOTER
    ══════════════════════════════════════════════════ */
 
-#footer,
-footer {
-  border-top: 1px solid var(--bd-2) !important;
-  background-color: var(--bg-0) !important;
+#footer {
+  border-top: 1px solid var(--bd-2);
+  background-color: var(--bg-0);
 }
 
 /* ══════════════════════════════════════════════════
@@ -516,40 +517,31 @@ footer {
    ══════════════════════════════════════════════════ */
 
 breadcrumb-item {
-  font-size: 0.8125rem !important;
-  color: var(--tx-m) !important;
+  font-size: 0.8125rem;
+  color: var(--tx-m);
 }
 
 /* ══════════════════════════════════════════════════
-   CHANGELOG (update element)
-   ══════════════════════════════════════════════════ */
-
-update {
-  border-left: 2px solid var(--bd-0) !important;
-  padding-left: 1.5rem !important;
-}
-
-/* ══════════════════════════════════════════════════
-   KEYBOARD SHORTCUTS  (kbd)
+   KEYBOARD SHORTCUTS
    ══════════════════════════════════════════════════ */
 
 kbd {
-  font-family: var(--f-meta) !important;
-  font-size: 0.7rem !important;
-  background-color: var(--bg-2) !important;
-  border: 1px solid var(--bd-0) !important;
-  border-radius: 4px !important;
-  color: var(--tx-m) !important;
-  padding: 2px 5px !important;
+  font-family: var(--f-meta);
+  font-size: 0.7rem;
+  background-color: var(--bg-2);
+  border: 1px solid var(--bd-0);
+  border-radius: 4px;
+  color: var(--tx-m);
+  padding: 2px 5px;
 }
 
 /* ══════════════════════════════════════════════════
-   FOCUS STATES (WCAG 2.2 AA)
+   FOCUS STATES  (WCAG 2.2 AA)
    ══════════════════════════════════════════════════ */
 
 *:focus-visible {
-  outline: 2px solid var(--ac-l) !important;
-  outline-offset: 2px !important;
+  outline: 2px solid var(--ac-l);
+  outline-offset: 2px;
 }
 
 /* ══════════════════════════════════════════════════
@@ -558,8 +550,8 @@ kbd {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms;
+    animation-duration: 0.01ms;
   }
 
   #body-content::before { display: none; }
