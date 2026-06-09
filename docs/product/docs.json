@@ -8,7 +8,7 @@
     "dark": "#1D4ED8"
   },
   "icons": {
-    "library": "lucide"
+    "library": "tabler"
   },
   "fonts": {
     "heading": {
@@ -104,7 +104,7 @@
           },
           {
             "anchor": "Configuration",
-            "icon": "sliders-horizontal",
+            "icon": "adjustments-horizontal",
             "pages": ["config/charter-yaml", "config/policy-profiles"]
           },
           {
@@ -114,7 +114,7 @@
           },
           {
             "anchor": "Design Philosophy",
-            "icon": "lightbulb",
+            "icon": "bulb",
             "pages": ["design-philosophy"]
           }
         ]
@@ -129,7 +129,7 @@
           },
           {
             "anchor": "Commands",
-            "icon": "code-2",
+            "icon": "code",
             "pages": [
               "cli/doctor",
               "cli/init",
@@ -172,17 +172,17 @@
           },
           {
             "group": "Agent Config",
-            "icon": "bot",
+            "icon": "robot",
             "pages": ["rules/AE-CC-001", "rules/AE-CC-002"]
           },
           {
             "group": "Environment & CI",
-            "icon": "wrench",
+            "icon": "tool",
             "pages": ["rules/AE-ENV-001", "rules/AE-CI-002"]
           },
           {
             "group": "Testing & Autonomy",
-            "icon": "flask-conical",
+            "icon": "flask",
             "pages": ["rules/AE-TEST-001", "rules/AE-AUTO-001"]
           },
           {

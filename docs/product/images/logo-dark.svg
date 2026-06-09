@@ -1,11 +1,11 @@
 <!--
   Charter wordmark — [C] mark + logotype
-  168×40 viewBox · mark 28×28 centred at y=20 · text cap-height centred at y=20
+  168×36 viewBox · bracket centre at y=18 · dy=0.35em aligns cap-height to y=18
   Dark variant: #FFFFFF
 -->
-<svg viewBox="0 0 168 40" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Charter">
+<svg viewBox="0 0 168 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Charter">
   <title>Charter</title>
-  <g transform="translate(0,6) scale(0.4375)">
+  <g transform="translate(0,4) scale(0.4375)">
     <rect x="3"  y="12" width="4"  height="40" fill="#FFFFFF"/>
     <rect x="3"  y="12" width="11" height="4"  fill="#FFFFFF"/>
     <rect x="3"  y="48" width="11" height="4"  fill="#FFFFFF"/>
@@ -15,9 +15,9 @@
     <path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5"
           fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="butt"/>
   </g>
-  <text x="36" y="21"
+  <text x="36" y="18"
         font-family="system-ui,-apple-system,'Segoe UI',sans-serif"
         font-size="18" font-weight="600"
         fill="#FFFFFF"
-        dominant-baseline="central">Charter</text>
+        dy="0.35em">Charter</text>
 </svg>
