@@ -45,6 +45,19 @@ tasks:
       - "scripts/go-perf.ts"
     options:
       cache: false
+  full-test:
+    command: "bun"
+    args:
+      - "scripts/full-test.ts"
+    options:
+      cache: false
+  visual-tour:
+    command: "bun"
+    args:
+      - "scripts/visual-tour.ts"
+    options:
+      cache: false
+      interactive: true
   vet:
     command: "go vet ./..."
     inputs:
