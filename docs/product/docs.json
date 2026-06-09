@@ -47,7 +47,7 @@
     }
   },
   "contextual": {
-    "options": ["copy", "view", "chatgpt", "claude", "grok"],
+    "options": ["copy", "view", "chatgpt", "claude", "grok", "mcp", "add-mcp", "cursor", "vscode"],
     "display": "header"
   },
   "search": {
