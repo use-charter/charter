@@ -1,152 +1,393 @@
 /*
  * Charter docs — design token overrides for Mintlify maple theme
  * Tokens: docs/internal/designs/DESIGN-TOKENS.md
- * Fonts:  Ruda (body/headings) · Atkinson Hyperlegible Mono (code/CLI) · IBM Plex Mono (meta/IDs)
+ * Goal: maple layout + mint-style navbar + Charter brand tokens throughout
  */
 
 /* ── External fonts ──────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-/* ── Semantic token variables ────────────────────── */
+/* ══════════════════════════════════════════════════
+   DESIGN TOKENS
+   ══════════════════════════════════════════════════ */
 :root {
-  /* Backgrounds */
-  --bg-primary-light:    #ffffff;
-  --bg-secondary-light:  #f9fafb;
-  --bg-tertiary-light:   #f3f4f6;
-  --bg-primary-dark:     #0d1117;
-  --bg-secondary-dark:   #161b22;
-  --bg-tertiary-dark:    #1f2937;
+  --bg-primary:    #0d1117;
+  --bg-secondary:  #161b22;
+  --bg-tertiary:   #1f2937;
+  --bg-hover:      rgba(255,255,255,0.04);
 
-  /* Text */
-  --text-primary-dark:   #f9fafb;
-  --text-secondary-dark: #d1d5db;
-  --text-tertiary-dark:  #9ca3af;
-  --text-info-dark:      #60a5fa;  /* Charter blue accent */
-  --text-info-light:     #1d4ed8;
+  --text-primary:   #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted:     #9ca3af;
 
-  /* Borders */
-  --border-primary-dark:   #374151;
-  --border-secondary-dark: #2b3240;
-  --border-tertiary-dark:  #21262d;
+  --border-subtle:  rgba(55, 65, 81, 0.50);
+  --border-strong:  #374151;
 
-  /* Accent */
-  --accent:       #2563eb;
-  --accent-light: #60a5fa;
-  --accent-glow:  rgba(37, 99, 235, 0.08);
+  --accent:         #2563eb;
+  --accent-mid:     #60a5fa;
+  --accent-glow:    rgba(37, 99, 235, 0.08);
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --font-code: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-meta: "IBM Plex Mono", ui-monospace, monospace;
 }
 
-/* ── Background surface ──────────────────────────── */
-.dark body,
-.dark [class*="content"],
-.dark main {
-  background-color: var(--bg-primary-dark);
+/* ══════════════════════════════════════════════════
+   NAVBAR — solid dark, mint-inspired layout
+   ══════════════════════════════════════════════════ */
+
+/* Top bar: solid Charter Dark, no blur (mint is solid, not frosted) */
+.dark #navbar,
+.dark header,
+.dark [class*="navbar"],
+.dark [class*="top-bar"] {
+  background-color: var(--bg-primary) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-/* Subtle blue radial gradient at top — Charter brand depth */
+/* Tab strip (Docs / CLI Reference / Rules / Changelog) — mint underline style */
+.dark [role="tablist"],
+.dark [class*="tab-list"],
+.dark [class*="tabs-nav"],
+.dark nav[class*="top"] {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  gap: 0 !important;
+  padding: 0 !important;
+}
+
+/* Individual tab items */
+.dark [role="tab"],
+.dark [class*="tab-item"],
+.dark [class*="tab-trigger"],
+.dark nav[class*="top"] a,
+.dark nav[class*="top"] button {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: var(--text-muted) !important;
+  padding: 10px 16px !important;
+  border-bottom: 2px solid transparent !important;
+  margin-bottom: -1px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  transition: color 0.15s ease, border-color 0.15s ease !important;
+  letter-spacing: 0.005em;
+}
+
+.dark [role="tab"]:hover,
+.dark [class*="tab-item"]:hover,
+.dark nav[class*="top"] a:hover {
+  color: var(--text-secondary) !important;
+  background: var(--bg-hover) !important;
+}
+
+/* Active tab: Charter blue underline, white text — matches mint's green underline pattern */
+.dark [role="tab"][aria-selected="true"],
+.dark [role="tab"][data-active="true"],
+.dark [role="tab"][data-state="active"],
+.dark [class*="tab-item"][class*="active"],
+.dark [class*="tab-trigger"][data-state="active"],
+.dark nav[class*="top"] a[aria-current="page"],
+.dark nav[class*="top"] a[class*="active"] {
+  color: var(--text-primary) !important;
+  border-bottom-color: var(--accent) !important;
+  background: transparent !important;
+}
+
+/* ══════════════════════════════════════════════════
+   SEARCH — pill shape, visible in sidebar
+   ══════════════════════════════════════════════════ */
+
+/* Search container */
+.dark [class*="search-bar"],
+.dark [class*="search-container"],
+.dark [role="search"] {
+  padding: 4px !important;
+}
+
+/* Search input */
+.dark input[type="search"],
+.dark input[placeholder*="Search"],
+.dark [class*="search-input"],
+.dark [class*="SearchInput"] {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: 8px !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem !important;
+  padding: 7px 12px !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+  width: 100% !important;
+}
+
+.dark input[type="search"]:focus,
+.dark [class*="search-input"]:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+  outline: none !important;
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Search kbd shortcut pill (⌘K) */
+.dark kbd,
+.dark [class*="kbd"],
+.dark [class*="shortcut"] {
+  background-color: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-strong) !important;
+  color: var(--text-muted) !important;
+  border-radius: 4px !important;
+  font-family: var(--font-meta) !important;
+  font-size: 0.7rem !important;
+  padding: 2px 5px !important;
+}
+
+/* ══════════════════════════════════════════════════
+   SIDEBAR
+   ══════════════════════════════════════════════════ */
+
+.dark aside,
+.dark [class*="sidebar"],
+.dark nav[class*="side"],
+.dark [class*="left-sidebar"] {
+  background-color: var(--bg-primary) !important;
+  border-right: 1px solid var(--border-subtle) !important;
+}
+
+/* Sidebar section headers (anchor names like "Getting Started") */
+.dark [class*="anchor-label"],
+.dark [class*="group-label"],
+.dark [class*="section-title"],
+.dark nav [class*="group"] > span:first-child {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--text-muted) !important;
+  padding: 4px 0 !important;
+}
+
+/* Sidebar nav links */
+.dark [class*="nav-link"],
+.dark [class*="sidebar"] a,
+.dark nav[class*="side"] a {
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem !important;
+  border-radius: var(--radius-sm) !important;
+  transition: background 0.12s, color 0.12s !important;
+  padding: 5px 10px !important;
+}
+
+.dark [class*="sidebar"] a:hover,
+.dark nav[class*="side"] a:hover {
+  background: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Active page link */
+.dark [class*="sidebar"] a[aria-current="page"],
+.dark [class*="sidebar"] a[data-active="true"],
+.dark nav[class*="side"] a[aria-current="page"] {
+  background: rgba(37, 99, 235, 0.12) !important;
+  color: var(--accent-mid) !important;
+  font-weight: 500 !important;
+  border-left: 2px solid var(--accent) !important;
+  padding-left: 8px !important;
+}
+
+/* ══════════════════════════════════════════════════
+   MAIN CONTENT AREA
+   ══════════════════════════════════════════════════ */
+
+/* Background + subtle top gradient */
+.dark body {
+  background-color: var(--bg-primary);
+}
+
 .dark body::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   background: radial-gradient(
-    ellipse 100% 35% at 50% -5%,
+    ellipse 90% 30% at 50% 0%,
     var(--accent-glow) 0%,
-    transparent 65%
+    transparent 60%
   );
   z-index: 0;
 }
 
-/* ── Navbar ─────────────────────────────────────── */
-.dark #navbar,
-.dark [id="navbar"],
-.dark header {
-  background-color: rgba(13, 17, 23, 0.88);
-  border-bottom: 1px solid var(--border-secondary-dark);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+/* Content wrapper sits above pseudo */
+.dark main,
+.dark article,
+.dark [class*="content"] {
+  position: relative;
+  z-index: 1;
+  background-color: var(--bg-primary);
 }
 
-/* ── Sidebar surfaces ────────────────────────────── */
-.dark aside,
-.dark [class*="sidebar"],
-.dark nav[class*="side"] {
-  background-color: var(--bg-primary-dark);
-  border-right: 1px solid var(--border-tertiary-dark);
+/* ══════════════════════════════════════════════════
+   TYPOGRAPHY
+   ══════════════════════════════════════════════════ */
+
+.dark h1 {
+  font-size: clamp(1.75rem, 4vw, 2.25rem) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+  color: var(--text-primary) !important;
+  line-height: 1.2 !important;
 }
 
-/* ── Code blocks — Atkinson Hyperlegible Mono ────── */
-pre,
-[class*="codeblock"],
-[class*="code-block"],
-code[class*="language"] {
-  font-family: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", Menlo, monospace !important;
+.dark h2 {
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--text-primary) !important;
+}
+
+.dark h3, .dark h4 {
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--text-primary) !important;
+}
+
+.dark p, .dark li {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* ══════════════════════════════════════════════════
+   CODE — Atkinson Hyperlegible Mono (CLI-first)
+   ══════════════════════════════════════════════════ */
+
+pre, code, [class*="codeblock"], [class*="code-block"] {
+  font-family: var(--font-code) !important;
 }
 
 .dark pre,
 .dark [class*="codeblock"],
 .dark [class*="code-block"] {
-  background-color: var(--bg-secondary-dark) !important;
-  border: 1px solid var(--border-primary-dark) !important;
-  border-radius: 8px;
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-md) !important;
 }
 
-/* ── Inline code — IBM Plex Mono (meta/IDs layer) ── */
+/* Inline code — IBM Plex Mono (meta layer: rule IDs, paths) */
 :not(pre) > code {
-  font-family: "IBM Plex Mono", ui-monospace, monospace !important;
-  font-size: 0.82em;
-  border-radius: 4px;
-  padding: 0.12em 0.38em;
+  font-family: var(--font-meta) !important;
+  font-size: 0.82em !important;
+  border-radius: 4px !important;
+  padding: 0.12em 0.38em !important;
 }
 
 .dark :not(pre) > code {
-  color: var(--text-info-dark);
-  background-color: rgba(37, 99, 235, 0.10);
-  border: 1px solid rgba(37, 99, 235, 0.22);
+  color: var(--accent-mid) !important;
+  background-color: rgba(37, 99, 235, 0.10) !important;
+  border: 1px solid rgba(37, 99, 235, 0.22) !important;
 }
 
-/* ── Typography ──────────────────────────────────── */
-.dark h1, .dark h2, .dark h3, .dark h4, .dark h5 {
-  letter-spacing: -0.02em;
-  color: var(--text-primary-dark);
-}
+/* ══════════════════════════════════════════════════
+   LINKS
+   ══════════════════════════════════════════════════ */
 
-.dark p, .dark li {
-  color: var(--text-secondary-dark);
-}
-
-/* ── Prose links ─────────────────────────────────── */
-.dark article a,
+.dark article a:not([class]),
 .dark [class*="prose"] a {
-  color: var(--accent-light);
-  text-decoration-color: rgba(96, 165, 250, 0.30);
-  text-underline-offset: 3px;
+  color: var(--accent-mid) !important;
+  text-underline-offset: 3px !important;
+  text-decoration-color: rgba(96, 165, 250, 0.30) !important;
+  transition: color 0.12s, text-decoration-color 0.12s !important;
 }
 
-.dark article a:hover,
+.dark article a:not([class]):hover,
 .dark [class*="prose"] a:hover {
-  color: #93c5fd;
-  text-decoration-color: rgba(147, 197, 253, 0.50);
+  color: #93c5fd !important;
+  text-decoration-color: rgba(147, 197, 253, 0.50) !important;
 }
 
-/* ── Severity callouts (map to Charter danger/warning tokens) */
-.dark [class*="callout-danger"],
-.dark [class*="callout-error"] {
-  background-color: #450a0a;
-  border-color: #991b1b;
+/* ══════════════════════════════════════════════════
+   CALLOUT / ADMONITION SURFACES (severity tokens)
+   ══════════════════════════════════════════════════ */
+
+.dark [class*="callout"][class*="danger"],
+.dark [class*="callout"][class*="error"],
+.dark [class*="admonition"][class*="warning"] {
+  background-color: #450a0a !important;
+  border-color: #991b1b !important;
 }
 
-.dark [class*="callout-warning"] {
-  background-color: #422006;
-  border-color: #92400e;
+.dark [class*="callout"][class*="warning"],
+.dark [class*="admonition"][class*="caution"] {
+  background-color: #422006 !important;
+  border-color: #92400e !important;
 }
 
-.dark [class*="callout-info"],
-.dark [class*="callout-tip"] {
-  background-color: #172554;
-  border-color: #1e40af;
+.dark [class*="callout"][class*="info"],
+.dark [class*="callout"][class*="tip"],
+.dark [class*="callout"][class*="note"] {
+  background-color: #172554 !important;
+  border-color: #1e40af !important;
 }
 
-.dark [class*="callout-success"] {
-  background-color: #052e16;
-  border-color: #166534;
+.dark [class*="callout"][class*="success"] {
+  background-color: #052e16 !important;
+  border-color: #166534 !important;
+}
+
+/* ══════════════════════════════════════════════════
+   RIGHT TOC (table of contents)
+   ══════════════════════════════════════════════════ */
+
+.dark [class*="toc"],
+.dark [class*="table-of-contents"],
+.dark aside[class*="right"] {
+  border-left: 1px solid var(--border-subtle) !important;
+}
+
+.dark [class*="toc"] a,
+.dark [class*="table-of-contents"] a {
+  color: var(--text-muted) !important;
+  font-size: 0.8125rem !important;
+  transition: color 0.12s !important;
+}
+
+.dark [class*="toc"] a:hover {
+  color: var(--text-secondary) !important;
+}
+
+.dark [class*="toc"] a[class*="active"],
+.dark [class*="toc"] a[aria-current] {
+  color: var(--accent-mid) !important;
+  border-left: 2px solid var(--accent) !important;
+  padding-left: 8px !important;
+}
+
+/* ══════════════════════════════════════════════════
+   PREV / NEXT FOOTER CARDS
+   ══════════════════════════════════════════════════ */
+
+.dark [class*="prev-next"],
+.dark [class*="pagination"],
+.dark [class*="footer-nav"] {
+  border-top: 1px solid var(--border-subtle) !important;
+  margin-top: 3rem !important;
+  padding-top: 2rem !important;
+}
+
+.dark [class*="prev-next"] a,
+.dark [class*="pagination"] a {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-lg) !important;
+  transition: border-color 0.15s, background 0.15s !important;
+  padding: 16px 20px !important;
+}
+
+.dark [class*="prev-next"] a:hover,
+.dark [class*="pagination"] a:hover {
+  border-color: var(--accent) !important;
+  background-color: rgba(37, 99, 235, 0.06) !important;
 }
