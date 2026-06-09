@@ -1,13 +1,13 @@
 <!--
   Charter wordmark — [C] mark + logotype
-  160×36 viewBox · mark scaled 28×28 · logotype in system sans-serif
-  Light variant: #0D1117 on light backgrounds
+  168×40 viewBox · mark 28×28 centred at y=20 · text cap-height centred at y=20
+  Light variant: #0D1117
 -->
-<svg viewBox="0 0 160 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Charter">
+<svg viewBox="0 0 168 40" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Charter">
   <title>Charter</title>
-
-  <!-- [C] mark scaled 0.4375 (64→28), centred vertically in 36px -->
-  <g transform="translate(0,4) scale(0.4375)">
+  <!-- [C] mark: scale 0.4375 (64→28), translate so mark centre lands at y=20 -->
+  <!-- mark spans y=12..52 (h40) → scaled: 5.25..22.75 → +6 → 11.25..28.75, centre=20 -->
+  <g transform="translate(0,6) scale(0.4375)">
     <rect x="3"  y="12" width="4"  height="40" fill="#0D1117"/>
     <rect x="3"  y="12" width="11" height="4"  fill="#0D1117"/>
     <rect x="3"  y="48" width="11" height="4"  fill="#0D1117"/>
@@ -15,14 +15,12 @@
     <rect x="50" y="12" width="11" height="4"  fill="#0D1117"/>
     <rect x="50" y="48" width="11" height="4"  fill="#0D1117"/>
     <path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5"
-          fill="none" stroke="#0D1117"
-          stroke-width="6" stroke-linecap="butt"/>
+          fill="none" stroke="#0D1117" stroke-width="6" stroke-linecap="butt"/>
   </g>
-
-  <!-- Logotype -->
-  <text x="36" y="18"
+  <!-- Logotype: dominant-baseline="central" aligns em-centre with y -->
+  <text x="36" y="21"
         font-family="system-ui,-apple-system,'Segoe UI',sans-serif"
         font-size="18" font-weight="600"
         fill="#0D1117"
-        dominant-baseline="middle">Charter</text>
+        dominant-baseline="central">Charter</text>
 </svg>
