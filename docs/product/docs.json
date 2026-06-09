@@ -1,0 +1,148 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Charter",
+  "theme": "mint",
+  "colors": {
+    "primary": "#2563EB"
+  },
+  "description": "AI-agent readiness, scored. Charter is an offline-first scanner that gives every repo an AI-agent readiness score and shows you how to fix it.",
+  "seo": {
+    "indexing": "navigable",
+    "metatags": {
+      "og:site_name": "Charter",
+      "og:title": "Charter — AI-Agent Readiness Scanner",
+      "og:description": "Offline-first scanner that scores a repo's AI-agent readiness and shows you how to fix it.",
+      "twitter:card": "summary_large_image"
+    }
+  },
+  "search": {
+    "prompt": "Search Charter docs..."
+  },
+  "metadata": {
+    "timestamp": true
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "CLI Reference",
+            "pages": [
+              "cli/overview",
+              "cli/doctor",
+              "cli/init",
+              "cli/fix",
+              "cli/report",
+              "cli/explain",
+              "cli/suppress",
+              "cli/version"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "config/charter-yaml"
+            ]
+          },
+          {
+            "group": "CI & GitHub Action",
+            "pages": [
+              "ci/github-action"
+            ]
+          },
+          {
+            "group": "How-to Guides",
+            "pages": [
+              "how-to/run-in-github-actions",
+              "how-to/adopt-in-existing-repo",
+              "how-to/suppress-a-finding",
+              "how-to/investigate-mcp-findings",
+              "how-to/use-charter-fix-safely"
+            ]
+          },
+          {
+            "group": "Concepts",
+            "pages": [
+              "concepts/agent-readiness-model",
+              "concepts/scoring-and-caps",
+              "concepts/mcp-safety-model",
+              "concepts/suppression-governance"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Rules",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "rules/overview"
+            ]
+          },
+          {
+            "group": "Context",
+            "pages": [
+              "rules/AE-CTX-001",
+              "rules/AE-CTX-002",
+              "rules/AE-CTX-004",
+              "rules/AE-CTX-006"
+            ]
+          },
+          {
+            "group": "Secrets",
+            "pages": [
+              "rules/AE-SEC-001",
+              "rules/AE-SEC-002"
+            ]
+          },
+          {
+            "group": "MCP Safety",
+            "pages": [
+              "rules/AE-MCP-001",
+              "rules/AE-MCP-002",
+              "rules/AE-MCP-003"
+            ]
+          },
+          {
+            "group": "Agent Config",
+            "pages": [
+              "rules/AE-CC-001",
+              "rules/AE-CC-002"
+            ]
+          },
+          {
+            "group": "Environment & CI",
+            "pages": [
+              "rules/AE-ENV-001",
+              "rules/AE-CI-002"
+            ]
+          },
+          {
+            "group": "Testing & Autonomy",
+            "pages": [
+              "rules/AE-TEST-001",
+              "rules/AE-AUTO-001"
+            ]
+          },
+          {
+            "group": "Governance",
+            "pages": [
+              "rules/AE-SUPPRESS-001",
+              "rules/AE-SUPPRESS-002",
+              "rules/AE-SUPPRESS-003"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+---
+title: "AE-CTX-002"
+description: "Agent context must remain current with repo reality."
+---
+
+> Generated from the internal rule spec. Edit `docs/internal/specs/AE-CTX-002.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+
+**Rule name:** AgentContextConsistent
+
+**Severity:** Medium  
+**Category:** Context
+
+Agent context must remain current with repo reality.
+
+## Detection Logic
+
+compare stated stack, setup path, verification command, off-limits paths, and hook/tooling references against actual repo manifests, workflow files, and directory structure.
+
+## Pass Example
+
+`AGENTS.md` points at a recognized verification command (e.g. `charter doctor`, `moon run :check`), mentions `hk.pkl`, and matches the current toolchain and repo boundaries.
+
+## Fail Example
+
+the context file references stale runtimes, missing task paths, or MCP/config behavior that no longer matches the repo.
+
+## Evidence Expectations
+
+last-reviewed date if present, plus exact contradictions between the file and repo state.
+
+## Edge Cases
+
+an old date alone is not enough to fail the rule if the content is still factually accurate.
+
+## Remediation
+
+update the context file to reflect current repo truth and keep review dates fresh.
+
+## Related ADRs
+
+- ADR-0006
+
+## Related Evals
+
+None yet
+
+## CLI
+
+```bash
+charter explain AE-CTX-002
+```

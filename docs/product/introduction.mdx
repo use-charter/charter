@@ -1,0 +1,61 @@
+---
+title: "Introduction"
+description: "Charter is an offline-first scanner that scores a repository's AI-agent readiness and shows you how to fix it."
+---
+
+Charter is an offline-first AI-agent-readiness scanner for software repositories. It audits the things that make coding agents safe and useful in a real repo: context, secrets, MCP safety, reproducibility, CI posture, testing, autonomy, and governance.
+
+It is built for:
+
+- developers adopting coding agents in an existing repo
+- platform and security teams that want a repeatable readiness gate
+- maintainers who need a deterministic, reviewable signal before letting agents edit code
+
+Today, Charter ships as a Go CLI with seven commands: `init`, `doctor`, `explain`, `report`, `fix`, `suppress`, and `version`.
+
+## What Charter Checks
+
+Charter's v1 rule set covers 18 rules across 9 categories:
+
+- context
+- secrets
+- MCP safety
+- agent config
+- environment
+- CI
+- testing
+- autonomy
+- governance
+
+Those checks feed a public score formula with documented caps, so a team can use the result as both a local signal and a CI gate.
+
+## Why Teams Use It
+
+- **Scan before agents run:** `charter doctor` shows whether a repo is ready for agent-assisted work.
+- **Gate in CI:** the GitHub Action source lives in this repo today, and the standalone consumer action lands at launch for pull-request scanning and SARIF upload.
+- **Fix the obvious gaps:** `charter init` scaffolds missing context, and `charter fix` applies safe diff-first repairs for supported findings.
+- **Share the result:** `charter report` writes a self-contained offline HTML report you can attach to a PR or hand to a teammate.
+
+## Core Properties
+
+- **Offline-first:** the core scanner does not send repo data anywhere.
+- **Deterministic:** findings come from static checks, not LLM calls.
+- **Cross-vendor:** the rules are designed for mixed agent ecosystems, not one editor or assistant.
+- **OSS core:** the CLI scan stays in the Apache-2.0 open-source core.
+
+## Start Here
+
+<Cards>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Scan your first repository, understand the score, and generate an offline report.
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/cli/overview">
+    See every command, flag, and exit-code contract for the Charter CLI.
+  </Card>
+  <Card title="Rules" icon="shield" href="/rules/overview">
+    Browse all 18 rules, what they check, and how to remediate them.
+  </Card>
+  <Card title="GitHub Action" icon="github" href="/ci/github-action">
+    Run Charter in CI and upload SARIF findings to GitHub Code Scanning.
+  </Card>
+</Cards>

@@ -1,0 +1,56 @@
+---
+title: "AE-CTX-006"
+description: "Agent instructions should be concise and declarative. Instruction-following research shows that stacked emphatic directives (`IMPORTANT`/`NEVER`/`MUST`/`CRITICAL`/…) create a fragile, competitive instruction topology that *degrades* adherence, while declarative phrasing transfers more reliably. AE-CTX-006 is a quality nudge for context files that over-use emphatic directives."
+---
+
+> Generated from the internal rule spec. Edit `docs/internal/specs/AE-CTX-006.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+
+**Rule name:** InstructionEmphasisRestrained
+
+**Severity:** Low (informational — does **not** deduct points or affect score)  
+**Category:** Context
+
+Agent instructions should be concise and declarative. Instruction-following research shows that stacked emphatic directives (`IMPORTANT`/`NEVER`/`MUST`/`CRITICAL`/…) create a fragile, competitive instruction topology that *degrades* adherence, while declarative phrasing transfers more reliably. AE-CTX-006 is a quality nudge for context files that over-use emphatic directives.
+
+## Detection Logic
+
+reads the highest-precedence agent context file present (same resolution as AE-CTX-001). Counts word-boundary matches of `IMPORTANT|NEVER|MUST|CRITICAL|ALWAYS|EXTREMELY|ABSOLUTELY|FORBIDDEN|PROHIBITED` and divides by word count × 1,000. Flags when density ≥ 15 per 1,000 words.
+
+## Pass Example
+
+a declarative AGENTS.md ("Tests run with `go test`. No silent mutation. Fail fast.") — low emphatic density, passes.
+
+## Fail Example
+
+an AGENTS.md that stacks `IMPORTANT`/`NEVER`/`MUST`/`CRITICAL` throughout — density ≥ 15/1K, flagged informational; evidence reports the count and density.
+
+## Evidence Expectations
+
+emphatic-directive count, word count, density, and the threshold.
+
+## Edge Cases
+
+fires only when a context file exists (absence is AE-CTX-001's concern); empty file → no finding.
+
+## Remediation
+
+prefer concise, declarative guidance over stacked emphatic directives; state constraints plainly.
+
+## Scoring Impact
+
+informational — listed in output, re-surfaces, but contributes **0** to the score (mirrors AE-SUPPRESS-003).
+
+## Related ADRs
+
+- ADR-0023
+- ADR-0013
+
+## Related Evals
+
+None yet
+
+## CLI
+
+```bash
+charter explain AE-CTX-006
+```

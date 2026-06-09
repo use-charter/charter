@@ -1,0 +1,51 @@
+---
+title: "AE-ENV-001"
+description: "Toolchain, lockfiles, and hooks should make the repo reproducible."
+---
+
+> Generated from the internal rule spec. Edit `docs/internal/specs/AE-ENV-001.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+
+**Rule name:** ReproducibleToolchain
+
+**Severity:** Medium  
+**Category:** Environment
+
+Toolchain, lockfiles, and hooks should make the repo reproducible.
+
+## Detection Logic
+
+inspect runtime pin declarations, committed lockfiles, and committed hook manager config; fail when active languages or repo tooling cannot be reproduced from tracked files.
+
+## Pass Example
+
+`mise.toml`, `mise.lock`, `go.mod`, and `hk.pkl` align with repo automation and verification commands.
+
+## Fail Example
+
+floating runtimes, missing lockfiles, or task/hook behavior that depends on untracked local files.
+
+## Evidence Expectations
+
+which toolchain file covers which language, which lockfiles exist, and which hook manager is committed.
+
+## Edge Cases
+
+partial language coverage is acceptable only if the uncovered language is not active in the repo; local-only helper scripts do not satisfy reproducibility for tracked task config.
+
+## Remediation
+
+pin the runtime in tracked config, commit the lockfile, and ensure local/hook/CI behavior all derive from the same tracked baseline.
+
+## Related ADRs
+
+- ADR-0006
+
+## Related Evals
+
+None yet
+
+## CLI
+
+```bash
+charter explain AE-ENV-001
+```

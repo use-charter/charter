@@ -1,0 +1,94 @@
+---
+title: "fix"
+description: "Preview and apply safe, diff-first auto-fixes for supported Charter findings."
+---
+
+`charter fix` is Charter's repair command. It is intentionally narrow: it only applies safe, explicit fixes, always shows the unified diff first, and backs up existing targets before replacing or updating them.
+
+## Safety Model
+
+`charter fix` does **not**:
+
+- silently mutate files
+- delete files
+- auto-fix secret findings
+- auto-fix every rule in the catalog
+
+Before a write that replaces or updates an existing file, it stores the original file in `.charter/backups/`. Pure creates do not have a prior file to back up.
+
+## Usage
+
+```bash
+charter fix --dry-run --path .
+```
+
+## Flags
+
+| Flag | Description |
+| --- | --- |
+| `--rule` | Limit the repair to a single rule ID, such as `AE-CTX-004`. |
+| `--dry-run` | Show the unified diffs without writing any files. |
+| `--all` | Plan every fixable rule. This is already the default behavior. |
+| `--yes` | Accepted for scripting. `fix` is already non-interactive, so this is effectively a no-op. |
+| `--path` | Explicit repository path. |
+
+## Currently Fixable Rules
+
+As shipped today, `charter fix` supports these rule IDs:
+
+- `AE-CTX-001`
+- `AE-CTX-004`
+- `AE-CI-002`
+- `AE-MCP-001`
+
+Those map to:
+
+- create `AGENTS.md`
+- create or append `.gitignore` agent-artifact patterns
+- create the Charter GitHub Actions workflow
+- bump a catalog-known MCP package pin to a safe version
+
+## Rules That Are Not Auto-Fixable
+
+Secret findings and other unsafe or opinionated repairs remain manual. For example, `AE-SEC-001` and `AE-SEC-002` are never auto-fixed.
+
+If you target a rule with no registered fixer, Charter reports that it is not auto-fixable.
+
+## Examples
+
+### Preview all fixable changes
+
+```bash
+charter fix --dry-run --path .
+```
+
+### Apply all available fixes
+
+```bash
+charter fix --path .
+```
+
+### Fix one rule only
+
+```bash
+charter fix --rule AE-MCP-001 --path .
+```
+
+## Backup Behavior
+
+When `fix` replaces or updates an existing file, it first copies the previous version into `.charter/backups/<timestamp>/...`. A create-only write has no prior file, so no backup is produced for that target.
+
+This gives you:
+
+- a reviewable before/after diff
+- a local recovery path if you do not want the applied change
+- evidence that Charter did not mutate files invisibly
+
+## Recommended Workflow
+
+```bash
+charter doctor --path .
+charter fix --dry-run --path .
+charter fix --path .
+charter doctor --path .
+```

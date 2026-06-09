@@ -1,0 +1,171 @@
+---
+title: "Run in GitHub Actions"
+description: "Add Charter to a GitHub Actions workflow, upload SARIF, and gate merges on the score threshold."
+---
+
+Use Charter in GitHub Actions when you want every pull request to run the same repo scan your local workflow runs.
+
+This guide covers:
+
+- adding a dedicated Charter workflow
+- setting the score threshold
+- uploading SARIF to GitHub Code Scanning
+- failing the workflow when the score falls below the gate
+
+## Before You Start
+
+Charter's GitHub Action source is already in this repo under `action/`, but public consumption is still launch-gated.
+
+- Repo-verified: the action contract is documented in `action/README.md`.
+- Repo-verified: the README says the standalone `use-charter/charter-action` repo is seeded at launch.
+
+If the public action ref is not live yet, use the workflow shape below as the target state and wait for launch publication before depending on it in a public repo.
+
+## 1. Create the workflow file
+
+Create `.github/workflows/charter.yaml`.
+
+Post-launch shape:
+
+```yaml
+name: Charter
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  charter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: use-charter/charter-action@<published-major>
+        with:
+          version: <published-tag>
+          threshold: "80"
+```
+
+Before launch, treat the action reference and version values above as placeholders for the published action and published release tag.
+
+Why these permissions matter:
+
+- `contents: read`: lets the workflow read the repo.
+- `security-events: write`: lets GitHub accept the uploaded SARIF report.
+- `actions: read`: may be required for Code Scanning upload in private repos.
+
+## 2. Set the threshold
+
+Pick the gate you want:
+
+- `80`: the standard Charter default.
+- `90`: strict gate.
+- `60`: relaxed gate.
+
+You can set the threshold in either place:
+
+- in the workflow with `threshold: "80"`
+- in `charter.yaml` with `policy.profile` or `policy.threshold`
+
+Precedence is:
+
+1. workflow `threshold` input
+2. `charter.yaml` `policy.threshold`
+3. `charter.yaml` `policy.profile`
+4. default `80`
+
+If you want the workflow to defer to repo config, omit the `threshold` input.
+
+## 3. Upload SARIF to Code Scanning
+
+The action runs:
+
+```bash
+charter doctor --format sarif
+```
+
+and uploads the SARIF report to GitHub Code Scanning.
+
+That gives you:
+
+- PR annotations on findings with locations
+- Security tab visibility for Charter results
+- a durable record of the scan in GitHub
+
+Repo-verified: `action/README.md` documents SARIF upload as the default behavior when `upload` is left at `true`.
+
+## 4. Fail the workflow below threshold
+
+By default, the action preserves Charter's exit semantics:
+
+- exit `0`: score passed
+- exit `1`: score below threshold
+- exit `2`: scan or setup error
+
+With the default `fail-below: true`, a below-threshold score fails the job after SARIF upload completes.
+
+That means:
+
+- you still get Code Scanning annotations
+- the PR still gets blocked when the repo is below the gate
+
+If you want reporting without blocking, set:
+
+```yaml
+with:
+  fail-below: "false"
+```
+
+## 5. Optional inputs
+
+Common variants:
+
+```yaml
+- uses: use-charter/charter-action@<published-major>
+  with:
+    path: .
+    threshold: "90"
+    category: charter
+    verify: "true"
+    upload: "true"
+```
+
+Useful notes:
+
+- `verify: true` keeps cosign + checksum verification on.
+- `upload: false` skips Code Scanning upload if you only want gate behavior.
+- `category` lets you separate Charter results from other SARIF producers.
+
+## 6. Verify the workflow
+
+After adding the workflow:
+
+1. open a pull request
+2. confirm the `Charter` job runs
+3. confirm the workflow uploads SARIF successfully
+4. confirm the job fails when the score is below the configured threshold
+
+If you want to check locally first:
+
+```bash
+charter doctor --path . --threshold 80
+```
+
+## Troubleshooting
+
+If the action fails before the scan runs:
+
+- check that the published `use-charter/charter-action@<published-major>` ref exists yet
+- check workflow permissions, especially `security-events: write`
+- check that your runner has the shell tooling described in `action/README.md` if you are on self-hosted runners
+
+If the scan runs but the PR still passes unexpectedly:
+
+- confirm `fail-below` is not set to `false`
+- confirm the effective threshold is what you expected
+- inspect the uploaded SARIF and the workflow logs for Charter's exit code

@@ -1,0 +1,136 @@
+---
+title: "Suppress a Finding"
+description: "Use governed suppressions for accepted findings without hiding risk or weakening Charter's audit trail."
+---
+
+Suppress a finding only when the repo's state is intentionally accepted, not when the fix is obvious and safe.
+
+Charter treats suppressions as governance artifacts, not as a way to mute the tool.
+
+## Fix vs suppress
+
+Use `charter fix` or a manual code/config change when:
+
+- the finding describes real repo drift
+- the fix is safe and clear
+- leaving it in place creates ongoing risk or confusion
+
+Use suppression when:
+
+- the finding is a confirmed false positive
+- the repo intentionally carries a temporary exception
+- the risk is accepted and documented
+
+If you can fix the underlying problem cleanly, do that first.
+
+## 1. Add a time-bounded suppression
+
+The normal path is a short-lived waiver:
+
+```bash
+charter suppress AE-MCP-001 --path . --reason "vendored fixture" --expires 90d
+```
+
+Repo-verified: `charter suppress` writes `.charter-suppress.yml` and stores day-based windows as absolute dates.
+
+This gives you:
+
+- a rule ID
+- a human-readable reason
+- an expiry date that re-surfaces later
+
+## 2. Use permanent only with an approver
+
+If you truly need a permanent waiver:
+
+```bash
+charter suppress AE-CC-002 --path . --reason "legacy accepted risk" --expires permanent --approver security-team
+```
+
+Without `--approver`, Charter warns that the permanent waiver is not honored as a real permanent suppression.
+
+## 3. Understand the governance rules
+
+Charter audits suppressions every scan:
+
+- `AE-SUPPRESS-001`: suppression is missing a reason
+- `AE-SUPPRESS-002`: permanent suppression has no approver
+- `AE-SUPPRESS-003`: suppression rate is high across the repo
+
+Important behavior:
+
+- a blank or missing reason still leaves the suppression governed and flagged
+- a permanent suppression without an approver is not honored as a permanent waiver
+- a high suppression rate is informational, but it tells you the repo may be muting too much
+
+## 4. Use inline suppression only for same-line findings
+
+Charter supports inline directives only for same-line, line-anchored findings on comment-supporting files.
+
+Example:
+
+```text
+# charter:ignore AE-SEC-001 reason="fixture secret for detector test"
+```
+
+Supported comment forms are line-based:
+
+- `# ...`
+- `// ...`
+- `<!-- ... -->`
+
+Important limits:
+
+- the directive must live on the same line as the finding Charter reports
+- it works only on files where a comment can live on that same line
+- it does not work for file-level findings
+- it does not work for strict JSON configs like `.mcp.json`
+
+For MCP config findings, file-level findings, and other cases where inline comments are not viable, use `.charter-suppress.yml` as the primary suppression path.
+
+## 5. Review the stored suppression file
+
+`charter suppress` writes `.charter-suppress.yml`.
+
+Typical entry shape:
+
+```yaml
+suppressions:
+  - rule: AE-MCP-001
+    reason: vendored fixture
+    expires: 2026-09-07
+```
+
+For permanent waivers:
+
+```yaml
+suppressions:
+  - rule: AE-CC-002
+    reason: legacy accepted risk
+    expires: permanent
+    approver: security-team
+```
+
+## 6. Re-run the scan
+
+After adding the suppression:
+
+```bash
+charter doctor --path . --threshold 80
+```
+
+What should change:
+
+- the underlying finding moves out of the active score calculation when the suppression is honored
+- the suppression is listed separately
+- governance findings appear if the waiver is incomplete or excessive
+
+## Good suppression hygiene
+
+- prefer a real fix when the repo state is actually wrong
+- prefer finite `--expires` windows over `permanent`
+- write reasons that explain the decision, not just `false positive`
+- add an approver for any long-lived accepted risk
+- review `.charter-suppress.yml` periodically instead of letting it grow silently
+
+Suppression is how you keep accepted exceptions visible without letting them disappear.

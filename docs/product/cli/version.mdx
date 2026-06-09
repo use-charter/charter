@@ -1,0 +1,66 @@
+---
+title: "version"
+description: "Print Charter build metadata for the current binary."
+---
+
+`charter version` prints the build metadata for the currently running binary.
+
+This is useful when you need to confirm exactly which build is installed in a local environment, CI runner, or release artifact.
+
+## Default Output
+
+The text format prints:
+
+- Charter version
+- commit
+- build date
+- Go version
+- platform
+
+```bash
+charter version
+```
+
+Example shape:
+
+```text
+charter   1.0.0
+commit    abc1234f
+built     2026-05-18T09:42:00Z
+go        1.26.3
+platform  darwin/arm64
+```
+
+## Additional Flags
+
+| Flag | Description |
+| --- | --- |
+| `--format text|json` | Output format. Defaults to `text`. |
+| `--short` | Print only the version string. |
+
+## Examples
+
+### Default text output
+
+```bash
+charter version
+```
+
+### Version string only
+
+```bash
+charter version --short
+```
+
+### JSON output
+
+```bash
+charter version --format json
+```
+
+## Exit Codes
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | Version output rendered successfully. This includes `--short`, which returns only the version string and bypasses format rendering. |
+| non-zero | Command error. In normal use this is most relevant for an unknown `--format` value when `--short` is not set. |

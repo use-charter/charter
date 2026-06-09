@@ -1,0 +1,56 @@
+---
+title: "AE-TEST-001"
+description: "A repository's active code language(s) must have automated tests. Agent-readiness depends on the agent being able to *verify its own work*; the AGENTS.md standard expects agents to run programmatic checks and fix failures before finishing a task. A language with source but no tests gives the agent nothing to verify against."
+---
+
+> Generated from the internal rule spec. Edit `docs/internal/specs/AE-TEST-001.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+
+**Rule name:** AutomatedTestsPresent
+
+**Severity:** High  
+**Category:** Testing
+
+A repository's active code language(s) must have automated tests. Agent-readiness depends on the agent being able to *verify its own work*; the AGENTS.md standard expects agents to run programmatic checks and fix failures before finishing a task. A language with source but no tests gives the agent nothing to verify against.
+
+## Detection Logic
+
+scans the tracked inventory. A language is **active** only when **both** (a) its project manifest is present (`go.mod`, `package.json`, `Cargo.toml`, `Gemfile`, `pyproject.toml`/`setup.py`/`setup.cfg`/`requirements.txt`, `pom.xml`/`build.gradle*`, `*.csproj`, `composer.json`) **and** (b) it has ≥1 non-test source file *outside tooling directories* (`scripts/`, `tools/`, `testdata/`, `examples/`, `third_party/`, `vendor/`, `node_modules/`, `dist/`, `build/`, `.github/`, `gen/`, `generated/`). The manifest gate rejects a stray secondary-language file (e.g. a Homebrew `.rb` formula in a Rust repo); the source-outside-tooling gate rejects a tooling-only manifest (e.g. a `package.json` driving build scripts in a Go repo); the **embedded-asset gate** excludes any file referenced by a `//go:embed` directive in a tracked `.go` file (a bundled resource of the host Go program — e.g. a `report.js` embedded into the binary — not an independent language surface), so a `go:embed`'d web asset plus a build-tooling `package.json` does not activate JavaScript/TypeScript. Embed patterns resolve relative to the directive's `.go` file directory and cover exact files, directory subtrees (recursive), and `path.Match` globs (with a leading `all:` prefix stripped); since `//go:embed` is Go-only, the scan runs only when a non-Go manifest is present. For each active language, require ≥1 recognized test artifact: a file under a `test/`/`tests/`/`spec/`/`__tests__/` segment (any language), or a per-file name convention — Go `*_test.go`; JS/TS `*.{test,spec}.*`; Python `test_*.py`/`*_test.py`/`conftest.py`; Rust `tests/**.rs` or an inline `#[test]`/`#[cfg(test)]` signal; Java/Kotlin `*Test.{java,kt}`/`*Spec.kt`; Ruby `*_spec.rb`/`*_test.rb`; C# `*Tests.cs`/`*Test.cs`; PHP `*Test.php`.
+
+## Pass Example
+
+a Go module (`go.mod` + `internal/**/*.go`) with `*_test.go` files — tests present, passes.
+
+## Fail Example
+
+a Go module with `internal/app/app.go` but no `*_test.go` anywhere — flagged High; evidence: `no test files detected for active language: Go`.
+
+## Evidence Expectations
+
+one finding listing each active language lacking tests. No location (repo-level).
+
+## Edge Cases
+
+**N/A** (no finding) when no recognized code language is active (docs/config/tooling-only repos). Tooling-only manifests (a `package.json` with only `scripts/*.ts`) and stray secondary-language files (a lone `*.rb` Homebrew formula with no `Gemfile`) are not active. A `//go:embed`'d web asset (e.g. a `report.js` embedded into a Go binary) is a bundled resource, not a language surface, so it does not activate JavaScript/TypeScript even when a build-tooling `package.json` is present. Rust inline unit tests count via the `#[cfg(test)]`/`#[test]` content signal. v1 judges *presence*, not coverage, quantity, or pyramid shape. Validated at 0% FP across 10 real public repos plus Charter's own self-dogfood (`docs/internal/operability-fp-validation.md`).
+
+## Remediation
+
+add tests for the active language(s) so an agent can run them and self-verify before finishing a task.
+
+## Scoring Impact
+
+`High` (−10); no hard cap.
+
+## Related ADRs
+
+- ADR-0023
+- ADR-0008
+
+## Related Evals
+
+None yet
+
+## CLI
+
+```bash
+charter explain AE-TEST-001
+```

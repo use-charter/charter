@@ -1,0 +1,143 @@
+---
+title: "doctor"
+description: "Scan a repository, evaluate Charter's rules, and compute an AI-agent-readiness score."
+---
+
+`charter doctor` is the primary Charter command. It scans a repository, evaluates the full rule set, computes the final score, and returns an exit code that is safe to use in local workflows, hooks, and CI.
+
+## What It Does
+
+- resolves the target repository
+- loads the effective score threshold
+- evaluates the full rule set unless `--rule` scopes the view
+- renders text, JSON, Markdown, or SARIF output
+- exits non-zero when the score is below the threshold
+
+## Usage
+
+```bash
+charter doctor --path . --threshold 80
+```
+
+## Flags
+
+| Flag | Description |
+| --- | --- |
+| `--path` | Explicit repository path. |
+| `--threshold` | Minimum passing score. Overrides `charter.yaml` policy threshold/profile when set. |
+| `--format text|json|markdown|sarif` | Output format. Defaults to `text`. |
+| `--out` | Write the rendered output to a file instead of standard output. |
+| `--rule` | Comma-separated rule IDs for a focused text-only view. Omits the score and exits `1` if any named rule fired. |
+| `--quiet` | Suppress non-failure text output. Useful in hooks and CI. |
+| `--color auto|always|never` | Color output mode for text rendering. |
+| `--no-color` | Disable color. Equivalent to `--color=never` and wins over `--color`. |
+| `-i`, `--interactive` | Open the interactive TUI. Requires a real terminal. |
+
+## Exit Codes
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | The scan passed the threshold, or a focused `--rule` view found no matching findings. |
+| `1` | The score fell below the threshold, or a focused `--rule` view found a matching rule. |
+| `2` | Usage, validation, I/O, or scan/setup error. |
+
+Examples of exit-2 cases:
+
+- invalid `--format`
+- unknown rule passed to `--rule`
+- `--interactive` on a non-TTY
+- malformed `charter.yaml`
+- unreadable repository files
+
+## Output Formats
+
+### Text
+
+Default human-facing output. In a TTY, Charter renders styled terminal output. When piped or redirected, it falls back to a plain byte-stable stream.
+
+```bash
+charter doctor --format text --path .
+```
+
+### JSON
+
+Machine-readable payload for scripts and tooling.
+
+```bash
+charter doctor --format json --path .
+```
+
+### Markdown
+
+PR-comment-friendly output.
+
+```bash
+charter doctor --format markdown --path .
+```
+
+### SARIF
+
+Use this for GitHub Code Scanning uploads.
+
+```bash
+charter doctor --format sarif --out charter.sarif --path .
+```
+
+## Interactive TUI
+
+`charter doctor -i` opens the interactive terminal UI. This is a browser over a single scan result, not a different scan engine.
+
+```bash
+charter doctor --interactive --path .
+```
+
+The TUI supports:
+
+- filter and search
+- drill-in on a finding
+- rule-focused browsing
+- in-place rescan
+
+It is intentionally human-only. You cannot combine it with `--out`, `--quiet`, non-text `--format`, or `--rule`.
+
+### Visual Reference
+
+Charter's interactive TUI uses the same terminal visual language as the shipped `doctor` text surface: a score header, category breakdown, finding list, detail pane, and keyboard hints in a full-screen terminal view.
+
+For a repo-grounded visual reference, see the command-gallery examples in the architecture doc and the terminal design references used to shape the TUI behavior:
+
+- `docs/internal/architecture/charter-architecture-2026.md`
+- `docs/internal/designs/charter-doctor-init-fix.html`
+- `docs/internal/designs/charter-supress-report-version.html`
+
+## Examples
+
+### Standard local run
+
+```bash
+charter doctor --path . --threshold 80
+```
+
+### Quiet CI gate
+
+```bash
+charter doctor --quiet --threshold 80
+```
+
+### Focus on one rule
+
+```bash
+charter doctor --rule AE-SEC-001 --path .
+```
+
+### Write SARIF to disk
+
+```bash
+charter doctor --format sarif --out charter.sarif --path .
+```
+
+## Notes
+
+- `--quiet` applies to text output only. JSON, Markdown, and SARIF still emit the full payload.
+- `--rule` is a focused inspection view, not a partial score.
+- `charter doctor` is the command to use when you want CI or hook gating behavior.

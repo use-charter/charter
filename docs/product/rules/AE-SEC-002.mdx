@@ -1,0 +1,57 @@
+---
+title: "AE-SEC-002"
+description: "No raw secret patterns in MCP or adjacent config files — .mcp.json, .mcp.yml, .cursor/mcp.json, .claude/settings.json, claude_desktop_config.json, cline_mcp_settings.json, and any `*.pkl` file with path containing `mcp` or `config`."
+---
+
+> Generated from the internal rule spec. Edit `docs/internal/specs/AE-SEC-002.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+
+**Rule name:** NoSecretsInMCPConfig
+
+**Severity:** Blocker  
+**Category:** Secrets
+
+No raw secret patterns in MCP or adjacent config files — .mcp.json, .mcp.yml, .cursor/mcp.json, .claude/settings.json, claude_desktop_config.json, cline_mcp_settings.json, and any `*.pkl` file with path containing `mcp` or `config`.
+
+## Detection Logic
+
+shared detector `DetectLine` scans config files for high-confidence token patterns; env-var references (`"${OPENAI_API_KEY}"`, `"$OPENAI_API_KEY"`) are neutralized and **pass**; literal secret values matching OpenAI/GitHub/AWS/Slack prefixes or PEM headers are flagged; redacted in output (first 4 chars + `…`).
+
+## Pass Example
+
+`.mcp.json` with `"env": {"OPENAI_API_KEY": "${OPENAI_API_KEY}"}` — env-ref passes; `"api_key": "your-api-key-here"` — placeholder passes.
+
+## Fail Example
+
+`.mcp.json` containing `"api_key": "sk-proj-abc123…T3BlbkFJXxyzABC"` — detected and redacted as `sk-p…`.
+
+## Evidence Expectations
+
+a structured location (config file path + 1-based line) plus a redacted secret value (never the raw value); env-refs and placeholders explicitly pass.
+
+## Edge Cases
+
+environment variable references (both `${VAR}` and `$VAR` syntax) are intentionally safe and never flagged; only literal string values match detection.
+
+## Remediation
+
+replace literal secrets with environment variable references (`"key": "${ENV_VAR_NAME}"`); move secrets to a runtime secrets manager.
+
+## Scoring Impact
+
+when any AE-SEC-001 or AE-SEC-002 finding is present, final Charter score is hard-capped at **49** (per ADR-0008, independent of other caps).
+
+## Related ADRs
+
+- ADR-0006
+- ADR-0007
+- ADR-0008
+
+## Related Evals
+
+None yet
+
+## CLI
+
+```bash
+charter explain AE-SEC-002
+```

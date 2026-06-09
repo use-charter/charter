@@ -1,0 +1,112 @@
+---
+title: "Agent Readiness Model"
+description: "What AI-agent readiness means and how Charter evaluates it."
+---
+
+AI-agent readiness is the degree to which a repository is safe, legible, and verifiable for coding agents.
+
+Charter treats this as a repository property, not a model property. A strong model still performs poorly in a repo that gives it weak instructions, unsafe tool configuration, or no way to verify its own work.
+
+## What "agent-ready" means
+
+An agent-ready repo gives a coding agent three core things:
+
+- **Orientation**: enough context to understand the project, the stack, and the rules of engagement
+- **Safety boundaries**: clear limits around secrets, MCP servers, edit scope, and dangerous automation
+- **Operability**: tests and runnable commands so the agent can check its work before it stops
+
+Charter's v1 rule set checks those properties deterministically from the repository itself. It does not call an LLM, upload code, or depend on runtime telemetry.
+
+Governance still matters, but Charter treats it as a **cross-cutting control layer** around the model rather than a fourth competing axis. Suppressions, exception handling, and score reporting sit across the three core axes instead of replacing them.
+
+## Why it matters
+
+Teams do not adopt coding agents just because the model is good. They adopt them when the repo gives agents a stable operating environment.
+
+Without that environment, common failure modes appear fast:
+
+- agents guess the right command instead of running the real one
+- agents touch files they should have left alone
+- MCP servers float to new versions without review
+- suppressions accumulate without ownership
+- fixes cannot be verified because there are no tests or no discoverable test command
+
+That is why Charter scores the repo instead of the model. The repo is the part a team controls.
+
+## The three axes
+
+Charter's model groups agent readiness into three practical axes.
+
+### Context
+
+Context answers: *Can the agent understand where it is and what rules apply?*
+
+This includes:
+
+- an agent context file such as `AGENTS.md`
+- current project and tooling details
+- explicit edit boundaries and off-limits paths
+- concise, non-fragile instructions
+
+In v1, context is covered by rules such as `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-CTX-006`, and `AE-CC-002`.
+
+### Safety
+
+Safety answers: *Is the repo configured so an agent can operate without creating obvious security or supply-chain risk?*
+
+This includes:
+
+- no raw secrets in agent-visible files or MCP config
+- pinned MCP server packages
+- trusted remote MCP origins
+- declared auth metadata for remote MCP servers
+- no dangerous hook commands
+
+In v1, safety is covered by `AE-SEC-*`, `AE-MCP-*`, and `AE-CC-001`.
+
+### Operability
+
+Operability answers: *Can the agent actually run the project and verify its own work?*
+
+This includes:
+
+- tests for every active language
+- a discoverable verification command
+- reproducible toolchain and lockfile state
+- CI that exercises the intended quality path
+
+In v1, operability is covered by `AE-TEST-001`, `AE-AUTO-001`, `AE-ENV-001`, and `AE-CI-002`.
+
+## Where governance fits
+
+Governance is reported alongside the model, but it is not a separate fourth axis.
+
+Instead, it cuts across context, safety, and operability by answering questions such as:
+
+- are accepted risks documented with a reason?
+- are permanent waivers explicitly approved?
+- is the repo accumulating too many suppressions to trust the score?
+
+That is why governance findings affect how Charter explains and audits the score, while the core readiness model itself stays centered on context, safety, and operability.
+
+## How Charter scores them
+
+Charter does **not** assign independent sub-scores that change the base formula. The public score remains one stable number.
+
+Instead, Charter:
+
+- evaluates all active rules
+- assigns severities to findings
+- computes one public score from those severities
+- applies hard caps where trust demands them
+- reports a category breakdown so you can see where the score moved, with governance surfaced as a cross-cutting reporting layer around the three core axes
+
+That means the score stays simple enough to gate in CI, while the category view still explains whether the real problem is context, safety, or operability.
+
+## What a good score means
+
+A high Charter score does **not** mean a repo is perfect. It means the repo gives a coding agent a reasonable chance to succeed without guesswork, silent risk, or unverifiable changes.
+
+A low score is not a judgment on the codebase. It is a signal that the repo is missing part of the operating contract agents need.
+
+If you want the exact math, caps, and score zones, continue to [Scoring and Caps](/concepts/scoring-and-caps).

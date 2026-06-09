@@ -89,8 +89,30 @@ tasks:
       - "docs"
     deps:
       - "docs-html"
+      - "docs-product"
     inputs:
       - "@globs(docsSources)"
+      - "docs/product/**/*.mdx"
+      - "docs/product/docs.json"
+  docs-product-rules:
+    command: "bun"
+    args:
+      - "scripts/generate-rule-pages.ts"
+      - "--check"
+    inputs:
+      - "docs/internal/specs/AE-*.md"
+      - "internal/rules/catalog/catalog.go"
+      - "scripts/generate-rule-pages.ts"
+  docs-product:
+    command: "bun"
+    args:
+      - "scripts/validate-product-docs.ts"
+    deps:
+      - "docs-product-rules"
+    inputs:
+      - "docs/product/**/*.mdx"
+      - "docs/product/docs.json"
+      - "scripts/validate-product-docs.ts"
   docs-html:
     command: "bun"
     args:

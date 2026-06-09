@@ -22,6 +22,8 @@ paths = ['''^internal/secrets/detect_test\.go$''']
 [[allowlists]]
 description = "Gitignored build/tool caches (not part of the committed tree)"
 paths = [
+  '''^\.worktrees/''',
+  '''^worktrees/''',
   '''^\.moon/''',
   '''^node_modules/''',
   '''^\.charter/''',

@@ -1,0 +1,95 @@
+---
+title: "Quickstart"
+description: "Run your first Charter scan, understand the score, and generate a shareable report."
+---
+
+This guide gets you from zero to a real Charter scan as quickly as possible.
+
+## Before You Start
+
+You need a repository you want to scan and one way to run the Charter CLI.
+
+Current launch-state notes:
+
+- The signed release pipeline and Homebrew cask config are in this repo.
+- The **public** Homebrew tap is still launch-gated.
+- The public `go install` path is also not live yet because the vanity import host is not deployed.
+
+That means the practical paths right now are:
+
+1. Run Charter from a local checkout.
+2. Plan to use a signed GitHub Release binary once the first public release is cut.
+
+## Option 1: Run From a Local Checkout
+
+If you already have the Charter source checked out, run it against the repository you want to evaluate by pointing `--path` at that target repo:
+
+```bash
+go run ./cmd/charter doctor --path ../your-repo
+```
+
+This is the fastest path while public distribution is still launch-gated.
+
+## Option 2: Use a GitHub Release Binary
+
+This path becomes available after the first public release is cut. At that point, download the archive for your platform from GitHub Releases, extract the `charter` binary, and run it against your repo:
+
+```bash
+charter doctor --path .
+```
+
+## Scan Your Repository
+
+From the repository you want to evaluate:
+
+```bash
+charter doctor --path .
+```
+
+Charter scans the repo, evaluates all 18 rules, and prints:
+
+- the findings that matter
+- the final score
+- whether the repo passed the active threshold
+
+## Read the Score
+
+Use the score as a quick triage signal:
+
+- **80-100:** ship-ready
+- **60-79:** needs work
+- **50-59:** blocked
+- **0-49:** critical
+
+Two caps matter most:
+
+- any raw secret finding caps the score at `49`
+- any blocker finding caps the score at `59`
+
+You do not need to memorize the full formula to get value from the first scan. Focus first on blocker and high-severity findings.
+
+## If AGENTS.md Is Missing
+
+If the scan tells you the repo has no usable agent context file, scaffold the missing basics:
+
+```bash
+charter init
+```
+
+`charter init` creates the missing core context files without overwriting existing ones, then you can rescan with `charter doctor --path .`.
+
+## Generate a Shareable Report
+
+For a fuller review in the browser, write the offline HTML report:
+
+```bash
+charter report --format html --open
+```
+
+That produces a self-contained file with no external network dependencies, useful for PRs, handoff, or review.
+
+## Next Steps
+
+- Use [`/rules/overview`](/rules/overview) to understand what Charter checks.
+- Use [`/cli/overview`](/cli/overview) for the full command reference.
+- Use [`/ci/github-action`](/ci/github-action) when you are ready to put Charter in CI.

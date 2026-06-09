@@ -1,0 +1,161 @@
+---
+title: "Investigate MCP Findings"
+description: "Work through MCP safety findings by checking package pins, trusted remotes, and auth declarations."
+---
+
+Use this guide when `charter doctor` reports one of the MCP safety rules:
+
+- `AE-MCP-001`: unpinned, deprecated, advisory-affected, or behind-stable MCP package
+- `AE-MCP-002`: remote MCP origin is not trusted
+- `AE-MCP-003`: remote MCP server declares no auth metadata
+
+## 1. Start with the rule ID
+
+If you already have the rule ID from `charter doctor`, look it up first:
+
+```bash
+charter explain AE-MCP-001
+```
+
+That gives you the compact rule metadata and points you at the full rule docs.
+
+## 2. Inspect the MCP config file
+
+Repo-verified: Charter scans these JSON MCP config paths:
+
+- `.mcp.json`
+- `mcp.json`
+- `.cursor/mcp.json`
+- `.vscode/mcp.json`
+
+Open the file named in the finding and inspect the specific server entry.
+
+Example:
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@latest"]
+    }
+  }
+}
+```
+
+## 3. Resolve `AE-MCP-001`
+
+Look for the package token in the runner args.
+
+Common problems:
+
+- `@latest`
+- missing version entirely
+- semver ranges like `^1.2.3` or `~1.2.3`
+- floating git refs
+- deprecated catalog packages
+
+Fix shape:
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@<exact-version>"]
+    }
+  }
+}
+```
+
+Use the exact version Charter names in the finding, or preview the safe bump it recommends with:
+
+```bash
+charter fix --path . --rule AE-MCP-001 --dry-run
+```
+
+If the package is deprecated, migrate to the successor named by Charter instead of just pinning the old package.
+
+## 4. Resolve `AE-MCP-002`
+
+Check whether the remote server host belongs in your repo's allowlist.
+
+Review `charter.yaml`:
+
+```yaml
+mcp:
+  trustedRemotes:
+    - mcp.asana.com
+```
+
+Questions to ask:
+
+- Is this a reviewed vendor host?
+- Is this your own trusted internal endpoint?
+- Is this an unexpected remote that should not be present at all?
+
+If the host is valid for your repo, add it to `mcp.trustedRemotes`. If it is not, remove or replace the MCP server entry.
+
+## 5. Resolve `AE-MCP-003`
+
+For remote servers, verify that auth metadata is declared.
+
+Example pass shape:
+
+```json
+{
+  "mcpServers": {
+    "asana": {
+      "type": "http",
+      "url": "https://mcp.asana.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${ASANA_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+Accepted auth header names include:
+
+- `Authorization`
+- `X-Api-Key`
+- `Api-Key`
+- `X-Auth-Token`
+
+Use environment-variable references, not literal credentials.
+
+## 6. Re-run the scan
+
+After editing MCP config or `charter.yaml`:
+
+```bash
+charter doctor --path . --threshold 80
+```
+
+If you only want to focus on MCP findings while iterating:
+
+```bash
+charter doctor --path . --rule AE-MCP-001,AE-MCP-002,AE-MCP-003
+```
+
+## Fast investigation loop
+
+```bash
+charter doctor --path . --threshold 80
+charter explain AE-MCP-001
+charter fix --path . --rule AE-MCP-001 --dry-run
+charter doctor --path . --threshold 80
+```
+
+## When not to suppress
+
+Do not jump straight to suppression for MCP findings that point at real supply-chain or trust problems.
+
+Suppress only when:
+
+- the repo intentionally carries a reviewed exception
+- the host or package is correct for a fixture or test harness
+- you have a real reason and, if permanent, an approver
+
+MCP findings are often some of the highest-signal findings in the repo because they touch dependency integrity, origin trust, and remote auth.

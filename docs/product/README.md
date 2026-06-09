@@ -1,13 +1,8 @@
 # Product Docs
 
-Reserved for future customer-facing documentation and Mintlify content.
+Mintlify documentation site for Charter. Home for customer-facing docs.
 
-Expected future content:
-
-- getting started
-- install
-- command reference
-- rule reference
-- CI and GitHub Action guides
-- MCP guidance
-- FAQ
+- `docs.json` — Mintlify site configuration
+- `*.mdx` — page content
+- `rules/*.mdx` — rule reference pages (placeholder pages now; generated content lands later)
+- Rule-page generation lands in a later Slice 18 task

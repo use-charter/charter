@@ -1,0 +1,79 @@
+---
+title: "init"
+description: "Scaffold the missing Charter and agent-context files in a repository."
+---
+
+`charter init` bootstraps a repository for Charter. It creates missing files only, never overwrites an existing file, and stays fully offline.
+
+## What It Creates
+
+Depending on what is already present, `charter init` can create:
+
+- `AGENTS.md`
+- `charter.yaml`
+- `.gitignore`
+- `ARCHITECTURE.md`
+- `.env.example`
+- `.claude/settings.json` when Claude is detected, explicitly requested, or selected by the fallback when no agents are detected
+
+`AGENTS.md` remains the universal agent context file. Today, `.claude/settings.json` is the only conditional agent-specific scaffolded file.
+
+The command is designed to get a blank or lightly prepared repository to a passing Charter scan quickly, without modifying files that already exist.
+
+## Usage
+
+```bash
+charter init --path .
+```
+
+## Flags
+
+| Flag | Description |
+| --- | --- |
+| `--path` | Target directory to scaffold. Defaults to the repository root when one is found, otherwise the current directory. |
+| `--profile` | Policy profile written to `charter.yaml`: `strict`, `standard`, or `relaxed`. Defaults to `standard`. |
+| `--agents` | Comma-separated agent surfaces used for scaffold selection, such as `claude,cursor`. In shipped behavior, this affects whether `.claude/settings.json` is scaffolded; `AGENTS.md` remains the universal context file. When omitted, Charter auto-detects and falls back to `claude` if nothing is detected. |
+| `--dry-run` | Print the planned file actions without writing anything. |
+| `--yes` | Accepted for scripting and compatibility. `init` is already non-interactive and never overwrites existing files, so this flag is currently a no-op. |
+
+## Behavior Notes
+
+- create-missing-only: existing files are skipped
+- deterministic: no prompts, no network, no hidden mutation
+- safe for scripting: repeated runs become no-op skips once the files exist
+
+## Examples
+
+### Scaffold the current repo
+
+```bash
+charter init --path .
+```
+
+### Preview without writing
+
+```bash
+charter init --path . --dry-run
+```
+
+### Force a strict policy profile
+
+```bash
+charter init --path . --profile strict
+```
+
+### Request multiple agent surfaces
+
+```bash
+charter init --path . --agents claude,cursor
+```
+
+## Typical Follow-up
+
+After `init`, run a full scan:
+
+```bash
+charter doctor --path . --threshold 80
+```
+
+If the repository still has fixable findings, use [`charter fix`](/cli/fix) to preview and apply supported repairs.
