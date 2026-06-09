@@ -3,46 +3,37 @@ title: "AE-CTX-004"
 description: "`.gitignore` should exclude common agent and local artifact noise."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-CTX-004.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-CTX-004 · **Severity:** Medium · **Category:** Context · **Auto-fixable:** Yes — `charter fix --rule AE-CTX-004`
 
-**Rule name:** AgentArtifactsGitignored
+## Why this rule
 
-**Severity:** Medium  
-**Category:** Context
+Agent session files checked into git expose local machine state and session history to the repo's commit record and inflate the tracked file set every agent has to scan.
 
-`.gitignore` should exclude common agent and local artifact noise.
+## What triggers it
 
-## Detection Logic
+Charter checks whether `.gitignore` excludes agent session artifacts: `.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/`. The finding also fires if any of these patterns are already tracked in git.
 
-inspect `.gitignore` for local agent/session/cache patterns and verify that shared team config stays committed while local state does not.
+## Examples
 
-## Pass Example
+### Failing
+
+Local agent output, cache directories, or secret-bearing env files remain trackable by default — none of the expected ignore patterns appear in `.gitignore`.
+
+### Passing
 
 `.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/`, `.hk/`, and `.env*` are handled correctly without ignoring committed team contracts.
 
-## Fail Example
+## How to fix
 
-local agent output, cache directories, or secret-bearing env files remain trackable by default.
+Run `charter fix --rule AE-CTX-004` to add the missing `.gitignore` entries. If agent artifacts are already tracked, remove them from git with `git rm --cached` before committing.
 
-## Evidence Expectations
-
-relevant `.gitignore` lines and any tracked local-agent artifacts that should not be in git.
-
-## Edge Cases
+## Edge cases
 
 `.cursor/rules`, `.claude/settings.json`, and similar team-owned config should stay committed even while local cache/state stays ignored.
 
-## Remediation
+## Related rules
 
-add precise ignore patterns and remove any accidentally tracked local artifacts from git.
-
-## Related ADRs
-
-- ADR-0006
-
-## Related Evals
-
-None yet
+- [AE-CTX-001](/rules/AE-CTX-001)
 
 ## CLI
 

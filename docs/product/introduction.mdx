@@ -1,61 +1,51 @@
 ---
 title: "Introduction"
-description: "Charter is an offline-first scanner that scores a repository's AI-agent readiness and shows you how to fix it."
+description: "Charter scores a repository's AI-agent readiness and shows you exactly what to fix."
 ---
 
-Charter is an offline-first AI-agent-readiness scanner for software repositories. It audits the things that make coding agents safe and useful in a real repo: context, secrets, MCP safety, reproducibility, CI posture, testing, autonomy, and governance.
+Teams don't fail at AI-assisted development because the model is bad. They fail because the repo isn't ready for an agent to work in it — missing context files, raw credentials in agent-visible places, floating MCP server versions, no way to verify the agent's changes. Charter measures that readiness and tells you what to fix.
 
-It is built for:
+## What Charter checks
 
-- developers adopting coding agents in an existing repo
-- platform and security teams that want a repeatable readiness gate
-- maintainers who need a deterministic, reviewable signal before letting agents edit code
+Charter evaluates every repo on three axes:
 
-Today, Charter ships as a Go CLI with seven commands: `init`, `doctor`, `explain`, `report`, `fix`, `suppress`, and `version`.
+- **Context** — Can the agent understand where it is and what rules apply? Charter checks that an agent context file exists, stays current, declares edit boundaries, and fits within a context window.
+- **Safety** — Is the repo configured so agents can operate without creating obvious security or supply-chain risk? Charter checks for raw secrets in agent-visible files, unpinned or deprecated MCP servers, unreviewed remote origins, and dangerous hook commands.
+- **Operability** — Can the agent run the project and verify its own work? Charter checks for automated tests, a discoverable verification command, a reproducible toolchain, and a CI gate.
 
-## What Charter Checks
+Governance cuts across all three: suppression entries are audited for reason, ownership, and accumulation rate.
 
-Charter's v1 rule set covers 18 rules across 9 categories:
+## What Charter is not
 
-- context
-- secrets
-- MCP safety
-- agent config
-- environment
-- CI
-- testing
-- autonomy
-- governance
+Charter is not a code reviewer, a style linter, a package vulnerability scanner, a runtime agent monitor, or a secrets vault. Those tools exist. Charter focuses on one narrower question: is this repo safe and legible for agent-assisted work?
 
-Those checks feed a public score formula with documented caps, so a team can use the result as both a local signal and a CI gate.
+## How it works
 
-## Why Teams Use It
+`charter doctor` scans the repo statically — no network calls, no LLM calls, no data sent anywhere. It produces a score from 0–100 using a public formula, emits structured findings with rule IDs and remediation guidance, and exits non-zero when the score falls below a threshold you control.
 
-- **Scan before agents run:** `charter doctor` shows whether a repo is ready for agent-assisted work.
-- **Gate in CI:** the GitHub Action source lives in this repo today, and the standalone consumer action lands at launch for pull-request scanning and SARIF upload.
-- **Fix the obvious gaps:** `charter init` scaffolds missing context, and `charter fix` applies safe diff-first repairs for supported findings.
-- **Share the result:** `charter report` writes a self-contained offline HTML report you can attach to a PR or hand to a teammate.
+`charter fix` applies safe diff-first repairs for findings Charter knows how to fix. Every repair shows a unified diff before writing. Secrets and dangerous commands are never auto-fixed.
 
-## Core Properties
+The score, the formula, and the rule set are all public and stable within a major version. Teams can use the score as a local signal, a pre-commit gate, and a CI requirement — and the number means the same thing in all three contexts.
 
-- **Offline-first:** the core scanner does not send repo data anywhere.
-- **Deterministic:** findings come from static checks, not LLM calls.
-- **Cross-vendor:** the rules are designed for mixed agent ecosystems, not one editor or assistant.
-- **OSS core:** the CLI scan stays in the Apache-2.0 open-source core.
+## Who uses Charter
 
-## Start Here
+- **Developers** adopting coding agents in an existing repo — to baseline the current state and close the obvious gaps before trusting agents with real tasks.
+- **Platform and security engineers** — to gate pull requests on agent-readiness and enforce a consistent policy across repos.
+- **Maintainers and reviewers** — to get a deterministic, explainable signal before letting agents edit code in a shared codebase.
+
+## Start here
 
 <Cards>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
     Scan your first repository, understand the score, and generate an offline report.
   </Card>
-  <Card title="CLI Reference" icon="terminal" href="/cli/overview">
-    See every command, flag, and exit-code contract for the Charter CLI.
+  <Card title="How Charter Works" icon="compass" href="/concepts/agent-readiness-model">
+    The three readiness axes, the scoring formula, and the fix engine.
   </Card>
   <Card title="Rules" icon="shield" href="/rules/overview">
-    Browse all 18 rules, what they check, and how to remediate them.
+    All 18 rules — what each checks and how to remediate it.
   </Card>
-  <Card title="GitHub Action" icon="github" href="/ci/github-action">
+  <Card title="GitHub Action" icon="git-branch" href="/ci/github-action">
     Run Charter in CI and upload SARIF findings to GitHub Code Scanning.
   </Card>
 </Cards>

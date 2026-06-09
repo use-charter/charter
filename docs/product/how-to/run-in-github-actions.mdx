@@ -12,20 +12,9 @@ This guide covers:
 - uploading SARIF to GitHub Code Scanning
 - failing the workflow when the score falls below the gate
 
-## Before You Start
-
-Charter's GitHub Action source is already in this repo under `action/`, but public consumption is still launch-gated.
-
-- Repo-verified: the action contract is documented in `action/README.md`.
-- Repo-verified: the README says the standalone `use-charter/charter-action` repo is seeded at launch.
-
-If the public action ref is not live yet, use the workflow shape below as the target state and wait for launch publication before depending on it in a public repo.
-
 ## 1. Create the workflow file
 
-Create `.github/workflows/charter.yaml`.
-
-Post-launch shape:
+Create `.github/workflows/charter.yaml`:
 
 ```yaml
 name: Charter
@@ -50,8 +39,6 @@ jobs:
           version: <published-tag>
           threshold: "80"
 ```
-
-Before launch, treat the action reference and version values above as placeholders for the published action and published release tag.
 
 Why these permissions matter:
 

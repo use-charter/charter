@@ -3,46 +3,38 @@ title: "AE-CTX-002"
 description: "Agent context must remain current with repo reality."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-CTX-002.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-CTX-002 · **Severity:** Medium · **Category:** Context · **Auto-fixable:** No
 
-**Rule name:** AgentContextConsistent
+## Why this rule
 
-**Severity:** Medium  
-**Category:** Context
+An agent that reads a context file describing the wrong stack or stale commands will make confident mistakes — wrong build commands, wrong test paths, wrong edit scope.
 
-Agent context must remain current with repo reality.
+## What triggers it
 
-## Detection Logic
+Charter reads the context file and compares its claims against the repo's actual state. The finding fires when the stated tech stack doesn't match the manifests Charter can see, when the stated test command doesn't exist in any task runner or script, or when declared off-limits paths don't match the repo structure.
 
-compare stated stack, setup path, verification command, off-limits paths, and hook/tooling references against actual repo manifests, workflow files, and directory structure.
+## Examples
 
-## Pass Example
+### Failing
+
+The context file references stale runtimes, a test command that no longer exists, or edit-scope boundaries that don't match the current directory structure.
+
+### Passing
 
 `AGENTS.md` points at a recognized verification command (e.g. `charter doctor`, `moon run :check`), mentions `hk.pkl`, and matches the current toolchain and repo boundaries.
 
-## Fail Example
+## How to fix
 
-the context file references stale runtimes, missing task paths, or MCP/config behavior that no longer matches the repo.
+Update the context file to reflect the repo's current state. Check that the tech stack, test command, and edit boundaries match what's actually in the repo. Run `charter doctor` after updating to confirm the finding clears.
 
-## Evidence Expectations
-
-last-reviewed date if present, plus exact contradictions between the file and repo state.
-
-## Edge Cases
+## Edge cases
 
 an old date alone is not enough to fail the rule if the content is still factually accurate.
 
-## Remediation
+## Related rules
 
-update the context file to reflect current repo truth and keep review dates fresh.
-
-## Related ADRs
-
-- ADR-0006
-
-## Related Evals
-
-None yet
+- [AE-CTX-001](/rules/AE-CTX-001)
+- [AE-AUTO-001](/rules/AE-AUTO-001)
 
 ## CLI
 

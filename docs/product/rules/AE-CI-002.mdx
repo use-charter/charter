@@ -3,46 +3,42 @@ title: "AE-CI-002"
 description: "Repo should run Charter-related checks in CI."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-CI-002.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-CI-002 · **Severity:** Low · **Category:** CI · **Auto-fixable:** Yes — `charter fix --rule AE-CI-002`
 
-**Rule name:** CharterInCI
+## Why this rule
 
-**Severity:** Low  
-**Category:** CI
+A local Charter pass only covers one developer's current state. Without a CI gate, a PR can introduce context drift, a new MCP server, or a weak suppression that no one catches until the next manual scan.
 
-Repo should run Charter-related checks in CI.
+## What triggers it
 
-## Detection Logic
+Charter inspects `.github/workflows/` for three things:
 
-inspect `.github/workflows/` for Charter-related verification, workflow linting, supply-chain checks, and pinned third-party actions. Trusted SLSA reusable workflows (`slsa-framework/slsa-github-generator/.github/workflows/*.yml@vX.Y.Z`) are exempt from the SHA-pin requirement because `slsa-verifier` resolves the trusted builder identity from the semantic version tag and SHA-pinning is unsupported.
+1. **No `charter doctor` step.** If no workflow invokes `charter doctor` (or an equivalent Charter entrypoint), Charter cannot enforce the agent-readiness gate in CI — findings accumulate silently until the next manual scan.
+2. **Workflow linting findings.** Charter runs `actionlint` against your workflow files and surfaces any issues it reports — incorrect syntax, invalid event triggers, misused contexts, and similar structural problems.
+3. **Unpinned third-party actions.** Actions referenced by a mutable tag (e.g. `uses: actions/checkout@v4`) rather than a full commit SHA can be silently updated by a maintainer. Charter flags any non-pinned action. SLSA reusable workflows from `slsa-framework/slsa-github-generator` are exempt because their trusted-builder identity is resolved through the tag, not a SHA.
 
-## Pass Example
+## Examples
 
-CI runs the repo quality gates, workflow security tools, and keeps mutable action tags out of the baseline.
+### Failing
 
-## Fail Example
+A repo where no workflow calls `charter doctor`, or where `uses: some-org/some-action@v2` appears without a SHA pin — flagged Low.
 
-no workflow coverage, no Charter entrypoint in CI, or unpinned third-party actions.
+### Passing
 
-## Evidence Expectations
+All workflow steps using third-party actions are pinned to a full SHA (e.g. `uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683`), and at least one workflow runs `charter doctor`.
 
-workflow file path, job name, threshold or gate command, SARIF upload presence when applicable, and whether workflow hygiene tools are present.
+## How to fix
 
-## Edge Cases
+Add a workflow step that runs `charter doctor` so the agent-readiness score is enforced on every pull request. Pin all third-party `uses:` references to a full commit SHA. You can apply the pinning fix automatically with `charter fix --rule AE-CI-002`.
+
+## Edge cases
 
 during pre-implementation bootstrap, CI may legitimately omit `charter doctor` itself if the scanner is not built yet. Once `charter doctor` exists, the repo should run a Charter-related CI gate, not just local quality gates.
 
-## Remediation
+## Related rules
 
-add or harden workflows so the repo's intended quality path is enforced in CI, not just locally.
-
-## Related ADRs
-
-- ADR-0006
-
-## Related Evals
-
-None yet
+- [AE-ENV-001](/rules/AE-ENV-001)
+- [AE-AUTO-001](/rules/AE-AUTO-001)
 
 ## CLI
 

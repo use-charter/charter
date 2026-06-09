@@ -1,0 +1,30 @@
+---
+title: "Changelog"
+description: "Release history for Charter."
+---
+
+## v1.0.0
+
+Charter v1.0 ships the full v1 rule set, seven commands, and CI integration.
+
+### What's included
+
+- **18 rules** across context, secrets, MCP safety, agent config, environment, CI, testing, autonomy, and governance
+- **7 commands**: `init`, `doctor`, `explain`, `report`, `fix`, `suppress`, `version`
+- **Output formats**: text (styled TTY / plain pipe), JSON, Markdown, SARIF 2.1.0, self-contained HTML
+- **Interactive TUI**: `charter doctor -i` for filter, search, drill-in, and rescan
+- **GitHub Action**: `use-charter/charter-action@v1` runs `charter doctor`, uploads SARIF to GitHub Code Scanning
+- **Fix engine**: diff-first auto-fix for AE-CTX-001, AE-CTX-004, AE-CI-002, AE-MCP-001
+- **MCP catalog**: embedded catalog of known servers with version, deprecation, and advisory data
+- **Signed releases**: cosign keyless signing, SLSA Level 3 provenance, SPDX 2.3 SBOM, Homebrew cask
+
+### Score formula (stable within v1)
+
+```
+score = max(0, 100 − B×20 − H×10 − M×4 − L×1)
+final = min(score, applicable_cap)
+```
+
+Severity caps: any raw secret detected applies a cap of ≤49; any blocker-severity finding applies a cap of ≤59.
+
+The formula and its caps are fixed for the v1 major version. Any change to weights or caps will ship in v2 with a migration guide.

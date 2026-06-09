@@ -1,0 +1,83 @@
+---
+title: "Use Charter in a pre-commit hook"
+description: "Run charter doctor automatically before every commit using hk, husky, or a plain shell hook."
+---
+
+Running Charter in a pre-commit hook catches score regressions before they reach CI and before other team members have to deal with them. Combined with `--quiet`, it is silent on pass and only interrupts when there is something to fix.
+
+## Why use Charter in a pre-commit hook
+
+`charter doctor --quiet` prints nothing and exits 0 when the score meets the threshold, so it adds no noise to a clean commit flow. When it does block, it prints the findings immediately — in the same terminal where you ran `git commit` — giving you the context you need without switching tools.
+
+## Exit code contract
+
+| Exit code | Meaning |
+|---|---|
+| `0` | Score meets or exceeds the threshold — commit proceeds |
+| `1` | Score is below the threshold — hook blocks the commit |
+
+All hook runners (hk, husky, plain shell) respect non-zero exit codes to block commits. No additional configuration is needed.
+
+## hk (recommended)
+
+[hk](https://github.com/jdx/hk) is a Git hook manager configured in `hk.pkl`. Add a Charter hook:
+
+```pkl
+hooks {
+  new Hook {
+    name = "charter"
+    run = "charter doctor --quiet --threshold 80"
+  }
+}
+```
+
+Run `hk install` after editing `hk.pkl` to activate the hook.
+
+## husky
+
+If your repo uses [husky](https://typicode.github.io/husky/), create or edit `.husky/pre-commit`:
+
+```bash
+#!/bin/sh
+charter doctor --quiet --threshold 80
+```
+
+Make the file executable:
+
+```bash
+chmod +x .husky/pre-commit
+```
+
+## Plain shell hook
+
+No hook manager required. Create `.git/hooks/pre-commit`:
+
+```bash
+#!/bin/sh
+charter doctor --quiet --threshold 80
+```
+
+Make it executable:
+
+```bash
+chmod +x .git/hooks/pre-commit
+```
+
+This approach works in any Git repo but is local to your machine — it is not committed to version control. For team-wide enforcement, use hk or husky, which check their configuration files into the repo.
+
+## Adjusting the threshold
+
+The `--threshold` flag overrides whatever is set in `charter.yaml` for that invocation. In a pre-commit hook, you typically want the same threshold your CI pipeline uses so that local and remote gates agree:
+
+```bash
+# Matches a charter.yaml policy.threshold: 85
+charter doctor --quiet --threshold 85
+```
+
+If you want the hook to simply respect whatever `charter.yaml` says, omit the flag:
+
+```bash
+charter doctor --quiet
+```
+
+Charter will use the threshold from `policy.threshold` or the default for the configured `policy.profile`.

@@ -1,8 +1,9 @@
 # Product Docs
 
-Mintlify documentation site for Charter. Home for customer-facing docs.
+Mintlify documentation site for Charter. Customer-facing docs.
 
-- `docs.json` — Mintlify site configuration
+- `docs.json` — Mintlify site configuration and navigation
 - `*.mdx` — page content
-- `rules/*.mdx` — rule reference pages (placeholder pages now; generated content lands later)
-- Rule-page generation lands in a later Slice 18 task
+- `rules/*.mdx` — rule reference pages (one per AE-* rule; bootstrapped by `scripts/generate-rule-pages.ts`, hand-maintained after initial generation)
+- `images/` — brand assets (logo light/dark SVGs, favicon)
+- `DEPLOY.md` — Cloudflare Worker + Mintlify custom domain setup

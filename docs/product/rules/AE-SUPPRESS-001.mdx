@@ -3,52 +3,51 @@ title: "AE-SUPPRESS-001"
 description: "Every suppression must carry a human-readable `reason` so that an accepted finding is auditable and a future reviewer understands why it was muted."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-SUPPRESS-001.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-SUPPRESS-001 · **Severity:** Medium · **Category:** Governance · **Auto-fixable:** No
 
-**Rule name:** SuppressionHasReason
+## Why this rule
 
-**Severity:** Medium  
-**Category:** Governance
+A suppression without a reason is indistinguishable from accident. When a finding re-surfaces after a security review or team rotation, there is no record of why it was acceptable or who decided.
 
-Every suppression must carry a human-readable `reason` so that an accepted finding is auditable and a future reviewer understands why it was muted.
+## What triggers it
 
-## Detection Logic
+Charter audits every suppression that was applied during the current scan — all entries in `.charter-suppress.yml` and every inline `# charter:ignore` comment that matched a finding. For each applied suppression, it checks whether a `reason` field is present and non-empty. A YAML entry with no `reason:` key and an inline directive with no `reason="…"` segment both fire the finding.
 
-the suppression engine (`internal/suppress`) collects the suppressions that were actually applied this scan — all entries from `.charter-suppress.yml` plus any inline `charter:ignore` directive that matched a finding. The governance check emits one Medium finding per applied suppression whose `reason` is missing or blank (after trimming). Both sources are covered: a YAML entry with no `reason:` key and an inline `charter:ignore AE-X` directive with no `reason="…"` segment each fire. The suppression still applies (the finding is still suppressed) — a missing reason is a hygiene defect, not a reason to un-suppress.
+The suppression itself still takes effect — Charter continues to suppress the underlying finding. A missing reason is a governance hygiene problem, not grounds to un-suppress.
 
-## Pass Example
+## Examples
 
-`.charter-suppress.yml` entry `{rule: AE-CC-001, reason: "Claude config lives in the infra repo", expires: 2026-08-16, approver: "alice"}`, or an inline `# charter:ignore AE-MCP-001 reason="vendored test fixture"` — both carry a reason, no finding.
+### Failing
 
-## Fail Example
+A `.charter-suppress.yml` entry of `{rule: AE-CC-001, expires: 2026-08-16}` with no `reason` field — flagged Medium. An inline `# charter:ignore AE-MCP-001` comment with no reason — also flagged. Charter names the suppressed rule and its source file in the finding evidence.
 
-`.charter-suppress.yml` entry `{rule: AE-CC-001, expires: 2026-08-16}` (no `reason`), or `// charter:ignore AE-MCP-001` (bare directive) — flagged Medium; evidence names the suppressed rule and the source.
+### Passing
 
-## Evidence Expectations
+```yaml
+- rule: AE-CC-001
+  reason: "Claude config lives in the infra repo"
+  expires: 2026-08-16
+  approver: alice
+```
 
-a structured location (`.charter-suppress.yml` for file entries — with the entry line when resolvable; or the directive `path:line` for inline directives) and an evidence string naming the suppressed rule ID and source (e.g., `.charter-suppress.yml: suppression of AE-CC-001 is missing a reason`).
+An inline `# charter:ignore AE-MCP-001 reason="vendored test fixture"` also passes.
 
-## Edge Cases
+## How to fix
 
-a suppression entry whose rule never matched any finding this scan and that came from `.charter-suppress.yml` is still audited (non-expired file entries are always evaluated; expired entries are inert and not audited); a dangling inline directive that matched no finding is **not** audited in v1 (inline directives are discovered only at finding locations — see ADR-0013); a `reason` of only whitespace counts as missing; secrets are suppressible like any rule, so a reason-less `AE-SEC-001/002` suppression is audited the same way.
+Add a meaningful `reason` to the suppression entry or inline directive that explains why the finding is accepted. For YAML entries, add a `reason:` field. For inline comments, add `reason="…"` after the rule ID. The `charter suppress <RULE> --reason "…"` command always writes the reason for you.
 
-## Remediation
-
-add a meaningful `reason` to the `.charter-suppress.yml` entry or the inline `charter:ignore` directive describing why the finding is accepted, then commit. Prefer `charter suppress <RULE> --reason "…"` which always writes a reason.
-
-## Scoring Impact
+## Score impact
 
 `Medium` — deducts 4 points via the standard formula; no cap.
 
-## Related ADRs
+## Edge cases
 
-- ADR-0013
-- ADR-0008
-- ADR-0009
+a suppression entry whose rule never matched any finding this scan and that came from `.charter-suppress.yml` is still audited (non-expired file entries are always evaluated; expired entries are inert and not audited); a dangling inline directive that matched no finding is **not** audited (inline directives are discovered only at finding locations); a `reason` of only whitespace counts as missing; secrets are suppressible like any rule, so a reason-less `AE-SEC-001/002` suppression is audited the same way.
 
-## Related Evals
+## Related rules
 
-None yet
+- [AE-SUPPRESS-002](/rules/AE-SUPPRESS-002)
+- [AE-SUPPRESS-003](/rules/AE-SUPPRESS-003)
 
 ## CLI
 

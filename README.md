@@ -1,71 +1,74 @@
 # Charter
 
-Charter is an offline-first AI-agent-readiness scanner for software repositories. It audits agent context, MCP safety, reproducibility, CI posture, and governance so teams can safely adopt coding agents without guesswork.
-
-This repository started as the AI-ready bootstrap baseline and now contains the real `charter doctor` path (text, JSON, Markdown, and SARIF output) plus `charter report`, which writes a self-contained, offline HTML report. The repo itself remains the first dogfood target.
-
-## Current State
-
-- Phase: Phase 1 Slice 18 implemented; the `charter init` scaffold, the real `charter doctor` path with the full 18-rule v1 set, governance, suppression, SARIF output, policy profiles, the `charter version` command, the diff-first `charter fix` repair command, a signed GoReleaser release pipeline, a composite GitHub Action, validated performance budgets, the Slice 15 terminal experience (styled TTY output, the interactive `charter doctor -i` TUI, `charter explain`, and `--rule`/`--color`/`--no-color`), the Slice 16 `charter report` command (a self-contained, offline, single-file HTML report), Slice 17 hardening (symlink-contained, inventory-gated repo-file reads via `repository.ReadTrackedFile`; TUI rescan), and the Slice 18 public Mintlify documentation site under `docs/product/` (quickstart, CLI reference, config and CI guides, concept pages, and the generated `/rules/AE-*` reference matching the SARIF `helpUri` contract)
-- Product authority: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
-- Module path: `go.use-charter.dev/charter`
-- Repo contract: [`AGENTS.md`](./AGENTS.md)
-
-Current implemented scope:
-
-- repository resolver
-- file inventory scanner (git-aware, respects .gitignore)
-- finding model with structured locations (path:line, 1-based)
-- score engine with hard caps (blocker ≤59, secret ≤49)
-- `charter init` scaffolds the missing agent-context files (`AGENTS.md`, `charter.yaml`, `.gitignore`, `ARCHITECTURE.md`, `.env.example`, plus `.claude/settings.json` when Claude is detected) so a blank repo reaches a passing scan (≥ 80, measured 95 on a blank Go repo) in seconds; create-missing-only — it never overwrites or deletes, and `--dry-run` previews the file plan
-- `charter doctor` with `--path`, `--threshold`, `--quiet`, `--format text|json|markdown|sarif`, `--out`, `--rule`, `--color`/`--no-color`, and an interactive `-i/--interactive` TUI — **styled** on a TTY (color tiers, OSC 8 links, the `[C] charter` mark, the readiness scorecard) and **byte-stable plain** when piped, under `NO_COLOR`, or with `--quiet`
-- `charter explain <RULE>` prints a rule's catalog metadata (name, category, description, docs URL) in `--format text|json`
-- `charter report` writes a self-contained, offline, single-file HTML report (`--format html` default, or `markdown`/`json` reusing the doctor renderers; `--out`, `--open`) — WCAG 2.2 AA, embedded brand fonts, zero network; it always exits 0 on a successful write (`charter doctor` stays the gate)
-- `charter fix` is the diff-first repair command (`--rule`, `--dry-run`, `--all`, `--yes`, `--path`): it previews unified diffs and applies the v1 fixers (`AE-CTX-001` AGENTS.md, `AE-CTX-004` .gitignore, `AE-CI-002` Charter CI workflow, `AE-MCP-001` catalog pin bump), backing up any existing target to `.charter/backups/` before each write — it never deletes, never overwrites a create target, and never auto-fixes secrets
-- 18 implemented rules: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-CTX-006`, `AE-ENV-001`, `AE-CI-002`, `AE-SEC-001`, `AE-SEC-002`, `AE-MCP-001`, `AE-MCP-002`, `AE-MCP-003`, `AE-CC-001`, `AE-CC-002`, `AE-TEST-001`, `AE-AUTO-001`, `AE-SUPPRESS-001`, `AE-SUPPRESS-002`, `AE-SUPPRESS-003`
-- agent context registry (`agentcontext` — shared source for context and secret scanning, drift guard)
-- blocker-level secret detection with redacted evidence and score cap at `49`: `AE-SEC-001` (agent context), `AE-SEC-002` (MCP config)
-- MCP config scanning of `.mcp.json` / `mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`: server pinning (`AE-MCP-001`), trusted-remote allowlist via `charter.yaml` (`AE-MCP-002`), and remote auth declaration (`AE-MCP-003`)
-- agent-config scanning of JSON hook configs (`.claude/settings.json`, `.cursor/hooks.json`): dangerous shell commands (`AE-CC-001`, Blocker) and explicit edit-scope declaration (`AE-CC-002`)
-- suppression engine with governance: `.charter-suppress.yml` and inline `charter:ignore` directives, with `charter suppress <RULE>` to author entries; suppressed findings are excluded from the score and listed separately, and the governance rules `AE-SUPPRESS-001` (missing reason), `AE-SUPPRESS-002` (permanent waiver without approver), and `AE-SUPPRESS-003` (high suppression rate, informational) audit them
-- text, JSON, Markdown (PR-comment), and SARIF 2.1.0 output with structured `path:line` finding locations; `--out <file>` writes any format to a file. SARIF is backed by a rule catalog (`internal/rules/catalog`) and carries GitHub Code Scanning metadata (`security-severity`, `tags`, `automationDetails`) so findings rank correctly in the Security tab
-- policy profiles in `charter.yaml`: `policy.profile` (strict=90 / standard=80 / relaxed=60) or `policy.threshold`, with precedence `--threshold` flag > `policy.threshold` > `policy.profile` > default 80 (see `schemas/charter-config.schema.json`)
-- `charter version` prints the build version, commit, build date, Go version, and platform (stamped at release time)
-
-Documentation topology:
-
-- root contract docs stay at repo root
-- internal engineering docs live under `docs/internal/`
-- customer-facing docs live under `docs/product/` (the Mintlify documentation site)
-
-Documentation authority ladder:
-
-1. `docs/internal/architecture/charter-architecture-2026.md` for product behavior
-2. `docs/internal/audit/charter-v1-audit-checklist.md` for manual rule-audit companion detail
-3. ADRs in `docs/internal/decisions/` for irreversible constraints
-4. root companion docs for execution guidance only
-5. HTML artifacts as presentation mirrors only
+Charter is an offline-first AI-agent-readiness scanner for software repositories. It scores a repo 0–100 across context, secrets, MCP safety, environment, CI, testing, autonomy, and governance — then tells you exactly what to fix.
 
 ## Install
 
-- Release distribution is wired but launch-gated: the repo contains the signed-release pipeline, Homebrew cask config, and GitHub Action source of truth, but the first public release and tap publication are still part of the go-public checklist.
-- `go install go.use-charter.dev/charter/cmd/charter@latest` is pending the vanity-path `go-import` redirect host (not yet available).
+```bash
+# Homebrew (macOS / Linux)
+brew install use-charter/tap/charter
+
+# Direct binary download
+# Download the archive for your platform from GitHub Releases, extract, and put charter on your PATH.
+
+# go install
+go install go.use-charter.dev/charter/cmd/charter@latest
+
+# Build from source
+git clone https://github.com/use-charter/charter
+cd charter && go build -o charter ./cmd/charter
+```
+
+## Quick start
+
+```bash
+charter doctor --path .
+```
+
+Charter scans the repo, evaluates 18 rules, and prints the score with finding details. Exit 0 = pass, exit 1 = below threshold, exit 2 = error.
+
+```bash
+charter init        # scaffold missing context files
+charter fix         # diff-first auto-repair for supported rules
+charter report      # self-contained offline HTML report
+charter explain AE-CTX-001  # rule reference
+```
+
+## Score formula
+
+```
+score = max(0, 100 − B×20 − H×10 − M×4 − L×1)
+final = min(base, applicable_cap)
+```
+
+Hard caps: raw secret → `≤ 49`, any blocker → `≤ 59`. Informational findings excluded.
 
 ## GitHub Action
 
-Run Charter in CI with the composite GitHub Action source in [`action/`](./action/README.md). The standalone `use-charter/charter-action` repo is seeded at launch:
-
 ```yaml
 - uses: use-charter/charter-action@v1
+  with:
+    threshold: "80"
 ```
 
-It downloads the signed `charter` binary, verifies it (cosign keyless + sha256), runs `charter doctor --format sarif`, and uploads the report to GitHub Code Scanning. See [`action/README.md`](./action/README.md) for the as-built contract and launch-state notes.
+Downloads the signed `charter` binary, runs `charter doctor --format sarif`, and uploads to GitHub Code Scanning. See [`action/README.md`](./action/README.md).
 
 ## Performance
 
-`charter doctor` scans a 50,000-file repository in ≤ 2 s wall-clock and ≤ 256 MiB RSS (Linux), validated by `moon run :perf` against a synthesized fixture (build-tagged, kept out of the default `:test`).
+`charter doctor` scans a 50,000-file repository in ≤ 2 s / ≤ 256 MiB RSS, validated by `moon run :perf`.
 
-## Golden Path
+## Design principles
+
+Charter makes ten commitments: no network calls, no LLM calls, no file deletion, no silent mutation, every finding has a rule ID and fix guidance, every release is signed (SLSA L3), the score formula is public and stable within a major version, cross-vendor (Claude Code / Cursor / Copilot / Gemini / Windsurf), secrets never printed, CLI free forever.
+
+## Documentation
+
+- Customer-facing docs: [`docs/product/`](./docs/product/) — the Mintlify site at `https://use-charter.dev/docs`
+- Rule reference: `https://use-charter.dev/rules/AE-*`
+- Architecture: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
+- Repo contract: [`AGENTS.md`](./AGENTS.md)
+
+## Developer setup
 
 ```bash
 mise install
@@ -73,63 +76,38 @@ mise install
 moon run :check
 ```
 
-This repo commits `.miserc.toml` to ignore user-global `mise` config so project tool resolution stays hermetic.
+Task family:
 
-All repo automation should route through the same task family:
+```
+moon run :check     # full quality gate
+moon run :test      # go test -race ./...
+moon run :lint      # gofumpt + golangci-lint + tsc
+moon run :build     # go build
+moon run :docs      # docs validation
+moon run :security  # gitleaks + govulncheck + osv-scanner
+moon run :perf      # 50k-file performance assertion (not in :check)
+```
 
-- `moon run :check`
-- `moon run :test`
-- `moon run :vet`
-- `moon run :lint`
-- `moon run :build`
-- `moon run :docs`
-- `moon run :security`
-- `moon run :eval`
-- `moon run :actionlint`
-- `moon run :zizmor`
+## Core conventions
 
-## Core Conventions
+- Single Go module `go.use-charter.dev/charter`. No `go.work`.
+- Conventional Commits. SemVer. DCO sign-off on every commit.
+- Repo-owned scripts in TypeScript via Bun. No plain JS helpers.
+- Bootstrap keeps tracked MCP config absent until a pinned, reviewed integration exists.
+- ADRs in [`docs/internal/decisions/`](./docs/internal/decisions/) for irreversible constraints.
 
-- Latest docs first. Local manifests before memory.
-- Project-local `mise` config only. User-global `mise` config is intentionally ignored in this repo.
-- Bootstrap keeps tracked MCP configuration absent until a pinned, reviewed integration exists.
-- Conventional Commits.
-- SemVer.
-- Single Go module. No `go.work`. No extra modules.
-- Go command entrypoint lives in `cmd/charter/`. Public Go API is deferred until stable.
-- Repo-owned helper scripts use TypeScript via Bun. No plain JavaScript helpers.
-- ADRs in [`docs/internal/decisions/`](./docs/internal/decisions/).
-- RFCs in [`docs/internal/rfcs/`](./docs/internal/rfcs/).
-- Contract-first schemas in [`api/openapi/`](./api/openapi/) and [`schemas/`](./schemas/).
-- Evals and verification artifacts in [`evals/`](./evals/).
+## Repo map
 
-GitHub-level repo health features stay split by capability:
-
-- committed here: Renovate config and a disabled Scorecard workflow stub for future public/org enablement
-- outside source control and should be enabled where supported: CodeQL default setup, required checks, branch protection, private vulnerability reporting
-
-## Repo Map
-
-- [`AGENTS.md`](./AGENTS.md): canonical agent instructions
-- [`ARCHITECTURE.md`](./ARCHITECTURE.md): structure and architecture rules
-- [`SECURITY.md`](./SECURITY.md): safety posture
-- [`CONTRIBUTING.md`](./CONTRIBUTING.md): contribution workflow
-- [`TESTING.md`](./TESTING.md): tests, fixtures, evals
-- [`CONTEXT_MAP.md`](./CONTEXT_MAP.md): knowledge graph lite
-- [`PERMISSIONS.md`](./PERMISSIONS.md): edit and escalation boundaries
-- [`docs/internal/README.md`](./docs/internal/README.md): repo-internal engineering docs
-- [`docs/product/README.md`](./docs/product/README.md): customer-facing Mintlify documentation site
+- [`AGENTS.md`](./AGENTS.md) — agent instructions and hard constraints
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — module layout and seam rules
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — workflow, commits, PRs, ADR/RFC triggers
+- [`SECURITY.md`](./SECURITY.md) — secrets, MCP, supply-chain posture
+- [`TESTING.md`](./TESTING.md) — fixtures, evals, verification commands
+- [`CONTEXT_MAP.md`](./CONTEXT_MAP.md) — context loading guide
+- [`PERMISSIONS.md`](./PERMISSIONS.md) — off-limits paths and escalation policy
 
 ## License
 
-Apache License 2.0 (`Apache-2.0`). See [`LICENSE`](./LICENSE).
+Apache License 2.0. See [`LICENSE`](./LICENSE).
 
-## Contribution Model
-
-- DCO first
-- CLA deferred unless governance or commercial needs require it later
-
-## Commercial Model
-
-- Apache-2.0 OSS core
-- paid hosted service, support, and enterprise features outside the OSS core
+DCO-first contributions. CLA deferred unless governance needs require it.

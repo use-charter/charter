@@ -3,51 +3,42 @@ title: "AE-CTX-006"
 description: "Agent instructions should be concise and declarative. Instruction-following research shows that stacked emphatic directives (`IMPORTANT`/`NEVER`/`MUST`/`CRITICAL`/…) create a fragile, competitive instruction topology that *degrades* adherence, while declarative phrasing transfers more reliably. AE-CTX-006 is a quality nudge for context files that over-use emphatic directives."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-CTX-006.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-CTX-006 · **Severity:** Low (informational — does **not** deduct points or affect score) · **Category:** Context · **Auto-fixable:** No
 
-**Rule name:** InstructionEmphasisRestrained
+## Why this rule
 
-**Severity:** Low (informational — does **not** deduct points or affect score)  
-**Category:** Context
+Agents that receive a high density of emphatic directives (IMPORTANT, NEVER, MUST) show measurably reduced instruction adherence. The signal degrades into noise when every sentence demands priority.
 
-Agent instructions should be concise and declarative. Instruction-following research shows that stacked emphatic directives (`IMPORTANT`/`NEVER`/`MUST`/`CRITICAL`/…) create a fragile, competitive instruction topology that *degrades* adherence, while declarative phrasing transfers more reliably. AE-CTX-006 is a quality nudge for context files that over-use emphatic directives.
+## What triggers it
 
-## Detection Logic
+Charter counts emphatic directive words — `IMPORTANT`, `NEVER`, `MUST`, `ALWAYS`, `CRITICAL`, `WARNING`, and similar — in the context file and computes a density relative to word count. The finding fires informally (no score deduction) when that density exceeds roughly 15 per 1,000 words.
 
-reads the highest-precedence agent context file present (same resolution as AE-CTX-001). Counts word-boundary matches of `IMPORTANT|NEVER|MUST|CRITICAL|ALWAYS|EXTREMELY|ABSOLUTELY|FORBIDDEN|PROHIBITED` and divides by word count × 1,000. Flags when density ≥ 15 per 1,000 words.
+## Examples
 
-## Pass Example
+### Failing
 
-a declarative AGENTS.md ("Tests run with `go test`. No silent mutation. Fail fast.") — low emphatic density, passes.
+A context file where nearly every instruction starts with `IMPORTANT:` or `NEVER`, or where multiple `CRITICAL` blocks are stacked in sequence. The finding reports the exact count and density.
 
-## Fail Example
+### Passing
 
-an AGENTS.md that stacks `IMPORTANT`/`NEVER`/`MUST`/`CRITICAL` throughout — density ≥ 15/1K, flagged informational; evidence reports the count and density.
+A context file that uses emphatic words selectively — reserving them for genuinely exceptional constraints rather than routine instructions. Plain declarative sentences like "Tests run with `go test`. No silent mutation. Fail fast." keep density well below the threshold.
 
-## Evidence Expectations
+## How to fix
 
-emphatic-directive count, word count, density, and the threshold.
+Review the context file for stacked imperatives. Reserve `IMPORTANT`, `NEVER`, and `MUST` for constraints that would cause real harm if missed. Rewrite routine guidance as plain declarative sentences. The goal is signal density, not volume.
 
-## Edge Cases
-
-fires only when a context file exists (absence is AE-CTX-001's concern); empty file → no finding.
-
-## Remediation
-
-prefer concise, declarative guidance over stacked emphatic directives; state constraints plainly.
-
-## Scoring Impact
+## Score impact
 
 informational — listed in output, re-surfaces, but contributes **0** to the score (mirrors AE-SUPPRESS-003).
 
-## Related ADRs
+## Edge cases
 
-- ADR-0023
-- ADR-0013
+fires only when a context file exists (absence is AE-CTX-001's concern); empty file → no finding.
 
-## Related Evals
+## Related rules
 
-None yet
+- [AE-CTX-001](/rules/AE-CTX-001)
+- [AE-CTX-002](/rules/AE-CTX-002)
 
 ## CLI
 

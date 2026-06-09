@@ -5,38 +5,9 @@ description: "Run your first Charter scan, understand the score, and generate a 
 
 This guide gets you from zero to a real Charter scan as quickly as possible.
 
-## Before You Start
+## Install Charter
 
-You need a repository you want to scan and one way to run the Charter CLI.
-
-Current launch-state notes:
-
-- The signed release pipeline and Homebrew cask config are in this repo.
-- The **public** Homebrew tap is still launch-gated.
-- The public `go install` path is also not live yet because the vanity import host is not deployed.
-
-That means the practical paths right now are:
-
-1. Run Charter from a local checkout.
-2. Plan to use a signed GitHub Release binary once the first public release is cut.
-
-## Option 1: Run From a Local Checkout
-
-If you already have the Charter source checked out, run it against the repository you want to evaluate by pointing `--path` at that target repo:
-
-```bash
-go run ./cmd/charter doctor --path ../your-repo
-```
-
-This is the fastest path while public distribution is still launch-gated.
-
-## Option 2: Use a GitHub Release Binary
-
-This path becomes available after the first public release is cut. At that point, download the archive for your platform from GitHub Releases, extract the `charter` binary, and run it against your repo:
-
-```bash
-charter doctor --path .
-```
+Download the binary for your platform from [GitHub Releases](https://github.com/use-charter/charter/releases), extract it, and put `charter` on your PATH. See [Installation](/installation) for all install paths including Homebrew and `go install`.
 
 ## Scan Your Repository
 

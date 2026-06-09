@@ -3,61 +3,49 @@ title: "AE-MCP-001"
 description: "Every MCP server entry in a repo's MCP configuration must be pinned to an exact version or digest. Floating references — `@latest`, missing versions, dist-tags, semver ranges, and branch/commit-less git sources — are a supply-chain risk (OWASP MCP Top 10 beta, MCP04 Software Supply Chain Attacks & Dependency Tampering)."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-MCP-001.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-MCP-001 · **Severity:** High · **Category:** MCP Safety · **Auto-fixable:** Yes — `charter fix --rule AE-MCP-001` (safe version bump to catalog stable; deprecated packages require manual migration)
 
-**Rule name:** MCPServerPinned
+## Why this rule
 
-**Severity:** High  
-**Category:** MCP Safety
+An MCP server at `@latest` can change behavior between runs without any change to the repo. A package can be deprecated, archived, or found to contain a known vulnerability after a repo first passed Charter. Pinning to an exact version ties the tool definition to a reviewable artifact.
 
-Every MCP server entry in a repo's MCP configuration must be pinned to an exact version or digest. Floating references — `@latest`, missing versions, dist-tags, semver ranges, and branch/commit-less git sources — are a supply-chain risk (OWASP MCP Top 10 beta, MCP04 Software Supply Chain Attacks & Dependency Tampering).
+## What triggers it
 
-## Detection Logic
+Charter scans MCP configuration files (`.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`) for server entries launched by package runners (`npx`, `bunx`, `uvx`, `pnpm dlx`). For each entry, Charter extracts the package spec and checks whether it pins an exact version.
 
-scans tracked JSON MCP config files (`.mcp.json`, `mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`; VS Code `servers` key parsed as an alias of `mcpServers`). For each stdio server launched by a recognized runner (`npx`, `bunx`, `uvx`, `pnpm dlx`, `yarn dlx`), the first non-flag argument is the package spec; the version is the substring after the last `@` that is not the leading scope prefix. Pinned = an exact semver (`1.2.3`, optional leading `v` / prerelease) or a digest (`sha256:<64hex>` or `<40hex>`). Unpinned = empty version, `latest` or any dist-tag, a semver range (`^`, `~`, `>=`, `>`, `<`, `*`, `x`), a floating git ref (`github:`, `git+`, or a `#branch`), or a dynamic value (`pkg@${VAR}`, which cannot be verified statically). Non-runner commands (`node`, `python3`, absolute paths) carry no pin assertion in v1.
+Unpinned forms that trigger this rule: `@latest`, a missing version, semver ranges (`^1.0.0`, `~1.0.0`, `>=1.0.0`), floating git refs, or dynamic values like `pkg@${VERSION}`.
 
-## Pass Example
+Charter's catalog adds additional signal: a deprecated or archived package fires High regardless of whether it's pinned. A pinned version covered by a known CVE or GHSA advisory also fires High. A pinned version that's simply behind the catalog's stable release fires informational only — it surfaces but doesn't deduct points.
 
-`.mcp.json` with `"args": ["-y", "@modelcontextprotocol/server-filesystem@1.0.4"]` — exact version, passes.
+## Examples
 
-## Fail Example
+### Failing
 
-`.mcp.json` with `"args": ["-y", "gumroad-mcp@latest"]` — floating tag, flagged High; evidence names `gumroad-mcp@latest`.
+`.mcp.json` with `"args": ["-y", "gumroad-mcp@latest"]` — floating tag, fires High.
 
-## Evidence Expectations
+`.mcp.json` with `"args": ["-y", "@modelcontextprotocol/server-github@1.0.0"]` — archived package, fires High with migration guidance.
 
-a structured location (config file path + 1-based line of the server entry) and an evidence string naming the config file, server name, and the offending package spec. The raw token is a public package name, not a secret, so it is shown verbatim.
+### Passing
 
-## Edge Cases
+`.mcp.json` with `"args": ["-y", "@modelcontextprotocol/server-filesystem@2026.1.14"]` — exact CalVer version, catalog-known, no advisory.
 
-package specs are resolved only for direct runners (`npx`, `bunx`, `uvx`) and the `dlx` subcommand of `pnpm`/`yarn`; local path args (`./`, `/`, `../`) and the `exec`/`run` forms launch local binaries and are not treated as registry packages. Scoped packages (`@scope/name@1.2.3`) are pinned only when the trailing version is exact; `pkg@${VERSION}` is treated as unpinned; other runners are out of scope for v1.
+## How to fix
 
-## Remediation
+Run `charter fix --rule AE-MCP-001` for a safe diff-first version bump. For unpinned or behind-stable packages, the fixer updates the package spec to the catalog's stable version. For deprecated packages, migration is manual — the finding includes the recommended successor.
 
-pin the MCP server package to an exact version or digest instead of `@latest`, a semver range, or a floating git ref, then commit the change.
-
-## Scoring Impact
+## Score impact
 
 deprecated/unpinned/advisory findings are `High` (−10); the behind-stable nudge is informational (0). No hard cap (caps are reserved for raw-secret findings).
 
-## Catalog Notes
+## Edge cases
 
-the rule is catalog-aware. Per server, at most one finding fires via a precedence ladder — **deprecated > unpinned > advisory > behind-stable > clean**:
-  - **Deprecated/archived package** (e.g. `@modelcontextprotocol/server-github`) → **High**, "migrate to `<successor>`" (fires even when unpinned — migration supersedes pinning).
-  - **Known advisory (CVE/GHSA)** matching the pinned version → **High**, names the advisory `id` and `fixedIn`. Matching is by exact `affected` membership or by `affectedBelow` (the "fixed in X, affected below X" CVE shape), the latter via a conservative component-wise numeric comparison (correct for CalVer and semver; an unparseable version never matches). Seeded with the real `mcp-server-git` path-traversal CVEs (CVE-2026-27735 / CVE-2025-68145 / CVE-2025-68143).
-  - **Behind the catalog's `stable_version`** with no advisory → **informational** (`Informational: true`; re-surfaces in output but does **not** deduct from the score — same idiom as AE-SUPPRESS-003).
-  - Comparison is **exact-match only** (no cross-scheme version ordering; the official servers use CalVer, not semver). A pinned version absent from the catalog's `known_versions` is **silent** — a stale catalog under-reports rather than misreporting (Commitment #9).
+package specs are resolved only for direct runners (`npx`, `bunx`, `uvx`) and the `dlx` subcommand of `pnpm`/`yarn`; local path args (`./`, `/`, `../`) and the `exec`/`run` forms launch local binaries and are not treated as registry packages. Scoped packages (`@scope/name@1.2.3`) are pinned only when the trailing version is exact; `pkg@${VERSION}` is treated as unpinned; other runners are out of scope for v1.
 
-## Related ADRs
+## Related rules
 
-- ADR-0021
-- ADR-0011
-- ADR-0006
-- ADR-0009
-
-## Related Evals
-
-None yet
+- [AE-MCP-002](/rules/AE-MCP-002)
+- [AE-MCP-003](/rules/AE-MCP-003)
+- [AE-SEC-002](/rules/AE-SEC-002)
 
 ## CLI
 
