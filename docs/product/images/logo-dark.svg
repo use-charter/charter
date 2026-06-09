@@ -1,32 +1,28 @@
 <!--
-  Charter [C] mark — canonical SVG
-  64×64 viewBox · geometric, zero font dependency · #FFFFFF
-  Use fill="#FFFFFF" on a parent element to control colour.
-  Bracket: bw=4 bars, cl=11 caps, bh=40 height
-  C arc:   r=11, stroke-width=6, 300° coverage (±30° opening on right)
+  Charter wordmark — [C] mark + logotype
+  160×36 viewBox · mark scaled 28×28 · logotype in system sans-serif
+  Dark variant: #FFFFFF on dark backgrounds
 -->
-<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"
-     role="img" aria-label="Charter mark">
+<svg viewBox="0 0 160 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Charter">
   <title>Charter</title>
 
-  <!-- Left bracket [ -->
-  <rect x="3"  y="12" width="4"  height="40" fill="#FFFFFF"/>
-  <rect x="3"  y="12" width="11" height="4"  fill="#FFFFFF"/>
-  <rect x="3"  y="48" width="11" height="4"  fill="#FFFFFF"/>
+  <!-- [C] mark scaled 0.4375 (64→28), centred vertically in 36px -->
+  <g transform="translate(0,4) scale(0.4375)">
+    <rect x="3"  y="12" width="4"  height="40" fill="#FFFFFF"/>
+    <rect x="3"  y="12" width="11" height="4"  fill="#FFFFFF"/>
+    <rect x="3"  y="48" width="11" height="4"  fill="#FFFFFF"/>
+    <rect x="57" y="12" width="4"  height="40" fill="#FFFFFF"/>
+    <rect x="50" y="12" width="11" height="4"  fill="#FFFFFF"/>
+    <rect x="50" y="48" width="11" height="4"  fill="#FFFFFF"/>
+    <path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5"
+          fill="none" stroke="#FFFFFF"
+          stroke-width="6" stroke-linecap="butt"/>
+  </g>
 
-  <!-- Right bracket ] -->
-  <rect x="57" y="12" width="4"  height="40" fill="#FFFFFF"/>
-  <rect x="50" y="12" width="11" height="4"  fill="#FFFFFF"/>
-  <rect x="50" y="48" width="11" height="4"  fill="#FFFFFF"/>
-
-  <!--
-    Geometric C
-    Centre (32,32) · r=11 · stroke-width=6 · 300° arc
-    Start  −30°: (32 + 11·cos −30°, 32 + 11·sin −30°) = (41.53, 26.50)
-    End    +30°: (41.53, 37.50)
-    large-arc=1, sweep=0 (counterclockwise on screen = C shape)
-  -->
-  <path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5"
-        fill="none" stroke="#FFFFFF"
-        stroke-width="6" stroke-linecap="butt"/>
+  <!-- Logotype -->
+  <text x="36" y="18"
+        font-family="system-ui,-apple-system,'Segoe UI',sans-serif"
+        font-size="18" font-weight="600"
+        fill="#FFFFFF"
+        dominant-baseline="middle">Charter</text>
 </svg>
