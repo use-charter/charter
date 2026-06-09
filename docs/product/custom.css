@@ -1,393 +1,566 @@
 /*
- * Charter docs — design token overrides for Mintlify maple theme
- * Tokens: docs/internal/designs/DESIGN-TOKENS.md
- * Goal: maple layout + mint-style navbar + Charter brand tokens throughout
+ * Charter — Mintlify maple theme: Charter design token system
+ *
+ * Selectors: Mintlify official element / ID hooks (docs/customize/custom-scripts)
+ * Tokens:    docs/internal/designs/DESIGN-TOKENS.md
+ * Fonts:     Ruda (UI/headings) · Atkinson Hyperlegible Mono (code/CLI) · IBM Plex Mono (meta/IDs)
+ * Standards: WCAG 2.2 AA · prefers-reduced-motion · 150-300ms transitions · 44px touch targets
  */
 
 /* ── External fonts ──────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-/* ══════════════════════════════════════════════════
-   DESIGN TOKENS
-   ══════════════════════════════════════════════════ */
+/* ── Charter design tokens ───────────────────────── */
 :root {
-  --bg-primary:    #0d1117;
-  --bg-secondary:  #161b22;
-  --bg-tertiary:   #1f2937;
-  --bg-hover:      rgba(255,255,255,0.04);
+  /* Backgrounds */
+  --bg-0:  #0d1117;   /* background-primary dark  */
+  --bg-1:  #161b22;   /* background-secondary dark */
+  --bg-2:  #1f2937;   /* background-tertiary dark  */
+  --bg-h:  rgba(255,255,255,0.04); /* hover tint */
 
-  --text-primary:   #f9fafb;
-  --text-secondary: #d1d5db;
-  --text-muted:     #9ca3af;
+  /* Text */
+  --tx-0:  #f9fafb;   /* text-primary dark    */
+  --tx-1:  #d1d5db;   /* text-secondary dark  */
+  --tx-m:  #9ca3af;   /* text-muted / tertiary */
 
-  --border-subtle:  rgba(55, 65, 81, 0.50);
-  --border-strong:  #374151;
+  /* Borders */
+  --bd-0:  #374151;   /* border-primary dark   */
+  --bd-1:  #2b3240;   /* border-secondary dark  */
+  --bd-2:  #21262d;   /* border-tertiary dark   */
 
-  --accent:         #2563eb;
-  --accent-mid:     #60a5fa;
-  --accent-glow:    rgba(37, 99, 235, 0.08);
+  /* Severity surfaces (DESIGN-TOKENS.md) */
+  --bg-danger:  #450a0a;  --bd-danger:  #991b1b;
+  --bg-warning: #422006;  --bd-warning: #92400e;
+  --bg-info:    #172554;  --bd-info:    #1e40af;
+  --bg-success: #052e16;  --bd-success: #166534;
 
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* Charter blue accent */
+  --ac:    #2563eb;   /* primary accent    */
+  --ac-l:  #60a5fa;   /* light accent / text-info-dark */
+  --ac-g:  rgba(37,99,235,0.08); /* glow  */
+  --ac-bg: rgba(37,99,235,0.10); /* tinted bg */
+  --ac-b:  rgba(37,99,235,0.22); /* tinted border */
 
-  --font-code: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --font-meta: "IBM Plex Mono", ui-monospace, monospace;
+  /* Fonts */
+  --f-code: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --f-meta: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Motion */
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --ease:     cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ══════════════════════════════════════════════════
-   NAVBAR — solid dark, mint-inspired layout
+   BACKGROUND  (#background-color is the page bg element)
    ══════════════════════════════════════════════════ */
 
-/* Top bar: solid Charter Dark, no blur (mint is solid, not frosted) */
-.dark #navbar,
-.dark header,
-.dark [class*="navbar"],
-.dark [class*="top-bar"] {
-  background-color: var(--bg-primary) !important;
-  border-bottom: 1px solid var(--border-subtle) !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+#background-color {
+  background-color: var(--bg-0);
 }
 
-/* Tab strip (Docs / CLI Reference / Rules / Changelog) — mint underline style */
-.dark [role="tablist"],
-.dark [class*="tab-list"],
-.dark [class*="tabs-nav"],
-.dark nav[class*="top"] {
-  background: transparent !important;
-  border-bottom: 1px solid var(--border-subtle) !important;
-  gap: 0 !important;
-  padding: 0 !important;
-}
-
-/* Individual tab items */
-.dark [role="tab"],
-.dark [class*="tab-item"],
-.dark [class*="tab-trigger"],
-.dark nav[class*="top"] a,
-.dark nav[class*="top"] button {
-  font-size: 0.875rem !important;
-  font-weight: 500 !important;
-  color: var(--text-muted) !important;
-  padding: 10px 16px !important;
-  border-bottom: 2px solid transparent !important;
-  margin-bottom: -1px !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  transition: color 0.15s ease, border-color 0.15s ease !important;
-  letter-spacing: 0.005em;
-}
-
-.dark [role="tab"]:hover,
-.dark [class*="tab-item"]:hover,
-.dark nav[class*="top"] a:hover {
-  color: var(--text-secondary) !important;
-  background: var(--bg-hover) !important;
-}
-
-/* Active tab: Charter blue underline, white text — matches mint's green underline pattern */
-.dark [role="tab"][aria-selected="true"],
-.dark [role="tab"][data-active="true"],
-.dark [role="tab"][data-state="active"],
-.dark [class*="tab-item"][class*="active"],
-.dark [class*="tab-trigger"][data-state="active"],
-.dark nav[class*="top"] a[aria-current="page"],
-.dark nav[class*="top"] a[class*="active"] {
-  color: var(--text-primary) !important;
-  border-bottom-color: var(--accent) !important;
-  background: transparent !important;
-}
-
-/* ══════════════════════════════════════════════════
-   SEARCH — pill shape, visible in sidebar
-   ══════════════════════════════════════════════════ */
-
-/* Search container */
-.dark [class*="search-bar"],
-.dark [class*="search-container"],
-.dark [role="search"] {
-  padding: 4px !important;
-}
-
-/* Search input */
-.dark input[type="search"],
-.dark input[placeholder*="Search"],
-.dark [class*="search-input"],
-.dark [class*="SearchInput"] {
-  background-color: var(--bg-secondary) !important;
-  border: 1px solid var(--border-strong) !important;
-  border-radius: 8px !important;
-  color: var(--text-secondary) !important;
-  font-size: 0.875rem !important;
-  padding: 7px 12px !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
-  width: 100% !important;
-}
-
-.dark input[type="search"]:focus,
-.dark [class*="search-input"]:focus {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
-  outline: none !important;
-  background-color: var(--bg-secondary) !important;
-}
-
-/* Search kbd shortcut pill (⌘K) */
-.dark kbd,
-.dark [class*="kbd"],
-.dark [class*="shortcut"] {
-  background-color: var(--bg-tertiary) !important;
-  border: 1px solid var(--border-strong) !important;
-  color: var(--text-muted) !important;
-  border-radius: 4px !important;
-  font-family: var(--font-meta) !important;
-  font-size: 0.7rem !important;
-  padding: 2px 5px !important;
-}
-
-/* ══════════════════════════════════════════════════
-   SIDEBAR
-   ══════════════════════════════════════════════════ */
-
-.dark aside,
-.dark [class*="sidebar"],
-.dark nav[class*="side"],
-.dark [class*="left-sidebar"] {
-  background-color: var(--bg-primary) !important;
-  border-right: 1px solid var(--border-subtle) !important;
-}
-
-/* Sidebar section headers (anchor names like "Getting Started") */
-.dark [class*="anchor-label"],
-.dark [class*="group-label"],
-.dark [class*="section-title"],
-.dark nav [class*="group"] > span:first-child {
-  font-size: 0.75rem !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.06em !important;
-  text-transform: uppercase !important;
-  color: var(--text-muted) !important;
-  padding: 4px 0 !important;
-}
-
-/* Sidebar nav links */
-.dark [class*="nav-link"],
-.dark [class*="sidebar"] a,
-.dark nav[class*="side"] a {
-  color: var(--text-secondary) !important;
-  font-size: 0.875rem !important;
-  border-radius: var(--radius-sm) !important;
-  transition: background 0.12s, color 0.12s !important;
-  padding: 5px 10px !important;
-}
-
-.dark [class*="sidebar"] a:hover,
-.dark nav[class*="side"] a:hover {
-  background: var(--bg-hover) !important;
-  color: var(--text-primary) !important;
-}
-
-/* Active page link */
-.dark [class*="sidebar"] a[aria-current="page"],
-.dark [class*="sidebar"] a[data-active="true"],
-.dark nav[class*="side"] a[aria-current="page"] {
-  background: rgba(37, 99, 235, 0.12) !important;
-  color: var(--accent-mid) !important;
-  font-weight: 500 !important;
-  border-left: 2px solid var(--accent) !important;
-  padding-left: 8px !important;
-}
-
-/* ══════════════════════════════════════════════════
-   MAIN CONTENT AREA
-   ══════════════════════════════════════════════════ */
-
-/* Background + subtle top gradient */
-.dark body {
-  background-color: var(--bg-primary);
-}
-
-.dark body::before {
+/* Radial blue glow at top — Charter brand depth */
+#body-content::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(
-    ellipse 90% 30% at 50% 0%,
-    var(--accent-glow) 0%,
-    transparent 60%
-  );
   z-index: 0;
+  background: radial-gradient(
+    ellipse 100% 30% at 50% 0%,
+    var(--ac-g) 0%,
+    transparent 65%
+  );
 }
 
-/* Content wrapper sits above pseudo */
-.dark main,
-.dark article,
-.dark [class*="content"] {
+/* ══════════════════════════════════════════════════
+   NAVBAR  (#navbar)
+   ══════════════════════════════════════════════════ */
+
+#navbar {
+  background-color: var(--bg-0) !important;
+  border-bottom: 1px solid var(--bd-1) !important;
+  box-shadow: none !important;
+  /* Solid — mint theme is not frosted */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Logo area */
+nav-logo {
+  opacity: 1;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+nav-logo:hover { opacity: 0.85; }
+
+/* Navbar links (GitHub etc.) */
+navbar-link {
+  color: var(--tx-m) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  transition: color var(--dur-fast) var(--ease) !important;
+  cursor: pointer;
+}
+
+navbar-link:hover { color: var(--tx-1) !important; }
+
+/* CTA button */
+#topbar-cta-button {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  transition: opacity var(--dur-fast) var(--ease) !important;
+  cursor: pointer;
+}
+
+#topbar-cta-button:hover { opacity: 0.88 !important; }
+
+/* Search trigger */
+#search-bar-entry {
+  background-color: var(--bg-1) !important;
+  border: 1px solid var(--bd-0) !important;
+  border-radius: 8px !important;
+  color: var(--tx-m) !important;
+  font-size: 0.875rem !important;
+  transition: border-color var(--dur-fast) var(--ease),
+              box-shadow var(--dur-fast) var(--ease) !important;
+  cursor: pointer;
+}
+
+#search-bar-entry:hover {
+  border-color: var(--ac-l) !important;
+  box-shadow: 0 0 0 3px var(--ac-bg) !important;
+}
+
+/* Search modal input */
+#search-input {
+  background-color: var(--bg-1) !important;
+  border: 1px solid var(--bd-0) !important;
+  border-radius: 8px !important;
+  color: var(--tx-0) !important;
+  font-size: 0.9375rem !important;
+}
+
+#search-input:focus {
+  border-color: var(--ac) !important;
+  box-shadow: 0 0 0 3px var(--ac-bg) !important;
+  outline: none !important;
+}
+
+/* ══════════════════════════════════════════════════
+   TAB BAR  (nav-tabs / nav-tabs-item)
+   Mint-style: underline indicator, no background pill
+   ══════════════════════════════════════════════════ */
+
+nav-tabs {
+  border-bottom: 1px solid var(--bd-2) !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+nav-tabs-item {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: var(--tx-m) !important;
+  border-bottom: 2px solid transparent !important;
+  margin-bottom: -1px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 10px 16px !important;
+  transition: color var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease) !important;
+  cursor: pointer;
+  letter-spacing: 0.005em;
+}
+
+nav-tabs-item:hover {
+  color: var(--tx-1) !important;
+  background: var(--bg-h) !important;
+}
+
+/* Active tab: white text + Charter blue 2px underline */
+.nav-tabs-item[data-active] {
+  color: var(--tx-0) !important;
+  border-bottom-color: var(--ac) !important;
+  background: transparent !important;
+}
+
+/* Mobile tabs — same pattern */
+mobile-nav-tabs-item { color: var(--tx-m) !important; }
+mobile-nav-tabs-item[data-active] { color: var(--ac-l) !important; }
+
+/* ══════════════════════════════════════════════════
+   SIDEBAR  (#sidebar · sidebar-* elements)
+   ══════════════════════════════════════════════════ */
+
+#sidebar {
+  background-color: var(--bg-0) !important;
+  border-right: 1px solid var(--bd-2) !important;
+}
+
+#sidebar-content { background-color: var(--bg-0) !important; }
+
+/* Section labels ("Getting Started", "How Charter Works") */
+sidebar-group-header {
+  font-size: 0.6875rem !important;   /* 11px */
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: var(--tx-m) !important;
+  padding: 6px 0 4px !important;
+}
+
+/* Section icon */
+sidebar-group-icon {
+  color: var(--tx-m) !important;
+  opacity: 0.7;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+sidebar-group[data-active] sidebar-group-icon { opacity: 1; }
+
+/* Sidebar nav links */
+#sidebar-content a {
+  color: var(--tx-1) !important;
+  font-size: 0.875rem !important;
+  border-radius: 6px !important;
+  transition: background var(--dur-fast) var(--ease),
+              color var(--dur-fast) var(--ease) !important;
+  cursor: pointer;
+}
+
+#sidebar-content a:hover {
+  background: var(--bg-h) !important;
+  color: var(--tx-0) !important;
+}
+
+/* Active page link — Charter blue left border + tinted bg */
+#sidebar-content li[data-active] a {
+  color: var(--ac-l) !important;
+  background: var(--ac-bg) !important;
+  font-weight: 500 !important;
+  border-left: 2px solid var(--ac) !important;
+  padding-left: 8px !important;
+}
+
+/* Divider between groups */
+sidebar-nav-group-divider {
+  border-color: var(--bd-2) !important;
+  opacity: 0.5;
+}
+
+/* ══════════════════════════════════════════════════
+   TABLE OF CONTENTS  (#table-of-contents · toc-*)
+   ══════════════════════════════════════════════════ */
+
+#table-of-contents {
+  border-left: 1px solid var(--bd-2) !important;
+  background: transparent !important;
+}
+
+toc-item {
+  color: var(--tx-m) !important;
+  font-size: 0.8125rem !important;
+  transition: color var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease) !important;
+  cursor: pointer;
+}
+
+toc-item:hover { color: var(--tx-1) !important; }
+
+toc-item[data-active] {
+  color: var(--ac-l) !important;
+  border-left: 2px solid var(--ac) !important;
+  padding-left: 8px !important;
+  font-weight: 500 !important;
+}
+
+toc-item[data-active-deepest] {
+  color: var(--ac-l) !important;
+  font-weight: 600 !important;
+}
+
+/* ══════════════════════════════════════════════════
+   CONTENT AREA  (#content-area · #content · mdx-content)
+   ══════════════════════════════════════════════════ */
+
+#content-area, #content {
+  background-color: var(--bg-0) !important;
   position: relative;
   z-index: 1;
-  background-color: var(--bg-primary);
+}
+
+mdx-content { color: var(--tx-1); }
+
+/* Page eyebrow label */
+eyebrow {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: var(--ac-l) !important;
 }
 
 /* ══════════════════════════════════════════════════
    TYPOGRAPHY
+   Token: --font-site = Ruda (loaded via docs.json fonts config)
    ══════════════════════════════════════════════════ */
 
-.dark h1 {
-  font-size: clamp(1.75rem, 4vw, 2.25rem) !important;
+#page-title {
+  font-size: clamp(1.625rem, 3.5vw, 2.125rem) !important;
   font-weight: 800 !important;
   letter-spacing: -0.03em !important;
-  color: var(--text-primary) !important;
+  color: var(--tx-0) !important;
   line-height: 1.2 !important;
 }
 
-.dark h2 {
+mdx-content h2 {
   font-weight: 700 !important;
   letter-spacing: -0.02em !important;
-  color: var(--text-primary) !important;
+  color: var(--tx-0) !important;
 }
 
-.dark h3, .dark h4 {
+mdx-content h3, mdx-content h4 {
   font-weight: 600 !important;
   letter-spacing: -0.01em !important;
-  color: var(--text-primary) !important;
+  color: var(--tx-0) !important;
 }
 
-.dark p, .dark li {
-  color: var(--text-secondary);
-  line-height: 1.7;
+mdx-content p, mdx-content li {
+  color: var(--tx-1);
+  line-height: 1.72;
 }
 
-/* ══════════════════════════════════════════════════
-   CODE — Atkinson Hyperlegible Mono (CLI-first)
-   ══════════════════════════════════════════════════ */
-
-pre, code, [class*="codeblock"], [class*="code-block"] {
-  font-family: var(--font-code) !important;
-}
-
-.dark pre,
-.dark [class*="codeblock"],
-.dark [class*="code-block"] {
-  background-color: var(--bg-secondary) !important;
-  border: 1px solid var(--border-strong) !important;
-  border-radius: var(--radius-md) !important;
-}
-
-/* Inline code — IBM Plex Mono (meta layer: rule IDs, paths) */
-:not(pre) > code {
-  font-family: var(--font-meta) !important;
-  font-size: 0.82em !important;
-  border-radius: 4px !important;
-  padding: 0.12em 0.38em !important;
-}
-
-.dark :not(pre) > code {
-  color: var(--accent-mid) !important;
-  background-color: rgba(37, 99, 235, 0.10) !important;
-  border: 1px solid rgba(37, 99, 235, 0.22) !important;
-}
-
-/* ══════════════════════════════════════════════════
-   LINKS
-   ══════════════════════════════════════════════════ */
-
-.dark article a:not([class]),
-.dark [class*="prose"] a {
-  color: var(--accent-mid) !important;
+/* Prose links */
+mdx-content a {
+  color: var(--ac-l) !important;
   text-underline-offset: 3px !important;
-  text-decoration-color: rgba(96, 165, 250, 0.30) !important;
-  transition: color 0.12s, text-decoration-color 0.12s !important;
+  text-decoration-color: rgba(96,165,250,0.30) !important;
+  transition: color var(--dur-fast) var(--ease),
+              text-decoration-color var(--dur-fast) var(--ease) !important;
 }
 
-.dark article a:not([class]):hover,
-.dark [class*="prose"] a:hover {
+mdx-content a:hover {
   color: #93c5fd !important;
-  text-decoration-color: rgba(147, 197, 253, 0.50) !important;
+  text-decoration-color: rgba(147,197,253,0.50) !important;
 }
 
 /* ══════════════════════════════════════════════════
-   CALLOUT / ADMONITION SURFACES (severity tokens)
+   CODE BLOCKS  (code-block · code-group elements)
+   Token: --font-code = Atkinson Hyperlegible Mono
    ══════════════════════════════════════════════════ */
 
-.dark [class*="callout"][class*="danger"],
-.dark [class*="callout"][class*="error"],
-.dark [class*="admonition"][class*="warning"] {
-  background-color: #450a0a !important;
-  border-color: #991b1b !important;
+code-block {
+  background-color: var(--bg-1) !important;
+  border: 1px solid var(--bd-0) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
 }
 
-.dark [class*="callout"][class*="warning"],
-.dark [class*="admonition"][class*="caution"] {
-  background-color: #422006 !important;
-  border-color: #92400e !important;
-}
-
-.dark [class*="callout"][class*="info"],
-.dark [class*="callout"][class*="tip"],
-.dark [class*="callout"][class*="note"] {
-  background-color: #172554 !important;
-  border-color: #1e40af !important;
-}
-
-.dark [class*="callout"][class*="success"] {
-  background-color: #052e16 !important;
-  border-color: #166534 !important;
-}
-
-/* ══════════════════════════════════════════════════
-   RIGHT TOC (table of contents)
-   ══════════════════════════════════════════════════ */
-
-.dark [class*="toc"],
-.dark [class*="table-of-contents"],
-.dark aside[class*="right"] {
-  border-left: 1px solid var(--border-subtle) !important;
-}
-
-.dark [class*="toc"] a,
-.dark [class*="table-of-contents"] a {
-  color: var(--text-muted) !important;
+code-block pre,
+code-block code {
+  font-family: var(--f-code) !important;
   font-size: 0.8125rem !important;
-  transition: color 0.12s !important;
+  line-height: 1.65 !important;
 }
 
-.dark [class*="toc"] a:hover {
-  color: var(--text-secondary) !important;
+code-group {
+  border: 1px solid var(--bd-0) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
 }
 
-.dark [class*="toc"] a[class*="active"],
-.dark [class*="toc"] a[aria-current] {
-  color: var(--accent-mid) !important;
-  border-left: 2px solid var(--accent) !important;
-  padding-left: 8px !important;
+/* Inline code — IBM Plex Mono (meta/ID layer per design tokens) */
+mdx-content :not(pre) > code {
+  font-family: var(--f-meta) !important;
+  font-size: 0.82em !important;
+  color: var(--ac-l) !important;
+  background-color: var(--ac-bg) !important;
+  border: 1px solid var(--ac-b) !important;
+  border-radius: 4px !important;
+  padding: 0.1em 0.38em !important;
 }
 
 /* ══════════════════════════════════════════════════
-   PREV / NEXT FOOTER CARDS
+   CALLOUTS  (callout element)
+   Severity surface tokens from DESIGN-TOKENS.md
    ══════════════════════════════════════════════════ */
 
-.dark [class*="prev-next"],
-.dark [class*="pagination"],
-.dark [class*="footer-nav"] {
-  border-top: 1px solid var(--border-subtle) !important;
+callout {
+  border-radius: 8px !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+/* Mintlify callout types via attribute */
+callout[type="warning"],
+callout[data-type="warning"] {
+  background-color: var(--bg-warning) !important;
+  border-color: var(--bd-warning) !important;
+}
+
+callout[type="danger"],
+callout[type="error"],
+callout[data-type="danger"] {
+  background-color: var(--bg-danger) !important;
+  border-color: var(--bd-danger) !important;
+}
+
+callout[type="info"],
+callout[type="note"],
+callout[type="tip"],
+callout[data-type="info"] {
+  background-color: var(--bg-info) !important;
+  border-color: var(--bd-info) !important;
+}
+
+callout[type="success"],
+callout[data-type="success"] {
+  background-color: var(--bg-success) !important;
+  border-color: var(--bd-success) !important;
+}
+
+/* ══════════════════════════════════════════════════
+   CARDS  (card element)
+   ══════════════════════════════════════════════════ */
+
+card {
+  background-color: var(--bg-1) !important;
+  border: 1px solid var(--bd-0) !important;
+  border-radius: 10px !important;
+  transition: border-color var(--dur-base) var(--ease),
+              background-color var(--dur-base) var(--ease),
+              box-shadow var(--dur-base) var(--ease) !important;
+  cursor: pointer;
+}
+
+card:hover {
+  border-color: var(--ac) !important;
+  background-color: var(--bg-2) !important;
+  box-shadow: 0 0 0 1px var(--ac-bg),
+              0 4px 16px rgba(37,99,235,0.12) !important;
+}
+
+/* ══════════════════════════════════════════════════
+   PAGINATION  (pagination-prev · pagination-next)
+   Mint-style large cards at page bottom
+   ══════════════════════════════════════════════════ */
+
+#pagination {
+  border-top: 1px solid var(--bd-2) !important;
   margin-top: 3rem !important;
   padding-top: 2rem !important;
 }
 
-.dark [class*="prev-next"] a,
-.dark [class*="pagination"] a {
-  background-color: var(--bg-secondary) !important;
-  border: 1px solid var(--border-strong) !important;
-  border-radius: var(--radius-lg) !important;
-  transition: border-color 0.15s, background 0.15s !important;
-  padding: 16px 20px !important;
+pagination-prev,
+pagination-next {
+  background-color: var(--bg-1) !important;
+  border: 1px solid var(--bd-0) !important;
+  border-radius: 12px !important;
+  padding: 18px 22px !important;
+  transition: border-color var(--dur-base) var(--ease),
+              background-color var(--dur-base) var(--ease),
+              box-shadow var(--dur-base) var(--ease) !important;
+  cursor: pointer;
 }
 
-.dark [class*="prev-next"] a:hover,
-.dark [class*="pagination"] a:hover {
-  border-color: var(--accent) !important;
-  background-color: rgba(37, 99, 235, 0.06) !important;
+pagination-prev:hover,
+pagination-next:hover {
+  border-color: var(--ac) !important;
+  background-color: var(--bg-2) !important;
+  box-shadow: 0 0 0 1px var(--ac-bg) !important;
+}
+
+pagination-title {
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  color: var(--tx-0) !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* ══════════════════════════════════════════════════
+   STEPS  (step · steps elements)
+   ══════════════════════════════════════════════════ */
+
+step {
+  border-left: 2px solid var(--bd-0) !important;
+}
+
+/* ══════════════════════════════════════════════════
+   ACCORDION  (accordion element)
+   ══════════════════════════════════════════════════ */
+
+accordion {
+  border: 1px solid var(--bd-1) !important;
+  border-radius: 8px !important;
+  background-color: var(--bg-1) !important;
+  transition: border-color var(--dur-fast) var(--ease) !important;
+}
+
+accordion:hover { border-color: var(--bd-0) !important; }
+
+/* ══════════════════════════════════════════════════
+   FOOTER  (#footer · footer element)
+   ══════════════════════════════════════════════════ */
+
+#footer,
+footer {
+  border-top: 1px solid var(--bd-2) !important;
+  background-color: var(--bg-0) !important;
+}
+
+/* ══════════════════════════════════════════════════
+   BREADCRUMBS
+   ══════════════════════════════════════════════════ */
+
+breadcrumb-item {
+  font-size: 0.8125rem !important;
+  color: var(--tx-m) !important;
+}
+
+/* ══════════════════════════════════════════════════
+   CHANGELOG (update element)
+   ══════════════════════════════════════════════════ */
+
+update {
+  border-left: 2px solid var(--bd-0) !important;
+  padding-left: 1.5rem !important;
+}
+
+/* ══════════════════════════════════════════════════
+   KEYBOARD SHORTCUTS  (kbd)
+   ══════════════════════════════════════════════════ */
+
+kbd {
+  font-family: var(--f-meta) !important;
+  font-size: 0.7rem !important;
+  background-color: var(--bg-2) !important;
+  border: 1px solid var(--bd-0) !important;
+  border-radius: 4px !important;
+  color: var(--tx-m) !important;
+  padding: 2px 5px !important;
+}
+
+/* ══════════════════════════════════════════════════
+   FOCUS STATES (WCAG 2.2 AA)
+   ══════════════════════════════════════════════════ */
+
+*:focus-visible {
+  outline: 2px solid var(--ac-l) !important;
+  outline-offset: 2px !important;
+}
+
+/* ══════════════════════════════════════════════════
+   REDUCED MOTION  (prefers-reduced-motion)
+   ══════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+
+  #body-content::before { display: none; }
 }
