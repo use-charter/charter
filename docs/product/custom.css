@@ -1,0 +1,66 @@
+/* Charter brand polish — linden theme overrides */
+
+/* ── Navbar ─────────────────────────────────────── */
+#navbar {
+  border-bottom: 1px solid rgba(37, 99, 235, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Sidebar ─────────────────────────────────────── */
+/* Active nav item uses Charter blue accent */
+.dark [data-active="true"],
+.dark [aria-current="page"] {
+  color: #60A5FA !important;
+}
+
+/* Sidebar group/anchor headers — tighten letter-spacing */
+.dark nav [class*="group"] > span,
+.dark nav [class*="anchor"] > span {
+  letter-spacing: 0.01em;
+}
+
+/* ── Code blocks ─────────────────────────────────── */
+/* Reinforce Charter Dark surface on code blocks */
+.dark pre,
+.dark [class*="codeblock"] {
+  background-color: #0D1117 !important;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+/* Inline code — Charter blue tint */
+.dark :not(pre) > code {
+  color: #93C5FD;
+  background-color: rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-size: 0.875em;
+}
+
+/* ── Typography ──────────────────────────────────── */
+/* Headings — Ruda weight bump */
+.dark h1, .dark h2, .dark h3 {
+  letter-spacing: -0.02em;
+}
+
+/* ── Links ───────────────────────────────────────── */
+.dark a[class*="prose"] {
+  color: #60A5FA;
+  text-decoration-color: rgba(96, 165, 250, 0.3);
+}
+
+.dark a[class*="prose"]:hover {
+  color: #93C5FD;
+  text-decoration-color: rgba(147, 197, 253, 0.5);
+}
+
+/* ── Gradient background refinement ─────────────── */
+/* Blend gradient toward Charter Dark */
+.dark body {
+  background: radial-gradient(
+    ellipse 80% 50% at 50% -10%,
+    rgba(37, 99, 235, 0.08) 0%,
+    transparent 70%
+  ), #0D1117;
+}
