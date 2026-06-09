@@ -32,10 +32,11 @@ Launch a public documentation system for Charter on Mintlify that is accurate, a
 - Changing rule behavior, command behavior, `helpUri` scheme.
 - Analytics — deployment-time config choice, not content structure.
 
-## Grounding (verified 2026-06-09)
+## Grounding (verified 2026-06-09; Cloudflare re-verified 2026-06-09)
 
 - **Repo constraints**: `docs/product/` is already reserved for customer-facing docs (`README.md:35-39`, `docs/product/README.md`). The roadmap explicitly requires Mintlify, quickstart, CLI reference, CI guide, full rule reference, config reference, suppression governance, and live `/rules/AE-*` pages (`roadmap md:112-118`). Rule `helpUri`s already point to `https://use-charter.dev/rules/<RULE>` (`internal/rules/catalog/catalog.go:19-39`). Internal rule specs in `docs/internal/specs/AE-*.md` are the canonical semantics source.
-- **Mintlify capabilities (Context7-verified)**: central site config via `docs.json`; navigation supports tabs, groups, anchors, dropdowns, versions, languages; redirects are native in `docs.json`; `/docs` subpath hosting via proxy/rewrites; SEO metadata and search prompt configurable; common analytics integrations available.
+- **Mintlify capabilities (Context7-verified)**: central site config via `docs.json`; navigation supports tabs, groups, anchors, dropdowns, versions, languages; redirects are native in `docs.json`; `/docs` subpath hosting via proxy/rewrites; SEO metadata and search prompt configurable; common analytics integrations available. Mintlify provides Cloudflare Worker examples for subpath routing at `/deploy/cloudflare.mdx`.
+- **Cloudflare (Cloudflare-docs-verified)**: domain `use-charter.dev` is registered via Cloudflare Registrar and DNS is managed in Cloudflare. Workers use ES modules format (`export default { async fetch(request, env, ctx) { ... } }`). Worker routes can be configured in the dashboard under Workers & Pages > Triggers > Routes. A single zone-level Worker can proxy `/docs/*` and `/rules/*` to the Mintlify origin, pass through `/.well-known/` paths, and route everything else to the future landing site (Slice 19). Wrangler configuration uses `wrangler.jsonc` with a current `compatibility_date` and optional `nodejs_compat` flag.
 - **2026 docs standards**: Diátaxis framework (quadrants: Tutorial, How-to, Reference, Explanation) is the dominant modern docs architecture. Developer-tool docs consistently optimize for adoption-first onboarding in 2026. Self-contained offline reports already ship (Slice 16); the docs remain a hosted surface, which is appropriate for a discoverability/browsing surface that the HTML report supplements.
 
 ## Content architecture
@@ -140,10 +141,11 @@ docs/product/
 
 ### Decision: URL architecture
 
-- **Choice**: Mintlify origin on `docs.use-charter.dev`. Root-domain routing added for `https://use-charter.dev/docs/*` and `https://use-charter.dev/rules/*`.
-- **Why**: preserves flexibility for Slice 19 to own the root marketing site. Satisfies the hardcoded `helpUri` contract (`https://use-charter.dev/rules/AE-*`). Aligns with Mintlify-supported `/docs` subpath routing.
-- **Tradeoff**: requires proxy/rewrite coordination with Slice 19 deployment. Risk: moderate if Slice 18 ships without recording the routing design.
-- **Status**: Inferred from Mintlify subpath docs + existing `helpUri` contract. Locked pending deploy implementation.
+- **Choice**: Mintlify origin on `docs.use-charter.dev`. Root-domain routing added via a Cloudflare Worker for `https://use-charter.dev/docs/*` and `https://use-charter.dev/rules/*`.
+- **Why**: domain already on Cloudflare (Registrar + DNS), so a zone-level Worker can proxy subpaths without extra DNS changes. Preserves flexibility for Slice 19 to own the root marketing site. Satisfies the hardcoded `helpUri` contract (`https://use-charter.dev/rules/AE-*`). Aligns with Mintlify-supported `/docs` subpath routing and Cloudflare Worker patterns.
+- **Technical choice**: single Cloudflare Worker (ES modules format) with explicit routes for `/docs*` and `/rules*` on the `use-charter.dev` zone; passes `/.well-known/` paths through; routes everything else to the future landing site (or returns a placeholder until Slice 19). See `docs/product/DEPLOY.md` for the full Worker script and deployment steps.
+- **Tradeoff**: requires Worker deployment + route configuration in the Cloudflare dashboard. Risk: low — the Worker is self-contained, stateless, and the script is version-controlled in the repo.
+- **Status**: Confirmed (Cloudflare-docs-verified: Workers ES modules format + route configuration).
 
 ### Decision: No versioning
 
@@ -191,4 +193,5 @@ Mintlify project is new in `docs/product/`. No migration of existing content —
 - `docs/internal/specs/AE-*.md` (canonical rule specs)
 - `docs/product/README.md` (reserved customer-docs home)
 - `README.md` (§ "Documentation topology" + "Repo Map")
-- Mintlify docs: `docs.json` config, navigation structure, redirects, `/docs` subpath hosting
+- Mintlify docs: `docs.json` config, navigation structure, redirects, `/docs` subpath hosting, Cloudflare deployment
+- Cloudflare Workers: ES modules format, route configuration, `wrangler.jsonc`
