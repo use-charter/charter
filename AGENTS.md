@@ -1,11 +1,11 @@
 # AGENTS.md
 
-Last reviewed: 2026-06-04
+Last reviewed: 2026-06-09
 
 ## Current State
 
 - Offline-first Go CLI scoring repos for AI-agent readiness (deterministic).
-- Phase: Slice 17 hardening (15–16 shipped).
+- Phase: Slice 18 shipped — public Mintlify docs in `docs/product/` (15–17 shipped).
 - Stack: Go 1.26.3, Moonrepo, mise, hk, GHA, Bun.
 - License: Apache-2.0 OSS core; DCO-first
 - Product truth: `docs/internal/architecture/charter-architecture-2026.md`

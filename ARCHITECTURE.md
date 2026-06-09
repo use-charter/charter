@@ -14,7 +14,7 @@
 
 - Root contract docs stay at repo root for contributor and agent entry.
 - Repo-internal engineering docs live under `docs/internal/`.
-- Future customer-facing docs live under `docs/product/`.
+- Customer-facing docs live under `docs/product/` (the Mintlify documentation site).
 
 - `cmd/`: binary entrypoints and command wiring (includes `cmd/charter/init.go`, the `charter init` scaffold command, `cmd/charter/fix.go`, the `charter fix` repair command, and `cmd/charter/version.go`, the `charter version` command)
 - `internal/`: non-public implementation details
