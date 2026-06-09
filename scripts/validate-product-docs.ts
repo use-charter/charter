@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { resolveRepoRoot } from './lib/process.ts';
 
-type NavigationNode = string | { pages?: NavigationNode[]; groups?: NavigationNode[]; tabs?: NavigationNode[] };
+type NavigationNode = string | { pages?: NavigationNode[]; groups?: NavigationNode[]; tabs?: NavigationNode[]; anchors?: NavigationNode[] };
 
 const repoRoot = resolveRepoRoot();
 const productDir = resolve(repoRoot, 'docs', 'product');
@@ -48,6 +48,7 @@ function collectPages(node: NavigationNode | NavigationNode[] | undefined): stri
     ...collectPages(node.pages),
     ...collectPages(node.groups),
     ...collectPages(node.tabs),
+    ...collectPages(node.anchors),
   ];
 }
 

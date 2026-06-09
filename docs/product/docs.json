@@ -44,7 +44,9 @@
       "github": "https://github.com/use-charter/charter"
     }
   },
-  "redirects": [],
+  "redirects": [
+    { "source": "/changelog", "destination": "/changelog/v1-0-0" }
+  ],
   "navigation": {
     "tabs": [
       {
@@ -92,24 +94,19 @@
             "anchor": "Design Philosophy",
             "icon": "lightbulb",
             "pages": ["design-philosophy"]
-          },
-          {
-            "anchor": "Changelog",
-            "icon": "history",
-            "pages": ["changelog"]
           }
         ]
       },
       {
         "tab": "CLI Reference",
-        "groups": [
+        "anchors": [
           {
-            "group": "Overview",
+            "anchor": "Overview",
             "icon": "terminal",
             "pages": ["cli/overview"]
           },
           {
-            "group": "Commands",
+            "anchor": "Commands",
             "icon": "code-2",
             "pages": [
               "cli/doctor",
@@ -173,6 +170,18 @@
               "rules/AE-SUPPRESS-001",
               "rules/AE-SUPPRESS-002",
               "rules/AE-SUPPRESS-003"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Changelog",
+        "groups": [
+          {
+            "group": "Releases",
+            "icon": "history",
+            "pages": [
+              "changelog/v1-0-0"
             ]
           }
         ]

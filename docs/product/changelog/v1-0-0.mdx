@@ -1,13 +1,11 @@
 ---
-title: "Changelog"
-description: "Release history for Charter."
+title: "v1.0.0"
+description: "Charter v1.0 — the full v1 rule set, seven commands, and CI integration."
 ---
 
-## v1.0.0
+**Released:** 2026
 
-Charter v1.0 ships the full v1 rule set, seven commands, and CI integration.
-
-### What's included
+## What's included
 
 - **18 rules** across context, secrets, MCP safety, agent config, environment, CI, testing, autonomy, and governance
 - **7 commands**: `init`, `doctor`, `explain`, `report`, `fix`, `suppress`, `version`
@@ -18,13 +16,13 @@ Charter v1.0 ships the full v1 rule set, seven commands, and CI integration.
 - **MCP catalog**: embedded catalog of known servers with version, deprecation, and advisory data
 - **Signed releases**: cosign keyless signing, SLSA Level 3 provenance, SPDX 2.3 SBOM, Homebrew cask
 
-### Score formula (stable within v1)
+## Score formula
 
 ```
 score = max(0, 100 − B×20 − H×10 − M×4 − L×1)
 final = min(score, applicable_cap)
 ```
 
-Severity caps: any raw secret detected applies a cap of ≤49; any blocker-severity finding applies a cap of ≤59.
+Hard caps: raw secret detected → ≤49, any blocker-severity finding → ≤59.
 
-The formula and its caps are fixed for the v1 major version. Any change to weights or caps will ship in v2 with a migration guide.
+The formula and caps are fixed for the v1 major version. Any change to weights or caps ships in v2 with a migration guide.
