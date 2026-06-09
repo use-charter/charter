@@ -1,66 +1,152 @@
-/* Charter brand polish — linden theme overrides */
+/*
+ * Charter docs — design token overrides for Mintlify maple theme
+ * Tokens: docs/internal/designs/DESIGN-TOKENS.md
+ * Fonts:  Ruda (body/headings) · Atkinson Hyperlegible Mono (code/CLI) · IBM Plex Mono (meta/IDs)
+ */
+
+/* ── External fonts ──────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* ── Semantic token variables ────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-primary-light:    #ffffff;
+  --bg-secondary-light:  #f9fafb;
+  --bg-tertiary-light:   #f3f4f6;
+  --bg-primary-dark:     #0d1117;
+  --bg-secondary-dark:   #161b22;
+  --bg-tertiary-dark:    #1f2937;
+
+  /* Text */
+  --text-primary-dark:   #f9fafb;
+  --text-secondary-dark: #d1d5db;
+  --text-tertiary-dark:  #9ca3af;
+  --text-info-dark:      #60a5fa;  /* Charter blue accent */
+  --text-info-light:     #1d4ed8;
+
+  /* Borders */
+  --border-primary-dark:   #374151;
+  --border-secondary-dark: #2b3240;
+  --border-tertiary-dark:  #21262d;
+
+  /* Accent */
+  --accent:       #2563eb;
+  --accent-light: #60a5fa;
+  --accent-glow:  rgba(37, 99, 235, 0.08);
+}
+
+/* ── Background surface ──────────────────────────── */
+.dark body,
+.dark [class*="content"],
+.dark main {
+  background-color: var(--bg-primary-dark);
+}
+
+/* Subtle blue radial gradient at top — Charter brand depth */
+.dark body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 100% 35% at 50% -5%,
+    var(--accent-glow) 0%,
+    transparent 65%
+  );
+  z-index: 0;
+}
 
 /* ── Navbar ─────────────────────────────────────── */
-#navbar {
-  border-bottom: 1px solid rgba(37, 99, 235, 0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+.dark #navbar,
+.dark [id="navbar"],
+.dark header {
+  background-color: rgba(13, 17, 23, 0.88);
+  border-bottom: 1px solid var(--border-secondary-dark);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-/* ── Sidebar ─────────────────────────────────────── */
-/* Active nav item uses Charter blue accent */
-.dark [data-active="true"],
-.dark [aria-current="page"] {
-  color: #60A5FA !important;
+/* ── Sidebar surfaces ────────────────────────────── */
+.dark aside,
+.dark [class*="sidebar"],
+.dark nav[class*="side"] {
+  background-color: var(--bg-primary-dark);
+  border-right: 1px solid var(--border-tertiary-dark);
 }
 
-/* Sidebar group/anchor headers — tighten letter-spacing */
-.dark nav [class*="group"] > span,
-.dark nav [class*="anchor"] > span {
-  letter-spacing: 0.01em;
+/* ── Code blocks — Atkinson Hyperlegible Mono ────── */
+pre,
+[class*="codeblock"],
+[class*="code-block"],
+code[class*="language"] {
+  font-family: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", Menlo, monospace !important;
 }
 
-/* ── Code blocks ─────────────────────────────────── */
-/* Reinforce Charter Dark surface on code blocks */
 .dark pre,
-.dark [class*="codeblock"] {
-  background-color: #0D1117 !important;
-  border: 1px solid rgba(37, 99, 235, 0.2);
+.dark [class*="codeblock"],
+.dark [class*="code-block"] {
+  background-color: var(--bg-secondary-dark) !important;
+  border: 1px solid var(--border-primary-dark) !important;
+  border-radius: 8px;
 }
 
-/* Inline code — Charter blue tint */
-.dark :not(pre) > code {
-  color: #93C5FD;
-  background-color: rgba(37, 99, 235, 0.1);
-  border: 1px solid rgba(37, 99, 235, 0.15);
+/* ── Inline code — IBM Plex Mono (meta/IDs layer) ── */
+:not(pre) > code {
+  font-family: "IBM Plex Mono", ui-monospace, monospace !important;
+  font-size: 0.82em;
   border-radius: 4px;
-  padding: 0.1em 0.35em;
-  font-size: 0.875em;
+  padding: 0.12em 0.38em;
+}
+
+.dark :not(pre) > code {
+  color: var(--text-info-dark);
+  background-color: rgba(37, 99, 235, 0.10);
+  border: 1px solid rgba(37, 99, 235, 0.22);
 }
 
 /* ── Typography ──────────────────────────────────── */
-/* Headings — Ruda weight bump */
-.dark h1, .dark h2, .dark h3 {
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5 {
   letter-spacing: -0.02em;
+  color: var(--text-primary-dark);
 }
 
-/* ── Links ───────────────────────────────────────── */
-.dark a[class*="prose"] {
-  color: #60A5FA;
-  text-decoration-color: rgba(96, 165, 250, 0.3);
+.dark p, .dark li {
+  color: var(--text-secondary-dark);
 }
 
-.dark a[class*="prose"]:hover {
-  color: #93C5FD;
-  text-decoration-color: rgba(147, 197, 253, 0.5);
+/* ── Prose links ─────────────────────────────────── */
+.dark article a,
+.dark [class*="prose"] a {
+  color: var(--accent-light);
+  text-decoration-color: rgba(96, 165, 250, 0.30);
+  text-underline-offset: 3px;
 }
 
-/* ── Gradient background refinement ─────────────── */
-/* Blend gradient toward Charter Dark */
-.dark body {
-  background: radial-gradient(
-    ellipse 80% 50% at 50% -10%,
-    rgba(37, 99, 235, 0.08) 0%,
-    transparent 70%
-  ), #0D1117;
+.dark article a:hover,
+.dark [class*="prose"] a:hover {
+  color: #93c5fd;
+  text-decoration-color: rgba(147, 197, 253, 0.50);
+}
+
+/* ── Severity callouts (map to Charter danger/warning tokens) */
+.dark [class*="callout-danger"],
+.dark [class*="callout-error"] {
+  background-color: #450a0a;
+  border-color: #991b1b;
+}
+
+.dark [class*="callout-warning"] {
+  background-color: #422006;
+  border-color: #92400e;
+}
+
+.dark [class*="callout-info"],
+.dark [class*="callout-tip"] {
+  background-color: #172554;
+  border-color: #1e40af;
+}
+
+.dark [class*="callout-success"] {
+  background-color: #052e16;
+  border-color: #166534;
 }
