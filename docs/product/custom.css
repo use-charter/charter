@@ -1,169 +1,83 @@
 /*
- * Charter — Mintlify maple theme: Charter design token system
- *
- * Selectors: Mintlify official element / ID hooks (docs/customize/custom-scripts)
+ * Charter — Mintlify maple: Charter design token system
+ * Selectors: Mintlify official hooks (docs/customize/custom-scripts)
  * Tokens:    docs/internal/designs/DESIGN-TOKENS.md
- * Fonts:     Ruda (UI/headings) · Atkinson Hyperlegible Mono (code/CLI) · IBM Plex Mono (meta/IDs)
- * Standards: WCAG 2.2 AA · prefers-reduced-motion · 150-300ms transitions
- * Lint:      No !important (lint/complexity/noImportantStyles)
- *            Specificity achieved by nesting under parent Mintlify IDs
+ * Lint:      no !important · noUnknownTypeSelector suppressed per element
+ *            · specificity ascending (generic → ID-nested)
  */
 
 /* ── External fonts ──────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-/* ── Charter design tokens ───────────────────────── */
+/* ── Design tokens ───────────────────────────────── */
 :root {
-  /* Backgrounds */
-  --bg-0:  #0d1117;
-  --bg-1:  #161b22;
-  --bg-2:  #1f2937;
-  --bg-h:  rgba(255,255,255,0.04);
-
-  /* Text */
-  --tx-0:  #f9fafb;
-  --tx-1:  #d1d5db;
-  --tx-m:  #9ca3af;
-
-  /* Borders */
-  --bd-0:  #374151;
-  --bd-1:  #2b3240;
-  --bd-2:  #21262d;
-
-  /* Severity surfaces (DESIGN-TOKENS.md) */
-  --bg-danger:  #450a0a;  --bd-danger:  #991b1b;
-  --bg-warning: #422006;  --bd-warning: #92400e;
-  --bg-info:    #172554;  --bd-info:    #1e40af;
-  --bg-success: #052e16;  --bd-success: #166534;
-
-  /* Charter blue accent */
+  --bg-0: #0d1117;
+  --bg-1: #161b22;
+  --bg-2: #1f2937;
+  --bg-h: rgba(255,255,255,0.04);
+  --tx-0: #f9fafb;
+  --tx-1: #d1d5db;
+  --tx-m: #9ca3af;
+  --bd-0: #374151;
+  --bd-1: #2b3240;
+  --bd-2: #21262d;
+  --bg-danger:  #450a0a; --bd-danger:  #991b1b;
+  --bg-warning: #422006; --bd-warning: #92400e;
+  --bg-info:    #172554; --bd-info:    #1e40af;
+  --bg-success: #052e16; --bd-success: #166534;
   --ac:    #2563eb;
   --ac-l:  #60a5fa;
   --ac-g:  rgba(37,99,235,0.08);
   --ac-bg: rgba(37,99,235,0.10);
   --ac-b:  rgba(37,99,235,0.22);
-
-  /* Fonts */
   --f-code: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --f-meta: "IBM Plex Mono", ui-monospace, monospace;
-
-  /* Motion */
-  --dur-fast: 150ms;
-  --dur-base: 200ms;
-  --ease:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ══════════════════════════════════════════════════
-   BACKGROUND
-   ══════════════════════════════════════════════════ */
+/* ══ BACKGROUND ══════════════════════════════════════ */
 
-#background-color {
-  background-color: var(--bg-0);
-}
+#background-color { background-color: var(--bg-0); }
 
-/* Radial blue glow at top — Charter brand depth */
 #body-content::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background: radial-gradient(
-    ellipse 100% 30% at 50% 0%,
-    var(--ac-g) 0%,
-    transparent 65%
-  );
+  background: radial-gradient(ellipse 100% 30% at 50% 0%, var(--ac-g) 0%, transparent 65%);
 }
 
-/* ══════════════════════════════════════════════════
-   NAVBAR  — solid Charter Dark, mint-style structure
-   Parent: #navbar (ID specificity already beats Tailwind classes)
-   ══════════════════════════════════════════════════ */
+/* ══ GENERIC ELEMENT RULES (low specificity — must come first) ══ */
 
-#navbar {
-  background-color: var(--bg-0);
-  border-bottom: 1px solid var(--bd-1);
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+nav-logo { opacity: 1; transition: opacity 150ms var(--ease); }
 
-/* Logo */
-#navbar nav-logo {
-  opacity: 1;
-  transition: opacity var(--dur-fast) var(--ease);
-}
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+nav-logo:hover { opacity: 0.85; }
 
-#navbar nav-logo:hover { opacity: 0.85; }
-
-/* Navbar links (e.g. GitHub) */
-#navbar navbar-link {
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+navbar-link {
   color: var(--tx-m);
   font-size: 0.875rem;
   font-weight: 500;
-  transition: color var(--dur-fast) var(--ease);
+  transition: color 150ms var(--ease);
   cursor: pointer;
 }
 
-#navbar navbar-link:hover { color: var(--tx-1); }
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+navbar-link:hover { color: var(--tx-1); }
 
-/* CTA button */
-#topbar-cta-button {
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  transition: opacity var(--dur-fast) var(--ease);
-  cursor: pointer;
-}
-
-#topbar-cta-button:hover { opacity: 0.88; }
-
-/* Search trigger */
-#search-bar-entry {
-  background-color: var(--bg-1);
-  border: 1px solid var(--bd-0);
-  border-radius: 8px;
-  color: var(--tx-m);
-  font-size: 0.875rem;
-  transition: border-color var(--dur-fast) var(--ease),
-              box-shadow var(--dur-fast) var(--ease);
-  cursor: pointer;
-}
-
-#search-bar-entry:hover {
-  border-color: var(--ac-l);
-  box-shadow: 0 0 0 3px var(--ac-bg);
-}
-
-/* Search modal input */
-#search-input {
-  background-color: var(--bg-1);
-  border: 1px solid var(--bd-0);
-  border-radius: 8px;
-  color: var(--tx-0);
-  font-size: 0.9375rem;
-}
-
-#search-input:focus {
-  border-color: var(--ac);
-  box-shadow: 0 0 0 3px var(--ac-bg);
-  outline: none;
-}
-
-/* ══════════════════════════════════════════════════
-   TAB BAR  — mint-style underline indicator
-   Nesting under #navbar gives (ID + element) specificity
-   Active tab: .nav-tabs-item[data-active] = class + attr selector
-   ══════════════════════════════════════════════════ */
-
-#navbar nav-tabs {
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+nav-tabs {
   border-bottom: 1px solid var(--bd-2);
   gap: 0;
   padding: 0;
   background: transparent;
 }
 
-#navbar nav-tabs-item {
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+nav-tabs-item {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--tx-m);
@@ -172,43 +86,22 @@
   border-radius: 0;
   background: transparent;
   padding: 10px 16px;
-  transition: color var(--dur-fast) var(--ease),
-              border-color var(--dur-fast) var(--ease);
+  transition: color 150ms var(--ease), border-color 150ms var(--ease);
   cursor: pointer;
   letter-spacing: 0.005em;
 }
 
-#navbar nav-tabs-item:hover {
-  color: var(--tx-1);
-  background: var(--bg-h);
-}
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+nav-tabs-item:hover { color: var(--tx-1); background: var(--bg-h); }
 
-/* Active tab: Charter blue 2px underline (must use class selector per Mintlify docs) */
-#navbar .nav-tabs-item[data-active] {
-  color: var(--tx-0);
-  border-bottom-color: var(--ac);
-  background: transparent;
-}
-
-/* Mobile */
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
 mobile-nav-tabs-item { color: var(--tx-m); }
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
 mobile-nav-tabs-item[data-active] { color: var(--ac-l); }
 
-/* ══════════════════════════════════════════════════
-   SIDEBAR  — #sidebar gives ID specificity throughout
-   ══════════════════════════════════════════════════ */
-
-#sidebar {
-  background-color: var(--bg-0);
-  border-right: 1px solid var(--bd-2);
-}
-
-#sidebar-content {
-  background-color: var(--bg-0);
-}
-
-/* Section labels */
-#sidebar sidebar-group-header {
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+sidebar-group-header {
   font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -217,313 +110,117 @@ mobile-nav-tabs-item[data-active] { color: var(--ac-l); }
   padding: 6px 0 4px;
 }
 
-/* Section icon */
-#sidebar sidebar-group-icon {
-  color: var(--tx-m);
-  opacity: 0.7;
-  transition: opacity var(--dur-fast) var(--ease);
-}
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+sidebar-group-icon { color: var(--tx-m); opacity: 0.7; transition: opacity 150ms var(--ease); }
 
-#sidebar sidebar-group[data-active] sidebar-group-icon { opacity: 1; }
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+sidebar-nav-group-divider { border-color: var(--bd-2); opacity: 0.5; }
 
-/* Nav links */
-#sidebar-content a {
-  color: var(--tx-1);
-  font-size: 0.875rem;
-  border-radius: 6px;
-  transition: background var(--dur-fast) var(--ease),
-              color var(--dur-fast) var(--ease);
-  cursor: pointer;
-}
-
-#sidebar-content a:hover {
-  background: var(--bg-h);
-  color: var(--tx-0);
-}
-
-/* Active page: Charter blue left border + tinted bg */
-#sidebar-content li[data-active] a {
-  color: var(--ac-l);
-  background: var(--ac-bg);
-  font-weight: 500;
-  border-left: 2px solid var(--ac);
-  padding-left: 8px;
-}
-
-/* Group divider */
-#sidebar sidebar-nav-group-divider {
-  border-color: var(--bd-2);
-  opacity: 0.5;
-}
-
-/* ══════════════════════════════════════════════════
-   TABLE OF CONTENTS
-   ══════════════════════════════════════════════════ */
-
-#table-of-contents {
-  border-left: 1px solid var(--bd-2);
-  background: transparent;
-}
-
-#table-of-contents-content toc-item {
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+toc-item {
   color: var(--tx-m);
   font-size: 0.8125rem;
-  transition: color var(--dur-fast) var(--ease);
+  transition: color 150ms var(--ease);
   cursor: pointer;
 }
 
-#table-of-contents-content toc-item:hover { color: var(--tx-1); }
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+toc-item:hover { color: var(--tx-1); }
 
-#table-of-contents-content toc-item[data-active] {
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+toc-item[data-active] {
   color: var(--ac-l);
   border-left: 2px solid var(--ac);
   padding-left: 8px;
   font-weight: 500;
 }
 
-#table-of-contents-content toc-item[data-active-deepest] {
-  color: var(--ac-l);
-  font-weight: 600;
-}
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+toc-item[data-active-deepest] { color: var(--ac-l); font-weight: 600; }
 
-/* ══════════════════════════════════════════════════
-   CONTENT AREA
-   ══════════════════════════════════════════════════ */
-
-#content-area, #content {
-  background-color: var(--bg-0);
-  position: relative;
-  z-index: 1;
-}
-
-/* Eyebrow label above page title */
-#content eyebrow {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ac-l);
-}
-
-/* ══════════════════════════════════════════════════
-   TYPOGRAPHY
-   #page-title and mdx-content nesting for specificity
-   ══════════════════════════════════════════════════ */
-
-#page-title {
-  font-size: clamp(1.625rem, 3.5vw, 2.125rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--tx-0);
-  line-height: 1.2;
-}
-
-#content mdx-content h2 {
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--tx-0);
-}
-
-#content mdx-content h3,
-#content mdx-content h4 {
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--tx-0);
-}
-
-#content mdx-content p,
-#content mdx-content li {
-  color: var(--tx-1);
-  line-height: 1.72;
-}
-
-/* Prose links */
-#content mdx-content a {
-  color: var(--ac-l);
-  text-underline-offset: 3px;
-  text-decoration-color: rgba(96,165,250,0.30);
-  transition: color var(--dur-fast) var(--ease),
-              text-decoration-color var(--dur-fast) var(--ease);
-}
-
-#content mdx-content a:hover {
-  color: #93c5fd;
-  text-decoration-color: rgba(147,197,253,0.50);
-}
-
-/* ══════════════════════════════════════════════════
-   CODE BLOCKS  — Atkinson Hyperlegible Mono
-   #content nesting beats Tailwind class specificity
-   ══════════════════════════════════════════════════ */
-
-#content code-block {
-  background-color: var(--bg-1);
-  border: 1px solid var(--bd-0);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-#content code-block pre,
-#content code-block code {
-  font-family: var(--f-code);
-  font-size: 0.8125rem;
-  line-height: 1.65;
-}
-
-#content code-group {
-  border: 1px solid var(--bd-0);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-/* Inline code — IBM Plex Mono (meta/ID layer per design tokens) */
-#content mdx-content :not(pre) > code {
-  font-family: var(--f-meta);
-  font-size: 0.82em;
-  color: var(--ac-l);
-  background-color: var(--ac-bg);
-  border: 1px solid var(--ac-b);
-  border-radius: 4px;
-  padding: 0.1em 0.38em;
-}
-
-/* ══════════════════════════════════════════════════
-   CALLOUTS  — severity surface tokens
-   ══════════════════════════════════════════════════ */
-
-#content callout {
-  border-radius: 8px;
-  border-width: 1px;
-  border-style: solid;
-}
-
-#content callout[type="warning"],
-#content callout[data-type="warning"] {
-  background-color: var(--bg-warning);
-  border-color: var(--bd-warning);
-}
-
-#content callout[type="danger"],
-#content callout[type="error"],
-#content callout[data-type="danger"] {
-  background-color: var(--bg-danger);
-  border-color: var(--bd-danger);
-}
-
-#content callout[type="info"],
-#content callout[type="note"],
-#content callout[type="tip"],
-#content callout[data-type="info"] {
-  background-color: var(--bg-info);
-  border-color: var(--bd-info);
-}
-
-#content callout[type="success"],
-#content callout[data-type="success"] {
-  background-color: var(--bg-success);
-  border-color: var(--bd-success);
-}
-
-/* ══════════════════════════════════════════════════
-   CARDS
-   ══════════════════════════════════════════════════ */
-
-#content card {
-  background-color: var(--bg-1);
-  border: 1px solid var(--bd-0);
-  border-radius: 10px;
-  transition: border-color var(--dur-base) var(--ease),
-              background-color var(--dur-base) var(--ease),
-              box-shadow var(--dur-base) var(--ease);
-  cursor: pointer;
-}
-
-#content card:hover {
-  border-color: var(--ac);
-  background-color: var(--bg-2);
-  box-shadow: 0 0 0 1px var(--ac-bg),
-              0 4px 16px rgba(37,99,235,0.12);
-}
-
-/* ══════════════════════════════════════════════════
-   PAGINATION  — card style matching maple reference screenshot
-   ══════════════════════════════════════════════════ */
-
-#pagination {
-  border-top: 1px solid var(--bd-2);
-  margin-top: 3rem;
-  padding-top: 2rem;
-}
-
-#pagination pagination-prev,
-#pagination pagination-next {
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+pagination-prev,
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+pagination-next {
   background-color: var(--bg-1);
   border: 1px solid var(--bd-0);
   border-radius: 12px;
   padding: 18px 22px;
-  transition: border-color var(--dur-base) var(--ease),
-              background-color var(--dur-base) var(--ease),
-              box-shadow var(--dur-base) var(--ease);
+  transition: border-color 200ms var(--ease), background-color 200ms var(--ease), box-shadow 200ms var(--ease);
   cursor: pointer;
 }
 
-#pagination pagination-prev:hover,
-#pagination pagination-next:hover {
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+pagination-prev:hover,
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+pagination-next:hover {
   border-color: var(--ac);
   background-color: var(--bg-2);
   box-shadow: 0 0 0 1px var(--ac-bg);
 }
 
-#pagination pagination-title {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--tx-0);
-  letter-spacing: -0.01em;
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+pagination-title { font-size: 0.9375rem; font-weight: 600; color: var(--tx-0); letter-spacing: -0.01em; }
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+eyebrow { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ac-l); }
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+breadcrumb-item { font-size: 0.8125rem; color: var(--tx-m); }
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+callout { border-radius: 8px; border-width: 1px; border-style: solid; }
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+callout[type="warning"] { background-color: var(--bg-warning); border-color: var(--bd-warning); }
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+callout[type="danger"],
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+callout[type="error"] { background-color: var(--bg-danger); border-color: var(--bd-danger); }
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+callout[type="info"],
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+callout[type="note"],
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+callout[type="tip"] { background-color: var(--bg-info); border-color: var(--bd-info); }
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+callout[type="success"] { background-color: var(--bg-success); border-color: var(--bd-success); }
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+card {
+  background-color: var(--bg-1);
+  border: 1px solid var(--bd-0);
+  border-radius: 10px;
+  transition: border-color 200ms var(--ease), background-color 200ms var(--ease), box-shadow 200ms var(--ease);
+  cursor: pointer;
 }
 
-/* ══════════════════════════════════════════════════
-   STEPS / ACCORDIONS / UPDATE
-   ══════════════════════════════════════════════════ */
-
-#content step {
-  border-left: 2px solid var(--bd-0);
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+card:hover {
+  border-color: var(--ac);
+  background-color: var(--bg-2);
+  box-shadow: 0 0 0 1px var(--ac-bg), 0 4px 16px rgba(37,99,235,0.12);
 }
 
-#content accordion {
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+step { border-left: 2px solid var(--bd-0); }
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+accordion {
   border: 1px solid var(--bd-1);
   border-radius: 8px;
   background-color: var(--bg-1);
-  transition: border-color var(--dur-fast) var(--ease);
+  transition: border-color 150ms var(--ease);
 }
 
-#content accordion:hover { border-color: var(--bd-0); }
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+accordion:hover { border-color: var(--bd-0); }
 
-#content update {
-  border-left: 2px solid var(--bd-0);
-  padding-left: 1.5rem;
-}
-
-/* ══════════════════════════════════════════════════
-   FOOTER
-   ══════════════════════════════════════════════════ */
-
-#footer {
-  border-top: 1px solid var(--bd-2);
-  background-color: var(--bg-0);
-}
-
-/* ══════════════════════════════════════════════════
-   BREADCRUMBS
-   ══════════════════════════════════════════════════ */
-
-breadcrumb-item {
-  font-size: 0.8125rem;
-  color: var(--tx-m);
-}
-
-/* ══════════════════════════════════════════════════
-   KEYBOARD SHORTCUTS
-   ══════════════════════════════════════════════════ */
+/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
+update { border-left: 2px solid var(--bd-0); padding-left: 1.5rem; }
 
 kbd {
   font-family: var(--f-meta);
@@ -535,24 +232,136 @@ kbd {
   padding: 2px 5px;
 }
 
-/* ══════════════════════════════════════════════════
-   FOCUS STATES  (WCAG 2.2 AA)
-   ══════════════════════════════════════════════════ */
+footer { border-top: 1px solid var(--bd-2); background-color: var(--bg-0); }
 
-*:focus-visible {
-  outline: 2px solid var(--ac-l);
-  outline-offset: 2px;
+/* ══ ID-NESTED RULES (higher specificity — must come after generic) ══ */
+
+#navbar {
+  background-color: var(--bg-0);
+  border-bottom: 1px solid var(--bd-1);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
-/* ══════════════════════════════════════════════════
-   REDUCED MOTION  (prefers-reduced-motion)
-   ══════════════════════════════════════════════════ */
+#navbar nav-logo:hover { opacity: 0.85; }
+
+#navbar navbar-link { color: var(--tx-m); }
+#navbar navbar-link:hover { color: var(--tx-1); }
+
+#topbar-cta-button {
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: opacity 150ms var(--ease);
+  cursor: pointer;
+}
+#topbar-cta-button:hover { opacity: 0.88; }
+
+#search-bar-entry {
+  background-color: var(--bg-1);
+  border: 1px solid var(--bd-0);
+  border-radius: 8px;
+  color: var(--tx-m);
+  transition: border-color 150ms var(--ease), box-shadow 150ms var(--ease);
+  cursor: pointer;
+}
+#search-bar-entry:hover { border-color: var(--ac-l); box-shadow: 0 0 0 3px var(--ac-bg); }
+
+#search-input {
+  background-color: var(--bg-1);
+  border: 1px solid var(--bd-0);
+  border-radius: 8px;
+  color: var(--tx-0);
+}
+#search-input:focus { border-color: var(--ac); box-shadow: 0 0 0 3px var(--ac-bg); outline: none; }
+
+/* Active tab — class selector with dot (Mintlify docs: class on standard <a>) */
+#navbar .nav-tabs-item[data-active] {
+  color: var(--tx-0);
+  border-bottom-color: var(--ac);
+  background: transparent;
+}
+
+#sidebar { background-color: var(--bg-0); border-right: 1px solid var(--bd-2); }
+#sidebar-content { background-color: var(--bg-0); }
+
+#sidebar sidebar-group[data-active] sidebar-group-icon { opacity: 1; }
+
+#sidebar-content a {
+  color: var(--tx-1);
+  font-size: 0.875rem;
+  border-radius: 6px;
+  transition: background 150ms var(--ease), color 150ms var(--ease);
+  cursor: pointer;
+}
+#sidebar-content a:hover { background: var(--bg-h); color: var(--tx-0); }
+
+#sidebar-content li[data-active] a {
+  color: var(--ac-l);
+  background: var(--ac-bg);
+  font-weight: 500;
+  border-left: 2px solid var(--ac);
+  padding-left: 8px;
+}
+
+#table-of-contents { border-left: 1px solid var(--bd-2); background: transparent; }
+
+#table-of-contents-content toc-item { color: var(--tx-m); }
+#table-of-contents-content toc-item:hover { color: var(--tx-1); }
+#table-of-contents-content toc-item[data-active] {
+  color: var(--ac-l);
+  border-left: 2px solid var(--ac);
+  padding-left: 8px;
+  font-weight: 500;
+}
+#table-of-contents-content toc-item[data-active-deepest] { color: var(--ac-l); font-weight: 600; }
+
+#content-area, #content { background-color: var(--bg-0); position: relative; z-index: 1; }
+
+#page-title { font-size: clamp(1.625rem, 3.5vw, 2.125rem); font-weight: 800; letter-spacing: -0.03em; color: var(--tx-0); line-height: 1.2; }
+
+#content mdx-content h2 { font-weight: 700; letter-spacing: -0.02em; color: var(--tx-0); }
+#content mdx-content h3, #content mdx-content h4 { font-weight: 600; letter-spacing: -0.01em; color: var(--tx-0); }
+#content mdx-content p, #content mdx-content li { color: var(--tx-1); line-height: 1.72; }
+
+#content mdx-content a {
+  color: var(--ac-l);
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(96,165,250,0.30);
+  transition: color 150ms var(--ease), text-decoration-color 150ms var(--ease);
+}
+#content mdx-content a:hover { color: #93c5fd; text-decoration-color: rgba(147,197,253,0.50); }
+
+#content code-block {
+  background-color: var(--bg-1);
+  border: 1px solid var(--bd-0);
+  border-radius: 8px;
+  overflow: hidden;
+}
+#content code-block pre, #content code-block code { font-family: var(--f-code); font-size: 0.8125rem; line-height: 1.65; }
+#content code-group { border: 1px solid var(--bd-0); border-radius: 8px; overflow: hidden; }
+#content mdx-content :not(pre) > code {
+  font-family: var(--f-meta);
+  font-size: 0.82em;
+  color: var(--ac-l);
+  background-color: var(--ac-bg);
+  border: 1px solid var(--ac-b);
+  border-radius: 4px;
+  padding: 0.1em 0.38em;
+}
+
+#pagination { border-top: 1px solid var(--bd-2); margin-top: 3rem; padding-top: 2rem; }
+#pagination pagination-prev, #pagination pagination-next { background-color: var(--bg-1); border: 1px solid var(--bd-0); border-radius: 12px; }
+#pagination pagination-prev:hover, #pagination pagination-next:hover { border-color: var(--ac); background-color: var(--bg-2); box-shadow: 0 0 0 1px var(--ac-bg); }
+
+#footer { border-top: 1px solid var(--bd-2); background-color: var(--bg-0); }
+
+/* ══ ACCESSIBILITY ══════════════════════════════════ */
+
+*:focus-visible { outline: 2px solid var(--ac-l); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    transition-duration: 0.01ms;
-    animation-duration: 0.01ms;
-  }
-
+  *, *::before, *::after { transition-duration: 0.01ms; animation-duration: 0.01ms; }
   #body-content::before { display: none; }
 }
