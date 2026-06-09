@@ -10,5 +10,8 @@
 - Edge cases: **N/A** (no finding) when no recognized code language is active (docs/config/tooling-only repos). Tooling-only manifests (a `package.json` with only `scripts/*.ts`) and stray secondary-language files (a lone `*.rb` Homebrew formula with no `Gemfile`) are not active. A `//go:embed`'d web asset (e.g. a `report.js` embedded into a Go binary) is a bundled resource, not a language surface, so it does not activate JavaScript/TypeScript even when a build-tooling `package.json` is present. Rust inline unit tests count via the `#[cfg(test)]`/`#[test]` content signal. v1 judges *presence*, not coverage, quantity, or pyramid shape. Validated at 0% FP across 10 real public repos plus Charter's own self-dogfood (`docs/internal/operability-fp-validation.md`).
 - Remediation: add tests for the active language(s) so an agent can run them and self-verify before finishing a task.
 - Scoring impact: `High` (−10); no hard cap.
+- Why: An agent that writes code in a language with no automated tests has no way to verify its own work. Tests are the agent's exit condition — without them it can only produce a diff, not a proof.
+- Auto-fixable: No
+- Related rules: AE-AUTO-001, AE-CI-002
 - Related ADRs: ADR-0023, ADR-0008
 - Related evals: None yet

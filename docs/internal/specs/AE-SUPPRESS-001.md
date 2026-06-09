@@ -10,5 +10,8 @@
 - Edge cases: a suppression entry whose rule never matched any finding this scan and that came from `.charter-suppress.yml` is still audited (non-expired file entries are always evaluated; expired entries are inert and not audited); a dangling inline directive that matched no finding is **not** audited in v1 (inline directives are discovered only at finding locations — see ADR-0013); a `reason` of only whitespace counts as missing; secrets are suppressible like any rule, so a reason-less `AE-SEC-001/002` suppression is audited the same way.
 - Remediation: add a meaningful `reason` to the `.charter-suppress.yml` entry or the inline `charter:ignore` directive describing why the finding is accepted, then commit. Prefer `charter suppress <RULE> --reason "…"` which always writes a reason.
 - Scoring impact: `Medium` — deducts 4 points via the standard formula; no cap.
+- Why: A suppression without a reason is indistinguishable from accident. When a finding re-surfaces after a security review or team rotation, there is no record of why it was acceptable or who decided.
+- Auto-fixable: No
+- Related rules: AE-SUPPRESS-002, AE-SUPPRESS-003
 - Related ADRs: ADR-0013, ADR-0008, ADR-0009
 - Related evals: None yet

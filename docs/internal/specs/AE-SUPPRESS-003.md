@@ -10,5 +10,8 @@
 - Edge cases: zero suppressions (zero denominator) ⇒ never fires; the finding is itself never suppressible and never counted in the denominator (no feedback loop); because it is informational, it does not move a passing repo below threshold; a freshly migrated repo may legitimately trip it during calibration — this is the intended prompt-to-review, and remains advisory only.
 - Remediation: review the suppressed findings — recalibrate noisy rules (file an issue/eval), fix the underlying problems instead of suppressing, or confirm and document the accepted risks with reasons and approvers. This is a prompt to review, not a defect to silence.
 - Scoring impact: none — informational only; the finding is excluded from the severity tally and all caps (ADR-0013).
+- Why: A high suppression rate signals that either the tool is misconfigured for this repo or the team is systematically bypassing its controls. It does not deduct points — it surfaces so the pattern is visible during reviews.
+- Auto-fixable: No
+- Related rules: AE-SUPPRESS-001, AE-SUPPRESS-002
 - Related ADRs: ADR-0013, ADR-0008
 - Related evals: None yet

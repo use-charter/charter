@@ -10,5 +10,8 @@
 - Edge cases: `expires` present but malformed (not `YYYY-MM-DD`) fails **closed** — the engine treats it as inert so it suppresses nothing and the finding stays active (loud); an inert entry is not audited by this rule (only non-expired file entries and matched inline directives are audited); a blank-only `approver` counts as missing; secrets are suppressible like any rule, so an unapproved permanent `AE-SEC-001/002` suppression fires this rule and is not honored (the ≤ 49 cap holds — an approved permanent secret suppression lifts it); an entry that is both reason-less and permanent-without-approver fires both `AE-SUPPRESS-001` (Medium) and `AE-SUPPRESS-002` (High).
 - Remediation: add `approver="<name>"` to the permanent suppression, or convert it to a time-bounded suppression with an `expires` date so it re-surfaces for review. Prefer `charter suppress <RULE> --reason "…" --approver "<name>"` or `--expires 90d`.
 - Scoring impact: `High` — deducts 10 points via the standard formula; no cap.
+- Why: A permanent suppression with no expiry and no approver is an unbounded waiver. It silently removes a finding from the score indefinitely with no human accountability attached.
+- Auto-fixable: No
+- Related rules: AE-SUPPRESS-001, AE-SUPPRESS-003
 - Related ADRs: ADR-0013, ADR-0008, ADR-0009
 - Related evals: None yet

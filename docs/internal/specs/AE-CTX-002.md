@@ -9,5 +9,8 @@
 - Evidence expectations: last-reviewed date if present, plus exact contradictions between the file and repo state.
 - Edge cases: an old date alone is not enough to fail the rule if the content is still factually accurate.
 - Remediation: update the context file to reflect current repo truth and keep review dates fresh.
+- Why: An agent that reads a context file describing the wrong stack or stale commands will make confident mistakes — wrong build commands, wrong test paths, wrong edit scope.
+- Auto-fixable: No
+- Related rules: AE-CTX-001, AE-AUTO-001
 - Related ADRs: ADR-0006
 - Related evals: None yet

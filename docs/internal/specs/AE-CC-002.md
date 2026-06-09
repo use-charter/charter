@@ -10,5 +10,8 @@
 - Edge cases: `.cursor/rules/` content (all tracked files concatenated) is scanned alongside the single-file context candidates; a single-purpose repo with no sensitive paths may legitimately have broad scope (documented false-positive risk); the check is presence-based on concrete sensitive-path tokens, not a semantic policy evaluation; an unreadable tracked context file fails fast (wrapped error), not silently skipped; when no agent context source exists at all, `AE-CTX-001` already fires (Blocker) and `AE-CC-002` does not duplicate the absence finding.
 - Remediation: add an explicit "Off-limits for agents" section to the agent context (or `PERMISSIONS.md`) listing at minimum `.github/workflows/`, `terraform/` or `infra/`, `db/migrations/`, `.env*`, and `secrets/`, then commit the change.
 - Scoring impact: each finding is `High` (−10); no hard cap.
+- Why: Without explicit edit boundaries, an agent has implicit full-repo write access — including CI workflows, migration files, environment config, and secret stores where an unreviewed change has operational or security impact.
+- Auto-fixable: No
+- Related rules: AE-CTX-001, AE-CC-001
 - Related ADRs: ADR-0012, ADR-0006, ADR-0009
 - Related evals: None yet

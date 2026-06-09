@@ -14,5 +14,8 @@
 - Evidence expectations: workflow file path, job name, threshold or gate command, SARIF upload presence when applicable, and whether workflow hygiene tools are present.
 - Edge cases: during pre-implementation bootstrap, CI may legitimately omit `charter doctor` itself if the scanner is not built yet. Once `charter doctor` exists, the repo should run a Charter-related CI gate, not just local quality gates.
 - Remediation: add or harden workflows so the repo's intended quality path is enforced in CI, not just locally.
+- Why: A local Charter pass only covers one developer's current state. Without a CI gate, a PR can introduce context drift, a new MCP server, or a weak suppression that no one catches until the next manual scan.
+- Auto-fixable: Yes — `charter fix --rule AE-CI-002`
+- Related rules: AE-ENV-001, AE-AUTO-001
 - Related ADRs: ADR-0006
 - Related evals: None yet

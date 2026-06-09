@@ -11,5 +11,8 @@
 - Remediation: add the reviewed host to `charter.yaml → mcp.trustedRemotes`, or replace the server with a trusted origin, then commit the change.
 - Catalog (Slice 13, ADR-0021): the effective allowlist is `union(charter.yaml → mcp.trustedRemotes, catalog trustedHosts)`. The catalog ships a baseline of 60+ major vendor-operated remote MCP hosts (GitHub, Vercel, Netlify, Supabase, Neon, Prisma, Figma, Canva, Webflow, Stripe, PayPal, Square, Plaid, Linear, Notion, Atlassian, Asana, monday.com, Intercom, HubSpot, Sentry, Semgrep, Hugging Face, Context7, Exa, DeepWiki, Google Cloud endpoints, the full Cloudflare managed `*.mcp.cloudflare.com` set, and more), so those origins pass without per-repo config (a pure false-positive reduction). The set is intentionally limited to reputable, officially vendor-operated servers — the hobbyist long tail is excluded so unfamiliar origins still prompt review. Unknown remotes still flag; `charter.yaml` remains the per-repo override. Matching stays host-only and case-insensitive.
 - Scoring impact: each finding is `High` (−10); no hard cap.
+- Why: A coding agent should not be pointed at arbitrary remote infrastructure without a team review. Unknown public MCP origins are a supply-chain and data-exfiltration risk — tool calls travel to infrastructure outside the team's visibility.
+- Auto-fixable: No
+- Related rules: AE-MCP-001, AE-MCP-003
 - Related ADRs: ADR-0021, ADR-0011, ADR-0006, ADR-0009
 - Related evals: None yet

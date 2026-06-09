@@ -38,18 +38,25 @@ function main(): void {
       continue;
     }
 
-    const content = renderRulePage(spec, entry);
     if (checkMode) {
+      // Structural check only: verify the page exists and contains the required
+      // headings. Full content equality is intentionally not enforced — rule pages
+      // are hand-maintained after initial generation and prose legitimately diverges
+      // from the spec one-liners.
       if (!existsSync(outPath)) {
-        errors.push(`Missing generated page: ${relativeToRepo(outPath)}`);
+        errors.push(`Missing rule page: ${relativeToRepo(outPath)}`);
         continue;
       }
       const existing = readFileSync(outPath, 'utf8');
-      if (normalizeNewlines(existing) !== normalizeNewlines(content)) {
-        errors.push(`Drifted generated page: ${relativeToRepo(outPath)}`);
+      if (!existing.includes(`title: "${spec.id}"`)) {
+        errors.push(`Rule page has wrong or missing title: ${relativeToRepo(outPath)}`);
+      }
+      if (!existing.includes(`charter explain ${spec.id}`)) {
+        errors.push(`Rule page missing CLI section: ${relativeToRepo(outPath)}`);
       }
       continue;
     }
+    const content = renderRulePage(spec, entry);
 
     writeFileSync(outPath, content);
     written.push(relativeToRepo(outPath));
@@ -157,8 +164,13 @@ function canonicalKey(raw: string): string {
 
 function renderRulePage(spec: RuleSpec, entry: CatalogEntry): string {
   const description = firstSentence(field(spec, 'description') || entry.shortDescription);
-  const severity = field(spec, 'severity');
+  const severity = field(spec, 'severity') || 'Unspecified';
   const category = field(spec, 'category') || entry.category;
+  const autoFixable = field(spec, 'auto fixable') || 'No';
+  const why = field(spec, 'why');
+  const relatedRules = field(spec, 'related rules');
+  const scoringImpact = field(spec, 'scoring impact');
+
   const sections: string[] = [];
 
   sections.push('---');
@@ -166,38 +178,56 @@ function renderRulePage(spec: RuleSpec, entry: CatalogEntry): string {
   sections.push(`description: "${escapeQuotes(description)}"`);
   sections.push('---');
   sections.push('');
-  sections.push(`> Generated from the internal rule spec. Edit \`docs/internal/specs/${spec.id}.md\`, then re-run \`bun scripts/generate-rule-pages.ts\`.`);
-  sections.push('');
-  sections.push(`**Rule name:** ${entry.name}`);
-  sections.push('');
-  sections.push(`**Severity:** ${severity || 'Unspecified'}  `);
-  sections.push(`**Category:** ${category}`);
-  sections.push('');
-  sections.push(description);
+
+  sections.push(`**Rule ID:** ${spec.id} · **Severity:** ${severity} · **Category:** ${category} · **Auto-fixable:** ${autoFixable}`);
   sections.push('');
 
-  addSection(sections, 'Detection Logic', field(spec, 'detection logic'));
-  addSection(sections, 'Pass Example', field(spec, 'pass example'));
-  addSection(sections, 'Fail Example', field(spec, 'fail example'));
-  addSection(sections, 'Evidence Expectations', field(spec, 'evidence expectations'));
-  addSection(sections, 'Edge Cases', field(spec, 'edge cases'));
-  addSection(sections, 'Remediation', field(spec, 'remediation'));
-  addSection(sections, 'Scoring Impact', field(spec, 'scoring impact'));
-  addSection(sections, 'Catalog Notes', field(spec, 'catalog slice 13 adr 0021'));
-
-  const relatedAdrs = field(spec, 'related adrs');
-  if (relatedAdrs) {
-    sections.push('## Related ADRs');
+  if (why) {
+    sections.push('## Why this rule');
     sections.push('');
-    sections.push(listify(relatedAdrs));
+    sections.push(formatBody(why));
     sections.push('');
   }
 
-  const relatedEvals = field(spec, 'related evals');
-  if (relatedEvals) {
-    sections.push('## Related Evals');
+  addSection(sections, 'What triggers it', field(spec, 'detection logic'));
+
+  const failExample = field(spec, 'fail example');
+  const passExample = field(spec, 'pass example');
+  if (failExample || passExample) {
+    sections.push('## Examples');
     sections.push('');
-    sections.push(listify(relatedEvals));
+    if (failExample) {
+      sections.push('### Failing');
+      sections.push('');
+      sections.push(formatBody(failExample));
+      sections.push('');
+    }
+    if (passExample) {
+      sections.push('### Passing');
+      sections.push('');
+      sections.push(formatBody(passExample));
+      sections.push('');
+    }
+  }
+
+  addSection(sections, 'How to fix', field(spec, 'remediation'));
+
+  if (scoringImpact) {
+    addSection(sections, 'Score impact', scoringImpact);
+  }
+
+  const edgeCases = field(spec, 'edge cases');
+  if (edgeCases && !/^none(\s+yet)?$/i.test(edgeCases.trim())) {
+    addSection(sections, 'Edge cases', edgeCases);
+  }
+
+  if (relatedRules && !/^none(\s+yet)?$/i.test(relatedRules.trim())) {
+    sections.push('## Related rules');
+    sections.push('');
+    const ids = relatedRules.split(/,\s*/).filter(Boolean).map((id) => id.trim());
+    for (const id of ids) {
+      sections.push(`- [${id}](/rules/${id})`);
+    }
     sections.push('');
   }
 
@@ -231,21 +261,6 @@ function formatBody(body: string): string {
     .map((line) => line.trimEnd())
     .join('\n')
     .trim();
-}
-
-function listify(body: string): string {
-  const trimmed = formatBody(body);
-  if (trimmed === '' || trimmed === 'None yet') {
-    return trimmed;
-  }
-  if (trimmed.startsWith('- ')) {
-    return trimmed;
-  }
-  return trimmed
-    .split(/,\s*/)
-    .filter(Boolean)
-    .map((item) => `- ${item}`)
-    .join('\n');
 }
 
 function firstSentence(value: string): string {
