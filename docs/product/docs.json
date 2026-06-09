@@ -10,6 +10,19 @@
   "icons": {
     "library": "lucide"
   },
+  "fonts": {
+    "heading": {
+      "family": "Ruda",
+      "weight": 700
+    }
+  },
+  "errors": {
+    "404": {
+      "redirect": false,
+      "title": "Page not found",
+      "description": "This page scored 0/100. Head back to the [introduction](/introduction) or browse the [rules reference](/rules/overview)."
+    }
+  },
   "logo": {
     "light": "/images/logo-light.svg",
     "dark": "/images/logo-dark.svg",
@@ -44,9 +57,7 @@
       "github": "https://github.com/use-charter/charter"
     }
   },
-  "redirects": [
-    { "source": "/changelog", "destination": "/changelog/v1-0-0" }
-  ],
+  "redirects": [],
   "navigation": {
     "tabs": [
       {
@@ -178,11 +189,9 @@
         "tab": "Changelog",
         "groups": [
           {
-            "group": "Releases",
+            "group": "Updates",
             "icon": "history",
-            "pages": [
-              "changelog/v1-0-0"
-            ]
+            "pages": ["changelog"]
           }
         ]
       }
