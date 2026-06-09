@@ -3,51 +3,48 @@ title: "AE-TEST-001"
 description: "A repository's active code language(s) must have automated tests. Agent-readiness depends on the agent being able to *verify its own work*; the AGENTS.md standard expects agents to run programmatic checks and fix failures before finishing a task. A language with source but no tests gives the agent nothing to verify against."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-TEST-001.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-TEST-001 · **Severity:** High · **Category:** Testing · **Auto-fixable:** No
 
-**Rule name:** AutomatedTestsPresent
+## Why this rule
 
-**Severity:** High  
-**Category:** Testing
+An agent that writes code in a language with no automated tests has no way to verify its own work. Tests are the agent's exit condition — without them it can only produce a diff, not a proof.
 
-A repository's active code language(s) must have automated tests. Agent-readiness depends on the agent being able to *verify its own work*; the AGENTS.md standard expects agents to run programmatic checks and fix failures before finishing a task. A language with source but no tests gives the agent nothing to verify against.
+## What triggers it
 
-## Detection Logic
+Charter detects active languages from manifest files committed to the repo — `go.mod` for Go, `package.json` for JavaScript/TypeScript, `Cargo.toml` for Rust, `pyproject.toml` or `requirements.txt` for Python, `pom.xml` or `build.gradle` for Java/Kotlin, and equivalents for Ruby, C#, and PHP.
 
-scans the tracked inventory. A language is **active** only when **both** (a) its project manifest is present (`go.mod`, `package.json`, `Cargo.toml`, `Gemfile`, `pyproject.toml`/`setup.py`/`setup.cfg`/`requirements.txt`, `pom.xml`/`build.gradle*`, `*.csproj`, `composer.json`) **and** (b) it has ≥1 non-test source file *outside tooling directories* (`scripts/`, `tools/`, `testdata/`, `examples/`, `third_party/`, `vendor/`, `node_modules/`, `dist/`, `build/`, `.github/`, `gen/`, `generated/`). The manifest gate rejects a stray secondary-language file (e.g. a Homebrew `.rb` formula in a Rust repo); the source-outside-tooling gate rejects a tooling-only manifest (e.g. a `package.json` driving build scripts in a Go repo); the **embedded-asset gate** excludes any file referenced by a `//go:embed` directive in a tracked `.go` file (a bundled resource of the host Go program — e.g. a `report.js` embedded into the binary — not an independent language surface), so a `go:embed`'d web asset plus a build-tooling `package.json` does not activate JavaScript/TypeScript. Embed patterns resolve relative to the directive's `.go` file directory and cover exact files, directory subtrees (recursive), and `path.Match` globs (with a leading `all:` prefix stripped); since `//go:embed` is Go-only, the scan runs only when a non-Go manifest is present. For each active language, require ≥1 recognized test artifact: a file under a `test/`/`tests/`/`spec/`/`__tests__/` segment (any language), or a per-file name convention — Go `*_test.go`; JS/TS `*.{test,spec}.*`; Python `test_*.py`/`*_test.py`/`conftest.py`; Rust `tests/**.rs` or an inline `#[test]`/`#[cfg(test)]` signal; Java/Kotlin `*Test.{java,kt}`/`*Spec.kt`; Ruby `*_spec.rb`/`*_test.rb`; C# `*Tests.cs`/`*Test.cs`; PHP `*Test.php`.
+A language is only considered active when its manifest is present **and** the repo contains at least one non-test source file for that language outside tooling directories (such as `scripts/`, `vendor/`, `node_modules/`, `dist/`, and `build/`). This prevents a `package.json` that only drives build scripts in a Go repo from triggering a JavaScript test requirement, and it prevents embedded web assets in a Go binary from activating a JavaScript surface.
 
-## Pass Example
+For each active language, Charter then checks whether at least one test file exists. It recognizes standard test conventions: `*_test.go` for Go, `*.test.*` and `*.spec.*` for JavaScript/TypeScript, `test_*.py` / `*_test.py` / `conftest.py` for Python, files under `tests/` for Rust (as well as inline `#[cfg(test)]` markers), `*Test.java` / `*Test.kt` for Java/Kotlin, and equivalents for other supported languages. Files in directories named `test/`, `tests/`, `spec/`, or `__tests__/` also count, regardless of language.
 
-a Go module (`go.mod` + `internal/**/*.go`) with `*_test.go` files — tests present, passes.
+## Examples
 
-## Fail Example
+### Failing
 
-a Go module with `internal/app/app.go` but no `*_test.go` anywhere — flagged High; evidence: `no test files detected for active language: Go`.
+A Go module with source files under `internal/` but no `*_test.go` file anywhere in the repo — flagged High with evidence: `no test files detected for active language: Go`.
 
-## Evidence Expectations
+A TypeScript project with `src/index.ts` and a `package.json` but no `*.test.ts` or `*.spec.ts` files and no `__tests__/` directory — flagged High.
 
-one finding listing each active language lacking tests. No location (repo-level).
+### Passing
 
-## Edge Cases
+A Go module with `go.mod` and at least one `*_test.go` file — passes. A TypeScript project with a `package.json` and files matching `*.test.ts` — passes. A Rust crate where source files contain `#[cfg(test)]` blocks — passes.
 
-**N/A** (no finding) when no recognized code language is active (docs/config/tooling-only repos). Tooling-only manifests (a `package.json` with only `scripts/*.ts`) and stray secondary-language files (a lone `*.rb` Homebrew formula with no `Gemfile`) are not active. A `//go:embed`'d web asset (e.g. a `report.js` embedded into a Go binary) is a bundled resource, not a language surface, so it does not activate JavaScript/TypeScript even when a build-tooling `package.json` is present. Rust inline unit tests count via the `#[cfg(test)]`/`#[test]` content signal. v1 judges *presence*, not coverage, quantity, or pyramid shape. Validated at 0% FP across 10 real public repos plus Charter's own self-dogfood (`docs/internal/operability-fp-validation.md`).
-
-## Remediation
+## How to fix
 
 add tests for the active language(s) so an agent can run them and self-verify before finishing a task.
 
-## Scoring Impact
+## Score impact
 
 `High` (−10); no hard cap.
 
-## Related ADRs
+## Edge cases
 
-- ADR-0023
-- ADR-0008
+**N/A** (no finding) when no recognized code language is active (docs/config/tooling-only repos). Tooling-only manifests (a `package.json` with only `scripts/*.ts`) and stray secondary-language files (a lone `*.rb` Homebrew formula with no `Gemfile`) are not active. A `//go:embed`'d web asset (e.g. a `report.js` embedded into a Go binary) is a bundled resource, not a language surface, so it does not activate JavaScript/TypeScript even when a build-tooling `package.json` is present. Rust inline unit tests count via the `#[cfg(test)]`/`#[test]` content signal. v1 judges *presence*, not coverage, quantity, or pyramid shape. Validated at 0% FP across 10 real public repos plus Charter's own self-dogfood.
 
-## Related Evals
+## Related rules
 
-None yet
+- [AE-AUTO-001](/rules/AE-AUTO-001)
+- [AE-CI-002](/rules/AE-CI-002)
 
 ## CLI
 

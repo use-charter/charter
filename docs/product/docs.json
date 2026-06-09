@@ -3,8 +3,19 @@
   "name": "Charter",
   "theme": "mint",
   "colors": {
-    "primary": "#2563EB"
+    "primary": "#2563EB",
+    "light": "#60A5FA",
+    "dark": "#1D4ED8"
   },
+  "icons": {
+    "library": "lucide"
+  },
+  "logo": {
+    "light": "/images/logo-light.svg",
+    "dark": "/images/logo-dark.svg",
+    "href": "https://use-charter.dev"
+  },
+  "favicon": "/images/favicon.svg",
   "description": "AI-agent readiness, scored. Charter is an offline-first scanner that gives every repo an AI-agent readiness score and shows you how to fix it.",
   "seo": {
     "indexing": "navigable",
@@ -18,25 +29,89 @@
   "search": {
     "prompt": "Search Charter docs..."
   },
-  "metadata": {
-    "timestamp": true
+  "navbar": {
+    "links": [
+      { "label": "GitHub", "href": "https://github.com/use-charter/charter" }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "/quickstart"
+    }
   },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/use-charter/charter"
+    }
+  },
+  "redirects": [],
   "navigation": {
     "tabs": [
       {
         "tab": "Docs",
-        "groups": [
+        "anchors": [
           {
-            "group": "Getting Started",
+            "anchor": "Getting Started",
+            "icon": "rocket",
+            "pages": ["introduction", "installation", "quickstart"]
+          },
+          {
+            "anchor": "How Charter Works",
+            "icon": "compass",
             "pages": [
-              "introduction",
-              "quickstart"
+              "concepts/agent-readiness-model",
+              "concepts/scoring-and-caps",
+              "concepts/fix-engine",
+              "concepts/mcp-safety-model",
+              "concepts/suppression-governance"
             ]
           },
           {
-            "group": "CLI Reference",
+            "anchor": "Guides",
+            "icon": "route",
             "pages": [
-              "cli/overview",
+              "how-to/adopt-in-existing-repo",
+              "how-to/run-in-github-actions",
+              "how-to/use-charter-fix-safely",
+              "how-to/suppress-a-finding",
+              "how-to/investigate-mcp-findings",
+              "how-to/pre-commit-hook"
+            ]
+          },
+          {
+            "anchor": "Configuration",
+            "icon": "sliders-horizontal",
+            "pages": ["config/charter-yaml", "config/policy-profiles"]
+          },
+          {
+            "anchor": "CI & GitHub Action",
+            "icon": "git-branch",
+            "pages": ["ci/github-action"]
+          },
+          {
+            "anchor": "Design Philosophy",
+            "icon": "lightbulb",
+            "pages": ["design-philosophy"]
+          },
+          {
+            "anchor": "Changelog",
+            "icon": "history",
+            "pages": ["changelog"]
+          }
+        ]
+      },
+      {
+        "tab": "CLI Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "icon": "terminal",
+            "pages": ["cli/overview"]
+          },
+          {
+            "group": "Commands",
+            "icon": "code-2",
+            "pages": [
               "cli/doctor",
               "cli/init",
               "cli/fix",
@@ -44,37 +119,6 @@
               "cli/explain",
               "cli/suppress",
               "cli/version"
-            ]
-          },
-          {
-            "group": "Configuration",
-            "pages": [
-              "config/charter-yaml"
-            ]
-          },
-          {
-            "group": "CI & GitHub Action",
-            "pages": [
-              "ci/github-action"
-            ]
-          },
-          {
-            "group": "How-to Guides",
-            "pages": [
-              "how-to/run-in-github-actions",
-              "how-to/adopt-in-existing-repo",
-              "how-to/suppress-a-finding",
-              "how-to/investigate-mcp-findings",
-              "how-to/use-charter-fix-safely"
-            ]
-          },
-          {
-            "group": "Concepts",
-            "pages": [
-              "concepts/agent-readiness-model",
-              "concepts/scoring-and-caps",
-              "concepts/mcp-safety-model",
-              "concepts/suppression-governance"
             ]
           }
         ]
@@ -84,12 +128,12 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": [
-              "rules/overview"
-            ]
+            "icon": "layout-grid",
+            "pages": ["rules/overview"]
           },
           {
             "group": "Context",
+            "icon": "file-text",
             "pages": [
               "rules/AE-CTX-001",
               "rules/AE-CTX-002",
@@ -99,42 +143,32 @@
           },
           {
             "group": "Secrets",
-            "pages": [
-              "rules/AE-SEC-001",
-              "rules/AE-SEC-002"
-            ]
+            "icon": "lock",
+            "pages": ["rules/AE-SEC-001", "rules/AE-SEC-002"]
           },
           {
             "group": "MCP Safety",
-            "pages": [
-              "rules/AE-MCP-001",
-              "rules/AE-MCP-002",
-              "rules/AE-MCP-003"
-            ]
+            "icon": "shield",
+            "pages": ["rules/AE-MCP-001", "rules/AE-MCP-002", "rules/AE-MCP-003"]
           },
           {
             "group": "Agent Config",
-            "pages": [
-              "rules/AE-CC-001",
-              "rules/AE-CC-002"
-            ]
+            "icon": "bot",
+            "pages": ["rules/AE-CC-001", "rules/AE-CC-002"]
           },
           {
             "group": "Environment & CI",
-            "pages": [
-              "rules/AE-ENV-001",
-              "rules/AE-CI-002"
-            ]
+            "icon": "wrench",
+            "pages": ["rules/AE-ENV-001", "rules/AE-CI-002"]
           },
           {
             "group": "Testing & Autonomy",
-            "pages": [
-              "rules/AE-TEST-001",
-              "rules/AE-AUTO-001"
-            ]
+            "icon": "flask-conical",
+            "pages": ["rules/AE-TEST-001", "rules/AE-AUTO-001"]
           },
           {
             "group": "Governance",
+            "icon": "scale",
             "pages": [
               "rules/AE-SUPPRESS-001",
               "rules/AE-SUPPRESS-002",

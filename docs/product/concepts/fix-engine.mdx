@@ -1,0 +1,95 @@
+---
+title: "The Fix Engine"
+description: "How charter fix works: diff-first, backup-before-write, and why some rules are intentionally not auto-fixable."
+---
+
+`charter fix` applies automated remediations for a subset of findings. It is designed around two guarantees: you always see the change before it lands, and your original files are always preserved.
+
+## How it works
+
+The fix cycle is three steps:
+
+1. **Scan.** `charter doctor` finds a fixable finding — a rule violation that Charter knows how to remediate deterministically.
+2. **Diff.** `charter fix --dry-run` computes the proposed change and prints a unified diff to the terminal. Nothing is written.
+3. **Apply.** `charter fix` (without `--dry-run`) backs up the original file to `.charter/backups/<timestamp>/`, then writes the fixed content.
+
+The scan and diff steps are always available without side effects. The apply step requires an explicit invocation.
+
+## The diff-first guarantee
+
+Before Charter writes a single byte, you see exactly what it intends to change. The unified diff shows the before and after for every file the fixer would touch. `--dry-run` exits with the same success or failure code that the apply would produce, but it never touches the filesystem.
+
+This is a hard constraint, not a UI nicety. It exists because a fixer that modifies files without a visible checkpoint is indistinguishable from a bug.
+
+## Backup mechanism
+
+When `charter fix` applies a change, it copies the original file to:
+
+```
+.charter/backups/<timestamp>/<relative-path>
+```
+
+For example, if the fixer modifies `.github/workflows/ci.yml`, the original is preserved at:
+
+```
+.charter/backups/20260601T143022Z/.github/workflows/ci.yml
+```
+
+The backup directory is created fresh for each `charter fix` invocation, keyed by a UTC timestamp. Charter never deletes backup directories and never truncates existing ones. They accumulate until you choose to remove them.
+
+You can add `.charter/backups/` to `.gitignore` to keep them local.
+
+## What is auto-fixable
+
+Four rules have deterministic fixers:
+
+| Rule | What the fixer does |
+|---|---|
+| AE-CTX-001 | Creates `AGENTS.md` from a standard template if the file is absent |
+| AE-CTX-004 | Creates or appends `.gitignore` with agent artifact patterns (e.g. `.aider/`, `.claude/`) |
+| AE-CI-002 | Creates the Charter CI workflow file at `.github/workflows/charter.yml` |
+| AE-MCP-001 | Updates an MCP server package reference to the catalog's current stable version |
+
+These fixers are safe to automate because the correct output is fully determined by the rule specification — there is no ambiguity and no judgment call required.
+
+## What is intentionally not auto-fixable
+
+Two categories of rules will never receive auto-fixers:
+
+**Secrets (AE-SEC-001, AE-SEC-002).** Remediating a committed secret requires rotating the credential, removing it from history, and updating any system that relied on it. Charter can identify the file and line, but it cannot make those decisions for you. An automated rewrite that scrubs the value from a file without rotation would leave you with a false sense of resolution and an actively compromised credential still in use.
+
+**Dangerous command configurations (AE-CC-001).** Rules that flag unsafe patterns in agent hook configurations — unrestricted shell execution, broad glob allowlists — require a human to evaluate the intent behind the configuration and decide on a safer alternative. Charter cannot know whether the hook is a legitimate use case that needs a narrow permission or an oversight that should be removed entirely.
+
+These are not gaps to fill in a future release. They are deliberate boundaries.
+
+## Usage
+
+Preview what `charter fix` would change without writing anything:
+
+```bash
+charter fix --dry-run
+```
+
+Apply fixes for a specific rule only:
+
+```bash
+charter fix --rule AE-CTX-001
+```
+
+Apply all available fixes (with diff printed before each write):
+
+```bash
+charter fix
+```
+
+Target a specific directory:
+
+```bash
+charter fix --path ./my-repo
+```
+
+After applying, run `charter doctor` again to confirm the score has improved:
+
+```bash
+charter doctor
+```

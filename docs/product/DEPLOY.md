@@ -97,8 +97,10 @@ Alternatively, use a wildcard route `use-charter.dev/*` and let the Worker logic
 
 For direct access to the docs site during development:
 
-- **DNS record**: `docs.use-charter.dev CNAME charter.mintlify.dev` (proxied — orange cloud)
+- **DNS record**: `docs.use-charter.dev CNAME charter.mintlify.dev` (DNS only — grey cloud; orange cloud breaks Mintlify's SSL certificate provisioning)
 - This is optional. The primary access path is `use-charter.dev/docs/*` via the Worker.
+- **Mintlify dashboard**: add `use-charter.dev` as the custom domain in Mintlify project settings. The Worker sets `X-Forwarded-Host: use-charter.dev` so Mintlify recognises its public hostname.
+- **Root placeholder record**: `use-charter.dev A 192.0.2.1` (proxied — orange cloud) must exist so Worker routes fire on the zone. `192.0.2.1` is a non-routable RFC 5737 test address; the Worker intercepts before the IP is ever used.
 
 ## Redirects (Mintlify-side)
 

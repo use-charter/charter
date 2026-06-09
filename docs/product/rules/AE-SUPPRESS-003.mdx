@@ -3,51 +3,50 @@ title: "AE-SUPPRESS-003"
 description: "A repository that suppresses a large share of its findings has likely stopped trusting Charter or accumulated unreviewed risk; this surfaces that signal without punishing the score, so teams self-correct rather than mute Charter entirely."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-SUPPRESS-003.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-SUPPRESS-003 · **Severity:** Medium (informational — does not deduct points or affect the score) · **Category:** Governance · **Auto-fixable:** No
 
-**Rule name:** SuppressionRate
+## Why this rule
 
-**Severity:** Medium (informational — does not deduct points or affect the score)  
-**Category:** Governance
+A high suppression rate signals that either the tool is misconfigured for this repo or the team is systematically bypassing its controls. It does not deduct points — it surfaces so the pattern is visible during reviews.
 
-A repository that suppresses a large share of its findings has likely stopped trusting Charter or accumulated unreviewed risk; this surfaces that signal without punishing the score, so teams self-correct rather than mute Charter entirely.
+## What triggers it
 
-## Detection Logic
+After scoring, Charter computes the suppression rate for the repo: the number of suppressed findings divided by the total of active plus suppressed findings (governance findings like this one are excluded from the denominator). When that rate exceeds 30% and there is at least one suppression in the repo, Charter surfaces a single informational finding.
 
-after the active/suppressed partition, the governance check computes the suppression rate `suppressed / (active_rule_findings + suppressed)`, where `active_rule_findings` counts active findings from the scanning rules (governance findings are excluded from the denominator to avoid a feedback loop). It emits a single **informational** finding when the denominator is non-zero **and** the rate is `> 0.30` (the audit checklist's 30% threshold). The finding carries `Informational: true`: it is listed in output but `scoring.Calculate` skips it, so it neither deducts points nor engages any cap. The 30% threshold is a fixed v1 constant; making it profile-tunable is deferred to the policy-profiles slice.
+This finding is **informational only** — it carries no point deduction, does not engage any score cap, and cannot itself be suppressed. It is listed in Charter output so the pattern is visible, but it does not change the score.
 
-## Pass Example
+## Examples
 
-a repo with 10 active findings and 1 suppression (rate 9%, below 30%), or a repo with no suppressions — no finding.
+### Triggers
 
-## Fail Example
+A repo with 3 active findings and 6 suppressions has a suppression rate of 67% — one informational finding is reported. The score reflects only the 3 active findings and is unchanged by this notice.
 
-a repo with 3 active findings and 6 suppressions (9 total, rate 67% > 30%) — one informational finding stating the rate; the score is computed from the 3 active findings only and is unchanged by this finding.
+### Does not trigger
 
-## Evidence Expectations
+A repo with 10 active findings and 1 suppression has a rate of 9% — below the 30% threshold, no finding. A repo with no suppressions at all also produces no finding.
 
-a file-level location of `.charter-suppress.yml` (the governance artifact) and an evidence string stating the suppression rate and counts (e.g., `6 of 9 findings suppressed (67%) — high suppression rate`). No per-finding code location.
+## How to fix
 
-## Edge Cases
+This finding is a prompt to review, not a defect to silence. Examine the suppressed findings and ask whether each one represents a genuine, documented acceptance of risk:
+
+- If a finding was suppressed to avoid noise rather than because the risk was evaluated, consider fixing the underlying problem instead.
+- If suppressions are accurate but accumulating, review whether any can be lifted as the codebase improves.
+- Confirm that each remaining suppression has a `reason:` and, where it is permanent, an `approver:` (see AE-SUPPRESS-001 and AE-SUPPRESS-002).
+
+A high suppression rate is not automatically wrong — a freshly migrated repo may legitimately have many accepted findings during initial calibration. The goal is intentional suppression, not the absence of it.
+
+## Score impact
+
+none — informational only; the finding is excluded from the severity tally and all caps.
+
+## Edge cases
 
 zero suppressions (zero denominator) ⇒ never fires; the finding is itself never suppressible and never counted in the denominator (no feedback loop); because it is informational, it does not move a passing repo below threshold; a freshly migrated repo may legitimately trip it during calibration — this is the intended prompt-to-review, and remains advisory only.
 
-## Remediation
+## Related rules
 
-review the suppressed findings — recalibrate noisy rules (file an issue/eval), fix the underlying problems instead of suppressing, or confirm and document the accepted risks with reasons and approvers. This is a prompt to review, not a defect to silence.
-
-## Scoring Impact
-
-none — informational only; the finding is excluded from the severity tally and all caps (ADR-0013).
-
-## Related ADRs
-
-- ADR-0013
-- ADR-0008
-
-## Related Evals
-
-None yet
+- [AE-SUPPRESS-001](/rules/AE-SUPPRESS-001)
+- [AE-SUPPRESS-002](/rules/AE-SUPPRESS-002)
 
 ## CLI
 

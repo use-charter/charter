@@ -3,52 +3,44 @@ title: "AE-SEC-002"
 description: "No raw secret patterns in MCP or adjacent config files — .mcp.json, .mcp.yml, .cursor/mcp.json, .claude/settings.json, claude_desktop_config.json, cline_mcp_settings.json, and any `*.pkl` file with path containing `mcp` or `config`."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-SEC-002.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-SEC-002 · **Severity:** Blocker · **Category:** Secrets · **Auto-fixable:** No
 
-**Rule name:** NoSecretsInMCPConfig
+## Why this rule
 
-**Severity:** Blocker  
-**Category:** Secrets
+MCP configurations are read by the agent runtime before tools execute. A raw credential in mcp.json is exposed to any model or log that processes the tool-call context — and unlike source code, MCP configs are intentionally agent-visible by design.
 
-No raw secret patterns in MCP or adjacent config files — .mcp.json, .mcp.yml, .cursor/mcp.json, .claude/settings.json, claude_desktop_config.json, cline_mcp_settings.json, and any `*.pkl` file with path containing `mcp` or `config`.
+## What triggers it
 
-## Detection Logic
+Charter scans tracked MCP configuration files — `.mcp.json`, `mcp.json`, `.cursor/mcp.json`, and `.vscode/mcp.json` — for the same high-confidence token patterns used by AE-SEC-001. It looks for literal values matching known secret prefixes: OpenAI `sk-` tokens (20+ characters), GitHub `ghp_` tokens (30+ characters), AWS access key IDs beginning with `AKIA`, Slack bot tokens starting with `xoxb-`, and PEM private key headers.
 
-shared detector `DetectLine` scans config files for high-confidence token patterns; env-var references (`"${OPENAI_API_KEY}"`, `"$OPENAI_API_KEY"`) are neutralized and **pass**; literal secret values matching OpenAI/GitHub/AWS/Slack prefixes or PEM headers are flagged; redacted in output (first 4 chars + `…`).
+Environment variable references — both `${VAR}` and `$VAR` syntax — are neutralized before matching and always pass. Placeholder strings such as `your-api-key-here` also pass. Only literal credential values trigger the finding. Detected secrets are redacted in Charter output (first 4 characters followed by `…`).
 
-## Pass Example
+## Examples
 
-`.mcp.json` with `"env": {"OPENAI_API_KEY": "${OPENAI_API_KEY}"}` — env-ref passes; `"api_key": "your-api-key-here"` — placeholder passes.
+### Failing
 
-## Fail Example
+`.mcp.json` containing `"api_key": "sk-proj-abc123…T3BlbkFJXxyzABC"` — a real OpenAI token of sufficient length is detected and reported as `sk-p…`.
 
-`.mcp.json` containing `"api_key": "sk-proj-abc123…T3BlbkFJXxyzABC"` — detected and redacted as `sk-p…`.
+### Passing
 
-## Evidence Expectations
+`.mcp.json` with `"env": {"OPENAI_API_KEY": "${OPENAI_API_KEY}"}` — the env-var reference is safe and passes. A field set to `"your-api-key-here"` also passes.
 
-a structured location (config file path + 1-based line) plus a redacted secret value (never the raw value); env-refs and placeholders explicitly pass.
+## How to fix
 
-## Edge Cases
+Remove the literal secret from the MCP config file, rotate it externally, and replace it with an environment variable reference — for example `"key": "${ENV_VAR_NAME}"`. Move runtime credentials to a secrets manager and inject them at startup rather than storing them in tracked config files.
+
+## Score impact
+
+when any AE-SEC-001 or AE-SEC-002 finding is present, final Charter score is hard-capped at **49**.
+
+## Edge cases
 
 environment variable references (both `${VAR}` and `$VAR` syntax) are intentionally safe and never flagged; only literal string values match detection.
 
-## Remediation
+## Related rules
 
-replace literal secrets with environment variable references (`"key": "${ENV_VAR_NAME}"`); move secrets to a runtime secrets manager.
-
-## Scoring Impact
-
-when any AE-SEC-001 or AE-SEC-002 finding is present, final Charter score is hard-capped at **49** (per ADR-0008, independent of other caps).
-
-## Related ADRs
-
-- ADR-0006
-- ADR-0007
-- ADR-0008
-
-## Related Evals
-
-None yet
+- [AE-SEC-001](/rules/AE-SEC-001)
+- [AE-MCP-001](/rules/AE-MCP-001)
 
 ## CLI
 

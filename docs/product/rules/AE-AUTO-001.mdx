@@ -3,51 +3,55 @@ title: "AE-AUTO-001"
 description: "The command an agent runs to verify the project (its tests) must be **discoverable and runnable**. The AGENTS.md standard calls the exact CLI commands (install/test/lint/build) &quot;the single highest-value section&quot; for agents. AE-CTX-001 checks that a verification command is *mentioned* in the context file; AE-AUTO-001 checks the repo actually *exposes* a runnable one."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-AUTO-001.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-AUTO-001 · **Severity:** Medium · **Category:** Autonomy · **Auto-fixable:** No
 
-**Rule name:** VerificationCommandDiscoverable
+## Why this rule
 
-**Severity:** Medium  
-**Category:** Autonomy
+Even with tests present, an agent needs to know how to run them. A discoverable command closes the agent's work loop — run, observe, fix, repeat — without guessing.
 
-The command an agent runs to verify the project (its tests) must be **discoverable and runnable**. The AGENTS.md standard calls the exact CLI commands (install/test/lint/build) "the single highest-value section" for agents. AE-CTX-001 checks that a verification command is *mentioned* in the context file; AE-AUTO-001 checks the repo actually *exposes* a runnable one.
+## What triggers it
 
-## Detection Logic
+This rule only applies when at least one code language is active in the repo (see AE-TEST-001). Charter checks whether a test or verification command is discoverable from the repo's tracked files.
 
-applies only when a code language is active (see AE-TEST-001). Passes when the test command is discoverable via **either** (a) a task runner declaring a test/check entrypoint — `Makefile` (`test:`/`check:`), `justfile`/`.justfile` (`test`/`check` recipe), `Taskfile.yml`/`Taskfile.yaml` or `moon.yml` (`test:`/`check:` task), `mise.toml`/`.mise.toml` (`[tasks.test]`/`[tasks.check]`), or `package.json` `scripts.test`/`test:*` — **or** (b) the active language's conventional zero-config toolchain: Go (`go.mod` → `go test`), Rust (`Cargo.toml` → `cargo test`), Python when pytest is configured (`pytest.ini`/`tox.ini`/`[tool.pytest…]`/`[tool:pytest]` → `pytest`).
+A command is considered discoverable if any of the following signals exist:
 
-## Pass Example
+- A `Makefile` with a `test:` or `check:` target
+- A `justfile` or `.justfile` with a `test` or `check` recipe
+- A `Taskfile.yml` or `Taskfile.yaml` with a `test:` or `check:` task
+- A `moon.yml` task named `test` or `check`
+- A `mise.toml` or `.mise.toml` with a `[tasks.test]` or `[tasks.check]` section
+- A `package.json` with a `test` key (or a `test:*` variant) under `scripts`
 
-a Go module (`go.mod`) — `go test` is conventional and discoverable, passes with no runner required. A JS app with `package.json` `scripts.test` — passes.
+For languages with a well-known conventional test command, no task runner is required: Go repos with `go.mod` satisfy the check via `go test`, Rust repos with `Cargo.toml` satisfy it via `cargo test`, and Python repos satisfy it via `pytest` when a pytest config file is present (`pytest.ini`, `tox.ini`, or a `[tool.pytest.ini_options]` section in `pyproject.toml`).
 
-## Fail Example
+The finding fires when none of these signals exist for an active language.
 
-a JS app with `src/index.ts` + tests but no `test` script and no task runner — flagged Medium; an agent has no discoverable way to run the checks.
+## Examples
 
-## Evidence Expectations
+### Failing
 
-one finding stating no runner test target and no conventional toolchain applies.
+A TypeScript project with source files and tests in place, but no `test` script in `package.json` and no task runner configured — flagged Medium. An agent reading the repo has no reliable way to invoke the test suite.
 
-## Edge Cases
+### Passing
 
-**N/A** when no language is active. **FP guard:** a single-language Go/Rust/Cargo repo is never penalized for lacking a `Makefile` — its toolchain is the contract. Conventional Python detection requires a pytest config (not merely `.py` files), since `python` alone is not a zero-config test command.
+A Go module with `go.mod` — `go test ./...` is the conventional command and is always discoverable, no additional config needed. A JavaScript project with `"scripts": { "test": "jest" }` in `package.json` — passes. A repo using `mise.toml` with a `[tasks.test]` section — passes regardless of language.
 
-## Remediation
+## How to fix
 
 expose a test command via a task runner (Makefile/justfile/Taskfile/package.json scripts/mise/moon) so an agent can discover and run it.
 
-## Scoring Impact
+## Score impact
 
 `Medium` (−4); no hard cap.
 
-## Related ADRs
+## Edge cases
 
-- ADR-0023
-- ADR-0008
+**N/A** when no language is active. **FP guard:** a single-language Go/Rust/Cargo repo is never penalized for lacking a `Makefile` — its toolchain is the contract. Conventional Python detection requires a pytest config (not merely `.py` files), since `python` alone is not a zero-config test command.
 
-## Related Evals
+## Related rules
 
-None yet
+- [AE-TEST-001](/rules/AE-TEST-001)
+- [AE-ENV-001](/rules/AE-ENV-001)
 
 ## CLI
 

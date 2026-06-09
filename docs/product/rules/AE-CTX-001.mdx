@@ -3,46 +3,40 @@ title: "AE-CTX-001"
 description: "Agent context file must exist, be meaningful, and fit budget."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-CTX-001.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-CTX-001 · **Severity:** Blocker · **Category:** Context · **Auto-fixable:** Yes — `charter fix --rule AE-CTX-001`
 
-**Rule name:** AgentContextFilePresent
+## Why this rule
 
-**Severity:** Blocker  
-**Category:** Context
+Agents operate from what they can read in the repo. A missing or empty context file means the agent starts every session with no orientation, guesses at the stack, and may edit files it should leave alone.
 
-Agent context file must exist, be meaningful, and fit budget.
+## What triggers it
 
-## Detection Logic
+Charter looks for a context file (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, or equivalent) in the repo root. The finding fires if no context file exists, if the file is empty or contains only placeholder text, or if the file exceeds the 600-token budget that agent context windows reliably fit.
 
-inspect canonical agent-visible files in repo root, confirm at least one valid context file exists, confirm it is non-empty, contains project summary + tech stack + edit boundaries + verification command, and flag files that exceed the configured token budget.
+## Examples
 
-## Pass Example
+### Failing
 
-`AGENTS.md` exists with project state, commands, hard constraints, edit scope, and context loading.
+The repo has no `AGENTS.md` or equivalent, an empty `AGENTS.md`, a file with only boilerplate like "Add your project details here", or a file that runs so long it would be truncated in the agent's context window.
 
-## Fail Example
+### Passing
 
-no agent context file, empty placeholder text, or a context file that is so large it risks truncation.
+`AGENTS.md` at the repo root with a project summary, the active tech stack, a verification command (`moon run :check`), and explicit edit boundaries. Under 600 tokens.
 
-## Evidence Expectations
+## How to fix
 
-file path, detected format, first substantive lines, and note whether the file appears over budget.
+Run `charter fix --rule AE-CTX-001` to scaffold a minimal `AGENTS.md`. Edit it to reflect your actual stack, commands, and off-limits paths. Keep it tight — the value of a context file degrades when it grows past the token budget.
 
-## Edge Cases
+## Edge cases
 
 a repo using `CLAUDE.md`, `DESIGN.md`, or `SKILL.md` instead of `AGENTS.md` can pass if the file satisfies the same content requirements.
 
-## Remediation
+## Related rules
 
-create or tighten the canonical context file and keep it small enough to survive agent context windows.
-
-## Related ADRs
-
-- ADR-0006
-
-## Related Evals
-
-None yet
+- [AE-CTX-002](/rules/AE-CTX-002)
+- [AE-CTX-004](/rules/AE-CTX-004)
+- [AE-CTX-006](/rules/AE-CTX-006)
+- [AE-CC-002](/rules/AE-CC-002)
 
 ## CLI
 

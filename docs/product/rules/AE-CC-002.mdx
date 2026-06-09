@@ -3,52 +3,46 @@ title: "AE-CC-002"
 description: "The agent context must explicitly constrain the agent's edit scope by declaring concrete off-limits paths, so an agent is not granted implicit full-repo write access (OWASP MCP Top 10 beta, MCP02 Privilege Escalation via Scope Creep)."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-CC-002.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-CC-002 · **Severity:** High · **Category:** Agent Config · **Auto-fixable:** No
 
-**Rule name:** ExplicitAgentEditScope
+## Why this rule
 
-**Severity:** High  
-**Category:** Agent Config
+Without explicit edit boundaries, an agent has implicit full-repo write access — including CI workflows, migration files, environment config, and secret stores where an unreviewed change has operational or security impact.
 
-The agent context must explicitly constrain the agent's edit scope by declaring concrete off-limits paths, so an agent is not granted implicit full-repo write access (OWASP MCP Top 10 beta, MCP02 Privilege Escalation via Scope Creep).
+## What triggers it
 
-## Detection Logic
+Charter reads all tracked agent context files — `AGENTS.md`, `CLAUDE.md`, `.windsurfrules`, `.github/copilot-instructions.md`, `opencode.md`, `codex.md`, `DESIGN.md`, `SKILL.md`, every file under `.cursor/rules/`, and `PERMISSIONS.md` when present — and checks whether any of them explicitly declare off-limits paths.
 
-reads the agent context — the `agentcontext` files (AGENTS.md, CLAUDE.md, .windsurfrules, .github/copilot-instructions.md, opencode.md, codex.md, DESIGN.md, SKILL.md), every tracked file under the `.cursor/rules/` directory, and `PERMISSIONS.md` when present. Passes when the context declares a concrete off-limits / protected-path boundary — recognized sensitive-path tokens presented as off-limits (`.env`, `secrets`, `.github/workflows`, `terraform`, `infra`, `db/migrations`, `credentials`) or an explicit reference to `PERMISSIONS.md`. Flags High when no concrete off-limits-path declaration is found across any context source. An unreadable tracked context file fails the scan fast with a wrapped error rather than being silently skipped. This is intentionally stricter than `AE-CTX-001`, which only requires a generic edit-boundary mention.
+The finding fires when none of those sources contains a concrete boundary listing sensitive directories. Charter looks for recognized sensitive-path tokens presented as restricted or off-limits: `.env`, `secrets`, `.github/workflows`, `terraform`, `infra`, `db/migrations`, and `credentials`. A context file that references `PERMISSIONS.md` as the authoritative boundary document also satisfies the check. A context that describes the project and stack thoroughly but never draws an edit boundary is flagged High.
 
-## Pass Example
+This rule is intentionally stricter than AE-CTX-001, which only requires a generic mention of edit scope. AE-CC-002 requires concrete path declarations.
 
-`AGENTS.md` with an "Edit Scope / Off-limits" section listing `.env*`, `secrets/`, and signing keys (Charter's own AGENTS.md), or a context file that points to `PERMISSIONS.md` — passes.
+## Examples
 
-## Fail Example
+### Failing
 
-an `AGENTS.md` that describes the project and stack but never declares any off-limits paths or edit boundaries — flagged High.
+An `AGENTS.md` that documents the project architecture and commands but contains no section declaring paths the agent must not edit — flagged High.
 
-## Evidence Expectations
+### Passing
 
-a file-level location (the context file evaluated) and an evidence string stating that no concrete off-limits-path declaration was found (and which context files were checked).
+An `AGENTS.md` with a dedicated "Off-limits" or "Edit Scope" section listing `.env*`, `secrets/`, `.github/workflows/`, and signing keys passes. A context file that delegates to `PERMISSIONS.md` for the full boundary list also passes.
 
-## Edge Cases
+## How to fix
 
-`.cursor/rules/` content (all tracked files concatenated) is scanned alongside the single-file context candidates; a single-purpose repo with no sensitive paths may legitimately have broad scope (documented false-positive risk); the check is presence-based on concrete sensitive-path tokens, not a semantic policy evaluation; an unreadable tracked context file fails fast (wrapped error), not silently skipped; when no agent context source exists at all, `AE-CTX-001` already fires (Blocker) and `AE-CC-002` does not duplicate the absence finding.
+Add an explicit off-limits section to your agent context file — or to a `PERMISSIONS.md` that the context references — listing at minimum `.github/workflows/`, `terraform/` or `infra/`, `db/migrations/`, `.env*`, and `secrets/`. Commit the change so every agent session inherits the boundary.
 
-## Remediation
-
-add an explicit "Off-limits for agents" section to the agent context (or `PERMISSIONS.md`) listing at minimum `.github/workflows/`, `terraform/` or `infra/`, `db/migrations/`, `.env*`, and `secrets/`, then commit the change.
-
-## Scoring Impact
+## Score impact
 
 each finding is `High` (−10); no hard cap.
 
-## Related ADRs
+## Edge cases
 
-- ADR-0012
-- ADR-0006
-- ADR-0009
+`.cursor/rules/` content (all tracked files concatenated) is scanned alongside the single-file context candidates; a single-purpose repo with no sensitive paths may legitimately have broad scope (documented false-positive risk); the check is presence-based on concrete sensitive-path tokens, not a semantic policy evaluation; an unreadable tracked context file fails fast (wrapped error), not silently skipped; when no agent context source exists at all, `AE-CTX-001` already fires (Blocker) and `AE-CC-002` does not duplicate the absence finding.
 
-## Related Evals
+## Related rules
 
-None yet
+- [AE-CTX-001](/rules/AE-CTX-001)
+- [AE-CC-001](/rules/AE-CC-001)
 
 ## CLI
 

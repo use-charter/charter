@@ -3,46 +3,44 @@ title: "AE-ENV-001"
 description: "Toolchain, lockfiles, and hooks should make the repo reproducible."
 ---
 
-> Generated from the internal rule spec. Edit `docs/internal/specs/AE-ENV-001.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+**Rule ID:** AE-ENV-001 · **Severity:** Medium · **Category:** Environment · **Auto-fixable:** No
 
-**Rule name:** ReproducibleToolchain
+## Why this rule
 
-**Severity:** Medium  
-**Category:** Environment
+An agent that cannot reproduce the project's toolchain installs the wrong version, runs tests against the wrong runtime, and produces fixes that pass locally but break in CI or on a colleague's machine.
 
-Toolchain, lockfiles, and hooks should make the repo reproducible.
+## What triggers it
 
-## Detection Logic
+Charter checks that every active language in the repo has a pinned, committed toolchain declaration. Accepted forms include `mise.toml` or `.mise.toml` (universal version manager), language-native files such as `go.mod toolchain`, `.nvmrc` or `.node-version` for Node.js, `pyproject.toml` `requires-python`, or `rust-toolchain.toml`, and environment-level alternatives such as `devcontainer.json` or `flake.nix`. If no toolchain declaration exists for an active language, Charter flags the finding.
 
-inspect runtime pin declarations, committed lockfiles, and committed hook manager config; fail when active languages or repo tooling cannot be reproduced from tracked files.
+The finding also fires in two additional cases: no lockfile is committed for a language that produces one (for example `go.sum`, `package-lock.json`, `yarn.lock`, `Cargo.lock`, or `uv.lock`), or no hook manager configuration is committed to the repo. Accepted hook manager files include `hk.pkl`, any file under `.husky/`, `lefthook.yml`, and `.pre-commit-config.yaml`. Without a committed hook config, pre-commit enforcement is local-only and cannot be verified by an agent or reproduced in CI.
 
-## Pass Example
+## Examples
 
-`mise.toml`, `mise.lock`, `go.mod`, and `hk.pkl` align with repo automation and verification commands.
+### Failing
 
-## Fail Example
+A Node.js repo with `package.json` but no `.nvmrc`, no `engines` field, and no `package-lock.json` committed — the runtime is floating and the dependency graph is not reproducible.
 
-floating runtimes, missing lockfiles, or task/hook behavior that depends on untracked local files.
+A Go repo with `go.mod` but no `go.sum` committed — the lockfile is missing.
 
-## Evidence Expectations
+A repo with CI and tests but no committed hook manager config — local hook behavior is unverifiable.
 
-which toolchain file covers which language, which lockfiles exist, and which hook manager is committed.
+### Passing
 
-## Edge Cases
+A repo with `mise.toml` pinning Go and Node versions, `go.sum` and `package-lock.json` committed, and `hk.pkl` declaring pre-commit hooks — fully reproducible from tracked files.
+
+## How to fix
+
+Pin each active language runtime in a tracked config file and commit the corresponding lockfile. Add a hook manager config file (`hk.pkl`, `.husky/`, `lefthook.yml`, or `.pre-commit-config.yaml`) so that pre-commit behavior is defined in the repo rather than relying on local developer setup.
+
+## Edge cases
 
 partial language coverage is acceptable only if the uncovered language is not active in the repo; local-only helper scripts do not satisfy reproducibility for tracked task config.
 
-## Remediation
+## Related rules
 
-pin the runtime in tracked config, commit the lockfile, and ensure local/hook/CI behavior all derive from the same tracked baseline.
-
-## Related ADRs
-
-- ADR-0006
-
-## Related Evals
-
-None yet
+- [AE-CI-002](/rules/AE-CI-002)
+- [AE-AUTO-001](/rules/AE-AUTO-001)
 
 ## CLI
 
