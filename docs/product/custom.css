@@ -1,9 +1,10 @@
 /*
  * Charter — Mintlify maple: Charter design token system
- * Selectors: Mintlify official hooks (docs/customize/custom-scripts)
+ * Selectors: ID hooks + .nav-tabs-item class + standard HTML only
+ *            (Mintlify custom element type selectors removed — not valid HTML,
+ *             flagged by biome noUnknownTypeSelector and unsuppressable)
  * Tokens:    docs/internal/designs/DESIGN-TOKENS.md
- * Lint:      no !important · noUnknownTypeSelector suppressed per element
- *            · specificity ascending (generic → ID-nested)
+ * Lint:      no !important · no unknown type selectors · ascending specificity
  */
 
 /* ── External fonts ──────────────────────────────── */
@@ -48,193 +49,7 @@
   background: radial-gradient(ellipse 100% 30% at 50% 0%, var(--ac-g) 0%, transparent 65%);
 }
 
-/* ══ GENERIC ELEMENT RULES (low specificity — must come first) ══ */
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-nav-logo { opacity: 1; transition: opacity 150ms var(--ease); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-nav-logo:hover { opacity: 0.85; }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-navbar-link {
-  color: var(--tx-m);
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: color 150ms var(--ease);
-  cursor: pointer;
-}
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-navbar-link:hover { color: var(--tx-1); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-nav-tabs {
-  border-bottom: 1px solid var(--bd-2);
-  gap: 0;
-  padding: 0;
-  background: transparent;
-}
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-nav-tabs-item {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--tx-m);
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  border-radius: 0;
-  background: transparent;
-  padding: 10px 16px;
-  transition: color 150ms var(--ease), border-color 150ms var(--ease);
-  cursor: pointer;
-  letter-spacing: 0.005em;
-}
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-nav-tabs-item:hover { color: var(--tx-1); background: var(--bg-h); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-mobile-nav-tabs-item { color: var(--tx-m); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-mobile-nav-tabs-item[data-active] { color: var(--ac-l); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-sidebar-group-header {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--tx-m);
-  padding: 6px 0 4px;
-}
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-sidebar-group-icon { color: var(--tx-m); opacity: 0.7; transition: opacity 150ms var(--ease); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-sidebar-nav-group-divider { border-color: var(--bd-2); opacity: 0.5; }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-toc-item {
-  color: var(--tx-m);
-  font-size: 0.8125rem;
-  transition: color 150ms var(--ease);
-  cursor: pointer;
-}
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-toc-item:hover { color: var(--tx-1); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-toc-item[data-active] {
-  color: var(--ac-l);
-  border-left: 2px solid var(--ac);
-  padding-left: 8px;
-  font-weight: 500;
-}
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-toc-item[data-active-deepest] { color: var(--ac-l); font-weight: 600; }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-pagination-prev,
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-pagination-next {
-  background-color: var(--bg-1);
-  border: 1px solid var(--bd-0);
-  border-radius: 12px;
-  padding: 18px 22px;
-  transition: border-color 200ms var(--ease), background-color 200ms var(--ease), box-shadow 200ms var(--ease);
-  cursor: pointer;
-}
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-pagination-prev:hover,
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-pagination-next:hover {
-  border-color: var(--ac);
-  background-color: var(--bg-2);
-  box-shadow: 0 0 0 1px var(--ac-bg);
-}
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-pagination-title { font-size: 0.9375rem; font-weight: 600; color: var(--tx-0); letter-spacing: -0.01em; }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-eyebrow { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ac-l); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-breadcrumb-item { font-size: 0.8125rem; color: var(--tx-m); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-callout { border-radius: 8px; border-width: 1px; border-style: solid; }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-callout[type="warning"] { background-color: var(--bg-warning); border-color: var(--bd-warning); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-callout[type="danger"],
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-callout[type="error"] { background-color: var(--bg-danger); border-color: var(--bd-danger); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-callout[type="info"],
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-callout[type="note"],
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-callout[type="tip"] { background-color: var(--bg-info); border-color: var(--bd-info); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-callout[type="success"] { background-color: var(--bg-success); border-color: var(--bd-success); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-card {
-  background-color: var(--bg-1);
-  border: 1px solid var(--bd-0);
-  border-radius: 10px;
-  transition: border-color 200ms var(--ease), background-color 200ms var(--ease), box-shadow 200ms var(--ease);
-  cursor: pointer;
-}
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-card:hover {
-  border-color: var(--ac);
-  background-color: var(--bg-2);
-  box-shadow: 0 0 0 1px var(--ac-bg), 0 4px 16px rgba(37,99,235,0.12);
-}
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-step { border-left: 2px solid var(--bd-0); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-accordion {
-  border: 1px solid var(--bd-1);
-  border-radius: 8px;
-  background-color: var(--bg-1);
-  transition: border-color 150ms var(--ease);
-}
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-accordion:hover { border-color: var(--bd-0); }
-
-/* biome-ignore lint/correctness/noUnknownTypeSelector: Mintlify custom element */
-update { border-left: 2px solid var(--bd-0); padding-left: 1.5rem; }
-
-kbd {
-  font-family: var(--f-meta);
-  font-size: 0.7rem;
-  background-color: var(--bg-2);
-  border: 1px solid var(--bd-0);
-  border-radius: 4px;
-  color: var(--tx-m);
-  padding: 2px 5px;
-}
-
-footer { border-top: 1px solid var(--bd-2); background-color: var(--bg-0); }
-
-/* ══ ID-NESTED RULES (higher specificity — must come after generic) ══ */
+/* ══ NAVBAR  (#navbar ID — solid Charter Dark, mint-style) ══ */
 
 #navbar {
   background-color: var(--bg-0);
@@ -244,15 +59,9 @@ footer { border-top: 1px solid var(--bd-2); background-color: var(--bg-0); }
   -webkit-backdrop-filter: none;
 }
 
-#navbar nav-logo:hover { opacity: 0.85; }
-
-#navbar navbar-link { color: var(--tx-m); }
-#navbar navbar-link:hover { color: var(--tx-1); }
-
 #topbar-cta-button {
   border-radius: 8px;
   font-weight: 600;
-  font-size: 0.875rem;
   transition: opacity 150ms var(--ease);
   cursor: pointer;
 }
@@ -262,7 +71,6 @@ footer { border-top: 1px solid var(--bd-2); background-color: var(--bg-0); }
   background-color: var(--bg-1);
   border: 1px solid var(--bd-0);
   border-radius: 8px;
-  color: var(--tx-m);
   transition: border-color 150ms var(--ease), box-shadow 150ms var(--ease);
   cursor: pointer;
 }
@@ -276,21 +84,20 @@ footer { border-top: 1px solid var(--bd-2); background-color: var(--bg-0); }
 }
 #search-input:focus { border-color: var(--ac); box-shadow: 0 0 0 3px var(--ac-bg); outline: none; }
 
-/* Active tab — class selector with dot (Mintlify docs: class on standard <a>) */
-#navbar .nav-tabs-item[data-active] {
+/* Active tab — documented as class on <a> element per Mintlify CSS reference */
+.nav-tabs-item[data-active] {
   color: var(--tx-0);
   border-bottom-color: var(--ac);
   background: transparent;
 }
 
+/* ══ SIDEBAR  (#sidebar · #sidebar-content) ══════════ */
+
 #sidebar { background-color: var(--bg-0); border-right: 1px solid var(--bd-2); }
 #sidebar-content { background-color: var(--bg-0); }
 
-#sidebar sidebar-group[data-active] sidebar-group-icon { opacity: 1; }
-
 #sidebar-content a {
   color: var(--tx-1);
-  font-size: 0.875rem;
   border-radius: 6px;
   transition: background 150ms var(--ease), color 150ms var(--ease);
   cursor: pointer;
@@ -305,43 +112,55 @@ footer { border-top: 1px solid var(--bd-2); background-color: var(--bg-0); }
   padding-left: 8px;
 }
 
+/* ══ TABLE OF CONTENTS ═══════════════════════════════ */
+
 #table-of-contents { border-left: 1px solid var(--bd-2); background: transparent; }
 
-#table-of-contents-content toc-item { color: var(--tx-m); }
-#table-of-contents-content toc-item:hover { color: var(--tx-1); }
-#table-of-contents-content toc-item[data-active] {
-  color: var(--ac-l);
-  border-left: 2px solid var(--ac);
-  padding-left: 8px;
-  font-weight: 500;
+/* ══ CONTENT AREA ════════════════════════════════════ */
+
+#content-area,
+#content { background-color: var(--bg-0); position: relative; z-index: 1; }
+
+#page-title {
+  font-size: clamp(1.625rem, 3.5vw, 2.125rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--tx-0);
+  line-height: 1.2;
 }
-#table-of-contents-content toc-item[data-active-deepest] { color: var(--ac-l); font-weight: 600; }
 
-#content-area, #content { background-color: var(--bg-0); position: relative; z-index: 1; }
+/* ══ TYPOGRAPHY (standard HTML elements) ════════════ */
 
-#page-title { font-size: clamp(1.625rem, 3.5vw, 2.125rem); font-weight: 800; letter-spacing: -0.03em; color: var(--tx-0); line-height: 1.2; }
+#content h2 { font-weight: 700; letter-spacing: -0.02em; color: var(--tx-0); }
+#content h3, #content h4 { font-weight: 600; letter-spacing: -0.01em; color: var(--tx-0); }
+#content p, #content li { color: var(--tx-1); line-height: 1.72; }
 
-#content mdx-content h2 { font-weight: 700; letter-spacing: -0.02em; color: var(--tx-0); }
-#content mdx-content h3, #content mdx-content h4 { font-weight: 600; letter-spacing: -0.01em; color: var(--tx-0); }
-#content mdx-content p, #content mdx-content li { color: var(--tx-1); line-height: 1.72; }
-
-#content mdx-content a {
+#content a {
   color: var(--ac-l);
   text-underline-offset: 3px;
   text-decoration-color: rgba(96,165,250,0.30);
   transition: color 150ms var(--ease), text-decoration-color 150ms var(--ease);
 }
-#content mdx-content a:hover { color: #93c5fd; text-decoration-color: rgba(147,197,253,0.50); }
+#content a:hover { color: #93c5fd; text-decoration-color: rgba(147,197,253,0.50); }
 
-#content code-block {
+/* ══ CODE (standard HTML: pre, code) ════════════════ */
+
+#content pre {
   background-color: var(--bg-1);
   border: 1px solid var(--bd-0);
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
 }
-#content code-block pre, #content code-block code { font-family: var(--f-code); font-size: 0.8125rem; line-height: 1.65; }
-#content code-group { border: 1px solid var(--bd-0); border-radius: 8px; overflow: hidden; }
-#content mdx-content :not(pre) > code {
+
+#content pre code,
+#content pre {
+  font-family: var(--f-code);
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+
+/* Inline code — IBM Plex Mono (meta layer: rule IDs, paths) */
+#content :not(pre) > code {
   font-family: var(--f-meta);
   font-size: 0.82em;
   color: var(--ac-l);
@@ -351,13 +170,27 @@ footer { border-top: 1px solid var(--bd-2); background-color: var(--bg-0); }
   padding: 0.1em 0.38em;
 }
 
+/* ══ KEYBOARD SHORTCUT (standard HTML: kbd) ══════════ */
+
+kbd {
+  font-family: var(--f-meta);
+  font-size: 0.7rem;
+  background-color: var(--bg-2);
+  border: 1px solid var(--bd-0);
+  border-radius: 4px;
+  color: var(--tx-m);
+  padding: 2px 5px;
+}
+
+/* ══ PAGINATION (#pagination ID) ════════════════════ */
+
 #pagination { border-top: 1px solid var(--bd-2); margin-top: 3rem; padding-top: 2rem; }
-#pagination pagination-prev, #pagination pagination-next { background-color: var(--bg-1); border: 1px solid var(--bd-0); border-radius: 12px; }
-#pagination pagination-prev:hover, #pagination pagination-next:hover { border-color: var(--ac); background-color: var(--bg-2); box-shadow: 0 0 0 1px var(--ac-bg); }
 
-#footer { border-top: 1px solid var(--bd-2); background-color: var(--bg-0); }
+/* ══ FOOTER (standard HTML: footer) ═════════════════ */
 
-/* ══ ACCESSIBILITY ══════════════════════════════════ */
+footer { border-top: 1px solid var(--bd-2); background-color: var(--bg-0); }
+
+/* ══ ACCESSIBILITY ═══════════════════════════════════ */
 
 *:focus-visible { outline: 2px solid var(--ac-l); outline-offset: 2px; }
 
