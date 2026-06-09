@@ -2,7 +2,7 @@
 
 Use this directory for the product authority, supporting maps, and architecture records that explain how the repo should evolve.
 
-This content is part of the repo-internal engineering docs tree and will live under `docs/internal/architecture/` once the topology migration is complete.
+This content is part of the repo-internal engineering docs tree under `docs/internal/architecture/`.
 
 Documentation authority ladder:
 
