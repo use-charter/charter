@@ -1,0 +1,89 @@
+---
+title: "CLI Overview"
+description: "Reference for Charter's command surface, exit codes, and shared CLI flags."
+---
+
+Charter is a single-binary CLI for scoring a repository's AI-agent readiness. The v1 command surface is:
+
+- `charter doctor`
+- `charter init`
+- `charter fix`
+- `charter report`
+- `charter explain`
+- `charter suppress`
+- `charter version`
+
+Use this page as the top-level reference for command behavior. For install paths and the fastest first run, see the [quickstart](/quickstart).
+
+## Exit Codes
+
+Charter keeps exit codes simple and predictable:
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | Success. A scan passed its threshold, or a non-gating command completed successfully. |
+| `1` | The requested check failed. Most commonly: `charter doctor` scored below the threshold, or `charter doctor --rule ...` found a matching rule. |
+| `2` | Usage, validation, I/O, or scan/setup error. Examples: invalid flags, malformed config, unreadable files, non-TTY interactive mode. |
+
+`charter report` is intentionally not a CI gate. It exits `0` when it successfully writes the report artifact, even if the underlying score would fail a `doctor` run.
+
+## Common Flags
+
+These flags appear across the CLI surface:
+
+| Flag | Used by | Purpose |
+| --- | --- | --- |
+| `--path` | `doctor`, `init`, `fix`, `report`, `suppress` | Explicit repository path instead of the current working directory. |
+| `--threshold` | `doctor`, `report` | Score gate used for pass/fail in `doctor`; reflected in `report` output but does not gate `report` itself. |
+| `--format` | `doctor`, `report`, `explain`, `version` | Selects an output format such as `json`, `markdown`, or `sarif`, depending on the command. |
+| `--out` | `doctor`, `report` | Writes output to a file instead of standard output. |
+| `--quiet` | `doctor` | Suppresses non-failure text output in CI or hooks. |
+
+## Output Modes
+
+`charter doctor` is the main output surface:
+
+- `text`: default human-readable terminal output
+- `json`: machine-readable result payload
+- `markdown`: PR-comment-friendly output
+- `sarif`: GitHub Code Scanning upload format
+
+`charter report` reuses the JSON and Markdown renderers and adds a self-contained HTML report format.
+
+## Typical Workflows
+
+### Local development
+
+```bash
+charter doctor --path . --threshold 80
+```
+
+### Hook or CI gate
+
+```bash
+charter doctor --quiet --threshold 80
+```
+
+### Produce machine-readable output
+
+```bash
+charter doctor --format json --path .
+```
+
+### Generate a shareable report
+
+```bash
+charter report --format html --out charter-report.html
+```
+
+## Command Index
+
+| Command | Use when you need to... |
+| --- | --- |
+| [`doctor`](/cli/doctor) | Scan a repo and compute a score. |
+| [`init`](/cli/init) | Scaffold missing Charter files in a repo. |
+| [`fix`](/cli/fix) | Preview and apply safe auto-fixes for supported findings. |
+| [`report`](/cli/report) | Generate a standalone HTML, Markdown, or JSON report artifact. |
+| [`explain`](/cli/explain) | Look up a specific rule by ID. |
+| [`suppress`](/cli/suppress) | Record a governed suppression in `.charter-suppress.yml`. |
+| [`version`](/cli/version) | Print build and environment metadata for the current binary. |

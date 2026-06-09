@@ -1,0 +1,51 @@
+---
+title: "AE-CTX-004"
+description: "`.gitignore` should exclude common agent and local artifact noise."
+---
+
+> Generated from the internal rule spec. Edit `docs/internal/specs/AE-CTX-004.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+
+**Rule name:** AgentArtifactsGitignored
+
+**Severity:** Medium  
+**Category:** Context
+
+`.gitignore` should exclude common agent and local artifact noise.
+
+## Detection Logic
+
+inspect `.gitignore` for local agent/session/cache patterns and verify that shared team config stays committed while local state does not.
+
+## Pass Example
+
+`.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/`, `.hk/`, and `.env*` are handled correctly without ignoring committed team contracts.
+
+## Fail Example
+
+local agent output, cache directories, or secret-bearing env files remain trackable by default.
+
+## Evidence Expectations
+
+relevant `.gitignore` lines and any tracked local-agent artifacts that should not be in git.
+
+## Edge Cases
+
+`.cursor/rules`, `.claude/settings.json`, and similar team-owned config should stay committed even while local cache/state stays ignored.
+
+## Remediation
+
+add precise ignore patterns and remove any accidentally tracked local artifacts from git.
+
+## Related ADRs
+
+- ADR-0006
+
+## Related Evals
+
+None yet
+
+## CLI
+
+```bash
+charter explain AE-CTX-004
+```

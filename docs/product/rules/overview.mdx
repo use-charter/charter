@@ -1,0 +1,50 @@
+---
+title: "Rules Overview"
+description: "Charter evaluates 18 rules across context, safety, operability, and governance to score AI-agent readiness."
+---
+
+Charter's v1 rule set evaluates whether a repository is safe, understandable, and runnable for coding agents.
+
+## What the Rules Cover
+
+| Category | Rules | Focus |
+| --- | --- | --- |
+| Context | 4 | Agent instructions exist, stay current, and avoid local artifact noise. |
+| Secrets | 2 | Raw credentials never land in agent-visible files or MCP config. |
+| MCP Safety | 3 | MCP servers are pinned, trusted, and authenticated. |
+| Agent Config | 2 | Hook configs stay safe and agent edit scope is explicit. |
+| Environment | 1 | Toolchains and repo setup stay reproducible. |
+| CI | 1 | Charter and workflow-quality checks run in CI. |
+| Testing | 1 | Active languages have automated tests. |
+| Autonomy | 1 | The verification command is discoverable and runnable. |
+| Governance | 3 | Suppressions stay reasoned, bounded, and reviewable. |
+
+## Score Formula
+
+```text
+score = max(0, 100 - B×20 - H×10 - M×4 - L×1)
+final = min(base, applicable_cap)
+```
+
+- `B` = blocker findings
+- `H` = high findings
+- `M` = medium findings
+- `L` = low findings
+
+Hard caps still apply. Raw secrets cap the score at `49`, and any active blocker caps the score at `59`.
+
+[Read more about scoring and caps.](/concepts/scoring-and-caps)
+
+## Using Rule Pages
+
+- Rule pages are generated from the internal specs in `docs/internal/specs/`.
+- Public docs stay aligned by regenerating them with `bun scripts/generate-rule-pages.ts`.
+- Every CLI explanation path matches the public rule URL contract at `/rules/AE-*`.
+
+## Rule Navigation
+
+Use the Rules navigation tab to browse by category, or jump directly from the CLI:
+
+```bash
+charter explain AE-CTX-001
+```

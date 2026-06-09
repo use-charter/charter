@@ -1,0 +1,63 @@
+---
+title: "suppress"
+description: "Record a governed suppression in .charter-suppress.yml."
+---
+
+`charter suppress` writes a suppression entry to `.charter-suppress.yml`. Use it when a finding is a confirmed false positive or an accepted risk that still needs an audit trail.
+
+## What It Writes
+
+The command updates `.charter-suppress.yml` in the target repository.
+
+Each entry can carry:
+
+- rule ID
+- reason
+- expiry
+- approver
+
+This file is part of Charter's governance surface and is checked by the suppression rules.
+
+## Flags
+
+| Flag | Description |
+| --- | --- |
+| `--reason` | Required. Human-readable reason for the suppression. |
+| `--expires` | Expiry value. Accepts a duration like `90d`, an ISO date (`YYYY-MM-DD`), or `permanent`. Defaults to `90d`. |
+| `--approver` | Approver handle. Required if a permanent suppression is meant to be honored. |
+| `--path` | Explicit repository path. |
+| `--dry-run` | Print the entry without writing `.charter-suppress.yml`. |
+
+## Usage
+
+### Add a time-bounded suppression
+
+```bash
+charter suppress AE-MCP-001 --path . --reason "vendored fixture" --expires 90d
+```
+
+### Add a permanent suppression with an approver
+
+```bash
+charter suppress AE-CC-002 --path . --reason "legacy accepted risk" --expires permanent --approver security-team
+```
+
+### Preview only
+
+```bash
+charter suppress AE-MCP-001 --path . --reason "test only" --dry-run
+```
+
+## Important Governance Behavior
+
+- a suppression without a reason is audited by `AE-SUPPRESS-001`
+- a permanent suppression without an approver is audited by `AE-SUPPRESS-002`
+- a high suppression rate is surfaced by `AE-SUPPRESS-003`
+
+When `--expires permanent` is used without `--approver`, Charter warns that the entry is not honored as a permanent waiver.
+
+## Notes
+
+- `charter suppress` updates only `.charter-suppress.yml`
+- it does not edit source files
+- it is intentionally separate from `charter fix`

@@ -1,0 +1,112 @@
+---
+title: "Use Charter Fix Safely"
+description: "Preview Charter's unified diffs first, apply only the safe repairs you want, and verify the result with a follow-up scan."
+---
+
+`charter fix` is intentionally narrow and conservative. Use it to repair the findings Charter knows how to fix safely, not as a blind rewrite tool.
+
+## 1. Always start with `--dry-run`
+
+Preview the changes first:
+
+```bash
+charter fix --path . --dry-run
+```
+
+Repo-verified: `charter fix` is diff-first by contract. It prints unified diffs and writes nothing in dry-run mode.
+
+Why this matters:
+
+- you can see exactly what Charter wants to change
+- you can decide whether the repair matches repo intent
+- you keep manual review in the loop
+
+## 2. Review the unified diff
+
+Look for:
+
+- the target file path
+- the rule being fixed
+- whether the change is a create, append, or replacement
+- whether the resulting file still matches your repo's conventions
+
+Typical examples:
+
+- create `AGENTS.md` for `AE-CTX-001`
+- append `.gitignore` patterns for `AE-CTX-004`
+- create `.github/workflows/charter.yaml` for `AE-CI-002`
+- bump a known MCP package pin for `AE-MCP-001`
+
+If the diff is wrong for your repo, stop and make the change manually instead.
+
+## 3. Apply the fix
+
+Once the diff looks correct:
+
+```bash
+charter fix --path .
+```
+
+You can also target a single rule:
+
+```bash
+charter fix --path . --rule AE-CTX-004
+```
+
+## 4. Know what Charter will not do
+
+`charter fix` does **not**:
+
+- delete files
+- silently mutate files
+- auto-fix secret findings
+- auto-fix every rule in the catalog
+
+That is intentional. Safe scope is part of the product contract.
+
+## 5. Use the backups if needed
+
+When `charter fix` updates an existing file, it writes the prior version to:
+
+```text
+.charter/backups/
+```
+
+This gives you a local recovery path if you do not want the applied result.
+
+Repo-verified: create-only writes do not have a prior file to back up. Updates and replacements do.
+
+## 6. Re-scan to verify
+
+Never assume the repair is good just because the diff looked reasonable.
+
+Run:
+
+```bash
+charter doctor --path . --threshold 80
+```
+
+You want to confirm:
+
+- the targeted finding disappeared
+- the score moved in the right direction
+- the repair did not reveal a new problem elsewhere
+
+## Recommended workflow
+
+```bash
+charter doctor --path . --threshold 80
+charter fix --path . --dry-run
+charter fix --path .
+charter doctor --path . --threshold 80
+```
+
+## When to stop using `fix`
+
+Switch to a manual edit when:
+
+- the file already exists but the repair needs repo-specific judgment
+- the change is outside the current safe fixer set
+- the finding is about secrets or another manual-only rule
+
+`charter fix` is best when the safe path is obvious and mechanical. When the repo needs judgment, review and edit manually.

@@ -1,0 +1,76 @@
+---
+title: "report"
+description: "Generate a shareable Charter report artifact in HTML, Markdown, or JSON."
+---
+
+`charter report` renders the same scan as `charter doctor` into a file artifact you can keep, review, or share.
+
+## What Makes It Different From `doctor`
+
+- `doctor` is the CI and hook gate
+- `report` is the artifact generator
+- `report` exits `0` on a successful write, even when the score would fail a `doctor` threshold gate
+
+## Formats
+
+| Format | Notes |
+| --- | --- |
+| `html` | Default. Self-contained offline report. |
+| `markdown` | Reuses the Markdown renderer from `doctor`. |
+| `json` | Reuses the JSON renderer from `doctor`. |
+
+`spdx` is deferred and is not part of the shipped v1 command surface.
+
+## Flags
+
+| Flag | Description |
+| --- | --- |
+| `--path` | Explicit repository path to scan and render into a report. |
+| `--threshold` | Score threshold reflected in the report output. Unlike `doctor`, `report` does not fail the process when the score is below this threshold. |
+| `--format html|markdown|json` | Report output format. Defaults to `html`. |
+| `--out` | Output file path. When omitted, Charter writes `charter-report.html`, `charter-report.md`, or `charter-report.json` depending on the format. |
+| `--open` | Open the written report with the OS default application. Best-effort only. |
+
+## HTML Report Contract
+
+The HTML report is a single-file artifact with these properties:
+
+- self-contained
+- offline-first
+- zero network
+- opens from `file://`
+- WCAG 2.2 AA
+
+The report inlines its data, CSS, JavaScript, and embedded font assets directly into the file.
+
+## Usage
+
+### Generate the default HTML report
+
+```bash
+charter report --path .
+```
+
+### Write to a specific file
+
+```bash
+charter report --path . --format html --out audits/charter-report.html
+```
+
+### Open after writing
+
+```bash
+charter report --path . --open
+```
+
+### Generate Markdown instead
+
+```bash
+charter report --path . --format markdown --out charter-report.md
+```
+
+## Threshold Behavior
+
+`report` still runs a real scan and reflects the threshold in the output, but it does not fail the process when the score is below that threshold.
+
+If you need gating behavior, run [`charter doctor`](/cli/doctor) instead.

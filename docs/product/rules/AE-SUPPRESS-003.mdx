@@ -1,0 +1,56 @@
+---
+title: "AE-SUPPRESS-003"
+description: "A repository that suppresses a large share of its findings has likely stopped trusting Charter or accumulated unreviewed risk; this surfaces that signal without punishing the score, so teams self-correct rather than mute Charter entirely."
+---
+
+> Generated from the internal rule spec. Edit `docs/internal/specs/AE-SUPPRESS-003.md`, then re-run `bun scripts/generate-rule-pages.ts`.
+
+**Rule name:** SuppressionRate
+
+**Severity:** Medium (informational — does not deduct points or affect the score)  
+**Category:** Governance
+
+A repository that suppresses a large share of its findings has likely stopped trusting Charter or accumulated unreviewed risk; this surfaces that signal without punishing the score, so teams self-correct rather than mute Charter entirely.
+
+## Detection Logic
+
+after the active/suppressed partition, the governance check computes the suppression rate `suppressed / (active_rule_findings + suppressed)`, where `active_rule_findings` counts active findings from the scanning rules (governance findings are excluded from the denominator to avoid a feedback loop). It emits a single **informational** finding when the denominator is non-zero **and** the rate is `> 0.30` (the audit checklist's 30% threshold). The finding carries `Informational: true`: it is listed in output but `scoring.Calculate` skips it, so it neither deducts points nor engages any cap. The 30% threshold is a fixed v1 constant; making it profile-tunable is deferred to the policy-profiles slice.
+
+## Pass Example
+
+a repo with 10 active findings and 1 suppression (rate 9%, below 30%), or a repo with no suppressions — no finding.
+
+## Fail Example
+
+a repo with 3 active findings and 6 suppressions (9 total, rate 67% > 30%) — one informational finding stating the rate; the score is computed from the 3 active findings only and is unchanged by this finding.
+
+## Evidence Expectations
+
+a file-level location of `.charter-suppress.yml` (the governance artifact) and an evidence string stating the suppression rate and counts (e.g., `6 of 9 findings suppressed (67%) — high suppression rate`). No per-finding code location.
+
+## Edge Cases
+
+zero suppressions (zero denominator) ⇒ never fires; the finding is itself never suppressible and never counted in the denominator (no feedback loop); because it is informational, it does not move a passing repo below threshold; a freshly migrated repo may legitimately trip it during calibration — this is the intended prompt-to-review, and remains advisory only.
+
+## Remediation
+
+review the suppressed findings — recalibrate noisy rules (file an issue/eval), fix the underlying problems instead of suppressing, or confirm and document the accepted risks with reasons and approvers. This is a prompt to review, not a defect to silence.
+
+## Scoring Impact
+
+none — informational only; the finding is excluded from the severity tally and all caps (ADR-0013).
+
+## Related ADRs
+
+- ADR-0013
+- ADR-0008
+
+## Related Evals
+
+None yet
+
+## CLI
+
+```bash
+charter explain AE-SUPPRESS-003
+```

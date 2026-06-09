@@ -1,0 +1,162 @@
+---
+title: "Adopt in Existing Repo"
+description: "Add Charter to an existing repository, baseline the first scan, fix what is safe, and govern what remains."
+---
+
+Use this path when you already have a working repository and want to add Charter without reshaping the repo all at once.
+
+The normal flow is:
+
+1. scaffold missing files with `charter init`
+2. run the first scan with `charter doctor`
+3. fix what Charter can fix safely
+4. suppress only the findings you intentionally accept
+
+## 1. Scaffold the missing baseline files
+
+Start with:
+
+```bash
+charter init --path .
+```
+
+Repo-verified: `charter init` creates missing files only. It does not overwrite or delete existing files.
+
+Typical outputs include:
+
+- `AGENTS.md`
+- `charter.yaml`
+- `.gitignore`
+- `ARCHITECTURE.md`
+- `.env.example`
+- `.claude/settings.json` when Claude is detected or requested
+
+If you want to preview first:
+
+```bash
+charter init --path . --dry-run
+```
+
+## 2. Run the first scan
+
+Once the missing baseline files exist, run:
+
+```bash
+charter doctor --path . --threshold 80
+```
+
+This tells you:
+
+- current score
+- active findings by rule
+- which findings are blockers vs non-blockers
+- whether the repo already meets the standard gate
+
+If you want a machine-readable baseline for later comparison:
+
+```bash
+mkdir -p .charter
+charter doctor --path . --format json --out .charter/charter-baseline.json
+```
+
+`charter doctor --out` writes the file you name, but it does not create missing parent directories.
+
+## 3. Interpret the first scan
+
+Treat the first scan as a triage pass, not a failure of the repo.
+
+Common first findings usually fall into a few groups:
+
+- context: missing or stale agent instructions
+- environment: missing reproducibility signals
+- CI: no Charter gate yet
+- MCP: unpinned servers, unknown remotes, or missing auth metadata
+- governance: old or weak suppressions in repos that already had waivers
+
+Good first questions:
+
+- Which findings are safe to fix immediately?
+- Which findings need a human decision?
+- Which findings represent accepted risk and need a governed suppression?
+
+## 4. Preview safe repairs
+
+Run the fix command in dry-run mode before writing:
+
+```bash
+charter fix --path . --dry-run
+```
+
+Repo-verified: `charter fix` is intentionally narrow. It previews unified diffs, never deletes files, and never auto-fixes secrets.
+
+Current safe fixers cover:
+
+- `AE-CTX-001`
+- `AE-CTX-004`
+- `AE-CI-002`
+- `AE-MCP-001`
+
+## 5. Apply safe fixes
+
+If the diff looks right:
+
+```bash
+charter fix --path .
+```
+
+Charter backs up existing targets in `.charter/backups/` before replacing or updating them.
+
+If you only want one rule:
+
+```bash
+charter fix --path . --rule AE-CTX-004
+```
+
+## 6. Re-run the scan
+
+Always verify after applying repairs:
+
+```bash
+charter doctor --path . --threshold 80
+```
+
+At this point you should have a shorter, cleaner findings list.
+
+## 7. Suppress only accepted findings
+
+If a finding is a real exception, not a fix candidate, record it explicitly:
+
+```bash
+charter suppress AE-MCP-001 --path . --reason "vendored test fixture" --expires 90d
+```
+
+Use suppression when:
+
+- the finding is a confirmed false positive
+- the repo carries an intentional short-term exception
+- the fix is deferred for a real operational reason and you want an audit trail
+
+Do not suppress a finding just because it is inconvenient. Fix first when the repo behavior is genuinely wrong.
+
+## Recommended adoption loop
+
+```bash
+charter init --path .
+charter doctor --path . --threshold 80
+charter fix --path . --dry-run
+charter fix --path .
+charter doctor --path . --threshold 80
+```
+
+Then add CI once the local scan is trustworthy.
+
+## What success looks like
+
+By the end of adoption:
+
+- the repo has a real agent context file
+- the first obvious drift is repaired
+- CI has a planned Charter gate
+- remaining exceptions are explicit and governed
+
+You do not need to reach perfect score on day one. You do need a repo state that is explainable, reviewable, and repeatable.

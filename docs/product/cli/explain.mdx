@@ -1,0 +1,79 @@
+---
+title: "explain"
+description: "Look up a Charter rule by ID and print its metadata in text or JSON."
+---
+
+`charter explain <RULE>` is the rule lookup command. In shipped behavior, it prints catalog metadata only: `ID`, `Name`, `Category`, `Summary`, and `Docs`. It does not print the full rule rationale, remediation guidance, or OWASP mapping directly. For the CLI reference surface, this page explains how to use that metadata output as the starting point for those fuller docs.
+
+Use it when you already know the rule ID and want the fastest CLI explanation.
+
+## Usage
+
+```bash
+charter explain AE-SEC-001
+```
+
+## Flags
+
+| Flag | Description |
+| --- | --- |
+| `--format text|json` | Output format. Defaults to `text`. |
+
+## Examples
+
+### Text output
+
+```bash
+charter explain AE-MCP-001
+```
+
+### JSON output
+
+```bash
+charter explain AE-MCP-001 --format json
+```
+
+## What the Command Prints
+
+The shipped command is intentionally compact. The command output covers:
+
+- what rule ID is this?
+- what is the rule called?
+- which category does it belong to?
+- what is the short summary?
+- where should I go next to fix or understand it?
+- where is the full rule documentation?
+
+## Rationale, Remediation, and OWASP Mapping
+
+`charter explain` is part of Charter's explanation surface. The shipped command itself is a compact metadata lookup, while this reference page explains the surrounding rationale, remediation, and OWASP context that the linked rule docs expand further.
+
+- **Rule rationale**: the command helps you identify the rule quickly, and the linked rule page explains why that rule exists.
+- **Remediation**: the command gives you the rule entry point, while the linked rule page carries the detailed remediation guidance.
+- **OWASP mapping**: for rules tied to OWASP MCP guidance, the command points you to the relevant rule entry, and the linked documentation explains the mapping in more detail.
+
+This keeps the shipped command fast and concise while still making `charter explain` the right CLI starting point for metadata and for navigating to the fuller rationale, remediation, and OWASP mapping documentation.
+
+## When To Use It
+
+Use `charter explain` when you are already looking at a rule ID from:
+
+- `charter doctor`
+- `charter report`
+- CI logs
+- a GitHub Code Scanning result
+
+Then follow the linked rule page for the full explanation.
+
+## Exit Codes
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | Rule found and rendered successfully. |
+| `2` | Usage or validation error, including unknown rule IDs or invalid `--format`. |
+
+## Notes
+
+- `explain` takes exactly one rule ID.
+- The command uses Charter's internal rule catalog, so the set of valid IDs matches the shipped rule set.
+- For long-form public rule documentation, use the corresponding `/rules/AE-*` pages.

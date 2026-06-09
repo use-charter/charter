@@ -17,6 +17,7 @@ cov*.html
 # Tool caches and local state
 .moon/cache/
 .moon/docker/
+.worktrees/
 .mise.local.toml
 .cache/
 .tmp/
