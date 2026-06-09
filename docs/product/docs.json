@@ -1,11 +1,21 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Charter",
-  "theme": "maple",
+  "theme": "linden",
   "colors": {
     "primary": "#2563EB",
     "light": "#60A5FA",
     "dark": "#1D4ED8"
+  },
+  "appearance": {
+    "default": "dark"
+  },
+  "background": {
+    "decoration": "gradient",
+    "color": {
+      "dark": "#0D1117",
+      "light": "#FFFFFF"
+    }
   },
   "icons": {
     "library": "tabler"
@@ -129,7 +139,7 @@
           },
           {
             "anchor": "Commands",
-            "icon": "terminal-2",
+            "icon": "keyboard",
             "pages": [
               "cli/doctor",
               "cli/init",
