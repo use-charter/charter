@@ -6,15 +6,19 @@ import (
 	"runtime"
 	"strings"
 
+	"charm.land/lipgloss/v2"
 	"github.com/spf13/cobra"
 
+	"go.use-charter.dev/charter/internal/terminal"
 	"go.use-charter.dev/charter/internal/version"
 )
 
 func newVersionCommand() *cobra.Command {
 	var (
-		format string
-		short  bool
+		format    string
+		short     bool
+		colorFlag string
+		noColor   bool
 	)
 	cmd := &cobra.Command{
 		Use:   "version",
@@ -30,11 +34,49 @@ func newVersionCommand() *cobra.Command {
 			platform := runtime.GOOS + "/" + runtime.GOARCH
 			switch format {
 			case "", "text":
-				_, _ = fmt.Fprintf(out, "charter   %s\n", version.Version())
-				_, _ = fmt.Fprintf(out, "commit    %s\n", version.Commit())
-				_, _ = fmt.Fprintf(out, "built     %s\n", version.Date())
-				_, _ = fmt.Fprintf(out, "go        %s\n", goVersion)
-				_, _ = fmt.Fprintf(out, "platform  %s\n", platform)
+				mode, err := resolveColorMode(colorFlag, noColor)
+				if err != nil {
+					return commandExitError{message: err.Error(), exitCode: 2}
+				}
+				caps, pal := terminalContext(cmd, "", mode)
+
+				st := func(tok terminal.Token) lipgloss.Style {
+					resolved := pal.Resolve(tok)
+					s := lipgloss.NewStyle()
+					if resolved.HasColor() {
+						s = s.Foreground(resolved.Color)
+					}
+					if resolved.Bold {
+						s = s.Bold(true)
+					}
+					if resolved.Faint {
+						s = s.Faint(true)
+					}
+					if resolved.Reverse {
+						s = s.Reverse(true)
+					}
+					return s
+				}
+
+				commit := version.Commit()
+				if len(commit) > 8 {
+					commit = commit[:8]
+				}
+
+				if caps.ColorEnabled() {
+					label := st(terminal.TextTertiary)
+					_, _ = fmt.Fprintf(out, "%s%s\n", label.Render(fmt.Sprintf("%-10s", "charter")), st(terminal.TextInfo).Bold(true).Render(version.Version()))
+					_, _ = fmt.Fprintf(out, "%s%s\n", label.Render(fmt.Sprintf("%-10s", "commit")), st(terminal.TextSecondary).Render(commit))
+					_, _ = fmt.Fprintf(out, "%s%s\n", label.Render(fmt.Sprintf("%-10s", "built")), st(terminal.TextSecondary).Render(version.Date()))
+					_, _ = fmt.Fprintf(out, "%s%s\n", label.Render(fmt.Sprintf("%-10s", "go")), st(terminal.TextSecondary).Render(goVersion))
+					_, _ = fmt.Fprintf(out, "%s%s\n", label.Render(fmt.Sprintf("%-10s", "platform")), st(terminal.TextSecondary).Render(platform))
+				} else {
+					_, _ = fmt.Fprintf(out, "charter   %s\n", version.Version())
+					_, _ = fmt.Fprintf(out, "commit    %s\n", commit)
+					_, _ = fmt.Fprintf(out, "built     %s\n", version.Date())
+					_, _ = fmt.Fprintf(out, "go        %s\n", goVersion)
+					_, _ = fmt.Fprintf(out, "platform  %s\n", platform)
+				}
 			case "json":
 				b, err := json.MarshalIndent(struct {
 					Version  string `json:"version"`
@@ -55,5 +97,7 @@ func newVersionCommand() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&format, "format", "text", "output format: text or json")
 	cmd.Flags().BoolVar(&short, "short", false, "print only the version string")
+	cmd.Flags().StringVar(&colorFlag, "color", "auto", "color output: auto, always, or never")
+	cmd.Flags().BoolVar(&noColor, "no-color", false, "disable color (equivalent to --color=never; wins over --color)")
 	return cmd
 }

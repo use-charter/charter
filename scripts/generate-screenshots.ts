@@ -442,16 +442,20 @@ if (existsSync(fnApiPath)) {
   await shot(f, join(screenshotsDir, "fix-dry-run.webp"));
 }
 
-// 4. init --dry-run — styled renderer
+// 4. init --dry-run — parse real command output into styled renderer
 if (existsSync(fnApiPath)) {
   console.log("\n📸 4/5  init --dry-run");
-  const initActions: InitAction[] = [
-    { path: "AGENTS.md",         action: "create", note: "universal context" },
-    { path: "charter.yaml",      action: "create", note: "profile: standard" },
-    { path: ".gitignore",        action: "create", note: "agent artifact patterns" },
-    { path: "ARCHITECTURE.md",   action: "create", note: "repo overview template" },
-    { path: ".env.example",      action: "create", note: "env refs from codebase" },
-  ];
+  const initRaw = runCharter("init", "--path", fnApiPath, "--dry-run");
+  // parse "would create FILE" / "would skip FILE" lines
+  const initActions: InitAction[] = initRaw
+    .split("\n")
+    .filter(l => l.startsWith("would ") || l.startsWith("create ") || l.startsWith("skip "))
+    .map(l => {
+      if (l.startsWith("would create ")) return { path: l.slice(13).trim(), action: "create", note: "" };
+      if (l.startsWith("would skip "))   return { path: l.slice(11).trim(), action: "skip",   note: "" };
+      if (l.startsWith("create "))       return { path: l.slice(7).trim(),  action: "create", note: "" };
+      return { path: l.slice(5).trim(),  action: "skip", note: "" };
+    });
   const f = join(tmpDir, "init.html");
   writeFileSync(f, html("~/work/backend-api", "charter init --dry-run", renderInit("~/work/backend-api", initActions)));
   await shot(f, join(screenshotsDir, "init-output.webp"));
@@ -462,8 +466,7 @@ console.log("\n📸 5/7  explain AE-CTX-001");
 {
   const entry = runCharterJson("explain", "AE-CTX-001") as ExplainEntry | null;
   if (entry) {
-    // catalog doesn't expose Severity in JSON — inject it from known data
-    entry.Severity = "BLOCKER";
+    // catalog intentionally has no Severity — don't inject one
     const f = join(tmpDir, "explain.html");
     writeFileSync(f, html("~/projects/my-platform", "charter explain AE-CTX-001", renderExplain(entry)));
     await shot(f, join(screenshotsDir, "explain-output.webp"));
