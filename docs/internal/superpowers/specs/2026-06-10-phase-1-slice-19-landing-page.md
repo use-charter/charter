@@ -120,8 +120,10 @@ Hero layout: split-screen on desktop (copy left, terminal right); stacked on mob
 
 Four cards. Each names the axis, explains why it matters to agent-adopting teams, and mentions the corresponding CLI command as an implementation detail only.
 
-| Card | Axis | Copy direction |
-|------|------|----------------|
+**Note:** Copy directions below are the final card copy as written. Render each question as the card's description paragraph verbatim. Card title is the axis name.
+
+| Card | Title (H3) | Description (locked copy) |
+|------|-----------|--------------------------|
 | 1 | Context | "Can agents see secrets? Outdated AGENTS.md? Missing .env.example?" |
 | 2 | Safety | "Are credentials in agent-visible paths? Policy enforcement?" |
 | 3 | Operability | "Is there a verify command? Pre-commit integration? CI gating?" |
@@ -408,11 +410,19 @@ Before marking any component done:
 | TBT | < 200ms |
 
 **Image strategy:**
-- Hero image: `loading="eager" fetchpriority="high"` (above fold)
+- "Hero image" = the `<picture>` fallback inside `TerminalCard.astro` (doctor-overview.webp). Apply `loading="eager" fetchpriority="high"` to this element only.
 - Below-fold images: `loading="lazy"`
 - All images: explicit `width` + `height` attributes (prevents CLS)
-- Format: AVIF primary, WebP fallback, PNG last resort
-- Screenshot reuse: use existing WebP from `docs/product/images/screenshots/` as-is
+- Format: AVIF primary, WebP fallback — handled automatically by Astro `<Picture />`
+- **Screenshot asset location:** Screenshots must live in `web/src/assets/screenshots/` (NOT `web/public/screenshots/`). Astro `<Picture />` only optimizes images processed through its pipeline (imported from `src/`). Images in `public/` pass through unoptimized. Import them as ES modules in component frontmatter.
+- **Budget risk:** Source screenshots are large (doctor-overview: 1728×770 70kb; fix-dry-run: 1728×2010 119kb; doctor-tty: 1728×770 70kb; total 259kb raw). Astro will resize on output — specify `width={864}` (50% of source) as the render width for all three. This gives Astro enough context to generate ≤50kb AVIF total. Verify actual output in Phase 6.
+
+**Actual source dimensions (verified):**
+| Screenshot | Source size | Source kb |
+|------------|------------|-----------|
+| doctor-overview.webp | 1728×770 | 70kb |
+| fix-dry-run.webp | 1728×2010 | 119kb |
+| doctor-tty.webp | 1728×770 | 70kb |
 
 **Font strategy:**
 - Self-hosted (no Google Fonts CDN)
@@ -435,7 +445,7 @@ All copy is **locked before implementation begins.** No drift from these sources
 | Value props axes | Docs IA: Context, Safety, Operability, Governance | Locked |
 | Trust strip | architecture-2026.md lines 57–62 (Ten Commitments #1, 2, 5, 6) verbatim | Locked |
 | CI snippet | `docs/product/how-to/run-in-github-actions.mdx` exact YAML | Locked |
-| CTA copy | "Get started", "View on GitHub", "Read the docs", "Star on GitHub" | Locked |
+| CTA copy | "View on GitHub", "Read the docs", "Star on GitHub", "Notify me about the dashboard" | Locked |
 
 **Claim rules:**
 - No benchmark numbers beyond "<2 seconds" and "50k-file budget" (both verified in architecture docs)
@@ -465,7 +475,7 @@ All copy is **locked before implementation begins.** No drift from these sources
 - URL: `https://api.github.com/repos/use-charter/charter`
 - Field: `stargazers_count`
 - No auth required (public repo)
-- Failure fallback: render "⭐ Star on GitHub" with no count (never hardcode a number)
+- Failure fallback: render "Star on GitHub" (text only, no count, no emoji) — never hardcode a number, never use emoji
 - Caches in static output; updates at next Pages deploy
 
 ### 3. Existing assets (all paths verified against live repo)
@@ -474,7 +484,8 @@ All copy is **locked before implementation begins.** No drift from these sources
 |-------|--------------|--------|
 | Design tokens | `docs/internal/designs/DESIGN-TOKENS.md` | ✅ Exists |
 | Brand meta.html | `docs/internal/designs/brand/meta.html` | ✅ Exists |
-| og:image | `docs/internal/designs/brand/og.svg` | ✅ Exists |
+| og:image SVG | `docs/internal/designs/brand/og.svg` | ✅ Exists (source) |
+| og:image PNG | `web/public/og.png` (1200×630) | ⚠️ Must be generated from `og.svg` before Phase 9 — SVG not supported by Twitter/LinkedIn/Slack OG parsers; use `rsvg-convert -w 1200 -h 630 og.svg -o og.png` or equivalent |
 | Favicon | `docs/internal/designs/brand/favicon.svg` | ✅ Exists |
 | Screenshots | `docs/product/images/screenshots/*.webp` (13 files) | ✅ Exists |
 | claude-ai icon | `docs/product/images/icons/claude-ai.svg` | ✅ Exists |
@@ -489,7 +500,7 @@ All copy is **locked before implementation begins.** No drift from these sources
 
 ### 4. Cloudflare Worker file
 
-The Worker file location must be confirmed before Phase 9 (deployment). Check repo root for `wrangler.toml` or `action/` for the composite action. Worker routing update in Phase 9 modifies the `LANDING_ORIGIN` route.
+**Confirmed:** No `wrangler.toml` exists in the repo root. The Cloudflare Worker is deployed and managed externally (Cloudflare dashboard or a separate deployment). Phase 9 must locate it via `wrangler whoami` + dashboard access, then add the `/` → `LANDING_ORIGIN` route. The existing `/docs/*` and `/rules/*` → Mintlify routes must remain unchanged. Phase 9 agent must confirm Worker access before starting routing work.
 
 ### 5. Meta tags (required in Base.astro)
 
@@ -498,7 +509,9 @@ The Worker file location must be confirmed before Phase 9 (deployment). Check re
 <meta name="description" content="Charter is an offline-first CLI that audits any repo against 18 rules and returns a deterministic 0–100 score in under 2 seconds. No data leaves your machine." />
 <meta property="og:title" content="Charter — AI-agent readiness, scored." />
 <meta property="og:description" content="Offline-first CLI. Deterministic 0–100 score. 18 rules. No LLM calls. No network. Works with Claude Code, Codex, Cursor, Windsurf, Copilot, Gemini." />
-<meta property="og:image" content="/og.svg" />
+<meta property="og:image" content="https://use-charter.dev/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
 <meta property="og:type" content="website" />
 <link rel="canonical" href="https://use-charter.dev/" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
