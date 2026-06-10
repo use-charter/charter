@@ -84,9 +84,20 @@ func newInitCommand() *cobra.Command {
 
 			if caps.ColorEnabled() {
 				brand := st(terminal.TextInfo).Bold(true).Render("[C] charter")
-				meta := st(terminal.TextTertiary).Render("  v" + version.Version() + "  ·  " + root)
+				dot := st(terminal.TextTertiary).Render("  ·  ")
+				ver := version.Version()
+				if !strings.HasPrefix(ver, "v") {
+					ver = "v" + ver
+				}
+				meta := st(terminal.TextTertiary).Render("  "+ver) + dot + st(terminal.TextTertiary).Render(root)
 				_, _ = fmt.Fprintln(w, brand+meta)
 				_, _ = fmt.Fprintln(w)
+
+				if dryRun {
+					_, _ = fmt.Fprintln(w, st(terminal.TextSecondary).Render("Creating")+"  "+st(terminal.TextTertiary).Render("(dry run)"))
+				} else {
+					_, _ = fmt.Fprintln(w, st(terminal.TextSecondary).Render("Creating"))
+				}
 
 				created, skipped := 0, 0
 				for _, action := range actions {
@@ -95,12 +106,10 @@ func newInitCommand() *cobra.Command {
 					switch {
 					case action.Action == scaffold.Skip:
 						skipped++
-						_, _ = fmt.Fprintln(w, st(terminal.TextTertiary).Render("  skip  "+action.Path))
+						_, _ = fmt.Fprintln(w, "  "+st(terminal.TextTertiary).Render("skip")+"  "+st(terminal.TextTertiary).Render(action.Path))
 					case dryRun:
 						created++
-						filePart := st(terminal.TextInfo).Render(action.Path)
-						statusPart := st(terminal.TextSuccess).Render("would create")
-						_, _ = fmt.Fprintln(w, "  "+statusPart+"  "+filePart)
+						_, _ = fmt.Fprintln(w, "  "+st(terminal.TextSuccess).Render("would create")+"  "+st(terminal.TextInfo).Render(action.Path))
 					default:
 						// #nosec G301 -- scaffolded directories hold world-readable committed context files.
 						if err := os.MkdirAll(filepath.Dir(abs), 0o755); err != nil {
@@ -111,7 +120,7 @@ func newInitCommand() *cobra.Command {
 						// the never-overwrite/never-delete commitments).
 						if _, statErr := os.Stat(abs); statErr == nil {
 							skipped++
-							_, _ = fmt.Fprintln(w, st(terminal.TextTertiary).Render("  skip  "+action.Path))
+							_, _ = fmt.Fprintln(w, "  "+st(terminal.TextTertiary).Render("skip")+"  "+st(terminal.TextTertiary).Render(action.Path))
 							continue
 						}
 						// #nosec G306 -- scaffolded context files are meant to be committed and world-readable.
@@ -119,19 +128,28 @@ func newInitCommand() *cobra.Command {
 							return commandExitError{message: err.Error(), exitCode: 2}
 						}
 						created++
-						filePart := st(terminal.TextInfo).Render(action.Path)
-						statusPart := st(terminal.TextSuccess).Render("create")
-						_, _ = fmt.Fprintln(w, "  "+statusPart+"  "+filePart)
+						_, _ = fmt.Fprintln(w, "  "+st(terminal.TextSuccess).Render("create")+"  "+st(terminal.TextInfo).Render(action.Path))
 					}
 				}
 
 				_, _ = fmt.Fprintln(w)
-				countStr := st(terminal.TextSuccess).Render(fmt.Sprintf("%d created", created))
-				skipStr := st(terminal.TextTertiary).Render(fmt.Sprintf(" · %d skipped", skipped))
-				_, _ = fmt.Fprintln(w, countStr+skipStr)
-				arrow := st(terminal.TextInfo).Render("›")
-				next := st(terminal.TextSecondary).Render(" Next: charter doctor")
-				_, _ = fmt.Fprintln(w, arrow+next)
+				_, _ = fmt.Fprintln(w, st(terminal.TextTertiary).Render(strings.Repeat("─", 44)))
+				dotSep := st(terminal.TextTertiary).Render("  ·  ")
+				if dryRun {
+					countStr := st(terminal.TextSuccess).Render(fmt.Sprintf("%d file(s) would be created", created))
+					skipStr := st(terminal.TextTertiary).Render(fmt.Sprintf("%d skipped", skipped))
+					_, _ = fmt.Fprintln(w, "  "+countStr+dotSep+skipStr)
+					arrow := st(terminal.TextInfo).Render("›")
+					next := st(terminal.TextSecondary).Render(" Run without --dry-run to apply")
+					_, _ = fmt.Fprintln(w, arrow+next)
+				} else {
+					countStr := st(terminal.TextSuccess).Render(fmt.Sprintf("%d created", created))
+					skipStr := st(terminal.TextTertiary).Render(fmt.Sprintf("%d skipped", skipped))
+					_, _ = fmt.Fprintln(w, "  "+countStr+dotSep+skipStr)
+					arrow := st(terminal.TextInfo).Render("›")
+					next := st(terminal.TextSecondary).Render(" Next: charter doctor")
+					_, _ = fmt.Fprintln(w, arrow+next)
+				}
 			} else {
 				prefix := ""
 				if dryRun {
