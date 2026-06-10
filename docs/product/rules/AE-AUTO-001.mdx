@@ -1,44 +1,127 @@
 ---
 title: "AE-AUTO-001"
-description: "The command an agent runs to verify the project (its tests) must be **discoverable and runnable**. The AGENTS.md standard calls the exact CLI commands (install/test/lint/build) &quot;the single highest-value section&quot; for agents. AE-CTX-001 checks that a verification command is *mentioned* in the context file; AE-AUTO-001 checks the repo actually *exposes* a runnable one."
+description: "The command an agent runs to verify the project (its tests) must be discoverable and runnable. The AGENTS.md standard calls the exact CLI commands (install/test/lint/build) \"the single highest-value section\" for agents. AE-CTX-001 checks that a verification command is mentioned in the context file; AE-AUTO-001 checks the repo actually exposes a runnable one."
 ---
 
-**Rule ID:** AE-AUTO-001 · **Severity:** Medium · **Category:** Autonomy · **Auto-fixable:** No
+**Rule ID:** AE-AUTO-001 · **Severity:** <Badge color="yellow">Medium</Badge> · **Category:** Autonomy · **Auto-fixable:** No
 
 ## Why this rule
 
 Even with tests present, an agent needs to know how to run them. A discoverable command closes the agent's work loop — run, observe, fix, repeat — without guessing.
 
+When a test command is missing, the agent either skips verification entirely or attempts to infer the command, risking a wrong invocation. Neither outcome is acceptable for an agent that is supposed to be self-correcting.
+
+<Note>
+  AE-AUTO-001 only applies when at least one code language is active in the repo. A docs-only or config-only repo is not evaluated.
+</Note>
+
 ## What triggers it
 
-This rule only applies when at least one code language is active in the repo (see AE-TEST-001). Charter checks whether a test or verification command is discoverable from the repo's tracked files.
+Charter checks whether a test or verification command is discoverable from the repo's tracked files. A command is considered discoverable if any of the following signals exist:
 
-A command is considered discoverable if any of the following signals exist:
+| Signal | Example |
+|---|---|
+| `Makefile` with a `test:` or `check:` target | `make test` |
+| `justfile` / `.justfile` with a `test` or `check` recipe | `just test` |
+| `Taskfile.yml` / `Taskfile.yaml` with a `test:` or `check:` task | `task test` |
+| `moon.yml` task named `test` or `check` | `moon run :test` |
+| `mise.toml` / `.mise.toml` with `[tasks.test]` or `[tasks.check]` | `mise run test` |
+| `package.json` with a `test` key (or `test:*` variant) under `scripts` | `npm test` |
 
-- A `Makefile` with a `test:` or `check:` target
-- A `justfile` or `.justfile` with a `test` or `check` recipe
-- A `Taskfile.yml` or `Taskfile.yaml` with a `test:` or `check:` task
-- A `moon.yml` task named `test` or `check`
-- A `mise.toml` or `.mise.toml` with a `[tasks.test]` or `[tasks.check]` section
-- A `package.json` with a `test` key (or a `test:*` variant) under `scripts`
+For languages with a well-known conventional test command, no task runner is required:
 
-For languages with a well-known conventional test command, no task runner is required: Go repos with `go.mod` satisfy the check via `go test`, Rust repos with `Cargo.toml` satisfy it via `cargo test`, and Python repos satisfy it via `pytest` when a pytest config file is present (`pytest.ini`, `tox.ini`, or a `[tool.pytest.ini_options]` section in `pyproject.toml`).
+| Language | Conventional command | Condition |
+|---|---|---|
+| Go | `go test ./...` | `go.mod` present |
+| Rust | `cargo test` | `Cargo.toml` present |
+| Python | `pytest` | pytest config present (`pytest.ini`, `tox.ini`, or `[tool.pytest.ini_options]` in `pyproject.toml`) |
 
 The finding fires when none of these signals exist for an active language.
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    A TypeScript project with source files and tests in place, but no `test` script in `package.json` and no task runner configured:
 
-A TypeScript project with source files and tests in place, but no `test` script in `package.json` and no task runner configured — flagged Medium. An agent reading the repo has no reliable way to invoke the test suite.
+    ```json package.json
+    {
+      "name": "my-app",
+      "scripts": {
+        "build": "tsc",
+        "lint": "eslint src/"
+        // no "test" key
+      }
+    }
+    ```
 
-### Passing
+    An agent reading this repo has no reliable way to invoke the test suite → flagged Medium.
+  </Tab>
+  <Tab title="Passing">
+    A Go module — `go test ./...` is always discoverable, no extra config needed:
 
-A Go module with `go.mod` — `go test ./...` is the conventional command and is always discoverable, no additional config needed. A JavaScript project with `"scripts": { "test": "jest" }` in `package.json` — passes. A repo using `mise.toml` with a `[tasks.test]` section — passes regardless of language.
+    ```
+    my-service/
+    ├── go.mod   ✓ (conventional command applies)
+    └── internal/
+        └── scorer_test.go
+    ```
+
+    A JavaScript project with an explicit test script:
+
+    ```json package.json
+    {
+      "scripts": {
+        "test": "jest"
+      }
+    }
+    ```
+
+    A multi-language repo using `mise` tasks:
+
+    ```toml mise.toml
+    [tasks.test]
+    run = "moon run :test"
+    description = "Run all tests"
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-expose a test command via a task runner (Makefile/justfile/Taskfile/package.json scripts/mise/moon) so an agent can discover and run it.
+Add a task runner target that runs your tests. Charter reads the task runner file — no extra Charter configuration is needed.
+
+<Steps>
+  <Step title="Choose a task runner">
+    If you already have a `Makefile`, `package.json`, or `moon.yml`, add a `test` target there. If you have none, `mise.toml` tasks are the lowest-friction option for multi-language repos.
+  </Step>
+  <Step title="Wire up the test command">
+    The target just needs to invoke your existing test command:
+
+    <CodeGroup>
+    ```makefile Makefile
+    test:
+    	go test ./...
+    ```
+
+    ```json package.json
+    {
+      "scripts": {
+        "test": "jest --coverage"
+      }
+    }
+    ```
+
+    ```toml mise.toml
+    [tasks.test]
+    run = "go test ./..."
+    ```
+    </CodeGroup>
+  </Step>
+  <Step title="Verify discoverability">
+    Run `charter explain AE-AUTO-001` to confirm Charter now recognizes the command.
+  </Step>
+</Steps>
 
 ## Score impact
 
@@ -46,12 +129,28 @@ expose a test command via a task runner (Makefile/justfile/Taskfile/package.json
 
 ## Edge cases
 
-**N/A** when no language is active. **FP guard:** a single-language Go/Rust/Cargo repo is never penalized for lacking a `Makefile` — its toolchain is the contract. Conventional Python detection requires a pytest config (not merely `.py` files), since `python` alone is not a zero-config test command.
+<AccordionGroup>
+  <Accordion title="Go and Rust — no task runner required">
+    Single-language Go and Rust repos are never penalized for lacking a `Makefile` or other task runner. Their toolchain is the contract.
+  </Accordion>
+  <Accordion title="Python — pytest config required">
+    Conventional Python detection requires a pytest config file (`pytest.ini`, `tox.ini`, or `[tool.pytest.ini_options]` in `pyproject.toml`). The mere presence of `.py` files is not enough, because `python` alone is not a zero-config test command.
+  </Accordion>
+  <Accordion title="No active language">
+    When no language is active (docs/config/tooling-only repos), AE-AUTO-001 does not fire. See AE-TEST-001 for how active language detection works.
+  </Accordion>
+</AccordionGroup>
 
 ## Related rules
 
-- [AE-TEST-001](/rules/AE-TEST-001)
-- [AE-ENV-001](/rules/AE-ENV-001)
+<CardGroup cols={2}>
+  <Card title="AE-TEST-001" icon="flask" href="/rules/AE-TEST-001">
+    Checks that test files actually exist — a prerequisite for this rule to be meaningful.
+  </Card>
+  <Card title="AE-ENV-001" icon="box" href="/rules/AE-ENV-001">
+    Reproducible toolchain — required for the discoverable test command to work reliably.
+  </Card>
+</CardGroup>
 
 ## CLI
 

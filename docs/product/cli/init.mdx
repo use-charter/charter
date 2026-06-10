@@ -1,80 +1,87 @@
 ---
 title: "init"
-description: "Scaffold the missing Charter and agent-context files in a repository."
+description: "Scaffold missing Charter and agent-context files in a repository."
 icon: "sparkles"
 ---
 
-`charter init` bootstraps a repository for Charter. It creates missing files only, never overwrites an existing file, and stays fully offline.
+`charter init` bootstraps a repository for Charter. It uses a create-missing-only approach: it only creates files that do not already exist, never overwrites, never deletes, and stays fully offline. Repeated runs become no-ops once all files are present, making it safe to use in scripting and CI.
 
-## What It Creates
+## Files It Creates
 
-Depending on what is already present, `charter init` can create:
+The following files are created only when they are absent:
 
-- `AGENTS.md`
-- `charter.yaml`
-- `.gitignore`
-- `ARCHITECTURE.md`
-- `.env.example`
-- `.claude/settings.json` when Claude is detected, explicitly requested, or selected by the fallback when no agents are detected
-
-`AGENTS.md` remains the universal agent context file. Today, `.claude/settings.json` is the only conditional agent-specific scaffolded file.
-
-The command is designed to get a blank or lightly prepared repository to a passing Charter scan quickly, without modifying files that already exist.
+| File | Purpose |
+|------|---------|
+| `AGENTS.md` | Agent context file — project summary, commands, and edit boundaries |
+| `charter.yaml` | Policy config scaffolded with `profile: standard` |
+| `.gitignore` | Agent artifact patterns appended when the file is absent |
+| `ARCHITECTURE.md` | Repo overview template |
+| `.env.example` | Environment variable references |
+| `.claude/settings.json` | Created when Claude is detected or explicitly requested via `--agents` |
 
 ## Usage
 
-```bash
-charter init --path .
-```
+<CodeGroup>
+  ```bash Interactive (default)
+  charter init
+  ```
+
+  ```bash Preview without writing
+  charter init --dry-run
+  ```
+
+  ```bash Non-interactive with strict profile
+  charter init --yes --profile strict
+  ```
+
+  ```bash Request specific agent surfaces
+  charter init --agents claude,cursor
+  ```
+</CodeGroup>
+
+<Frame caption="charter init output — detected stack and created files">
+  <img src="/images/screenshots/init-output.png" alt="charter init creating files" />
+</Frame>
 
 ## Flags
 
-| Flag | Description |
-| --- | --- |
-| `--path` | Target directory to scaffold. Defaults to the repository root when one is found, otherwise the current directory. |
-| `--profile` | Policy profile written to `charter.yaml`: `strict`, `standard`, or `relaxed`. Defaults to `standard`. |
-| `--agents` | Comma-separated agent surfaces used for scaffold selection, such as `claude,cursor`. In shipped behavior, this affects whether `.claude/settings.json` is scaffolded; `AGENTS.md` remains the universal context file. When omitted, Charter auto-detects and falls back to `claude` if nothing is detected. |
-| `--dry-run` | Print the planned file actions without writing anything. |
-| `--yes` | Accepted for scripting and compatibility. `init` is already non-interactive and never overwrites existing files, so this flag is currently a no-op. |
+<ResponseField name="--path" type="string">
+  Target directory to scaffold. Defaults to the repository root when one is found, otherwise the current directory.
+</ResponseField>
 
-## Behavior Notes
+<ResponseField name="--dry-run" type="boolean">
+  Print the planned file actions without writing anything. Use this to preview exactly what `init` would create before committing.
+</ResponseField>
 
-- create-missing-only: existing files are skipped
-- deterministic: no prompts, no network, no hidden mutation
-- safe for scripting: repeated runs become no-op skips once the files exist
+<ResponseField name="--yes" type="boolean">
+  Skip prompts for non-interactive or CI use. Because `init` never overwrites existing files, this flag is effectively a no-op in most runs — it is accepted for scripting compatibility.
+</ResponseField>
 
-## Examples
+<ResponseField name="--profile" type="standard | strict">
+  Policy profile written into the generated `charter.yaml`. Defaults to `standard`.
+</ResponseField>
 
-### Scaffold the current repo
+<ResponseField name="--agents" type="string">
+  Comma-separated agent surfaces to request, such as `claude,cursor`. Controls whether agent-specific config files like `.claude/settings.json` are scaffolded. When omitted, Charter auto-detects the agent surface and falls back to `claude` if nothing is detected. `AGENTS.md` is always created regardless of this flag.
+</ResponseField>
 
-```bash
-charter init --path .
-```
+## After Init
 
-### Preview without writing
+<Steps>
+  <Step title="Review the generated files">
+    Open `AGENTS.md` and tailor the project summary, commands section, and edit boundaries to your repo. The scaffolded content is intentionally generic.
+  </Step>
+  <Step title="Run charter doctor">
+    ```bash
+    charter doctor --threshold 80
+    ```
+    This gives you your baseline score. A blank repo typically passes 80 immediately after `init`.
+  </Step>
+  <Step title="Commit the new files">
+    Add the scaffolded files to version control so future scans and CI runs see them.
+  </Step>
+</Steps>
 
-```bash
-charter init --path . --dry-run
-```
-
-### Force a strict policy profile
-
-```bash
-charter init --path . --profile strict
-```
-
-### Request multiple agent surfaces
-
-```bash
-charter init --path . --agents claude,cursor
-```
-
-## Typical Follow-up
-
-After `init`, run a full scan:
-
-```bash
-charter doctor --path . --threshold 80
-```
-
-If the repository still has fixable findings, use [`charter fix`](/cli/fix) to preview and apply supported repairs.
+<Tip>
+  A blank Go repo scores ≥ 80 immediately after `charter init` — measured at 95 in testing. The residual findings are typically `AE-ENV-001` (no toolchain file) and `AE-CI-002` (CI not yet configured).
+</Tip>

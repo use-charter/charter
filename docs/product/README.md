@@ -37,7 +37,7 @@ Rule pages (`rules/AE-*.mdx`) are **bootstrapped** by `scripts/generate-rule-pag
 To add a new rule page (when a new AE-* rule is added to the engine):
 
 ```bash
-# 1. Add the rule spec to docs/internal/specs/AE-XXX-NNN.md
+# 1. Add the rule spec to the rule spec in docs/internal/specs/
 # 2. Add the rule to internal/rules/catalog/catalog.go
 # 3. Generate the initial page:
 bun scripts/generate-rule-pages.ts

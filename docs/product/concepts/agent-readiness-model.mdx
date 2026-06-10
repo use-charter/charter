@@ -1,112 +1,113 @@
 ---
 title: "Agent Readiness Model"
-description: "What AI-agent readiness means and how Charter evaluates it."
+description: "What AI-agent readiness means and how Charter evaluates it across three axes."
 ---
 
-AI-agent readiness is the degree to which a repository is safe, legible, and verifiable for coding agents.
+Repos don't fail agents because the model is bad — they fail because the operating environment is broken. Charter's readiness model exists to make that environment measurable.
 
-Charter treats this as a repository property, not a model property. A strong model still performs poorly in a repo that gives it weak instructions, unsafe tool configuration, or no way to verify its own work.
-
-## What "agent-ready" means
-
-An agent-ready repo gives a coding agent three core things:
-
-- **Orientation**: enough context to understand the project, the stack, and the rules of engagement
-- **Safety boundaries**: clear limits around secrets, MCP servers, edit scope, and dangerous automation
-- **Operability**: tests and runnable commands so the agent can check its work before it stops
-
-Charter's v1 rule set checks those properties deterministically from the repository itself. It does not call an LLM, upload code, or depend on runtime telemetry.
-
-Governance still matters, but Charter treats it as a **cross-cutting control layer** around the model rather than a fourth competing axis. Suppressions, exception handling, and score reporting sit across the three core axes instead of replacing them.
-
-## Why it matters
-
-Teams do not adopt coding agents just because the model is good. They adopt them when the repo gives agents a stable operating environment.
-
-Without that environment, common failure modes appear fast:
-
-- agents guess the right command instead of running the real one
-- agents touch files they should have left alone
-- MCP servers float to new versions without review
-- suppressions accumulate without ownership
-- fixes cannot be verified because there are no tests or no discoverable test command
-
-That is why Charter scores the repo instead of the model. The repo is the part a team controls.
+Charter treats agent readiness as a **repository property**, not a model property. A strong model still performs poorly in a repo that gives it weak instructions, unsafe tool configuration, or no way to verify its own work. The model is outside your control; the repo is entirely within it.
 
 ## The three axes
 
-Charter's model groups agent readiness into three practical axes.
+<CardGroup cols={3}>
+  <Card title="Context" icon="file-text">
+    **Orientation** — does the agent know where it is?
 
-### Context
+    - `AGENTS.md` or equivalent context file present
+    - Tech stack and tooling documented
+    - Explicit edit boundaries and off-limits paths declared
+    - Token-budget-friendly, non-fragile instructions
 
-Context answers: *Can the agent understand where it is and what rules apply?*
+    Covered by: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-CTX-006`, `AE-CC-002`
+  </Card>
+  <Card title="Safety" icon="shield">
+    **Risk boundaries** — are the guardrails in place?
 
-This includes:
+    - No raw secrets in agent-visible files or MCP config
+    - MCP server packages pinned to reviewed versions
+    - Remote MCP origins explicitly trusted
+    - No dangerous hook commands with unconstrained shell access
 
-- an agent context file such as `AGENTS.md`
-- current project and tooling details
-- explicit edit boundaries and off-limits paths
-- concise, non-fragile instructions
+    Covered by: `AE-SEC-001`, `AE-SEC-002`, `AE-MCP-001`, `AE-MCP-002`, `AE-MCP-003`, `AE-CC-001`
+  </Card>
+  <Card title="Operability" icon="cpu">
+    **Verifiability** — can the agent check its own work?
 
-In v1, context is covered by rules such as `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-CTX-006`, and `AE-CC-002`.
+    - Tests exist for every active language in the repo
+    - A discoverable verification command is documented
+    - Reproducible toolchain with lockfile and version constraints
+    - CI gate that exercises the intended quality path
 
-### Safety
+    Covered by: `AE-TEST-001`, `AE-AUTO-001`, `AE-ENV-001`, `AE-CI-002`
+  </Card>
+</CardGroup>
 
-Safety answers: *Is the repo configured so an agent can operate without creating obvious security or supply-chain risk?*
+## Governance: the cross-cutting layer
 
-This includes:
+<Note>
+  Governance isn't a fourth axis. It wraps the other three — auditing suppressions, ensuring exceptions have reasons, and surfacing when the score is being systematically bypassed. Rules `AE-SUPPRESS-001`, `AE-SUPPRESS-002`, and `AE-SUPPRESS-003` enforce this contract on every scan.
+</Note>
 
-- no raw secrets in agent-visible files or MCP config
-- pinned MCP server packages
-- trusted remote MCP origins
-- declared auth metadata for remote MCP servers
-- no dangerous hook commands
+A suppression changes the trust model of the entire scan. That is why Charter requires suppressions to be visible in source control, attributable with a reason, and time-bounded by default. Governance findings are reported separately and listed in the HTML report and SARIF output — they don't replace the three core axes, they audit how honestly the three axes are being applied.
 
-In v1, safety is covered by `AE-SEC-*`, `AE-MCP-*`, and `AE-CC-001`.
+## Why repo, not model
 
-### Operability
+Model capability is outside your control. You can choose a model, but you cannot change how it reasons, what it was trained on, or how it handles ambiguous instructions. The repo configuration is entirely within your control — and it determines how much of that model capability you actually get.
 
-Operability answers: *Can the agent actually run the project and verify its own work?*
+An excellent model in a poorly configured repo will:
+- guess at commands instead of running documented ones
+- infer edit boundaries instead of reading declared ones
+- install whatever version of a tool was latest at execution time
+- produce changes it cannot verify against any test
 
-This includes:
+None of those are model failures. They are environment failures. Charter scores the environment.
 
-- tests for every active language
-- a discoverable verification command
-- reproducible toolchain and lockfile state
-- CI that exercises the intended quality path
+## Real failure modes
 
-In v1, operability is covered by `AE-TEST-001`, `AE-AUTO-001`, `AE-ENV-001`, and `AE-CI-002`.
+<AccordionGroup>
+  <Accordion title="Agent guesses the wrong test command">
+    **What happens:** The agent runs `npm test` when the project uses `pnpm run test:unit`, or `go test ./...` in a monorepo where only specific packages are testable. It gets errors or false passes, loops, and produces changes it believes are correct.
 
-## Where governance fits
+    **Root cause:** No `AGENTS.md` with a verification command. No `AE-AUTO-001`-compliant automation section.
 
-Governance is reported alongside the model, but it is not a separate fourth axis.
+    **Rules:** `AE-CTX-001` (missing context file), `AE-AUTO-001` (missing verification command)
+  </Accordion>
+  <Accordion title="Agent touches files it should have left alone">
+    **What happens:** The agent refactors a file that is generated, vendored, or owned by a separate team. The change breaks a downstream process. No warning was given.
 
-Instead, it cuts across context, safety, and operability by answering questions such as:
+    **Root cause:** No edit boundaries declared. The agent had no signal that certain paths were off-limits.
 
-- are accepted risks documented with a reason?
-- are permanent waivers explicitly approved?
-- is the repo accumulating too many suppressions to trust the score?
+    **Rule:** `AE-CC-002` (missing edit scope declaration)
+  </Accordion>
+  <Accordion title="MCP server changes silently between sessions">
+    **What happens:** An MCP server package was referenced as `@latest`. Between Monday and Friday, the package published a new version. The agent's tool behavior changed without any review.
 
-That is why governance findings affect how Charter explains and audits the score, while the core readiness model itself stays centered on context, safety, and operability.
+    **Root cause:** Floating MCP package reference. Supply-chain control delegated to the registry's publish cadence.
 
-## How Charter scores them
+    **Rule:** `AE-MCP-001` (unpinned MCP server package)
+  </Accordion>
+  <Accordion title="Changes cannot be verified">
+    **What happens:** The agent writes code, tries to verify it, finds no test suite for the active language, and either stops short or proceeds on guesswork. The change lands unverified.
 
-Charter does **not** assign independent sub-scores that change the base formula. The public score remains one stable number.
+    **Root cause:** No tests for the primary language detected by Charter.
 
-Instead, Charter:
+    **Rule:** `AE-TEST-001` (missing test suite for active language)
+  </Accordion>
+  <Accordion title="Secret committed via agent session file">
+    **What happens:** A developer stores an API key in a `.claude/local/` settings file for convenience. The directory is not in `.gitignore`. An agent session commit includes the file. The secret is now in git history.
 
-- evaluates all active rules
-- assigns severities to findings
-- computes one public score from those severities
-- applies hard caps where trust demands them
-- reports a category breakdown so you can see where the score moved, with governance surfaced as a cross-cutting reporting layer around the three core axes
+    **Root cause:** Agent session directories not excluded from version control.
 
-That means the score stays simple enough to gate in CI, while the category view still explains whether the real problem is context, safety, or operability.
+    **Rule:** `AE-CTX-004` (agent artifact patterns missing from `.gitignore`)
+  </Accordion>
+</AccordionGroup>
 
 ## What a good score means
 
-A high Charter score does **not** mean a repo is perfect. It means the repo gives a coding agent a reasonable chance to succeed without guesswork, silent risk, or unverifiable changes.
+A high Charter score does **not** mean the code is perfect. It means the repo gives a coding agent a reasonable operating contract: enough context to understand where it is, enough safety configuration to avoid obvious risk, and enough operability infrastructure to verify its own work.
 
-A low score is not a judgment on the codebase. It is a signal that the repo is missing part of the operating contract agents need.
+A low score is not a judgment on the codebase quality. It is a signal that scaffolding is missing — scaffolding that agents need but humans can often operate without, because humans bring implicit context that agents cannot access.
+
+The score answers one narrow question: **how ready is this repo for safe, verifiable use by a coding agent?**
 
 If you want the exact math, caps, and score zones, continue to [Scoring and Caps](/concepts/scoring-and-caps).

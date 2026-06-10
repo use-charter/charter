@@ -4,131 +4,156 @@ description: "Scan a repository, evaluate Charter's rules, and compute an AI-age
 icon: "stethoscope"
 ---
 
-`charter doctor` is the primary Charter command. It scans a repository, evaluates the full rule set, computes the final score, and returns an exit code that is safe to use in local workflows, hooks, and CI.
-
-## What It Does
-
-- resolves the target repository
-- loads the effective score threshold
-- evaluates the full rule set unless `--rule` scopes the view
-- renders text, JSON, Markdown, or SARIF output
-- exits non-zero when the score is below the threshold
+`charter doctor` is the primary Charter command. It resolves the target repository, loads the effective score threshold from `charter.yaml` or the `--threshold` flag, evaluates the full rule set, renders the result, and exits with a code that is safe to use in local workflows, pre-commit hooks, and CI pipelines.
 
 ## Usage
 
-```bash
-charter doctor --path . --threshold 80
-```
+<CodeGroup>
+  ```bash Standard scan
+  charter doctor
+  ```
+
+  ```bash With explicit path and threshold
+  charter doctor --path /path/to/repo --threshold 90
+  ```
+
+  ```bash SARIF output for CI
+  charter doctor --format sarif --out charter.sarif
+  ```
+
+  ```bash Quiet mode for pre-commit hook
+  charter doctor --quiet --threshold 80
+  ```
+
+  ```bash Single-rule targeted scan
+  charter doctor --rule AE-SEC-001
+  ```
+</CodeGroup>
+
+<Frame caption="charter doctor — styled terminal output with category scorecard and findings">
+  <img src="/images/screenshots/doctor-tty.png" alt="charter doctor TTY output" />
+</Frame>
 
 ## Flags
 
-| Flag | Description |
-| --- | --- |
-| `--path` | Explicit repository path. |
-| `--threshold` | Minimum passing score. Overrides `charter.yaml` policy threshold/profile when set. |
-| `--format text|json|markdown|sarif` | Output format. Defaults to `text`. |
-| `--out` | Write the rendered output to a file instead of standard output. |
-| `--rule` | Comma-separated rule IDs for a focused text-only view. Omits the score and exits `1` if any named rule fired. |
-| `--quiet` | Suppress non-failure text output. Useful in hooks and CI. |
-| `--color auto|always|never` | Color output mode for text rendering. |
-| `--no-color` | Disable color. Equivalent to `--color=never` and wins over `--color`. |
-| `-i`, `--interactive` | Open the interactive TUI. Requires a real terminal. |
+<ResponseField name="--path" type="string">
+  Explicit repository root to scan. Defaults to the current working directory.
+</ResponseField>
 
-## Exit Codes
+<ResponseField name="--threshold" type="int">
+  Minimum passing score. Overrides the threshold or profile value in `charter.yaml` when provided.
+</ResponseField>
 
-| Exit code | Meaning |
-| --- | --- |
-| `0` | The scan passed the threshold, or a focused `--rule` view found no matching findings. |
-| `1` | The score fell below the threshold, or a focused `--rule` view found a matching rule. |
-| `2` | Usage, validation, I/O, or scan/setup error. |
+<ResponseField name="--format" type="text | json | markdown | sarif">
+  Output format. Defaults to `text`. In a TTY, `text` renders styled terminal output; when piped or redirected, it falls back to a plain byte-stable stream.
+</ResponseField>
 
-Examples of exit-2 cases:
+<ResponseField name="--out" type="string">
+  Write the rendered output to a file instead of stdout.
+</ResponseField>
 
-- invalid `--format`
-- unknown rule passed to `--rule`
-- `--interactive` on a non-TTY
-- malformed `charter.yaml`
-- unreadable repository files
+<ResponseField name="--rule" type="string">
+  Comma-separated rule IDs for a scoped text-only view. Omits the overall score and exits `1` if any named rule fired. Incompatible with `--interactive`.
+</ResponseField>
+
+<ResponseField name="--quiet" type="boolean">
+  Suppress non-failure output. Useful in hooks and CI. Applies to text output only — JSON, Markdown, and SARIF still emit the full payload.
+</ResponseField>
+
+<ResponseField name="--color" type="auto | always | never">
+  Color output mode for text rendering. Defaults to `auto`.
+</ResponseField>
+
+<ResponseField name="--no-color" type="boolean">
+  Disable color. Equivalent to `--color=never` and wins over `--color` when both are set.
+</ResponseField>
+
+<ResponseField name="-i, --interactive" type="boolean">
+  Open the interactive TUI. Requires a real terminal — exits with code `2` if stdin is not a TTY.
+</ResponseField>
 
 ## Output Formats
 
-### Text
+<Tabs>
+  <Tab title="Text (default)">
+    Styled terminal output with a category scorecard, per-finding evidence rows, and a score hero at the bottom. In a TTY, Charter renders color and box-drawing characters. When stdout is piped or redirected, it falls back to a plain, byte-stable stream safe for log capture.
 
-Default human-facing output. In a TTY, Charter renders styled terminal output. When piped or redirected, it falls back to a plain byte-stable stream.
+    ```bash
+    charter doctor
+    charter doctor --format text --out scan.txt
+    ```
+  </Tab>
+  <Tab title="JSON">
+    Machine-readable payload for scripts and tooling. The top-level shape includes:
 
-```bash
-charter doctor --format text --path .
-```
+    ```json
+    {
+      "score": 87,
+      "passed": true,
+      "threshold": 80,
+      "findings": [
+        {
+          "rule_id": "AE-ENV-001",
+          "severity": "Medium",
+          "category": "Environment",
+          "summary": "No .env.example found",
+          "evidence": "No .env.example detected in the repository root.",
+          "locations": ["/.env.example"],
+          "remediation": "Create a .env.example listing required environment variable names."
+        }
+      ]
+    }
+    ```
 
-### JSON
+    ```bash
+    charter doctor --format json
+    charter doctor --format json --out result.json
+    ```
+  </Tab>
+  <Tab title="Markdown">
+    Formatted for GitHub PR comments. Paste directly into a PR description or post it via a CI step.
 
-Machine-readable payload for scripts and tooling.
+    ```bash
+    charter doctor --format markdown
+    charter doctor --format markdown --out charter-summary.md
+    ```
+  </Tab>
+  <Tab title="SARIF">
+    SARIF 2.1.0 format for GitHub Code Scanning. Upload the output file as a Code Scanning artifact to surface findings inline in pull requests.
 
-```bash
-charter doctor --format json --path .
-```
+    ```bash
+    charter doctor --format sarif --out charter.sarif
+    ```
 
-### Markdown
+    In a GitHub Actions workflow:
 
-PR-comment-friendly output.
-
-```bash
-charter doctor --format markdown --path .
-```
-
-### SARIF
-
-Use this for GitHub Code Scanning uploads.
-
-```bash
-charter doctor --format sarif --out charter.sarif --path .
-```
+    ```yaml
+    - name: Upload SARIF
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: charter.sarif
+    ```
+  </Tab>
+</Tabs>
 
 ## Interactive TUI
 
-`charter doctor -i` opens the interactive terminal UI. This is a browser over a single scan result, not a different scan engine.
+`charter doctor -i` opens a full-screen terminal UI over a single scan result. It is a browser over the findings, not a different scan engine.
 
-```bash
-charter doctor --interactive --path .
-```
+<Frame caption="charter doctor -i — interactive TUI with filter, search, and drill-in">
+  <img src="/images/screenshots/doctor-tui.png" alt="charter doctor interactive TUI" />
+</Frame>
 
-The TUI supports:
+The TUI supports filter and search, drill-in on individual findings, rule-focused browsing, and in-place rescan. It is intentionally human-only — you cannot combine it with `--out`, `--quiet`, non-text `--format`, or `--rule`.
 
-- filter and search
-- drill-in on a finding
-- rule-focused browsing
-- in-place rescan
+<Note>
+  `-i` requires a real TTY. It exits with code `2` if stdin is not a terminal.
+</Note>
 
-It is intentionally human-only. You cannot combine it with `--out`, `--quiet`, non-text `--format`, or `--rule`.
+## Exit Codes
 
-## Examples
-
-### Standard local run
-
-```bash
-charter doctor --path . --threshold 80
-```
-
-### Quiet CI gate
-
-```bash
-charter doctor --quiet --threshold 80
-```
-
-### Focus on one rule
-
-```bash
-charter doctor --rule AE-SEC-001 --path .
-```
-
-### Write SARIF to disk
-
-```bash
-charter doctor --format sarif --out charter.sarif --path .
-```
-
-## Notes
-
-- `--quiet` applies to text output only. JSON, Markdown, and SARIF still emit the full payload.
-- `--rule` is a focused inspection view, not a partial score.
-- `charter doctor` is the command to use when you want CI or hook gating behavior.
+| Code | Meaning | When |
+|------|---------|------|
+| `0` | Pass | Score ≥ threshold, or `--rule` view found no matching findings |
+| `1` | Fail | Score < threshold, or `--rule` view found at least one matching finding |
+| `2` | Error | Invalid `--format`, unknown rule ID in `--rule`, `--interactive` on non-TTY, malformed `charter.yaml`, unreadable files |

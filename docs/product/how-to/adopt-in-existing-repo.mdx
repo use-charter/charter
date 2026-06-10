@@ -1,162 +1,196 @@
 ---
-title: "Adopt in Existing Repo"
-description: "Add Charter to an existing repository, baseline the first scan, fix what is safe, and govern what remains."
+title: "Add Charter to an Existing Repo"
+description: "Baseline your first scan, fix what is safe, and commit Charter in under 10 minutes."
 ---
 
-Use this path when you already have a working repository and want to add Charter without reshaping the repo all at once.
+Use this path when you already have a working repository and want to add Charter without reshaping the repo all at once. The full adoption loop takes under 10 minutes on most repos.
 
-The normal flow is:
+<Steps>
 
-1. scaffold missing files with `charter init`
-2. run the first scan with `charter doctor`
-3. fix what Charter can fix safely
-4. suppress only the findings you intentionally accept
+<Step title="Scaffold missing baseline files">
 
-## 1. Scaffold the missing baseline files
-
-Start with:
+Run `charter init` to create any missing baseline files — without touching what already exists:
 
 ```bash
 charter init --path .
 ```
 
-Repo-verified: `charter init` creates missing files only. It does not overwrite or delete existing files.
+What gets created (only if the file is not already present):
 
-Typical outputs include:
+| File | Purpose |
+|------|---------|
+| `AGENTS.md` | Agent context and repo instructions |
+| `charter.yaml` | Policy configuration |
+| `.gitignore` | Common agent artifact patterns |
+| `ARCHITECTURE.md` | High-level module layout |
+| `.env.example` | Environment variable documentation |
+| `.claude/settings.json` | Claude tool permissions (when Claude is detected) |
 
-- `AGENTS.md`
-- `charter.yaml`
-- `.gitignore`
-- `ARCHITECTURE.md`
-- `.env.example`
-- `.claude/settings.json` when Claude is detected or requested
-
-If you want to preview first:
+Want to preview before writing anything?
 
 ```bash
 charter init --path . --dry-run
 ```
 
-## 2. Run the first scan
+<Tip>
+`init` is create-missing-only. It will never overwrite an existing `AGENTS.md` or `charter.yaml`. Run it freely even on repos that are partially set up.
+</Tip>
 
-Once the missing baseline files exist, run:
+</Step>
+
+<Step title="Run the baseline scan">
+
+Once the missing baseline files exist, run the first scan:
 
 ```bash
-charter doctor --path . --threshold 80
+charter doctor
 ```
 
-This tells you:
+<Frame caption="charter doctor — first scan on an existing repo with findings">
+  <img src="/images/screenshots/adopt-first-scan.png" alt="charter doctor first scan output" />
+</Frame>
 
-- current score
-- active findings by rule
-- which findings are blockers vs non-blockers
+The output shows:
+
+- your current score
+- active findings grouped by rule
+- which findings are blockers (Hard caps: secret findings cap at 49, blocker findings cap at 59)
 - whether the repo already meets the standard gate
+
+<Info>
+Don't be alarmed by a low first score. Most repos score 40–60 before any fixes. The output tells you exactly what to address — treat the first scan as a triage pass, not a verdict on the repo.
+</Info>
 
 If you want a machine-readable baseline for later comparison:
 
 ```bash
 mkdir -p .charter
-charter doctor --path . --format json --out .charter/charter-baseline.json
+charter doctor --format json --out .charter/charter-baseline.json
 ```
 
-`charter doctor --out` writes the file you name, but it does not create missing parent directories.
+</Step>
 
-## 3. Interpret the first scan
+<Step title="Fix what Charter can fix safely">
 
-Treat the first scan as a triage pass, not a failure of the repo.
+Review the auto-fix diffs before applying anything:
 
-Common first findings usually fall into a few groups:
+<CodeGroup>
 
-- context: missing or stale agent instructions
-- environment: missing reproducibility signals
-- CI: no Charter gate yet
-- MCP: unpinned servers, unknown remotes, or missing auth metadata
-- governance: old or weak suppressions in repos that already had waivers
+```bash Dry run first
+charter fix --dry-run
+```
 
-Good first questions:
+```bash Apply fixes
+charter fix
+```
 
-- Which findings are safe to fix immediately?
-- Which findings need a human decision?
-- Which findings represent accepted risk and need a governed suppression?
+```bash Target a single rule
+charter fix --rule AE-CTX-004
+```
 
-## 4. Preview safe repairs
+</CodeGroup>
 
-Run the fix command in dry-run mode before writing:
+Charter's safe fixers cover exactly four rules:
+
+<AccordionGroup>
+
+<Accordion title="AE-CTX-001 — Creates AGENTS.md">
+Generates an `AGENTS.md` template populated with your detected language, toolchain, and CI platform. Review the template — the generated content is a starting point, not a finished doc.
+</Accordion>
+
+<Accordion title="AE-CTX-004 — Appends .gitignore entries">
+Adds agent artifact patterns (`.charter/`, `.claude/`, common cache paths) to your `.gitignore`. Review before committing to make sure no existing entries conflict.
+</Accordion>
+
+<Accordion title="AE-CI-002 — Creates the Charter GitHub Actions workflow">
+Creates `.github/workflows/charter.yaml`. Check the threshold value and that the SHA pins match what you want before committing.
+</Accordion>
+
+<Accordion title="AE-MCP-001 — Bumps an unpinned MCP package version">
+Updates floating `@latest` or semver-range MCP server references to an exact pinned version from Charter's catalog. Verify the resolved version is the one you want.
+</Accordion>
+
+</AccordionGroup>
+
+<Warning>
+Always run `charter fix --dry-run` first. Read each unified diff before applying. The diff is the contract.
+</Warning>
+
+Charter backs up any existing file it modifies to `.charter/backups/<timestamp>/` before writing.
+
+</Step>
+
+<Step title="Review remaining findings">
+
+For each finding Charter cannot auto-fix, resolve it manually:
+
+<CardGroup cols={2}>
+
+<Card title="AE-SEC-001 / AE-SEC-002" icon="key">
+Remove the secret, rotate the credential, and replace it with an environment variable reference. Never suppress a live secret finding.
+</Card>
+
+<Card title="AE-TEST-001" icon="flask">
+Add a test suite. Charter looks for evidence of a test runner in your toolchain config and CI — a test file or `package.json` script is enough to pass.
+</Card>
+
+<Card title="AE-ENV-001" icon="gear">
+Add a toolchain file (`mise.toml`, `.tool-versions`, or a language-native equivalent) so the repo's runtime versions are reproducible.
+</Card>
+
+<Card title="AE-MCP-003" icon="lock">
+Add an auth header to each remote MCP server entry. Use an env var reference — never a literal credential value.
+</Card>
+
+</CardGroup>
+
+</Step>
+
+<Step title="Suppress accepted risks">
+
+If a finding is a confirmed false positive or an intentionally accepted exception, record it explicitly:
 
 ```bash
-charter fix --path . --dry-run
+charter suppress AE-CI-002 \
+  --reason "CI integration planned for Q3" \
+  --expires 90d
 ```
 
-Repo-verified: `charter fix` is intentionally narrow. It previews unified diffs, never deletes files, and never auto-fixes secrets.
+This writes a governed entry to `.charter-suppress.yml` with the rule ID, your reason, and an expiry date that re-surfaces later.
 
-Current safe fixers cover:
+<Warning>
+Suppress only when the repo state is intentionally accepted. If the underlying problem is real, fix it — don't suppress it. Suppression is an audit trail, not a mute button.
+</Warning>
 
-- `AE-CTX-001`
-- `AE-CTX-004`
-- `AE-CI-002`
-- `AE-MCP-001`
+Permanent suppressions require `--approver`. Without it, `AE-SUPPRESS-002` fires as a High finding on every scan.
 
-## 5. Apply safe fixes
+</Step>
 
-If the diff looks right:
+<Step title="Commit">
+
+Stage the files Charter created or modified:
 
 ```bash
-charter fix --path .
+git add AGENTS.md charter.yaml .gitignore
+git commit -m "chore: add Charter agent-readiness baseline"
 ```
 
-Charter backs up existing targets in `.charter/backups/` before replacing or updating them.
+Then open a pull request to add CI. Use the workflow file Charter generated at `.github/workflows/charter.yaml`, or follow the [GitHub Actions guide](/ci/github-action).
 
-If you only want one rule:
+</Step>
 
-```bash
-charter fix --path . --rule AE-CTX-004
-```
+</Steps>
 
-## 6. Re-run the scan
+<Note>
+**What score to target:** 80 is the standard threshold. A first-pass fix run typically moves a blank repo from 40–60 up to 75–90 within 30 minutes. You do not need to reach a perfect score on day one — you need a repo state that is explainable, reviewable, and repeatable.
+</Note>
 
-Always verify after applying repairs:
-
-```bash
-charter doctor --path . --threshold 80
-```
-
-At this point you should have a shorter, cleaner findings list.
-
-## 7. Suppress only accepted findings
-
-If a finding is a real exception, not a fix candidate, record it explicitly:
-
-```bash
-charter suppress AE-MCP-001 --path . --reason "vendored test fixture" --expires 90d
-```
-
-Use suppression when:
-
-- the finding is a confirmed false positive
-- the repo carries an intentional short-term exception
-- the fix is deferred for a real operational reason and you want an audit trail
-
-Do not suppress a finding just because it is inconvenient. Fix first when the repo behavior is genuinely wrong.
-
-## Recommended adoption loop
+## Quick reference loop
 
 ```bash
 charter init --path .
-charter doctor --path . --threshold 80
-charter fix --path . --dry-run
-charter fix --path .
-charter doctor --path . --threshold 80
+charter doctor
+charter fix --dry-run
+charter fix
+charter doctor
 ```
-
-Then add CI once the local scan is trustworthy.
-
-## What success looks like
-
-By the end of adoption:
-
-- the repo has a real agent context file
-- the first obvious drift is repaired
-- CI has a planned Charter gate
-- remaining exceptions are explicit and governed
-
-You do not need to reach perfect score on day one. You do need a repo state that is explainable, reviewable, and repeatable.

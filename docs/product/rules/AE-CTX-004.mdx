@@ -3,37 +3,88 @@ title: "AE-CTX-004"
 description: "`.gitignore` should exclude common agent and local artifact noise."
 ---
 
-**Rule ID:** AE-CTX-004 · **Severity:** Medium · **Category:** Context · **Auto-fixable:** Yes — `charter fix --rule AE-CTX-004`
+**Rule ID:** AE-CTX-004 · **Severity:** <Badge color="yellow">Medium</Badge> · **Category:** Context · **Auto-fixable:** Yes — `charter fix --rule AE-CTX-004`
 
 ## Why this rule
 
-Agent session files checked into git expose local machine state and session history to the repo's commit record and inflate the tracked file set every agent has to scan.
+Agent session files checked into git expose local machine state and session history to the repo's commit record. They also inflate the tracked file set every agent scans on each task, adding irrelevant noise to the agent's view of the codebase.
 
 ## What triggers it
 
-Charter checks whether `.gitignore` excludes agent session artifacts: `.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/`. The finding also fires if any of these patterns are already tracked in git.
+Charter checks whether `.gitignore` excludes the following agent session artifact patterns:
+
+| Pattern | What it covers |
+|---------|---------------|
+| `.charter/` | Charter local run state and session cache |
+| `*.charter-session` | Charter session files |
+| `.claude/local/` | Claude Code local settings and session data |
+| `.cursor/cache/` | Cursor IDE agent cache |
+
+The finding also fires if any of these patterns are **already tracked in git** — a `.gitignore` entry alone does not remove a file that was previously committed.
+
+<Note>
+  Team-owned config files such as `.cursor/rules`, `.claude/settings.json`, and `hk.pkl` should stay committed. AE-CTX-004 targets local cache and session state, not shared configuration.
+</Note>
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    ```gitignore .gitignore (missing entries)
+    node_modules/
+    dist/
+    # No entries for .charter/, *.charter-session, .claude/local/, .cursor/cache/
+    ```
 
-Local agent output, cache directories, or secret-bearing env files remain trackable by default — none of the expected ignore patterns appear in `.gitignore`.
+    ```
+    # OR: any of these patterns are tracked in git
+    $ git ls-files .claude/local/
+    .claude/local/preferences.json   ← tracked, fires finding
+    ```
+  </Tab>
+  <Tab title="Passing">
+    ```gitignore .gitignore
+    node_modules/
+    dist/
 
-### Passing
-
-`.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/`, `.hk/`, and `.env*` are handled correctly without ignoring committed team contracts.
+    # Agent artifacts
+    .charter/
+    *.charter-session
+    .claude/local/
+    .cursor/cache/
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-Run `charter fix --rule AE-CTX-004` to add the missing `.gitignore` entries. If agent artifacts are already tracked, remove them from git with `git rm --cached` before committing.
+<Steps>
+  <Step title="Preview the changes">
+    Run `charter fix --rule AE-CTX-004 --dry-run` to see which `.gitignore` entries will be added.
+  </Step>
+  <Step title="Apply the fix">
+    Run `charter fix --rule AE-CTX-004` to append the missing patterns to `.gitignore`.
+  </Step>
+  <Step title="Remove any already-tracked artifacts">
+    If agent artifacts were previously committed, untrack them without deleting the local files:
 
-## Edge cases
+    <CodeGroup>
+      ```bash Remove tracked agent artifacts
+      git rm --cached .claude/local/ -r
+      git rm --cached ".charter/" -r
+      git commit -m "chore: untrack agent session artifacts"
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
 
-`.cursor/rules`, `.claude/settings.json`, and similar team-owned config should stay committed even while local cache/state stays ignored.
+## Score impact
+
+Medium severity: −4 to the base score. No hard cap.
 
 ## Related rules
 
-- [AE-CTX-001](/rules/AE-CTX-001)
+- [AE-CTX-001](/rules/AE-CTX-001) — context file must exist and be within budget
 
 ## CLI
 

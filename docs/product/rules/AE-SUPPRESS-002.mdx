@@ -1,70 +1,153 @@
 ---
 title: "AE-SUPPRESS-002"
-description: "An explicit permanent waiver (`expires: permanent`) must name an `approver` who owns the accepted risk; an unapproved permanent waiver is a governance hole, so Charter both flags it (High) and refuses to honor it — the finding re-surfaces until an approver is recorded or a finite `expires` is set. A suppression with no `expires` is a default-TTL suppression (honored) and is not a permanent waiver."
+description: "An explicit permanent waiver (expires: permanent) must name an approver who owns the accepted risk; an unapproved permanent waiver is a governance hole, so Charter both flags it (High) and refuses to honor it — the finding re-surfaces until an approver is recorded or a finite expires is set."
 ---
 
-**Rule ID:** AE-SUPPRESS-002 · **Severity:** High · **Category:** Governance · **Auto-fixable:** No
+**Rule ID:** AE-SUPPRESS-002 · **Severity:** <Badge color="orange">High</Badge> · **Category:** Governance · **Auto-fixable:** No
 
 ## Why this rule
 
 A permanent suppression with no expiry and no approver is an unbounded waiver. It silently removes a finding from the score indefinitely with no human accountability attached.
 
+Unlike a time-bounded suppression — which expires and forces a re-evaluation — a permanent waiver with no approver can survive security reviews, team rotations, and architectural changes without ever being questioned. Charter refuses to honor it until a named approver accepts the risk.
+
 ## What triggers it
 
 Charter audits every active suppression — non-expired entries in `.charter-suppress.yml` and inline `# charter:ignore` directives matched to a finding — and flags any entry that is an explicit permanent waiver without a named approver.
 
-A suppression is a permanent waiver when its `expires` field is set to the literal value `permanent`. If that entry has no `approver:` field (or the approver is blank), Charter flags it High and, critically, **does not honor the suppression** — the underlying finding remains active and is included in scoring. This prevents a single developer from permanently silencing a finding with no accountability attached.
+A suppression is a **permanent waiver** when its `expires` field is set to the literal value `permanent`. If that entry has no `approver:` field (or the approver is blank), Charter:
+
+1. Flags the entry at **High** severity
+2. **Does not honor the suppression** — the underlying finding remains active and is included in scoring
+
+<Warning>
+  An unapproved permanent waiver is not honored. The original finding continues to affect the score until either an `approver:` is added or the suppression is converted to a time-bounded entry.
+</Warning>
 
 Suppressions with a future `expires` date, or with no `expires` at all (which applies a default TTL), are not permanent waivers and do not require an approver.
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    Permanent waiver with no approver — flagged High, suppression not honored:
 
-```yaml
-- rule: AE-CC-002
-  reason: "we'll deal with it later"
-  expires: permanent
-```
+    ```yaml .charter-suppress.yml
+    suppressions:
+      - rule: AE-TEST-001
+        reason: "Backend-only repo"
+        expires: permanent
+        # no approver field → flagged High, finding stays active
+    ```
 
-No `approver` — flagged High, and the suppression is not honored.
+    An entry that fires both AE-SUPPRESS-001 and AE-SUPPRESS-002:
 
-### Passing
+    ```yaml .charter-suppress.yml
+    suppressions:
+      - rule: AE-CC-002
+        expires: permanent
+        # no reason AND no approver → both rules fire
+    ```
+  </Tab>
+  <Tab title="Passing">
+    Permanent waiver with a named approver:
 
-```yaml
-- rule: AE-CC-002
-  reason: "accepted risk — CI config lives in a separate repo"
-  expires: permanent
-  approver: security-team
-```
+    ```yaml .charter-suppress.yml
+    suppressions:
+      - rule: AE-TEST-001
+        reason: "Backend-only repo — no application code, only data pipeline scripts"
+        expires: permanent
+        approver: "@tashfiqul"
+    ```
 
-A time-bounded suppression with no approver also passes:
+    A time-bounded suppression — no approver required:
 
-```yaml
-- rule: AE-MCP-001
-  reason: "temporary during migration"
-  expires: 2026-09-01
-```
+    ```yaml .charter-suppress.yml
+    suppressions:
+      - rule: AE-MCP-001
+        reason: "Temporary during migration to new MCP server config"
+        expires: "2026-09-01"
+    ```
+
+    An entry with no `expires` field — default TTL applies, not a permanent waiver:
+
+    ```yaml .charter-suppress.yml
+    suppressions:
+      - rule: AE-CI-002
+        reason: "CI bootstrap in progress"
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-Add an `approver:` field naming the person or team who accepted the permanent risk, or convert the entry to a time-bounded suppression by replacing `expires: permanent` with a specific date. The `charter suppress <RULE> --reason "…" --approver "<name>"` command writes both fields for you. To set a finite window instead, use `--expires 90d`.
+<Steps>
+  <Step title="Identify unapproved permanent waivers">
+    Run `charter explain AE-SUPPRESS-002` — Charter lists every permanent waiver missing an approver, including the file location and the rule being suppressed.
+  </Step>
+  <Step title="Add an approver or convert to time-bounded">
+    Choose one of two paths:
+
+    **Option A — Add an approver** (keep the permanent waiver, add accountability):
+    ```yaml
+    - rule: AE-TEST-001
+      reason: "Backend-only repo"
+      expires: permanent
+      approver: "@tashfiqul"   # ← add this
+    ```
+
+    **Option B — Convert to time-bounded** (eliminate the permanent waiver):
+    ```bash
+    charter suppress AE-TEST-001 \
+      --reason "Backend-only repo" \
+      --expires 90d
+    ```
+  </Step>
+  <Step title="Confirm the finding clears">
+    Run `charter doctor` to verify the finding no longer appears and the suppression is now honored.
+  </Step>
+</Steps>
+
+<Tip>
+  AE-SUPPRESS-003 (Informational) surfaces when the overall suppression rate is high across the repo. AE-SUPPRESS-002 (High) is about accountability on permanent waivers specifically — the two rules are complementary, not redundant.
+</Tip>
 
 ## Score impact
 
-`High` — deducts 10 points via the standard formula; no cap.
+`High` (−10); no hard cap. The underlying finding also remains active and contributes its own deduction, since the unapproved permanent waiver is not honored.
 
 ## Edge cases
 
-`expires` present but malformed (not `YYYY-MM-DD`) fails **closed** — the engine treats it as inert so it suppresses nothing and the finding stays active (loud); an inert entry is not audited by this rule (only non-expired file entries and matched inline directives are audited); a blank-only `approver` counts as missing; secrets are suppressible like any rule, so an unapproved permanent `AE-SEC-001/002` suppression fires this rule and is not honored (the ≤ 49 cap holds — an approved permanent secret suppression lifts it); an entry that is both reason-less and permanent-without-approver fires both `AE-SUPPRESS-001` (Medium) and `AE-SUPPRESS-002` (High).
+<AccordionGroup>
+  <Accordion title="Malformed expires field">
+    An `expires` value that is not `YYYY-MM-DD` or `permanent` fails closed — the engine treats the entry as inert, suppresses nothing, and the finding stays active. The malformed entry is not audited by AE-SUPPRESS-002 (only non-expired file entries and matched inline directives are audited).
+  </Accordion>
+  <Accordion title="Blank approver counts as missing">
+    A `approver:` field containing only whitespace counts as missing and fires the finding.
+  </Accordion>
+  <Accordion title="Secret rule suppressions">
+    Secrets are suppressible like any rule. An unapproved permanent `AE-SEC-001` or `AE-SEC-002` suppression fires this rule and is not honored — the ≤ 49 score cap for secrets remains in effect. An approved permanent secret suppression lifts the cap.
+  </Accordion>
+  <Accordion title="Both AE-SUPPRESS-001 and AE-SUPPRESS-002 can fire together">
+    An entry that is both reason-less and a permanent waiver without an approver fires both AE-SUPPRESS-001 (Medium, −4) and AE-SUPPRESS-002 (High, −10) independently.
+  </Accordion>
+</AccordionGroup>
 
 ## Related rules
 
-- [AE-SUPPRESS-001](/rules/AE-SUPPRESS-001)
-- [AE-SUPPRESS-003](/rules/AE-SUPPRESS-003)
+<CardGroup cols={2}>
+  <Card title="AE-SUPPRESS-001" icon="file-pen" href="/rules/AE-SUPPRESS-001">
+    Requires a reason on every suppression — the documentation companion to this rule.
+  </Card>
+  <Card title="AE-SUPPRESS-003" icon="chart-bar" href="/rules/AE-SUPPRESS-003">
+    Informational — surfaces when the overall suppression rate across the repo is high.
+  </Card>
+</CardGroup>
 
 ## CLI
 
 ```bash
 charter explain AE-SUPPRESS-002
+charter suppress <RULE> --reason "..." --approver "<name>"
+charter suppress <RULE> --reason "..." --expires 90d
 ```

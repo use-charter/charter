@@ -3,151 +3,122 @@ title: "Suppression Governance"
 description: "How Charter treats suppressions as governed exceptions instead of silent muting."
 ---
 
-Charter allows suppressions because real repositories have false positives, accepted risk, and migration windows.
+Suppressions are not a weakness in the model — they're the governance surface. Real repositories have false positives, accepted risk, and migration windows. Charter supports all of those. The question isn't whether to suppress; it's whether the suppression is intentional, documented, and bounded.
 
-But Charter does **not** treat suppressions as free-form muting. A suppression changes the trust model of the scan, so it is governed like any other exception path.
+An unbounded suppression mechanism creates two problems fast: teams stop fixing issues because muting is easier than review, and later reviewers cannot tell which risks were understood versus forgotten. Charter's governance model is built to prevent both.
 
-## Why suppressions are governed
+## Two suppression mechanisms
 
-An unbounded suppression mechanism creates two problems fast:
+<Tabs>
+  <Tab title="File suppression (.charter-suppress.yml)">
+    `.charter-suppress.yml` is the repo-level governance file. It is the right choice when the finding has no precise line location, the target file cannot carry inline comments, or the team wants a central, reviewable suppression ledger.
 
-- teams stop fixing issues because muting is easier than review
-- later reviewers cannot tell which risks were understood versus forgotten
+    Generate an entry using `charter suppress`:
 
-Charter's governance model is built to prevent both.
+    ```bash
+    charter suppress --rule AE-CC-001 --reason "Claude config lives in the infra repo" --expires 90d --approver "@tashfiqul"
+    ```
 
-It does that by requiring suppressions to be:
+    This writes a structured entry to `.charter-suppress.yml`:
 
-- visible in source control
-- attributable with a reason
-- time-bounded by default
-- reviewable when made permanent
+    ```yaml
+    suppressions:
+      - rule: AE-CC-001
+        reason: "Claude config lives in the infra repo"
+        expires: "2026-09-07"
+        approver: "@tashfiqul"
+    ```
 
-## Two suppression surfaces
+    The `expires` field is stored as an absolute `YYYY-MM-DD` date. The CLI default is 90 days from today. Permanent waivers require `expires: permanent` and a mandatory `approver` field.
 
-Charter supports two ways to record a suppression.
+    Optional `path` field scopes the suppression to a specific file or glob, reducing the blast radius.
+  </Tab>
+  <Tab title="Inline directive (charter:ignore)">
+    Inline suppressions use a `charter:ignore` directive placed on the line **directly above** the triggering content.
 
-### File-based suppressions
+    ```yaml
+    # charter:ignore AE-ENV-001 reason="mise managed externally for this workspace"
+    MISE_GLOBAL_CONFIG_FILE: /shared/workspace/.mise.toml
+    ```
 
-`.charter-suppress.yml` is the repo-level governance file.
+    ```json
+    // charter:ignore AE-MCP-001 reason="vendored test fixture, not a real server config"
+    { "args": ["npx", "-y", "mcp-server-test@latest"] }
+    ```
 
-It is the right choice when:
+    Charter only discovers inline suppressions at a finding location. It does **not** scan the whole repo for comments that merely mention the syntax. Documentation pages, READMEs, and examples will never be misread as suppressions.
 
-- the finding has no precise line location
-- the target file cannot carry inline comments
-- the team wants a central, reviewable suppression ledger
+    Inline suppressions cannot carry `expires` or `approver` fields. For permanent waivers or approver attribution, use `.charter-suppress.yml`.
+  </Tab>
+</Tabs>
 
-Typical fields:
+## Three governance rules
 
-- `rule`
-- `reason`
-- `expires`
-- `approver`
-- optional `path`
+Every scan audits suppressions through three dedicated rules:
 
-### Inline suppressions
+| Rule | Severity | When it fires |
+|---|---|---|
+| `AE-SUPPRESS-001` | Medium | Any suppression entry is missing a `reason:` field |
+| `AE-SUPPRESS-002` | High | A permanent suppression (`expires: permanent`) has no `approver:` field |
+| `AE-SUPPRESS-003` | Informational | Suppression rate exceeds 30% of all findings (signal only, no score deduction) |
 
-Inline suppressions use a `charter:ignore` directive on the finding's own line.
+`AE-SUPPRESS-001` is the simplest rule in the model. Every suppression must explain itself. "False positive" alone is usually not enough. "Vendored test fixture" or "lives in a separate infra repo" is much better — it gives a future reviewer the context they would otherwise have to rediscover.
 
-Example:
+`AE-SUPPRESS-002` draws a hard line: permanent waivers require accountability. Without an `approver`, the underlying finding stays active and the accepted risk is treated as undocumented — regardless of how well-reasoned the suppression may be.
 
-```text
-# charter:ignore AE-MCP-001 reason="vendored test fixture"
-```
+## What suppression does to the score
 
-Charter only discovers inline suppressions at a finding location. It does **not** scan the whole repo for comments that merely mention the syntax. That keeps the mechanism precise and prevents documentation pages from being misread as suppressions.
+<Note>
+  Suppressed findings are excluded from the base score calculation entirely. They are listed separately in `charter doctor` output under a "Suppressed" section and appear in the HTML report with full detail. In SARIF output, suppressed findings carry a `suppressed: true` annotation so downstream security tooling can distinguish them from active findings.
+</Note>
 
-## Default TTL and permanent waivers
+This is why suppression governance matters so much: the mechanism directly changes the final score. Without an audit trail, a score of 95 could mean an excellent repo or a heavily-suppressed one. Charter makes both cases visible and distinguishable.
 
-Charter's model is time-bounded by default, but that default applies differently depending on how the suppression was created.
+## Expiry behavior
 
-When you use `charter suppress`, the default is `--expires 90d`, and the command stores that as an absolute `YYYY-MM-DD` date in `.charter-suppress.yml`.
+<AccordionGroup>
+  <Accordion title="What happens when a suppression expires">
+    When a suppression's `expires` date passes, the finding re-surfaces as active on the next scan. The suppression entry itself remains in `.charter-suppress.yml` but is ignored — Charter treats expired dates as if the suppression were never there.
 
-That behavior applies to **CLI-generated suppressions**.
+    The expired entry stays in the file deliberately. It provides an audit trail: this finding was suppressed, it expired on this date, and it was not re-suppressed. That history is valuable for security reviews.
 
-For **hand-authored suppressions**, a missing `expires` field is still honored. Charter does not infer a creation-time 90-day window for a bare entry.
+    To re-suppress, either update the `expires` field to a new future date or add `expires: permanent` (with a required `approver` field). Do not delete the old entry; amend it.
+  </Accordion>
+  <Accordion title="Hand-authored entries vs CLI-generated entries">
+    The CLI's `charter suppress` command always sets a default 90-day expiry and stores it as an absolute date. That is the recommended path.
 
-That gives teams a clean default behavior:
+    Hand-authored entries in `.charter-suppress.yml` with no `expires` field are honored without a default TTL. Charter does not infer a 90-day window from the file's last-modified time. If you write an entry by hand, the absence of `expires` means it has no expiry — which means it will also need an `approver` if it's effectively permanent, or it will trigger `AE-SUPPRESS-002`.
 
-- CLI-generated short-term suppressions are easy to add
-- the finding re-surfaces automatically later
-- old risk acceptance does not stay hidden forever by accident
+    The clean path: use `charter suppress` for all new suppressions and let the CLI handle the date arithmetic.
+  </Accordion>
+</Accordion>
+</AccordionGroup>
 
-Permanent waivers are treated differently.
+## When to suppress vs fix
 
-### Default-TTL suppressions
+Use suppression when the finding is a confirmed false positive in this specific repo, or when the risk is real but explicitly accepted with documented justification and a finite window.
 
-A suppression with no explicit `expires: permanent` is **not** treated as a permanent waiver.
+Do **not** use suppression as a substitute for fixing the issue when:
+- Charter can fix it safely → run `charter fix`
+- The fix is straightforward and low-risk → fix it manually
+- The finding is new and not yet understood → investigate first
 
-That means:
+A healthy suppression workflow:
 
-- finite expiries are honored until they expire
-- the CLI's default 90-day path keeps **generated** suppressions bounded
-- a hand-authored entry with no `expires` is still honored and is **not** automatically bounded by when it was created
-- expired or malformed dates fail closed and do not suppress anything
-
-### Permanent suppressions
-
-Only `expires: permanent` is a permanent waiver.
-
-And permanent waivers are honored **only** when they include an `approver`.
-
-Without an approver:
-
-- Charter flags `AE-SUPPRESS-002`
-- the underlying finding stays active
-- the accepted risk is treated as undocumented
-
-This rule applies even to secret findings. Charter does not create a special non-suppressible class; it requires stronger governance instead.
-
-## Every suppression needs a reason
-
-`AE-SUPPRESS-001` enforces the simplest rule in the model: every suppression must explain itself.
-
-A good reason answers:
-
-- what is being accepted
-- why that acceptance is safe or necessary
-- what context a future reviewer would otherwise have to rediscover
-
-"False positive" by itself is usually not enough. "Vendored test fixture" or "lives in a separate infra repo" is much better.
-
-## Governance rules are part of every scan
-
-Charter audits suppressions on every run through three governance rules:
-
-| Rule | What it catches |
-|---|---|
-| `AE-SUPPRESS-001` | Missing `reason` |
-| `AE-SUPPRESS-002` | Permanent waiver without `approver` |
-| `AE-SUPPRESS-003` | High suppression rate |
-
-`AE-SUPPRESS-003` is informational only. It exists to surface a repo-level smell: if a large share of findings are suppressed, the team may have stopped trusting the scanner or accumulated too much accepted risk.
-
-The threshold is fixed in v1 at more than 30% suppressed findings.
-
-## What happens to the score
-
-Charter partitions findings before scoring.
-
-That means:
-
-- active findings affect the score
-- honored suppressions are listed separately and excluded from the base score
-- informational governance findings do not deduct points
-
-This is why suppression governance matters so much: the mechanism can change the final score, so the repo needs an audit trail for using it.
-
-## Practical guidance
-
-Use suppression when the finding is real but temporarily accepted, or when the rule is correct in general but wrong for a narrow, documented case.
-
-Do **not** use suppression as a substitute for fixing the issue when the remediation is straightforward.
-
-In practice, a healthy suppression flow looks like this:
-
-1. confirm the finding really is accepted or noisy in this repo
-2. add a meaningful `reason`
-3. use a finite expiry unless permanence is truly justified
-4. add an `approver` for permanent waivers
-5. let the governance rules keep the exception visible over time
+<Steps>
+  <Step title="Confirm the finding">
+    Read the finding detail with `charter explain <RULE-ID>`. Verify that the finding is a real false positive or genuinely accepted risk in this repo — not just inconvenient.
+  </Step>
+  <Step title="Suppress with a meaningful reason">
+    Run `charter suppress --rule <ID> --reason "..."`. The reason should tell a future reviewer what is being accepted and why it is safe or necessary in this context.
+  </Step>
+  <Step title="Set a bounded expiry">
+    Accept the default 90-day expiry unless you have a specific reason to change it. Permanent waivers are the exception, not the default.
+  </Step>
+  <Step title="Add an approver for permanent waivers">
+    If `expires: permanent` is truly justified, add `--approver "@handle"`. This is enforced by `AE-SUPPRESS-002` — without it, the suppression is rejected and the finding stays active.
+  </Step>
+  <Step title="Let governance rules keep it honest">
+    `AE-SUPPRESS-001` and `AE-SUPPRESS-002` run on every scan. They are not optional. They exist to ensure the suppression ledger stays trustworthy over time, not just at the moment of creation.
+  </Step>
+</Steps>

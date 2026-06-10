@@ -1,112 +1,153 @@
 ---
-title: "Use Charter Fix Safely"
-description: "Preview Charter's unified diffs first, apply only the safe repairs you want, and verify the result with a follow-up scan."
+title: "Use charter fix Safely"
+description: "The correct workflow for reviewing and applying Charter's auto-fixes without surprises."
 ---
 
-`charter fix` is intentionally narrow and conservative. Use it to repair the findings Charter knows how to fix safely, not as a blind rewrite tool.
+`charter fix` has a hard guarantee: it never mutates a file without showing you the diff first. This guide makes sure you never skip that step.
 
-## 1. Always start with `--dry-run`
+<Warning>
+Never run `charter fix` without `--dry-run` first. The diff is the contract — read it before accepting it. Applying a fix you haven't reviewed defeats the purpose of a diff-first tool.
+</Warning>
 
-Preview the changes first:
+<Steps>
 
-```bash
-charter fix --path . --dry-run
-```
+<Step title="Always dry-run first">
 
-Repo-verified: `charter fix` is diff-first by contract. It prints unified diffs and writes nothing in dry-run mode.
-
-Why this matters:
-
-- you can see exactly what Charter wants to change
-- you can decide whether the repair matches repo intent
-- you keep manual review in the loop
-
-## 2. Review the unified diff
-
-Look for:
-
-- the target file path
-- the rule being fixed
-- whether the change is a create, append, or replacement
-- whether the resulting file still matches your repo's conventions
-
-Typical examples:
-
-- create `AGENTS.md` for `AE-CTX-001`
-- append `.gitignore` patterns for `AE-CTX-004`
-- create `.github/workflows/charter.yaml` for `AE-CI-002`
-- bump a known MCP package pin for `AE-MCP-001`
-
-If the diff is wrong for your repo, stop and make the change manually instead.
-
-## 3. Apply the fix
-
-Once the diff looks correct:
+Before writing anything, preview every change:
 
 ```bash
-charter fix --path .
+charter fix --dry-run
 ```
 
-You can also target a single rule:
+Charter prints a unified diff for each affected file. Each hunk shows you the exact before/after — the file path, the rule being addressed, and whether the change is a create, append, or replacement.
+
+Read every diff. If a diff looks wrong for your repo, stop and make the change manually instead.
+
+</Step>
+
+<Step title="Understand what you're applying">
+
+Charter's safe fixers are narrow by design. Here's exactly what each one does:
+
+<AccordionGroup>
+
+<Accordion title="AE-CTX-001 — AGENTS.md creation">
+Creates `AGENTS.md` using a template populated with your detected language, CI platform, and toolchain. The template is a starting point — review it and fill in repo-specific context before committing. Charter will not overwrite an existing `AGENTS.md`.
+</Accordion>
+
+<Accordion title="AE-CTX-004 — .gitignore entries">
+Appends agent artifact patterns to your `.gitignore` (`.charter/`, `.claude/`, common cache directories). Review before committing to confirm no existing entries conflict and no paths you intend to track are being excluded.
+</Accordion>
+
+<Accordion title="AE-CI-002 — Charter GitHub Actions workflow">
+Creates `.github/workflows/charter.yaml` with a standard Charter gate workflow. Check the `threshold` value and verify the `actions/checkout` SHA pin matches the version you want before committing.
+</Accordion>
+
+<Accordion title="AE-MCP-001 — MCP package version bump">
+Updates floating `@latest`, semver ranges, or missing version pins in your MCP config to the exact version from Charter's catalog. Verify the resolved version is the one you want — especially for packages where the catalog version may lag the latest release.
+</Accordion>
+
+</AccordionGroup>
+
+<Note>
+`charter fix` does **not** delete files, silently mutate files, auto-fix secret findings, or auto-fix rules outside the four safe fixers above. That narrow scope is intentional.
+</Note>
+
+</Step>
+
+<Step title="Apply the fixes">
+
+Once the diffs look right, apply:
+
+<CodeGroup>
+
+```bash Apply all safe fixes
+charter fix
+```
+
+```bash Apply a single rule only
+charter fix --rule AE-CTX-004
+```
+
+</CodeGroup>
+
+When Charter updates an existing file, it writes the prior version to `.charter/backups/<timestamp>/` before making any changes. Create-only operations (new files) don't produce a backup because there's nothing to restore.
+
+</Step>
+
+<Step title="Re-scan to verify">
+
+Never assume a fix is good just because the diff looked right. Always verify:
 
 ```bash
-charter fix --path . --rule AE-CTX-004
+charter doctor
 ```
 
-## 4. Know what Charter will not do
+Confirm:
 
-`charter fix` does **not**:
-
-- delete files
-- silently mutate files
-- auto-fix secret findings
-- auto-fix every rule in the catalog
-
-That is intentional. Safe scope is part of the product contract.
-
-## 5. Use the backups if needed
-
-When `charter fix` updates an existing file, it writes the prior version to:
-
-```text
-.charter/backups/
-```
-
-This gives you a local recovery path if you do not want the applied result.
-
-Repo-verified: create-only writes do not have a prior file to back up. Updates and replacements do.
-
-## 6. Re-scan to verify
-
-Never assume the repair is good just because the diff looked reasonable.
-
-Run:
-
-```bash
-charter doctor --path . --threshold 80
-```
-
-You want to confirm:
-
-- the targeted finding disappeared
+- the targeted finding no longer appears in the active findings list
 - the score moved in the right direction
-- the repair did not reveal a new problem elsewhere
+- the fix didn't reveal a new problem elsewhere
+
+</Step>
+
+<Step title="Commit the result">
+
+Review the staged changes with `git diff --staged` before committing:
+
+```bash
+git diff --staged
+git commit -m "fix: apply Charter safe repairs"
+```
+
+</Step>
+
+</Steps>
+
+## Recovery
+
+<AccordionGroup>
+
+<Accordion title="Recovering from an unwanted fix">
+
+If you applied a fix and want to revert, Charter's backups are in `.charter/backups/`:
+
+```bash
+# List available backups
+ls .charter/backups/
+
+# Restore a specific file
+cp .charter/backups/2026-06-10T07:42:00Z/AGENTS.md ./AGENTS.md
+```
+
+You can also use `git checkout` if the change has been staged but not committed:
+
+```bash
+git checkout -- AGENTS.md
+```
+
+</Accordion>
+
+<Accordion title="When to skip charter fix entirely">
+
+Use a manual edit instead of `charter fix` when:
+
+- the file already exists and the repair needs repo-specific judgment
+- the change is outside the four safe fixers
+- the finding is about secrets or another manual-only rule
+- the generated template content needs substantial customization before it would be accurate
+
+`charter fix` is best when the safe path is obvious and mechanical.
+
+</Accordion>
+
+</AccordionGroup>
 
 ## Recommended workflow
 
 ```bash
-charter doctor --path . --threshold 80
-charter fix --path . --dry-run
-charter fix --path .
-charter doctor --path . --threshold 80
+charter doctor
+charter fix --dry-run
+charter fix
+charter doctor
 ```
-
-## When to stop using `fix`
-
-Switch to a manual edit when:
-
-- the file already exists but the repair needs repo-specific judgment
-- the change is outside the current safe fixer set
-- the finding is about secrets or another manual-only rule
-
-`charter fix` is best when the safe path is obvious and mechanical. When the repo needs judgment, review and edit manually.

@@ -3,11 +3,17 @@ title: "AE-CC-001"
 description: "Agent hook configurations must not contain dangerous shell commands that a prompt-injected agent could weaponize (OWASP MCP Top 10 beta, MCP05 Command Injection & Execution)."
 ---
 
-**Rule ID:** AE-CC-001 · **Severity:** Blocker · **Category:** Agent Config · **Auto-fixable:** No
+**Rule ID:** AE-CC-001 · **Severity:** <Badge color="red">Blocker</Badge> · **Category:** Agent Config · **Auto-fixable:** No
+
+<Warning>
+  AE-CC-001 is never auto-fixed. Dangerous hook commands require human review — Charter shows the evidence and guidance but will not rewrite hook configurations automatically.
+</Warning>
 
 ## Why this rule
 
-Agent hook configurations run shell commands automatically on events like file save or tool use. A destructive or injection-vulnerable hook fires without explicit user action, and in an agent session the agent may trigger it indirectly through file writes.
+Agent hook configurations run shell commands automatically on events like file save or tool use. A destructive or injection-vulnerable hook fires without explicit user action — in an agent session, the agent may trigger it indirectly through file writes.
+
+Because hooks execute outside the agent's visible reasoning loop, a compromised hook can cause irrecoverable damage — deleted files, elevated permissions, or remote code execution — before any human has a chance to intervene.
 
 ## What triggers it
 
@@ -15,38 +21,118 @@ Charter scans agent hook configuration files — `.claude/settings.json` and `.c
 
 It flags commands that fall into three danger classes:
 
-- **Shell injection vectors:** command substitution via `$(…)` or backtick syntax, and `&&` or `||` chains where the left-hand side accepts open input that an injected prompt could control.
-- **Destructive commands:** `rm -rf`, `git reset --hard`, `git clean -fd`, `dd`, `mkfs`, and `truncate` — operations that irreversibly delete or overwrite data.
-- **Privilege escalation:** `sudo`, `chmod 777`, and `chown -R` — commands that widen permissions beyond what the task requires.
+| Danger class | Examples | Why dangerous |
+|---|---|---|
+| Shell injection | `$()`, backticks, `&&` with open input | Agent-controlled input can execute arbitrary commands |
+| Destructive commands | `rm -rf`, `git reset --hard`, `git clean -fd` | Irrecoverable file loss triggered automatically |
+| Privilege escalation | `sudo`, `chmod 777`, `chown -R` | Elevates permissions beyond intended scope |
 
-A hook running any of these patterns fires the finding at Blocker severity. Charter quotes the offending command in the finding evidence so you can locate it immediately.
+Charter quotes the offending command in the finding evidence so you can locate it immediately.
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    A hook command using `rm -rf` with a shell-expanded path — destructive and flagged Blocker:
 
-`.claude/settings.json` with a hook `command` of `"rm -rf $CLAUDE_PROJECT_DIR/build"` — destructive, flagged Blocker. A hook using `"sudo chmod 777 ./bin"` is also flagged.
+    ```json .claude/settings.json
+    {
+      "hooks": {
+        "PostToolUse": [{
+          "command": "rm -rf /tmp/$(basename $FILE)"
+        }]
+      }
+    }
+    ```
 
-### Passing
+    A hook elevating permissions is also flagged:
 
-`.claude/settings.json` with a `PreToolUse` hook running a scoped shell script — for example `"$CLAUDE_PROJECT_DIR/.claude/hooks/format.sh"` — passes because it delegates to an explicit, bounded command.
+    ```json .claude/settings.json
+    {
+      "hooks": {
+        "PostToolUse": [{
+          "command": "sudo chmod 777 ./bin"
+        }]
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Passing">
+    A hook delegating to an explicit, bounded script — no destructive patterns:
+
+    ```json .claude/settings.json
+    {
+      "hooks": {
+        "PostToolUse": [{
+          "command": "npx prettier --write \"$FILE_PATH\""
+        }]
+      }
+    }
+    ```
+
+    Or delegating to a scoped hook script in the repo:
+
+    ```json .claude/settings.json
+    {
+      "hooks": {
+        "PreToolUse": [{
+          "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/format.sh"
+        }]
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-replace the dangerous command with an explicit, scoped, non-destructive command; prefer array-form (`args`) execution to avoid shell expansion; review each hook against "if an agent were prompt-injected, could this hook be weaponized?", then commit the change.
+<Steps>
+  <Step title="Locate the flagged hook">
+    Run `charter explain AE-CC-001` to see the finding evidence. Charter identifies the config file and the offending command pattern.
+  </Step>
+  <Step title="Replace the dangerous pattern">
+    Substitute destructive or injection-vulnerable commands with explicit, scoped, non-destructive alternatives. Prefer array-form execution (`args`) over shell strings to avoid expansion.
+  </Step>
+  <Step title="Review against the injection model">
+    For each hook, ask: "If an agent were prompt-injected, could this hook be weaponized?" If yes, redesign the command to be safe regardless of what the agent does.
+  </Step>
+  <Step title="Commit the change">
+    Commit the updated hook config. Charter re-evaluates on the next scan.
+  </Step>
+</Steps>
+
+<Tip>
+  OWASP MCP Top 10 item MCP05 covers command injection in agent hooks. Charter's AE-CC-001 is a static check for the most obvious patterns — it catches the dangerous cases without requiring runtime analysis.
+</Tip>
 
 ## Score impact
 
-`Blocker` — engages the hard blocker score cap (final score ≤ 59 whenever any blocker finding is present); no separate per-finding cap.
+`Blocker` — engages the hard blocker score cap. The final score is capped at **≤ 59** whenever any Blocker finding is present, regardless of other findings.
 
 ## Edge cases
 
-only the three JSON hook files are scanned in v1; Pkl (`hk.pkl`), YAML (`.pre-commit-config.yaml`, `lefthook.yml`), and shell-dir (`.husky/`) hook managers are out of scope for v1; a controlled `&&` chain (`cd app && npm test`) is not flagged (operator chaining is deferred); a malformed JSON hook file fails the scan fast with a wrapped error.
+<AccordionGroup>
+  <Accordion title="Hook managers out of scope for v1">
+    Only the three JSON hook files are scanned in v1. `hk.pkl`, `.pre-commit-config.yaml`, `lefthook.yml`, and `.husky/` shell-dir hooks are out of scope and not evaluated.
+  </Accordion>
+  <Accordion title="Controlled && chains">
+    A controlled `&&` chain where both sides are safe (e.g. `cd app && npm test`) is not flagged — operator chaining is only flagged when the left-hand side accepts open or agent-controlled input.
+  </Accordion>
+  <Accordion title="Malformed JSON hook files">
+    A hook file that cannot be parsed fails the scan fast with a wrapped error. Charter surfaces the parse failure rather than silently passing the file.
+  </Accordion>
+</AccordionGroup>
 
 ## Related rules
 
-- [AE-CC-002](/rules/AE-CC-002)
-- [AE-SEC-001](/rules/AE-SEC-001)
+<CardGroup cols={2}>
+  <Card title="AE-CC-002" icon="shield-halved" href="/rules/AE-CC-002">
+    Requires explicit edit-scope boundaries in the agent context file.
+  </Card>
+  <Card title="AE-SEC-001" icon="key" href="/rules/AE-SEC-001">
+    Detects hardcoded secrets in tracked files.
+  </Card>
+</CardGroup>
 
 ## CLI
 

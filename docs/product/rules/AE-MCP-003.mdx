@@ -3,54 +3,119 @@ title: "AE-MCP-003"
 description: "Remote MCP servers must declare authentication metadata. A non-local remote server with no auth declaration is flagged (OWASP MCP Top 10 beta, MCP07 Insufficient Authentication & Authorization), aligned with MCP specification revision `2025-11-25`."
 ---
 
-**Rule ID:** AE-MCP-003 · **Severity:** High · **Category:** MCP Safety · **Auto-fixable:** No
+**Rule ID:** AE-MCP-003 · **Severity:** <Badge color="orange">High</Badge> · **Category:** MCP Safety · **Auto-fixable:** No
 
 ## Why this rule
 
-A public remote MCP server with no declared auth boundary accepts tool calls from any agent that can reach it. Charter checks whether the config declares that auth is required — the minimum signal that the server was configured with access control in mind.
+A public remote MCP server with no declared auth boundary accepts tool calls from any agent that can reach it. Charter checks whether the config declares that auth is required — the minimum signal that the server was configured with access control in mind. Without this declaration, there is no evidence that tool calls to the server are gated at all.
 
 ## What triggers it
 
-Charter scans tracked MCP configuration files — `.mcp.json`, `mcp.json`, `.cursor/mcp.json`, and `.vscode/mcp.json` — and inspects every remote HTTP or SSE server entry. For each non-local remote server, Charter checks whether an auth header is declared in the server's config. Accepted header names are `Authorization`, `X-Api-Key`, `Api-Key`, and `X-Auth-Token` (checked case-insensitively). An environment variable reference such as `"Bearer ${TOKEN}"` counts as a valid declaration — Charter checks for the presence of an auth header, not the validity of the credential.
+Charter inspects every remote HTTP or SSE server entry in tracked MCP configuration files. For each non-local remote server, it checks whether an auth header is declared in the server's config block.
 
-A remote server with none of these headers declared is flagged High.
+**Accepted auth header names** (checked case-insensitively):
+- `Authorization`
+- `X-Api-Key`
+- `Api-Key`
+- `X-Auth-Token`
 
-Two categories of server are always exempt: local and internal origins (loopback, RFC 1918 private addresses, `.localhost`, `.local`, `.internal`), and catalog-known OAuth vendor hosts such as Sentry, Atlassian, and Context7. These vendors authenticate through an OAuth flow rather than a static config header, so requiring a header declaration on them would be a false positive.
+An environment variable reference such as `"Bearer ${TOKEN}"` counts as a valid declaration — Charter checks for the *presence* of an auth header, not the validity of the credential.
+
+**Scanned files:** `.mcp.json`, `mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`
+
+**Always exempt:**
+
+| Exemption | Reason |
+|-----------|--------|
+| Local / internal origins | Loopback, RFC 1918 private addresses, `*.localhost`, `*.local`, `*.internal` |
+| Catalog OAuth vendor hosts | Sentry, Atlassian, Context7, and similar — they authenticate via OAuth flow, not a static config header |
+| Dynamic `${VAR}` URL | No parseable host — skipped |
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    ```json .mcp.json
+    {
+      "mcpServers": {
+        "self-hosted": {
+          "type": "http",
+          "url": "https://self-hosted.example.com/mcp"
+        }
+      }
+    }
+    ```
 
-A `.mcp.json` entry for `"url": "https://self-hosted.example/mcp"` with no `headers` block — Charter cannot confirm auth is configured and flags it High.
+    ```
+    # Remote server, no headers block — Charter cannot confirm auth is configured
+    # Fires High
+    ```
+  </Tab>
+  <Tab title="Passing">
+    ```json .mcp.json (env-var auth header)
+    {
+      "mcpServers": {
+        "self-hosted": {
+          "type": "http",
+          "url": "https://self-hosted.example.com/mcp",
+          "headers": {
+            "Authorization": "Bearer ${MCP_SERVER_TOKEN}"
+          }
+        }
+      }
+    }
+    ```
 
-### Passing
-
-A server entry for `"url": "https://mcp.sentry.dev/mcp"` with no headers — Sentry is a catalog-known OAuth host and is exempt. Any remote server with `"headers": { "Authorization": "Bearer ${TOKEN}" }` also passes.
+    ```json .mcp.json (catalog OAuth vendor — no header needed)
+    {
+      "mcpServers": {
+        "sentry": {
+          "type": "http",
+          "url": "https://mcp.sentry.dev/mcp"
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-Add a `headers` block to the remote MCP server entry and include an auth header that references an environment variable:
+Add a `headers` block to the remote MCP server entry with an auth header that references an environment variable:
 
 ```json
-"headers": {
-  "Authorization": "Bearer ${MCP_SERVER_TOKEN}"
+{
+  "mcpServers": {
+    "your-server": {
+      "type": "http",
+      "url": "https://your-mcp-server.example.com",
+      "headers": {
+        "Authorization": "Bearer ${MCP_SERVER_TOKEN}"
+      }
+    }
+  }
 }
 ```
 
-If the server uses a different auth mechanism, declare the appropriate header (`X-Api-Key`, `Api-Key`, or `X-Auth-Token`) using the same env-reference pattern. Commit the change so the auth declaration is tracked.
+If the server uses a different auth mechanism, use the appropriate header name (`X-Api-Key`, `Api-Key`, or `X-Auth-Token`) with the same env-reference pattern.
+
+<Warning>
+  Use env var references for header values — never literal credentials. A literal credential in an auth header triggers AE-SEC-002 (Blocker, score cap ≤ 49).
+</Warning>
 
 ## Score impact
 
-each finding is `High` (−10); no hard cap.
+Each finding is `High` (−10). No hard cap (caps are reserved for raw-secret findings).
 
 ## Edge cases
 
-local/internal origins never fire (loopback, RFC1918 private, link-local, `.localhost`/`.local`/`.internal`); catalog OAuth vendor hosts never fire; an env-reference header value satisfies the presence check (Charter does not validate the credential, only its declaration); a bare `${VAR}` URL with no parseable host is skipped.
+Local and internal origins never fire. Catalog OAuth vendor hosts never fire. An env-reference header value (`${TOKEN}`) satisfies the presence check — Charter does not validate the credential itself, only its declaration. A bare `${VAR}` URL with no parseable host is skipped entirely.
 
 ## Related rules
 
-- [AE-MCP-001](/rules/AE-MCP-001)
-- [AE-MCP-002](/rules/AE-MCP-002)
+- [AE-MCP-001](/rules/AE-MCP-001) — MCP servers must be pinned to exact versions
+- [AE-MCP-002](/rules/AE-MCP-002) — remote MCP server origins must be trusted
+- [AE-SEC-002](/rules/AE-SEC-002) — no raw secrets in MCP config files
 
 ## CLI
 

@@ -1,66 +1,127 @@
 ---
 title: "Quickstart"
-description: "Run your first Charter scan, understand the score, and generate a shareable report."
+description: "Get a real Charter score on your repo in under 5 minutes."
 ---
 
-This guide gets you from zero to a real Charter scan as quickly as possible.
+This guide takes you from zero to a real Charter scan result. By the end you'll have a score, a list of findings to act on, and an offline report you can share.
 
-## Install Charter
+<Steps>
+  <Step title="Install Charter">
+    The fastest path on macOS and Linux:
 
-Download the binary for your platform from [GitHub Releases](https://github.com/use-charter/charter/releases), extract it, and put `charter` on your PATH. See [Installation](/installation) for all install paths including Homebrew and `go install`.
+    ```bash
+    brew install use-charter/tap/charter
+    ```
 
-## Scan Your Repository
+    Verify the install:
 
-From the repository you want to evaluate:
+    ```bash
+    charter version
+    ```
 
-```bash
-charter doctor --path .
-```
+    <Tip>
+      On Windows or if you prefer a direct binary or `go install`, see the [Installation guide](/installation) for all supported platforms.
+    </Tip>
+  </Step>
 
-Charter scans the repo, evaluates all 18 rules, and prints:
+  <Step title="Scan your repo">
+    From the root of the repository you want to evaluate:
 
-- the findings that matter
-- the final score
-- whether the repo passed the active threshold
+    ```bash
+    charter doctor --path .
+    ```
 
-## Read the Score
+    Charter scans statically — no network requests, no LLM calls, nothing sent anywhere. On a typical repo it finishes in under 2 seconds.
 
-Use the score as a quick triage signal:
+    <Frame caption="charter doctor scanning — terminal output with category scorecard">
+      <img src="/images/screenshots/quickstart-scan.png" alt="charter doctor output" />
+    </Frame>
+  </Step>
 
-- **80-100:** ship-ready
-- **60-79:** needs work
-- **50-59:** blocked
-- **0-49:** critical
+  <Step title="Read the output">
+    The doctor output has three sections:
 
-Two caps matter most:
+    **1. Category scorecard**
 
-- any raw secret finding caps the score at `49`
-- any blocker finding caps the score at `59`
+    A breakdown of findings by axis — Context, Safety, Operability, and Governance — so you can see which area is pulling the score down.
 
-You do not need to memorize the full formula to get value from the first scan. Focus first on blocker and high-severity findings.
+    **2. Individual findings**
 
-## If AGENTS.md Is Missing
+    Each finding shows:
+    - Rule ID (e.g. `AE-SEC-001`)
+    - Severity (Blocker / High / Medium / Low)
+    - Evidence — the exact file or pattern that triggered the rule
+    - A fix suggestion or a link to the remediation guide
 
-If the scan tells you the repo has no usable agent context file, scaffold the missing basics:
+    **3. Final score and gate result**
 
-```bash
-charter init
-```
+    The total score (0–100) and whether the repo passed or failed the active threshold.
 
-`charter init` creates the missing core context files without overwriting existing ones, then you can rescan with `charter doctor --path .`.
+    <Note>
+      **Exit code contract:**
+      - Exit `0` — passed threshold
+      - Exit `1` — below threshold
+      - Exit `2` — scan error (bad path, unreadable files, etc.)
+    </Note>
 
-## Generate a Shareable Report
+    Use the score as a quick triage signal:
 
-For a fuller review in the browser, write the offline HTML report:
+    | Score | Zone |
+    |-------|------|
+    | 80–100 | Ship-ready |
+    | 60–79 | Needs work |
+    | 50–59 | Blocked (active Blocker finding) |
+    | 0–49 | Critical (raw secret detected) |
+  </Step>
 
-```bash
-charter report --format html --open
-```
+  <Step title="Fix what Charter can fix">
+    For findings Charter knows how to repair, preview the diff first:
 
-That produces a self-contained file with no external network dependencies, useful for PRs, handoff, or review.
+    ```bash
+    charter fix --dry-run
+    ```
 
-## Next Steps
+    Apply when you're satisfied:
 
-- Use [`/rules/overview`](/rules/overview) to understand what Charter checks.
-- Use [`/cli/overview`](/cli/overview) for the full command reference.
-- Use [`/ci/github-action`](/ci/github-action) when you are ready to put Charter in CI.
+    ```bash
+    charter fix
+    ```
+
+    <Warning>
+      Secrets and dangerous-command findings are never auto-fixed. Charter shows you what needs to change and where, but you make those changes manually. This is intentional — automated secret handling requires decisions only a human should make.
+    </Warning>
+
+    After fixing, re-run `charter doctor --path .` to confirm the score improved.
+  </Step>
+
+  <Step title="Generate a shareable report">
+    For a fuller offline review you can attach to a PR or hand to a colleague:
+
+    ```bash
+    charter report
+    ```
+
+    This writes `charter-report.html` — a self-contained file with no external network dependencies. Open it in any browser.
+
+    <Frame caption="charter-report.html — self-contained offline HTML report">
+      <img src="/images/screenshots/report-overview.png" alt="charter HTML report" />
+    </Frame>
+  </Step>
+</Steps>
+
+## What's next
+
+<CardGroup cols={2}>
+  <Card title="Add Charter to CI" icon="git-branch" href="/ci/github-action">
+    Gate pull requests on agent-readiness with the GitHub Action.
+  </Card>
+  <Card title="Understand the score" icon="chart-bar" href="/concepts/scoring-and-caps">
+    The scoring formula, hard caps, and how findings roll up.
+  </Card>
+  <Card title="Browse the rules" icon="shield" href="/rules/overview">
+    All 18 rules with remediation guidance for each.
+  </Card>
+  <Card title="Fix a finding manually" icon="wrench" href="/how-to/use-charter-fix-safely">
+    When auto-fix isn't available, here's how to close findings by hand.
+  </Card>
+</CardGroup>

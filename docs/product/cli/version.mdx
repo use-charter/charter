@@ -1,28 +1,28 @@
 ---
 title: "version"
-description: "Print Charter build metadata for the current binary."
+description: "Print Charter build metadata for the currently installed binary."
 icon: "tag"
 ---
 
-`charter version` prints the build metadata for the currently running binary.
+`charter version` prints build metadata for the currently running binary. Use it to confirm which build is installed in a local environment, CI runner, or release artifact — and to include the exact version when filing a bug report.
 
-This is useful when you need to confirm exactly which build is installed in a local environment, CI runner, or release artifact.
+## Usage
 
-## Default Output
+<CodeGroup>
+  ```bash Full output
+  charter version
+  ```
 
-The text format prints:
+  ```bash Short (version number only)
+  charter version --short
+  ```
 
-- Charter version
-- commit
-- build date
-- Go version
-- platform
+  ```bash JSON
+  charter version --format json
+  ```
+</CodeGroup>
 
-```bash
-charter version
-```
-
-Example shape:
+## Example Output
 
 ```text
 charter   1.0.0
@@ -32,36 +32,31 @@ go        1.26.3
 platform  darwin/arm64
 ```
 
-## Additional Flags
+## JSON Output
 
-| Flag | Description |
-| --- | --- |
-| `--format text|json` | Output format. Defaults to `text`. |
-| `--short` | Print only the version string. |
-
-## Examples
-
-### Default text output
-
-```bash
-charter version
+```json
+{
+  "version": "1.0.0",
+  "commit": "abc1234f",
+  "date": "2026-05-18T09:42:00Z",
+  "go": "1.26.3",
+  "platform": "darwin/arm64"
+}
 ```
 
-### Version string only
+## Flags
 
-```bash
-charter version --short
-```
+<ResponseField name="--short" type="boolean">
+  Print only the version number. Bypasses format rendering entirely — `--format` is ignored when `--short` is set.
+</ResponseField>
 
-### JSON output
-
-```bash
-charter version --format json
-```
+<ResponseField name="--format" type="text | json">
+  Output format. Defaults to `text`. Ignored when `--short` is set.
+</ResponseField>
 
 ## Exit Codes
 
-| Exit code | Meaning |
-| --- | --- |
-| `0` | Version output rendered successfully. This includes `--short`, which returns only the version string and bypasses format rendering. |
-| non-zero | Command error. In normal use this is most relevant for an unknown `--format` value when `--short` is not set. |
+| Code | Meaning |
+|------|---------|
+| `0` | Version output rendered successfully |
+| `2` | Usage error — for example, an unknown `--format` value when `--short` is not set |

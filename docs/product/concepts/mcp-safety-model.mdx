@@ -1,120 +1,135 @@
 ---
 title: "MCP Safety Model"
-description: "Why Charter treats MCP safety as a first-class part of agent readiness."
+description: "Why Charter treats MCP safety as a first-class part of agent readiness, and how each rule works."
 ---
 
-Model Context Protocol expands what a coding agent can reach. That makes MCP configuration part of the repo's safety boundary, not a side detail.
+Model Context Protocol expands what agents can reach — tools, databases, APIs, filesystems, external services. That expansion makes MCP configuration part of the repo's security boundary, not a side detail. Misconfigured MCP is not a developer experience issue; it is a supply-chain and access control issue.
 
-Charter's MCP model focuses on three practical questions:
+Charter's MCP model asks three practical questions on every scan, all answerable from static config alone — no network calls, no runtime observation required.
 
-- Is the server package pinned?
-- Is the remote origin trusted?
-- Does the remote declare authentication metadata?
+## The three questions
 
-Those checks map to the OWASP MCP Top 10 beta and are designed to stay deterministic from static config alone.
+<CardGroup cols={3}>
+  <Card title="Is the server pinned?" icon="shield-check">
+    **Supply chain integrity**
+
+    A floating reference installs a different package tomorrow than it installed today. Charter checks every MCP server reference for a pinned, reviewable version.
+
+    Rule: `AE-MCP-001`
+  </Card>
+  <Card title="Is the remote trusted?" icon="network">
+    **Shadow server risk**
+
+    An agent should not be pointed at arbitrary remote infrastructure without review. Charter compares remote origins against an effective allowlist of trusted hosts.
+
+    Rule: `AE-MCP-002`
+  </Card>
+  <Card title="Is auth declared?" icon="lock">
+    **Unauthorized access prevention**
+
+    A public remote with no declared authentication boundary is an open door. Charter checks for the presence of auth metadata on non-local remotes.
+
+    Rule: `AE-MCP-003`
+  </Card>
+</CardGroup>
 
 ## Why pinning matters
 
-`AE-MCP-001` treats floating MCP server references as a supply-chain risk.
+Floating MCP server references hand version control to the registry's publish cadence. Examples of risky references:
 
-Examples of risky references:
+<CodeGroup>
+```json Bad — floating reference
+{
+  "args": ["npx", "-y", "mcp-server-git@latest"]
+}
+```
+```json Bad — semver range
+{
+  "args": ["uvx", "mcp-server-git@^2.0.0"]
+}
+```
+```json Good — pinned to exact version
+{
+  "args": ["uvx", "mcp-server-git@2026.1.14"]
+}
+```
+</CodeGroup>
 
-- `@latest`
-- missing versions
-- semver ranges such as `^1.2.3`
-- floating git refs
+Three things can go wrong with a floating reference:
 
-Why this matters:
+- An agent tool installs a different package version on Tuesday than it installed on Monday
+- A package can be deprecated or archived after a repo first passed Charter
+- A previously-clean pinned version can later become the subject of a CVE or GHSA advisory
 
-- an agent tool can install a different package version tomorrow than it installed today
-- a package can be archived or deprecated after a repo first passed Charter
-- a pinned version can later become the subject of a CVE or GHSA advisory
+<Note>
+  Charter's catalog is aware of deprecated packages. `@modelcontextprotocol/server-github` was archived — Charter flags it as High with the migration path to `github/github-mcp-server`. You do not need to know the successor; Charter tells you.
+</Note>
 
-Charter's rule is catalog-aware, so it can distinguish between different kinds of version risk:
+## AE-MCP-001 finding ladder
 
-- **deprecated or archived package**: High severity
-- **known advisory affecting the pinned version**: High severity
-- **behind the catalog's stable version, with no advisory**: informational only
+For a given server, Charter follows a precedence ladder and reports one finding — the most important next action:
 
-That split is deliberate. Charter warns about freshness, but it only deducts when the issue is a real maintenance or security signal.
+| Signal | Severity | Example |
+|---|---|---|
+| Deprecated or archived package | High | `@modelcontextprotocol/server-github` |
+| Known CVE or advisory on the pinned version | High | `mcp-server-git@2025.8.0` (path traversal) |
+| Unpinned version reference | High | `@latest`, `^1.0.0`, missing version |
+| Behind catalog stable, no advisory | Informational | Pinned but outdated, clean |
+| Current and clean | Pass | — |
+
+The split is deliberate. Charter warns about freshness as an informational signal, but only deducts points when the issue carries a real maintenance or security risk.
 
 ## Why trusted remotes matter
 
-`AE-MCP-002` asks whether a remote MCP origin is known.
+`AE-MCP-002` maps to OWASP MCP09: shadow MCP servers. A coding agent should not be pointed at arbitrary remote infrastructure without review. In practice, Charter treats this as two layers:
 
-This maps to OWASP MCP09: shadow MCP servers. A coding agent should not be pointed at arbitrary remote infrastructure without review.
+- Local and internal origins are exempt — no allowlist check required
+- Public remote hosts are compared against the effective allowlist: `charter.yaml mcp.trustedRemotes` + catalog `trustedHosts`
 
-In practice, Charter:
-
-- treats local and internal origins as exempt
-- compares public remote hosts against the effective allowlist
-- flags unknown public origins as High severity
-
-The effective allowlist is:
-
-```text
-charter.yaml mcp.trustedRemotes + catalog trustedHosts
-```
-
-That gives teams two layers:
-
-- a shipped baseline for major vendor-operated hosts
-- a per-repo allowlist for reviewed exceptions
+Unknown public origins are flagged as High severity. The per-repo `trustedRemotes` list in `charter.yaml` is how teams document reviewed exceptions beyond the vendor baseline.
 
 ## Why auth declaration matters
 
-`AE-MCP-003` checks whether a non-local remote MCP server declares authentication metadata.
-
-This maps to OWASP MCP07: insufficient authentication and authorization.
-
-Charter's check is intentionally presence-based. It does **not** attempt to validate a credential or enforce one provider-specific OAuth format. It only asks whether the config declares an auth header such as:
+`AE-MCP-003` maps to OWASP MCP07: insufficient authentication and authorization. Charter's check is intentionally presence-based — it does not attempt to validate credentials or enforce a specific OAuth flow. It only asks whether the config declares an auth header such as:
 
 - `Authorization`
 - `X-Api-Key`
 - `Api-Key`
 - `X-Auth-Token`
 
-That keeps the rule resilient as MCP transport and OAuth details evolve, while still catching the unsafe case of a public remote with no auth declaration at all.
+That keeps the rule resilient as MCP transport and authentication details evolve, while still catching the unsafe case of a public remote with no declared auth boundary. Catalog-known OAuth vendor hosts are exempt because they authenticate through the OAuth flow rather than a static config header.
 
-Catalog-known OAuth vendor hosts are exempt because they authenticate through the OAuth flow rather than a static config header.
+## OWASP MCP Top 10 coverage
 
-## How Charter's catalog works
+<AccordionGroup>
+  <Accordion title="MCP04 — Insufficient Supply Chain Security → AE-MCP-001">
+    Floating and deprecated package references allow supply-chain substitution without review. `AE-MCP-001` requires exact pinning and flags deprecated packages with their known successors.
 
-Charter ships an embedded MCP catalog so the scanner stays offline and deterministic.
+    **Severity when triggered:** High (unpinned, deprecated, or advisory-affected) or Informational (behind stable, no advisory)
+  </Accordion>
+  <Accordion title="MCP07 — Insufficient Authentication and Authorization → AE-MCP-003">
+    Remote MCP servers without declared authentication metadata create open access surfaces. `AE-MCP-003` requires auth header declaration for all non-local, non-OAuth-vendor remotes.
 
-The catalog provides:
+    **Severity when triggered:** High
+  </Accordion>
+  <Accordion title="MCP09 — Inadequate Shadow Server Defense → AE-MCP-002">
+    Unreviewed public remote infrastructure gives agents tool access that was never explicitly sanctioned. `AE-MCP-002` compares remote origins against a maintained allowlist and flags unknowns.
 
-- known server package metadata
-- deprecated package successors
-- known advisories and fixed versions
-- a trusted-host baseline for major vendor-operated remotes
+    **Severity when triggered:** High
+  </Accordion>
+</AccordionGroup>
 
-Two design choices matter:
+## How the catalog works
 
-### Exact-match version logic
+Charter ships an embedded MCP catalog so the scanner stays offline and deterministic. The catalog provides:
 
-The catalog does **not** try to compare arbitrary version strings across schemes. MCP ecosystems mix semver, CalVer, and other conventions.
+- known server package metadata and stable versions
+- deprecated package successors and migration paths
+- known advisories and their `fixedIn` versions
+- a trusted-host baseline for major vendor-operated remote endpoints
 
-So Charter only makes strong claims when the catalog has exact knowledge of the version being used.
+Two design choices keep the catalog honest:
 
-That means a stale catalog under-reports instead of misreporting.
+**Exact-match version logic.** The catalog does not try to compare arbitrary version strings across semver, CalVer, or custom schemes. Charter only makes strong claims when it has exact knowledge of the version in use. A stale catalog under-reports rather than misreports — conservative by design.
 
-### One finding per server
-
-For a given server, `AE-MCP-001` follows a precedence ladder:
-
-```text
-deprecated > unpinned > advisory > behind-stable > clean
-```
-
-That keeps the output focused on the most important next action.
-
-## What Charter is trying to prevent
-
-Charter's MCP model is not trying to ban MCP. It is trying to stop the most avoidable failure modes:
-
-- silently drifting server packages
-- unreviewed public remote tools
-- public remotes with no declared auth boundary
-
-That is why MCP safety sits inside agent readiness. Once agents can reach tools, those tool definitions become part of the repo's operating contract.
+**One finding per server.** For a given server, `AE-MCP-001` reports the single most important signal following the precedence ladder: deprecated → unpinned → advisory → behind-stable → clean. Output stays focused on the most important next action.

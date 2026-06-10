@@ -3,45 +3,116 @@ title: "AE-CI-002"
 description: "Repo should run Charter-related checks in CI."
 ---
 
-**Rule ID:** AE-CI-002 · **Severity:** Low · **Category:** CI · **Auto-fixable:** Yes — `charter fix --rule AE-CI-002`
+**Rule ID:** AE-CI-002 · **Severity:** <Badge color="blue">Low</Badge> · **Category:** CI · **Auto-fixable:** Yes — `charter fix --rule AE-CI-002`
 
 ## Why this rule
 
 A local Charter pass only covers one developer's current state. Without a CI gate, a PR can introduce context drift, a new MCP server, or a weak suppression that no one catches until the next manual scan.
 
+CI enforcement turns Charter from a point-in-time snapshot into a continuous gate. Every pull request is evaluated, and regressions surface immediately rather than accumulating silently.
+
 ## What triggers it
 
 Charter inspects `.github/workflows/` for three things:
 
-1. **No `charter doctor` step.** If no workflow invokes `charter doctor` (or an equivalent Charter entrypoint), Charter cannot enforce the agent-readiness gate in CI — findings accumulate silently until the next manual scan.
-2. **Workflow linting findings.** Charter runs `actionlint` against your workflow files and surfaces any issues it reports — incorrect syntax, invalid event triggers, misused contexts, and similar structural problems.
-3. **Unpinned third-party actions.** Actions referenced by a mutable tag (e.g. `uses: actions/checkout@v4`) rather than a full commit SHA can be silently updated by a maintainer. Charter flags any non-pinned action. SLSA reusable workflows from `slsa-framework/slsa-github-generator` are exempt because their trusted-builder identity is resolved through the tag, not a SHA.
+**1. No `charter doctor` step** — If no workflow invokes `charter doctor` (or an equivalent Charter entrypoint), findings accumulate silently until the next manual scan.
+
+**2. Workflow linting findings** — Charter runs `actionlint` against your workflow files and surfaces any issues it reports: incorrect syntax, invalid event triggers, misused contexts, and similar structural problems.
+
+**3. Unpinned third-party actions** — Actions referenced by a mutable tag (e.g. `uses: actions/checkout@v4`) rather than a full commit SHA can be silently updated by a maintainer. Charter flags any non-pinned action.
+
+<Note>
+  SLSA reusable workflows from `slsa-framework/slsa-github-generator` are exempt from the SHA-pinning requirement because their trusted-builder identity is resolved through the tag, not a SHA.
+</Note>
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    A repo where no workflow calls `charter doctor`:
 
-A repo where no workflow calls `charter doctor`, or where `uses: some-org/some-action@v2` appears without a SHA pin — flagged Low.
+    ```yaml .github/workflows/ci.yml
+    jobs:
+      test:
+        steps:
+          - uses: actions/checkout@v4   # unpinned tag
+          - run: go test ./...
+          # no charter doctor step
+    ```
 
-### Passing
+    Two problems: unpinned action and no Charter gate.
+  </Tab>
+  <Tab title="Passing">
+    All third-party actions pinned to full SHAs, and a dedicated Charter step:
 
-All workflow steps using third-party actions are pinned to a full SHA (e.g. `uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683`), and at least one workflow runs `charter doctor`.
+    ```yaml .github/workflows/charter.yml
+    name: Charter
+    on: [push, pull_request]
+
+    jobs:
+      charter:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+          - uses: use-charter/charter-action@<SHA>
+            with:
+              threshold: 80
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-Add a workflow step that runs `charter doctor` so the agent-readiness score is enforced on every pull request. Pin all third-party `uses:` references to a full commit SHA. You can apply the pinning fix automatically with `charter fix --rule AE-CI-002`.
+AE-CI-002 is the only CI rule that Charter can fix automatically:
+
+<CodeGroup>
+```bash Dry run
+charter fix --rule AE-CI-002 --dry-run
+```
+
+```bash Apply fix
+charter fix --rule AE-CI-002
+```
+</CodeGroup>
+
+Charter creates `.github/workflows/charter.yaml` with the correct structure, pins all third-party actions to full SHAs, and wires up `charter doctor` with a configurable threshold.
+
+For unpinned actions in existing workflows, the fix updates each `uses:` reference in-place. Review the diff before committing — SHA pins change the update model for those actions.
+
+<Tip>
+  AE-CI-002 has Low severity — it doesn't block the threshold on its own. But closing it establishes the recurring CI gate that catches future regressions automatically. It is the cheapest rule to fix and delivers ongoing enforcement value.
+</Tip>
+
+## Score impact
+
+`Low` (−1); no hard cap.
 
 ## Edge cases
 
-during pre-implementation bootstrap, CI may legitimately omit `charter doctor` itself if the scanner is not built yet. Once `charter doctor` exists, the repo should run a Charter-related CI gate, not just local quality gates.
+<AccordionGroup>
+  <Accordion title="Bootstrap phase">
+    During pre-implementation bootstrap, CI may legitimately omit `charter doctor` if the scanner is not yet built. Once `charter doctor` exists as a runnable binary, the repo should run a Charter-related CI gate.
+  </Accordion>
+  <Accordion title="Repos without GitHub Actions">
+    v1 only inspects `.github/workflows/`. Repos using GitLab CI, Bitbucket Pipelines, or other CI systems are not evaluated for this rule — Charter does not flag their absence.
+  </Accordion>
+</AccordionGroup>
 
 ## Related rules
 
-- [AE-ENV-001](/rules/AE-ENV-001)
-- [AE-AUTO-001](/rules/AE-AUTO-001)
+<CardGroup cols={2}>
+  <Card title="AE-ENV-001" icon="box" href="/rules/AE-ENV-001">
+    Reproducible toolchain — a prerequisite for meaningful CI runs.
+  </Card>
+  <Card title="AE-AUTO-001" icon="play" href="/rules/AE-AUTO-001">
+    Discoverable test command — what CI actually runs.
+  </Card>
+</CardGroup>
 
 ## CLI
 
 ```bash
 charter explain AE-CI-002
+charter fix --rule AE-CI-002 --dry-run
+charter fix --rule AE-CI-002
 ```

@@ -5,79 +5,109 @@ description: "Install Charter on macOS, Linux, or Windows."
 
 Charter ships as a single static binary with no runtime dependencies. Pick the install path that fits your workflow.
 
-## Homebrew (macOS and Linux)
+<Tabs>
+  <Tab title="Homebrew">
+    The fastest path on macOS and Linux:
 
-The fastest path on macOS and most Linux distributions:
+    ```bash
+    brew install use-charter/tap/charter
+    ```
 
-```bash
-brew install use-charter/tap/charter
-```
+    Homebrew handles version management and future upgrades:
 
-Homebrew handles version management and upgrades (`brew upgrade charter`).
+    ```bash
+    brew upgrade charter
+    ```
+  </Tab>
 
-## Direct binary download
+  <Tab title="Binary">
+    Pre-built binaries are published to [GitHub Releases](https://github.com/use-charter/charter/releases) for all supported platforms.
 
-Pre-built binaries are published to GitHub Releases for the following platforms:
+    <Steps>
+      <Step title="Go to GitHub Releases">
+        Navigate to [github.com/use-charter/charter/releases](https://github.com/use-charter/charter/releases) and find the latest release.
+      </Step>
 
-| OS | Architecture | Asset pattern |
-|---|---|---|
-| macOS | x86_64 | `charter_darwin_amd64.tar.gz` |
-| macOS | Apple Silicon | `charter_darwin_arm64.tar.gz` |
-| Linux | x86_64 | `charter_linux_amd64.tar.gz` |
-| Linux | ARM64 | `charter_linux_arm64.tar.gz` |
-| Windows | x86_64 | `charter_windows_amd64.zip` |
-| Windows | ARM64 | `charter_windows_arm64.zip` |
+      <Step title="Download the archive for your platform">
+        | Platform | Asset |
+        |----------|-------|
+        | macOS Apple Silicon | `charter_*_darwin_arm64.tar.gz` |
+        | macOS Intel | `charter_*_darwin_amd64.tar.gz` |
+        | Linux x86-64 | `charter_*_linux_amd64.tar.gz` |
+        | Linux ARM | `charter_*_linux_arm64.tar.gz` |
+        | Windows x86-64 | `charter_*_windows_amd64.zip` |
+      </Step>
 
-Download from:
+      <Step title="Extract and move to your PATH">
+        <CodeGroup>
+          ```bash macOS / Linux
+          # Extract the archive
+          tar xzf charter_*_linux_amd64.tar.gz
 
-```
-https://github.com/use-charter/charter/releases/latest
-```
+          # Move charter to a directory on your PATH
+          sudo mv charter /usr/local/bin/charter
+          ```
 
-**Steps (macOS / Linux):**
+          ```powershell Windows
+          # Extract the zip (right-click → Extract All, or use Expand-Archive)
+          Expand-Archive charter_*_windows_amd64.zip -DestinationPath .
 
-```bash
-# Download and extract (replace <version> and <platform> as appropriate)
-curl -L https://github.com/use-charter/charter/releases/download/v<version>/charter_<platform>.tar.gz | tar xz
+          # Move charter.exe to a directory on your PATH
+          Move-Item charter.exe C:\Windows\System32\charter.exe
+          ```
+        </CodeGroup>
+      </Step>
 
-# Move the binary to a directory on your PATH
-sudo mv charter /usr/local/bin/charter
-```
+      <Step title="Verify">
+        ```bash
+        charter version
+        ```
+      </Step>
+    </Steps>
 
-**Steps (Windows):**
+    <AccordionGroup>
+      <Accordion title="Verify the binary signature (optional)">
+        Every release asset is signed with cosign keyless signing. To verify:
 
-Download the `.zip` from the releases page, extract `charter.exe`, and move it to a directory that is on your `PATH`.
+        ```bash
+        cosign verify-blob \
+          --certificate-identity "https://github.com/use-charter/charter/.github/workflows/release.yml@refs/tags/v*" \
+          --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+          --bundle charter_*.bundle \
+          charter
+        ```
 
-Every release asset is signed with cosign keyless signing and accompanied by SLSA L3 provenance. Verify a release:
+        A successful verification prints `Verified OK`.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
 
-```bash
-cosign verify-blob \
-  --certificate charter_linux_amd64.tar.gz.cert \
-  --signature charter_linux_amd64.tar.gz.sig \
-  charter_linux_amd64.tar.gz
-```
+  <Tab title="go install">
+    If you have a Go toolchain available:
 
-## go install
+    ```bash
+    go install go.use-charter.dev/charter/cmd/charter@latest
+    ```
 
-If you have a Go toolchain available (Go 1.21 or later required):
+    The binary is placed in `$(go env GOPATH)/bin`.
 
-```bash
-go install go.use-charter.dev/charter/cmd/charter@latest
-```
+    <Note>
+      Requires Go 1.21 or later. The vanity import host `go.use-charter.dev` serves the module. Make sure `$(go env GOPATH)/bin` is on your `PATH`.
+    </Note>
+  </Tab>
 
-The binary is placed in `$(go env GOPATH)/bin`. Make sure that directory is on your `PATH`.
+  <Tab title="Source">
+    Build directly from the repository:
 
-## Build from source
+    ```bash
+    git clone https://github.com/use-charter/charter
+    cd charter
+    go build -o charter ./cmd/charter
+    ```
 
-```bash
-git clone https://github.com/use-charter/charter
-cd charter
-go build -o charter ./cmd/charter
-```
-
-The resulting `charter` binary can be placed anywhere on your `PATH`. Building from source requires Go 1.21 or later.
-
----
+    Move the resulting binary to a directory on your `PATH`. Building from source requires Go 1.21 or later.
+  </Tab>
+</Tabs>
 
 ## Verify the install
 
@@ -87,10 +117,16 @@ After any install path, confirm the binary is working:
 charter version
 ```
 
-Expected output includes the version number, the commit hash it was built from, and the platform:
+Expected output:
 
 ```
-charter v1.0.0 (abc1234) darwin/arm64
+charter   1.0.0
+commit    abc1234f
+built     2026-05-18T09:42:00Z
+go        1.26.3
+platform  darwin/arm64
 ```
 
-If the command is not found, ensure the directory containing the binary is on your `PATH` and open a new shell session to pick up the change.
+<Tip>
+  Add `charter` to your shell `PATH` so it's available from any directory. Homebrew does this automatically. For manual installs, ensure the directory containing the binary is in your `PATH` and open a new shell session to pick up the change.
+</Tip>

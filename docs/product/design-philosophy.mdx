@@ -1,70 +1,87 @@
 ---
 title: "Design Philosophy"
-description: "The ten commitments Charter makes to every user, and why."
+description: "The ten commitments Charter makes to every user, and the reasoning behind each one."
 ---
 
-Charter is opinionated by design. These are not guidelines — they are constraints built into the scanner from the start. Each commitment exists because we made a deliberate tradeoff, and we want that reasoning to be auditable rather than hidden inside a product blog post.
+Charter is opinionated by design. These aren't guidelines — they're constraints woven into every release. Each commitment exists because we made a deliberate tradeoff, and we want that reasoning to be auditable rather than buried in a product blog post.
 
 ## The ten commitments
 
-### 1. We never send your data anywhere without explicit opt-in
+<AccordionGroup>
+  <Accordion title="1. We never send your data anywhere without explicit opt-in">
+    Charter runs entirely offline. The scanner reads your repo, computes a score, and writes output to your terminal or a file — no network calls, no telemetry, no usage pings. Charter works in airgapped environments by design.
 
-Charter runs entirely offline. The scanner reads your repo, computes a score, and writes output to your terminal or a file — no network calls, no telemetry, no usage pings. The alternative was a hosted scoring API that could enrich findings with cross-repo signals, but that would require you to trust us with source code you haven't consented to share. We chose local execution instead. The tradeoff is that we can't offer SaaS-style dashboards without a separate opt-in integration.
+    The alternative was a hosted scoring API that could enrich findings with cross-repo signals. But that would require you to trust us with source code you haven't consented to share. We chose local execution instead. The tradeoff is that we can't offer SaaS-style dashboards without a separate, explicit opt-in integration — and we think that's the right tradeoff.
+  </Accordion>
+  <Accordion title="2. We never call an LLM">
+    Every finding Charter produces comes from deterministic static analysis. No model inference, no embedding lookups, no generative explanations at scan time. Same repo plus same version equals same score. Every time.
 
-### 2. We never call an LLM
+    The alternative — using an LLM to generate richer fix suggestions or natural-language explanations — would introduce non-determinism and require an API key you may not want to provide. Determinism makes scores comparable across runs, auditable in CI, and trustworthy as a policy gate. A gate that gives different answers on different days is not a gate you can rely on.
+  </Accordion>
+  <Accordion title="3. We never delete a user file">
+    Charter's fix engine creates, appends, and replaces files. It does not delete, rename, or move files outside of `.charter/backups/`. The original is always preserved before any write.
 
-Every finding Charter produces comes from deterministic static analysis. No model inference, no embedding lookups, no generative explanations at scan time. The alternative — using an LLM to generate richer fix suggestions or natural-language explanations — would introduce non-determinism (same repo, different score) and require an API key you may not want to provide. Determinism makes scores comparable across runs, auditable in CI, and trustworthy as a policy gate.
+    The alternative — overwriting in place without backup — is faster but unrecoverable if a fixer has a bug. We chose the slower path that leaves you in control. The backup directory accumulates until you decide to clear it; Charter never does it for you.
+  </Accordion>
+  <Accordion title="4. We never apply a fix without showing a diff first">
+    Running `charter fix` without `--dry-run` still computes and displays a unified diff before writing anything. You must see the change before it lands. Always.
 
-### 3. We never delete a user file
+    The alternative was a one-shot apply that minimizes output noise. We rejected it because a fixer that modifies files without a visible checkpoint is indistinguishable from a bug. The diff is not a UI nicety — it is the last human checkpoint between Charter's judgment and your codebase.
+  </Accordion>
+  <Accordion title="5. Every finding includes a rule ID, evidence, and a fix suggestion">
+    Findings are not just scores. Each one names the rule that fired, identifies or quotes the specific evidence in your repo (redacted if it contains a secret), and tells you what a passing state looks like.
 
-Charter's fix engine writes new content and backs up originals. It does not delete, rename, or move files outside of `.charter/backups/`. The alternative — overwriting in place without backup — is faster but unrecoverable if a fixer has a bug. We chose the slower path that leaves you in control.
+    The alternative — reporting only a summary score — is easier to implement but gives you nothing actionable. Terse output optimizes for dashboards; Charter optimizes for the engineer who has to fix the problem. Vague findings are useless; specific findings with a path forward are the product.
+  </Accordion>
+  <Accordion title="6. Every release is signed (SLSA L3 + cosign keyless)">
+    Release artifacts are signed using cosign keyless signing. SLSA Level 3 provenance is attached to every build. SPDX 2.3 SBOMs are published alongside binaries.
 
-### 4. We never apply a fix without showing the diff first
+    Charter enforces supply-chain integrity on others. It holds itself to the same standard. The alternative — shipping unsigned tarballs — is the open-source default, but a tool that modifies your repo and runs in CI has elevated supply-chain risk. We chose the higher standard even though it adds build complexity. You can verify any Charter release against its provenance without trusting us to say it's clean.
+  </Accordion>
+  <Accordion title="7. The score formula is public and stable within a major version">
+    The formula `max(0, 100 − B×20 − H×10 − M×4 − L×1)` with its hard caps is documented, fixed within a major version, and will not change in a patch release.
 
-Running `charter fix` without `--dry-run` still computes and displays a unified diff before writing anything. You must see the change before it lands. The alternative was a one-shot apply that minimizes output noise, but that removes the last human checkpoint between the scanner's judgment and your codebase.
+    Teams gate CI on this number. Surprise changes would break real pipelines. The alternative — a proprietary model that improves continuously — would make scores non-comparable across time and undermine any policy threshold you've set. Stability is a feature, not a limitation. A major-version upgrade is the only place where the formula can change, and when it does, we document exactly why.
+  </Accordion>
+  <Accordion title="8. Charter is cross-vendor">
+    Charter checks for agent config patterns across Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, OpenCode, and Aider — without preferring any one. The score means the same thing regardless of which coding agent your team uses.
 
-### 5. Every finding includes a rule ID, evidence, and a fix suggestion
+    The alternative — optimizing for a single vendor's conventions — would make Charter a vendor-specific linter rather than a neutral readiness standard. Agent tooling is still consolidating. A repo's readiness score should not depend on which model happens to be popular this quarter.
+  </Accordion>
+  <Accordion title="9. We never print raw secret values in any output">
+    When Charter detects a credential or token in your repo, it reports the file path, line number, and rule ID. Never the secret value itself. Evidence is redacted: the first 4 characters are shown; the rest is replaced with `…`. This holds in terminal output, JSON, SARIF, Markdown, and the HTML report.
 
-Findings are not just scores. Each one names the rule that fired, quotes or identifies the specific evidence in your repo, and tells you what a passing state looks like. The alternative — reporting only a summary score — is easier to implement but gives you nothing actionable to act on. Terse output optimizes for dashboards; Charter optimizes for the engineer who has to fix the problem.
+    The alternative — showing the matched string so you can identify it — risks the secret appearing in CI logs, terminal recordings, or bug reports. You already know what the secret is; you need to know where it is. Charter gives you the location, not the value.
+  </Accordion>
+  <Accordion title="10. The CLI is free forever">
+    Charter's core CLI will never be paywalled. No freemium gate on the command-line scan. No expiring trial. The score is only useful as a community standard if everyone can reproduce it.
 
-### 6. Every release is signed with SLSA Level 3 provenance
-
-Release artifacts are signed using cosign keyless signing, and SLSA L3 provenance is attached to every build. SPDX 2.3 SBOMs are published alongside binaries. The alternative — ship unsigned tarballs — is the default in open-source tooling, but a tool that modifies your repo and runs in CI has elevated supply-chain risk. We chose the higher standard even though it adds build complexity.
-
-### 7. The score formula is public and stable within a major version
-
-The formula `max(0, 100 − B×20 − H×10 − M×4 − L×1)` with its severity caps is documented, fixed within a major version, and will not change in a patch release. The alternative — a proprietary model that improves continuously — would make scores non-comparable across time and undermine any policy threshold you've set. Stability is a feature, not a limitation.
-
-### 8. Charter is cross-vendor
-
-Charter checks for agent config patterns across Claude Code, Cursor, GitHub Copilot, Gemini CLI, and Windsurf without preferring any one. The alternative — optimizing for a single vendor's conventions — would make Charter a vendor-specific linter rather than a neutral readiness standard. We kept the rule set vendor-neutral so the score means the same thing regardless of which agent your team uses.
-
-### 9. We never print raw secrets to the terminal
-
-When Charter detects a credential or token in your repo, it reports the file path, line number, and rule ID — never the secret value itself. The alternative — showing the matched string so you can identify it — risks the secret appearing in CI logs, terminal recordings, or bug reports. We chose the safer redaction. You already know what the secret is; you need to know where it is.
-
-### 10. The CLI is free forever
-
-Charter's core CLI will never be paywalled. The alternative — a freemium gate on the command-line tool — would make the score unreliable as a community standard because not everyone could reproduce it. Paid offerings, if they ever exist, will be integrations layered on top of the open core, not restrictions to it.
-
----
+    Paid offerings, if they exist, will be integrations layered on top of the open core — multi-repo dashboards, policy enforcement, managed CI — not restrictions on the core tool itself. The CLI stays Apache-2.0 and free, always.
+  </Accordion>
+</AccordionGroup>
 
 ## What Charter is not
 
+<Note>
+  These are explicit non-goals. Building any of them would require violating commitments above — specifically determinism, offline execution, or scope discipline. We list them not to deprecate the tools that do them well, but to be clear about where Charter's boundaries are.
+</Note>
+
 **Not a code reviewer.** Charter does not analyze logic, detect bugs, or assess code quality. Doing that at scale requires either symbolic analysis (a compiler-grade effort per language) or LLM inference — both of which conflict with Charter's determinism and offline commitments.
 
-**Not a code style linter.** Charter does not check formatting, naming conventions, or language idioms. ESLint, Ruff, golangci-lint, and their equivalents already do this; Charter scans for AI-agent readiness signals, which are a distinct surface area.
+**Not a code style linter.** Charter does not check formatting, naming conventions, or language idioms. ESLint, Ruff, golangci-lint, and their equivalents already do this. Charter scans for AI-agent readiness signals, which are a distinct surface area.
 
 **Not a package vulnerability scanner.** Charter does not cross-reference your dependency tree against CVE databases. Snyk, Dependabot, and OSV Scanner are purpose-built for that problem and maintain live advisory feeds that a static binary cannot replicate.
 
 **Not a runtime agent monitor.** Charter scores the repo at a point in time. It does not observe what agents do when they actually run — no hook interception, no syscall tracing, no network monitoring. Runtime observability is a separate discipline.
 
-**Not a secrets vault.** Charter finds secrets in your repo; it does not store, rotate, or manage them. That is the domain of tools like HashiCorp Vault, AWS Secrets Manager, or 1Password Secrets Automation.
+**Not a secrets vault.** Charter finds secrets in your repo; it does not store, rotate, or manage them. That is the domain of HashiCorp Vault, AWS Secrets Manager, or 1Password Secrets Automation.
 
 **Not a git history scanner.** Charter analyzes the current working tree. It does not walk commits to find secrets that were added and later removed. Tools like Gitleaks and TruffleHog cover that surface.
 
----
+## Why determinism
 
-## Why the score formula is public
+<Tip>
+  Determinism isn't a constraint — it's the product. A CI gate you can't reproduce locally isn't a gate you can trust. When Charter gives a score of 74 in your terminal and 74 in CI and 74 in a colleague's terminal on the same commit, the number means something. That's the foundation everything else is built on.
+</Tip>
 
-A scoring formula you cannot inspect is a black box you are being asked to comply with. Publishing the formula — weights, caps, and all — means you can verify that Charter's output matches its specification, build equivalent logic into your own tooling if needed, and hold us accountable when a release changes the formula in ways we haven't documented. Governance trust requires transparency, not just a claim of fairness.
+A scoring formula you cannot inspect is a black box you are being asked to comply with. Publishing the formula — weights, caps, and all — means you can verify that Charter's output matches its specification, build equivalent logic into your own tooling if needed, and hold us accountable when a release changes anything we haven't documented. Governance trust requires transparency, not just a claim of fairness.

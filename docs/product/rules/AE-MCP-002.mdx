@@ -3,46 +3,104 @@ title: "AE-MCP-002"
 description: "Every remote MCP server origin must be known — present in the repo's trusted-remote allowlist. Unknown remote origins are flagged (OWASP MCP Top 10 beta, MCP09 Shadow MCP Servers)."
 ---
 
-**Rule ID:** AE-MCP-002 · **Severity:** High · **Category:** MCP Safety · **Auto-fixable:** No
+**Rule ID:** AE-MCP-002 · **Severity:** <Badge color="orange">High</Badge> · **Category:** MCP Safety · **Auto-fixable:** No
 
 ## Why this rule
 
-A coding agent should not be pointed at arbitrary remote infrastructure without a team review. Unknown public MCP origins are a supply-chain and data-exfiltration risk — tool calls travel to infrastructure outside the team's visibility.
+A coding agent should not be pointed at arbitrary remote infrastructure without a team review. Unknown public MCP origins are a supply-chain and data-exfiltration risk — tool calls travel to infrastructure outside the team's visibility, and there is no way to audit what the server receives or returns.
 
 ## What triggers it
 
-Charter scans MCP configuration files (`.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`) for server entries that use a remote `url` or a transport type of `http` or `sse`. For each remote server, Charter extracts the URL host and compares it against the repo's `charter.yaml` `mcp.trustedRemotes` allowlist. Any public host not present in that allowlist fires High.
+Charter scans MCP configuration files for server entries that use a remote `url` or a transport type of `http` or `sse`. For each remote server, Charter extracts the URL host and compares it against two sources:
 
-If no `mcp.trustedRemotes` allowlist exists in `charter.yaml`, every non-local remote server is flagged as unverifiable — the finding's summary makes the remediation clear: add an allowlist.
+1. The built-in catalog of vendor-operated hosts (known, reviewed third-party MCP providers)
+2. The repo's `charter.yaml` `mcp.trustedRemotes` list
 
-Local and internal origins are exempt from this rule. Loopback addresses, RFC 1918 private ranges, link-local addresses, and hosts under the `.localhost`, `.local`, or `.internal` TLDs are all treated as safe. A bare environment-variable URL like `${API_URL}` has no parseable host and is skipped.
+Any public host not present in either source fires High.
+
+**Scanned files:** `.mcp.json`, `mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`
+
+**Always exempt (never fire):**
+
+| Origin type | Examples |
+|------------|---------|
+| Loopback | `localhost`, `127.0.0.1`, `::1` |
+| RFC 1918 private ranges | `192.168.x.x`, `10.x.x.x`, `172.16–31.x.x` |
+| Link-local | `169.254.x.x`, `fe80::` |
+| Internal TLDs | `*.localhost`, `*.local`, `*.internal` |
+| Dynamic / unresolvable URL | `${API_URL}` — no parseable host, skipped |
+
+<Note>
+  If no `mcp.trustedRemotes` allowlist exists in `charter.yaml`, every non-local remote server is flagged as unverifiable. The finding's summary makes the remediation clear: add an allowlist entry for any intentional remote server.
+</Note>
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    ```json .mcp.json
+    {
+      "mcpServers": {
+        "custom": {
+          "type": "http",
+          "url": "https://unknown-startup.com/mcp"
+        }
+      }
+    }
+    ```
 
-`.mcp.json` server `"url": "https://unknown.example.net/mcp"` with no matching allowlist entry — flagged High; evidence names the server and host.
+    ```
+    # unknown-startup.com not in catalog or charter.yaml trustedRemotes
+    # Charter flags: unknown remote origin — fires High
+    ```
+  </Tab>
+  <Tab title="Passing">
+    ```json .mcp.json
+    {
+      "mcpServers": {
+        "internal-tool": {
+          "type": "http",
+          "url": "https://api.your-internal-tool.com/mcp"
+        }
+      }
+    }
+    ```
 
-### Passing
-
-`.mcp.json` server `"url": "https://mcp.asana.com/mcp"` with `charter.yaml` listing `mcp.trustedRemotes: [mcp.asana.com]` — host allowlisted, passes.
+    ```yaml charter.yaml
+    mcp:
+      trustedRemotes:
+        - "api.your-internal-tool.com"
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-If the remote origin is intentional, add its hostname to `charter.yaml` under `mcp.trustedRemotes` and commit the change — this signals that your team has reviewed the server. If the origin is unknown or unintended, replace it with a trusted alternative. There is no auto-fixer for this rule because the trust decision requires a human review.
+If the remote origin is intentional, add its hostname to `charter.yaml` under `mcp.trustedRemotes` and commit the change. This signals that your team has reviewed the server.
+
+```yaml charter.yaml
+mcp:
+  trustedRemotes:
+    - "api.your-internal-tool.com"
+    - "mcp.your-vendor.com"
+```
+
+If the origin is unknown or unintended, replace it with a trusted catalog host or a local alternative.
+
+There is no auto-fixer for this rule — the trust decision requires a human review before it can be encoded in config.
+
+<Tip>
+  The effective allowlist is: built-in catalog hosts + your `mcp.trustedRemotes`. Local origins (loopback, RFC 1918 private ranges, `.local`, `.internal`) are always exempt without any listing. Allowlist matching is host-only — no scheme or path component is compared.
+</Tip>
 
 ## Score impact
 
-each finding is `High` (−10); no hard cap.
-
-## Edge cases
-
-local/internal origins never fire (loopback, RFC1918 private, link-local, unspecified, `.localhost`/`.local`/`.internal`); SSE (`type: sse`, deprecated in favor of HTTP) is treated as remote; a scheme-less or dynamic `${VAR}` URL has no parseable host and is skipped; allowlist matching is host-only (no scheme or path).
+Each finding is `High` (−10). No hard cap (caps are reserved for raw-secret findings).
 
 ## Related rules
 
-- [AE-MCP-001](/rules/AE-MCP-001)
-- [AE-MCP-003](/rules/AE-MCP-003)
+- [AE-MCP-001](/rules/AE-MCP-001) — MCP servers must be pinned to exact versions
+- [AE-MCP-003](/rules/AE-MCP-003) — remote MCP servers must declare auth
 
 ## CLI
 

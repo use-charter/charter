@@ -1,53 +1,21 @@
 ---
 title: "GitHub Action"
-description: "Reference for running Charter in GitHub Actions and uploading SARIF to GitHub Code Scanning."
+description: "The use-charter/charter-action@v1 composite action — runs charter doctor, uploads SARIF to GitHub Code Scanning, and gates PRs on the score threshold."
 ---
 
-Charter ships a composite GitHub Action source in [`action/`](https://github.com/use-charter/charter/tree/main/action).
+Charter ships a composite GitHub Action that downloads the signed Charter binary, verifies it, runs `charter doctor`, uploads SARIF to GitHub Code Scanning, and gates the job on the score threshold.
 
-The public consumer surface is:
+## Quickstart
+
+Add this to any workflow:
 
 ```yaml
 - uses: use-charter/charter-action@v1
+  with:
+    threshold: "80"
 ```
 
-Launch-state note:
-
-- the action source is already implemented in this repository
-- the standalone `use-charter/charter-action` consumer repo is seeded at launch, not before
-
-## What The Action Does
-
-The action:
-
-1. downloads the signed `charter` release binary
-2. verifies it with cosign keyless verification plus sha256
-3. runs `charter doctor --format sarif`
-4. uploads the SARIF report to GitHub Code Scanning by default
-5. fails the workflow when the score is below the configured threshold, if `fail-below` stays enabled
-
-Runner note:
-
-- the current action implementation uses `curl` plus the GitHub API to resolve the latest release tag, then uses `gh release download` to fetch release assets
-- GitHub-hosted runners are the expected path
-- on self-hosted runners, ensure the required shell tooling is installed before using the action
-
-## Required Permissions
-
-```yaml
-permissions:
-  actions: read
-  contents: read
-  security-events: write
-```
-
-- `actions: read` may be needed for SARIF upload in private repositories.
-- `contents: read` lets the workflow access repository contents
-- `security-events: write` is required for SARIF upload to GitHub Code Scanning
-
-If you disable upload (`upload: false`), you can drop `security-events: write`. In private repositories, keep `actions: read` when GitHub Code Scanning upload requires it.
-
-## Copy-Paste Workflow
+Full copy-paste workflow:
 
 ```yaml
 name: Charter
@@ -72,77 +40,130 @@ jobs:
           threshold: "80"
 ```
 
-This is the intended consumer form once the launch-seeded action repo is published.
+<Frame caption="GitHub Code Scanning — Charter findings as security alerts on a pull request">
+  <img src="/images/screenshots/github-action-pr.png" alt="Charter PR check with code scanning annotations" />
+</Frame>
+
+## What the action does
+
+<Steps>
+
+<Step title="Download the signed Charter binary">
+Resolves the release tag using the GitHub API, then downloads the Charter binary for the runner platform via `gh release download`.
+</Step>
+
+<Step title="Verify the binary">
+Runs cosign keyless verification of the release checksum bundle, then verifies the sha256 of the downloaded archive against `checksums.txt`. Controlled by the `verify` input (default: `true`).
+</Step>
+
+<Step title="Run charter doctor">
+Executes `charter doctor --format sarif` against the repo at `path`. Applies the effective threshold from the `threshold` input or `charter.yaml`.
+</Step>
+
+<Step title="Upload SARIF to GitHub Code Scanning">
+Uploads the SARIF report via `github/codeql-action/upload-sarif`. Gives you Security tab visibility, inline PR annotations, and a durable scan record. Controlled by the `upload` input (default: `true`).
+</Step>
+
+<Step title="Exit with threshold result">
+Exits `0` if the score meets the threshold, `1` if it falls below. When `fail-below: true` (default), an exit `1` fails the job after SARIF upload completes.
+</Step>
+
+</Steps>
+
+<Note>
+SARIF upload completes before the threshold check. Even on a failing score, you still get Code Scanning annotations AND a failed CI check — both useful for triage.
+</Note>
 
 ## Inputs
 
-| Input | Default | Description |
-| --- | --- | --- |
-| `version` | `latest` | Charter release to use, for example `v1.0.0`, or `latest`. |
-| `path` | `.` | Repository path to scan. |
-| `threshold` | `""` | Minimum passing score. Empty defers to `charter.yaml` policy or the default `80`. |
-| `format` | `sarif` | Output format. The action is primarily designed for `sarif`. |
-| `sarif-file` | `charter.sarif` | Path where the SARIF report is written. |
-| `upload` | `true` | Upload the SARIF report to GitHub Code Scanning. |
-| `verify` | `true` | Verify the downloaded binary before running it. |
-| `fail-below` | `true` | Fail the workflow when the score is below threshold. |
-| `category` | `""` | Optional GitHub Code Scanning category for the SARIF upload. |
+<ResponseField name="threshold" type="string">
+Minimum score to pass. Empty string defers to `charter.yaml` policy or the built-in default of `80`.
+
+Default: `""` (defer to config)
+</ResponseField>
+
+<ResponseField name="path" type="string">
+Repository root path to scan.
+
+Default: `"."`
+</ResponseField>
+
+<ResponseField name="version" type="string">
+Charter release version to download. Accepts a specific tag like `v1.0.0` or `"latest"`.
+
+Default: `"latest"`
+</ResponseField>
+
+<ResponseField name="fail-below" type="boolean">
+Whether to fail the job when the score is below the threshold.
+
+Default: `true`
+</ResponseField>
+
+<ResponseField name="upload" type="boolean">
+Whether to upload the SARIF report to GitHub Code Scanning. Set to `false` if you only want gate behavior without Security tab annotations.
+
+Default: `true`
+</ResponseField>
+
+<ResponseField name="verify" type="boolean">
+Whether to verify the downloaded binary with cosign and sha256 before running it.
+
+Default: `true`
+</ResponseField>
+
+<ResponseField name="category" type="string">
+Optional GitHub Code Scanning category for the SARIF upload. Useful for separating Charter results from other SARIF producers in the same workflow.
+
+Default: `""` (no category)
+</ResponseField>
 
 ## Outputs
 
 | Output | Description |
-| --- | --- |
-| `exit-code` | `charter doctor` exit code: `0` pass, `1` below threshold, `2` error. |
-| `score` | Best-effort final Charter score from the follow-up JSON extraction. May be empty if that extraction does not yield a score. |
-| `sarif-file` | Path to the generated SARIF file. |
+|--------|-------------|
+| `exit-code` | `charter doctor` exit code: `0` pass, `1` below threshold, `2` error |
+| `score` | Best-effort final Charter score. May be empty if extraction doesn't yield a value |
+| `sarif-file` | Path to the generated SARIF file |
 
-## SARIF And GitHub Code Scanning
+## Required permissions
 
-By default, the action uploads the generated SARIF file into GitHub Code Scanning. That gives you:
+<Warning>
+`security-events: write` is required for SARIF upload. Without it, findings won't appear in the GitHub Security tab.
 
-- Security tab visibility for Charter findings
-- inline pull request annotations where GitHub supports them
-- a stable machine-readable artifact for workflow automation
+If you disable upload (`upload: false`), you can drop `security-events: write`. In private repositories, keep `actions: read` when GitHub Code Scanning upload requires it.
+</Warning>
 
-You do not need to add a separate `upload-sarif` step when using the default action behavior. The action already performs the upload when:
+```yaml
+permissions:
+  actions: read          # SARIF upload in private repos
+  contents: read         # Read repository contents
+  security-events: write # Required for SARIF upload
+```
 
-- `format: sarif`
-- `upload: true`
+## Gate semantics
 
-## Verification Behavior
+The action preserves Charter's CLI exit contract:
 
-With `verify: true` (the default), the action verifies the downloaded Charter release before executing it:
+| Exit code | Meaning | Job result (with `fail-below: true`) |
+|-----------|---------|--------------------------------------|
+| `0` | Score at or above threshold | Pass |
+| `1` | Score below threshold | Fail (after SARIF upload) |
+| `2` | Scan or setup error | Fail |
 
-- cosign keyless verification of the release checksum bundle
-- sha256 verification of the downloaded archive against `checksums.txt`
+## Runner requirements
 
-This keeps the Action aligned with Charter's own signed-release posture.
+GitHub-hosted runners are the intended baseline. For self-hosted runners, ensure these tools are available:
 
-## Runner Requirements
+- `bash`
+- `gh` (GitHub CLI)
+- POSIX utilities: `curl`, `grep`, `sed`, `awk`
+- Archive tools: `tar` or `unzip` (platform-dependent)
+- Checksum tools: `sha256sum` or `shasum`
+- `jq` (optional — used for score extraction; falls back to `grep` if absent)
 
-The current action implementation expects a Unix-style shell environment on the runner.
+## See also
 
-- GitHub-hosted runners are the intended baseline.
-- Self-hosted runners should provide:
-  - `bash`
-  - `gh`
-  - POSIX shell utilities used by the action: `curl`, `grep`, `sed`, `awk`
-  - archive tools: `tar` or `unzip`, depending on platform
-  - checksum tooling: `sha256sum` or `shasum`
-- `jq` is used as a best-effort score extractor when available; the action falls back to `grep` if it is missing.
-
-## Gate Semantics
-
-The action preserves the CLI's pass/fail contract:
-
-- exit `0`: score is at or above threshold
-- exit `1`: score is below threshold
-- exit `2`: scan or setup error
-
-When `fail-below: true`, an exit `1` fails the workflow after the SARIF upload step runs.
-
-## Related Docs
-
-- [Quickstart](/quickstart)
-- [charter.yaml](/config/charter-yaml)
-- [Rules Overview](/rules/overview)
+- [Run in GitHub Actions](/how-to/run-in-github-actions)
+- [charter.yaml Reference](/config/charter-yaml)
+- [Policy Profiles](/config/policy-profiles)
