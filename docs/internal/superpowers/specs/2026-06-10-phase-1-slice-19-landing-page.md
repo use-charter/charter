@@ -1,18 +1,23 @@
 # Slice 19 — Landing Page Specification
 
 **Document type:** Specification (WHAT and WHY, not HOW)  
-**Status:** Locked & Validated Against All Official Docs  
+**Status:** Locked & Validated  
 **Date:** 2026-06-10  
-**Last Updated:** 2026-06-10 (post-skill validation)
+**Last validated:** 2026-06-10 (all asset paths and source references verified against live repo)
+
+---
 
 ## Goal
 
 Ship a conversion-focused landing page (`use-charter.dev/`) that introduces Charter to engineers evaluating AI-agent readiness and DevOps leads managing repo compliance at scale. The page drives primary conversion (CLI install via `brew install use-charter/tap/charter`) and secondary conversion (GitHub stars, community engagement) while deferring Phase 2 dashboard signup to a waitlist.
 
+---
+
 ## Problem Statement
 
 Charter has a mature product (CLI, 18 rules, fix engine, suppression governance) and excellent reference documentation (Mintlify docs, rule pages, architecture). The missing piece is a customer-facing landing page that:
-1. Articulates the problem ("Teams adopting coding agents fail not because the model is bad, but because the repo isn't ready")
+
+1. Articulates the problem: "Teams adopting coding agents fail not because the model is bad, but because the repo isn't ready"
 2. Shows the solution in under 10 seconds (terminal card with real `charter doctor` output)
 3. Makes installing trivial (copy-to-clipboard `brew install ...`)
 4. Drives awareness via GitHub stars and community
@@ -20,427 +25,482 @@ Charter has a mature product (CLI, 18 rules, fix engine, suppression governance)
 
 The landing page must integrate seamlessly with the existing product identity: terminal-dashboard aesthetic, dark-first branding, semantic design tokens, and offline-first ethos.
 
+---
+
 ## Design Baselines
 
-**Validated Against High-End Visual Design & Design-Taste Skills:**
+Validated against high-end visual design, design-taste, and frontend design skills.
 
-- **DESIGN_VARIANCE:** 7/10 (asymmetric layouts, intentional composition, grid-breaking)
-- **MOTION_INTENSITY:** 5/10 (CSS transitions only, no heavy JS choreography)
-- **VISUAL_DENSITY:** 3/10 (art-gallery mode, generous whitespace, premium feel)
+| Dial | Value | Meaning |
+|------|-------|---------|
+| DESIGN_VARIANCE | 7/10 | Asymmetric layouts, intentional composition, grid-breaking |
+| MOTION_INTENSITY | 5/10 | CSS transitions only; no heavy JS choreography |
+| VISUAL_DENSITY | 3/10 | Art-gallery mode; generous whitespace; premium feel |
 
-**Critical Anti-Patterns:**
-- No emojis (use Phosphor Light icons or SVG instead)
-- Max 1 accent color (#2563EB, <80% saturation)
-- No Inter font (Ruda exclusively)
-- No h-screen (use min-h-[100dvh] for iOS Safari stability)
-- No generic cards without elevation justification
-- No center-biased hero (asymmetric/split-screen preferred)
+**Critical anti-patterns — these are banned:**
+
+- Emojis anywhere (copy, decoration, icons) — use Phosphor Light SVG icons instead
+- More than 1 accent color (#2563EB blue; saturation <80%)
+- Inter font — banned. Ruda exclusively for sans
+- `height: 100vh` — use `min-height: 100dvh` for iOS Safari stability
+- Generic cards without earned elevation (card used only where depth communicates hierarchy)
+- Centered hero with gradient blob and uniform three-card row — banned
+
+---
 
 ## Scope
 
 ### In scope
 
 - **Landing page:** Single long-form HTML page served at `/` on `use-charter.dev`
-- **Page sections:** 9 sections (Hero → Footer) with locked copy, wireframes at 320/768/1440
-- **Visual design:** Terminal-dashboard aesthetic (dark-first, Ruda/Atkinson Mono, score-zone colors)
-- **Technology:** Astro (SSG) + vanilla CSS + Cloudflare Pages as `LANDING_ORIGIN`
-- **Performance:** LCP < 1.5s, FCP < 1s, INP < 200ms, CLS < 0.1; JS ≤ 150kb gz, CSS ≤ 30kb gz
+- **Sections:** 9 sections (Hero → Footer) with locked copy
+- **Visual design:** Terminal-dashboard aesthetic (dark-first, Ruda + Atkinson Mono, score-zone colors)
+- **Technology:** Astro v6 SSG + vanilla CSS + Cloudflare Pages as `LANDING_ORIGIN`
+- **Performance:** LCP < 1.5s, FCP < 1s, INP < 200ms, CLS < 0.1; JS ≤ 150kb gzip, CSS ≤ 30kb gzip
 - **Accessibility:** WCAG 2.2 AA (semantic HTML, keyboard nav, reduced-motion, contrast)
-- **Conversion mechanics:** Copy-to-clipboard button, GitHub link, waitlist email capture
-- **Integration:** Wire as Cloudflare Pages app; update Worker `LANDING_ORIGIN` in DEPLOY.md
+- **Conversion:** Copy-to-clipboard button, GitHub link, waitlist email capture
+- **Integration:** Wire as Cloudflare Pages app; update Worker `LANDING_ORIGIN` in `docs/product/DEPLOY.md`
 
 ### Out of scope
 
-- **Multi-page marketing site:** No pricing, no blog, no solutions pages — use landing + link to Mintlify
-- **Cloud dashboard signup:** Dashboard is Phase 2 (unbuilt); waitlist is deferred, non-blocking capture
-- **User authentication:** No login, no account creation
-- **Real social proof logos:** Use GitHub stars + vendor trust badges until logos are permissioned
-- **Performance optimization beyond CSS/image:** No third-party scripts, no analytics, no tracking
+- Multi-page marketing site — use landing + link to Mintlify
+- Cloud dashboard signup — Phase 2; waitlist is deferred, non-blocking capture
+- User authentication
+- Fabricated social proof logos — only permissioned logos or explicit placeholder markup
+- Analytics, tracking, or third-party scripts
+
+---
 
 ## Information Architecture & Copy
 
-Single scroll, 9 sections. Copy is drawn from approved brand language and existing product docs (introduction.mdx, quickstart.mdx, architecture-2026.md).
-
 ### Section 1: Hero (above fold)
 
-**Purpose:** Outcome-first headline + instant install  
-**Headline:** "AI-agent readiness, scored."  
-**Subheadline:** "Charter is an offline-first CLI that audits any repo against 18 rules and returns a deterministic 0–100 score — in under 2 seconds, with no data leaving your machine."  
-**Primary CTA:** Copy-to-clipboard button with `brew install use-charter/tap/charter`  
-**Secondary CTA:** `View on GitHub` (linking to repo)  
-**Right/below:** Animated terminal showing real `charter doctor` output → `94/100 Ship-ready` with green zone label  
-**Mobile:** Terminal card reflows horizontally; copy button stacks below headline  
+**Purpose:** Outcome-first headline + instant install
+
+| Element | Content |
+|---------|---------|
+| H1 | "AI-agent readiness, scored." |
+| Subheadline | "Charter is an offline-first CLI that audits any repo against 18 rules and returns a deterministic 0–100 score — in under 2 seconds, with no data leaving your machine." |
+| Primary CTA | Copy-to-clipboard button: `brew install use-charter/tap/charter` |
+| Secondary CTA | `View on GitHub` → `https://github.com/use-charter/charter` |
+| Hero visual | Terminal card showing real `charter doctor` output → `94/100 Ship-ready` (green zone) |
+| Mobile behavior | Terminal card reflows with horizontal scroll; copy button stacks below headline |
+
+Hero layout: split-screen on desktop (copy left, terminal right); stacked on mobile. NOT centered hero.
 
 ### Section 2: Problem
 
-**Purpose:** Name the pain; establish credibility  
-**Copy direction:**  
-> "Teams adopting coding agents don't fail because the model is bad — they fail because the repo isn't ready.  
+**Purpose:** Name the pain; establish credibility
+
+**Locked copy (verbatim from `docs/product/introduction.mdx`):**
+
+> "Teams adopting coding agents don't fail because the model is bad — they fail because the repo isn't ready.
 > Unpinned MCP servers. Secrets visible to agents. No verification command. Outdated AGENTS.md. These aren't policy violations; they're operational gaps that block agent adoption."
 
-*[Lifted verbatim from introduction.mdx]*
+### Section 3: How It Works
 
-### Section 3: Solution / How It Works
+**Purpose:** Scan → Score → Fix triad visual
 
-**Purpose:** Scan → Score → Fix triad visual  
-**Structure:** Three-step horizontal flow (mobile: vertical stack)  
-- **Step 1: Scan** — Deterministic, offline, no LLM, no network calls
-- **Step 2: Score** — Formula: `max(0, 100 − B×20 − H×10 − M×4 − L×1)` + four score zones (success/warning/danger + metadata)
-- **Step 3: Fix** — Diff-first, never auto-fixes secrets, human review always required
+**Structure:** Three-step horizontal flow (mobile: vertical stack)
 
-**Visual:** Use existing WebP screenshots from `docs/product/images/screenshots/`:
-- doctor-overview.webp (scoring visual)
-- fix-dry-run.webp (diff output)
-- doctor-tty.webp (full scan output)
+| Step | Label | Content |
+|------|-------|---------|
+| 1 | Scan | Deterministic, offline, no LLM, no network calls |
+| 2 | Score | Formula: `max(0, 100 − B×20 − H×10 − M×4 − L×1)` + four score zones |
+| 3 | Fix | Diff-first, never auto-fixes secrets, human review always required |
 
-### Section 4: Value Props (3–4 cards)
+**Screenshots to use** (existing files in `docs/product/images/screenshots/`):
+- `doctor-overview.webp` (scoring visual — Step 2)
+- `fix-dry-run.webp` (diff output — Step 3)
+- `doctor-tty.webp` (full scan output — Step 1)
 
-**Purpose:** Differentiation via outcome axes (not CLI commands)  
-**Four readiness axes** (from docs IA):
-1. **Context** — Agent visibility: "Can agents see secrets? Outdated AGENTS.md? Missing .env.example?"
-2. **Safety** — Secret management: "Are credentials in agent-visible paths? Policy enforcement?"
-3. **Operability** — Automation readiness: "Is there a verify command? Pre-commit integration? CI gating?"
-4. **Governance** — Suppression & approval: "Can teams waive findings? Are waivers tracked and audited?"
+### Section 4: Value Props
 
-**Copy:** Each card names the axis, explains why it matters to teams adopting agents, and mentions the corresponding CLI commands (doctor/fix/suppress/explain) *as implementation details*, not primary selling points.
+**Purpose:** Differentiation via readiness axes (not CLI commands)
+
+Four cards. Each names the axis, explains why it matters to agent-adopting teams, and mentions the corresponding CLI command as an implementation detail only.
+
+| Card | Axis | Copy direction |
+|------|------|----------------|
+| 1 | Context | "Can agents see secrets? Outdated AGENTS.md? Missing .env.example?" |
+| 2 | Safety | "Are credentials in agent-visible paths? Policy enforcement?" |
+| 3 | Operability | "Is there a verify command? Pre-commit integration? CI gating?" |
+| 4 | Governance | "Can teams waive findings? Are waivers tracked and audited?" |
 
 ### Section 5: Trust / Determinism
 
-**Purpose:** Earn developer credibility — why Charter is different  
-**Copy:** Short trust strip pulling four of the Ten Commitments:
-- "Never calls an LLM — all scoring is deterministic, offline, rule-based"
-- "Never sends data without opt-in — your repo stays on your machine"
-- "Every finding has a rule ID, evidence, and a fix — no black boxes"
-- "Every release is cosign-signed with SLSA L3 provenance — supply-chain verified"
+**Purpose:** Earn developer credibility
 
-*(Source: architecture-2026.md lines 55–79)*
+**Locked copy — verbatim from `docs/internal/architecture/charter-architecture-2026.md` lines 57–62 (Ten Commitments):**
+
+Select these four (exact text):
+
+1. "Never send data anywhere without explicit opt-in."
+2. "Never call an LLM — all findings are deterministic."
+3. "Every finding has a rule ID, evidence, and fix suggestion."
+4. "Every release is signed (cosign) with SLSA Level 3 provenance."
 
 ### Section 6: Social Proof
 
-**Purpose:** Adoption signal  
+**Purpose:** Adoption signal
+
 **Components:**
-- GitHub stars count (fetched at build time, cached)
-- "Works with Claude Code, Codex, Cursor, Windsurf, Copilot, Gemini" (vendor icons from `docs/product/images/icons/`)
-- **Placeholder:** Logo slot for real adoptions — flag as unfilled until permissioned logos exist; spec says "Do NOT fabricate 'Used by X teams at [logos]'"
+- GitHub stars count (fetched at build time from `https://api.github.com/repos/use-charter/charter`; cached in static output)
+- Vendor compatibility icons: Claude Code, ChatGPT, Grok (SVGs confirmed in `docs/product/images/icons/`), plus Cursor, Windsurf, Copilot, Gemini, Codex (placeholders — these SVGs do NOT exist yet; must render as text-only badges until SVGs are sourced and permissioned)
+- **Strict rule:** Do NOT fabricate "Used by X teams at [Company logos]". GitHub stars + confirmed vendor icons only.
 
 ### Section 7: CI / SARIF Strip
 
-**Purpose:** Reach DevOps-lead persona  
-**Headline:** "Gate pull requests on agent-readiness"  
-**Copy:** Short band showing GitHub Action snippet + mention of SARIF 2.1.0 output  
-**CTA:** Link to `docs/product/how-to/run-in-github-actions.mdx`
+**Purpose:** Reach DevOps-lead persona
+
+**Headline:** "Gate pull requests on agent-readiness"
+
+**Locked snippet** (exact text from `docs/product/how-to/run-in-github-actions.mdx`):
+
+```yaml
+name: Charter
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+jobs:
+  charter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: use-charter/charter-action@v1
+        with:
+          threshold: "80"
+```
+
+**CTA:** "Read the GitHub Actions guide" → `https://use-charter.dev/docs/how-to/run-in-github-actions`
+
+Mention SARIF 2.1.0 output + GitHub Code Scanning integration.
 
 ### Section 8: Final CTA
 
-**Purpose:** Convert  
-**Components:**
-- Repeat install command (copy button)
-- `Read the docs` → Mintlify (`/docs`)
-- `Star on GitHub` → repo URL
-- **Deferred:** `Notify me about the dashboard` → waitlist email capture (POST to TBD endpoint)
+**Purpose:** Convert
+
+| Element | Content |
+|---------|---------|
+| Install command | Repeat copy button: `brew install use-charter/tap/charter` |
+| Primary CTA | "Read the docs" → `https://use-charter.dev/docs` |
+| Secondary CTA | "Star on GitHub" → `https://github.com/use-charter/charter` |
+| Tertiary (deferred) | "Notify me about the dashboard" → waitlist email capture form (endpoint TBD — see Critical Dependencies) |
 
 ### Section 9: Footer
 
-**Purpose:** Links + community  
-**Components:** Docs, Rules reference, GitHub repo, releases, community/Discord (flag if placeholder), license (Apache-2.0), copyright
+**Purpose:** Links + community
+
+| Group | Items |
+|-------|-------|
+| Product | Docs, Rules reference |
+| Project | GitHub repo, Releases |
+| Community | Discord (mark as placeholder if link unavailable) |
+| Legal | Apache-2.0 license, Copyright notice |
+
+All external links: `rel="noopener noreferrer"`.
 
 ---
 
 ## Visual Direction
 
-### Design System Alignment
+### Design System
 
-**Mandatory:** Use existing DESIGN-TOKENS.md + brand/README.md exactly. Do NOT re-invent.
+**Source of truth:** `docs/internal/designs/DESIGN-TOKENS.md` and `docs/internal/designs/brand/README.md`. Do NOT re-invent; extract exactly.
 
 **Color palette:**
-- **Primary surface:** `#0D1117` (dark background) / `#ffffff` (light, for optional light mode fallback)
-- **Primary accent:** `#2563EB` (blue — docs primary)
-- **Score zones:** 
-  - Success: `#4ade80` (green, 80+ score)
-  - Warning: `#fbbf24` (amber, 60–79 score)
-  - Danger: `#f87171` (red, <60 score)
-- **Semantic tokens:** success/danger/warning/info colors from DESIGN-TOKENS.md; use for badges, charts, state indicators
 
-**Typography:**
-- **Headings (H1, H2):** Ruda 700/800 (wordmark uses Ruda 800/900; match it)
-- **Body & subheads:** Ruda 400/500 (inherit size scale from tokens)
-- **Code/terminal/command blocks:** Atkinson Hyperlegible Mono (canonical primary mono)
-- **Metadata/rule IDs/status labels:** IBM Plex Mono (secondary mono, small sizes only)
-- **Status-accent tiny labels:** Share Tech (small labels only, ~10px)
+| Token | Value | Use |
+|-------|-------|-----|
+| Primary surface | `#0D1117` | Page background (dark-first) |
+| Primary accent | `#2563EB` | Buttons, links, active states |
+| Success (score ≥80) | `#4ade80` | Terminal score green zone |
+| Warning (score 60–79) | `#fbbf24` | Terminal score amber zone |
+| Danger (score <60) | `#f87171` | Terminal score red zone |
 
-**Signature visual:** Terminal card in hero section showing real `charter doctor` output (OUTCOME = 94/100 Ship-ready). Shows the OUTCOME, not the product. Animation (CSS only): fade-in + fade-up on scroll reveal. Fallback: static screenshot.
+**Typography (weights confirmed in `DESIGN-TOKENS.md`):**
 
-**Interaction Timings (validated against interaction-design skill):**
-- Button scale feedback (`active:scale-[0.98]`): 100-150ms
-- Copy button "copied" feedback: 100-150ms  
-- Form input focus transition: 200-300ms
-- Section fade-up on scroll reveal: 300-500ms
-- Easing: Use `cubic-bezier(0.16, 1, 0.3, 1)` for enter (out), `cubic-bezier(0.55, 0, 1, 0.45)` for exit (in)
+| Use | Family | Weight |
+|-----|--------|--------|
+| H1, H2, wordmark | Ruda | 700 / 800 (max is 800) |
+| Body, subheads | Ruda | 400 / 500 |
+| Code, terminal, commands | Atkinson Hyperlegible Mono | 400 / 500 |
+| Metadata, rule IDs (small) | IBM Plex Mono | 400 / 500 |
+| Status labels (tiny, accent) | Share Tech | 400 |
 
-**Component States (mandatory per design-taste skills):**
-- Copy button: default → hover (scale 1.02) → active (scale 0.98) → "copied" (text change, 2s)
-- Form: empty → focus (input focus transition) → loading (disabled + spinner) → success/error (toast)
-- Section reveals: invisible (opacity 0, translate-y-16) → visible (opacity 1, translate-y-0)
+**Fonts sourcing:** No woff2 files exist in the repo directly. They are Latin-subset woff2 base64-embedded, generated by `bun scripts/generate-report-fonts.ts`. Run this script to generate `internal/render/html/assets/fonts.css`, then extract the `@font-face` blocks for self-hosting in `web/src/styles/fonts.css`. Do NOT link Google Fonts CDN (offline-first ethos).
 
-### Responsive Design
+**Hero visual:** Terminal card showing real `charter doctor` output (OUTCOME = 94/100 Ship-ready). CSS-only animation: fade-in + slide-up on scroll reveal. Static screenshot fallback: `docs/product/images/screenshots/doctor-overview.webp`.
 
-- **Mobile-first:** 320px (min width), 375px (typical), 768px (tablet), 1024px (laptop), 1440px (desktop), 1920px (ultra-wide)
-- **Terminal card behavior:** Horizontal scroll inside card on 320px; never overflow page
-- **Touch-friendly:** Button/link targets ≥ 44×44px
-- **Breakpoint strategy:** Prefer CSS Grid + media queries; no wrapper divs solely for layout
+### Interaction Timings
+
+| Interaction | Duration | Easing |
+|-------------|----------|--------|
+| Button scale feedback (`active` state, scale 0.98) | 100–150ms | `cubic-bezier(0.55, 0, 1, 0.45)` |
+| Copy button "Copied!" text change | 100–150ms instant, revert after 2000ms | — |
+| Form input focus border transition | 200–300ms | `cubic-bezier(0.16, 1, 0.3, 1)` |
+| Section fade-up scroll reveal | 300–500ms | `cubic-bezier(0.16, 1, 0.3, 1)` |
+| Hover scale up (scale 1.02) | 200ms | `cubic-bezier(0.16, 1, 0.3, 1)` |
+
+### Component States (mandatory)
+
+**Copy button:**
+- `default` → `hover` (scale 1.02, 200ms) → `active` (scale 0.98, 100ms) → `copied` (text "Copied!", icon change, 2s timeout, then revert)
+
+**Waitlist form:**
+- `empty` → `focus` (input border transition, 200ms) → `loading` (submit disabled, CSS spinner) → `success` (toast "Check your email!") / `error` (toast with error message)
+
+**Section reveals:**
+- `invisible` (opacity: 0, transform: translateY(4rem)) → `visible` (opacity: 1, transform: translateY(0), 300–500ms)
+- Disabled entirely under `prefers-reduced-motion: reduce`
+
+### Responsive
+
+- **Mobile-first breakpoints:** 320px, 375px, 768px, 1024px, 1440px, 1920px
+- **Terminal card:** `overflow-x: auto` inside card; `overflow-x: hidden` on `<body>` — card scrolls, page doesn't
+- **Touch targets:** All buttons and links ≥ 44×44px
+- **Hero full-height:** `min-height: 100dvh` (never `height: 100vh`)
+- **Layout:** CSS Grid + media queries; never flexbox percentage math
 
 ### Accessibility (WCAG 2.2 AA)
 
-- **Semantic HTML:** `<header>`, `<main>`, `<section aria-labelledby="...">`, `<footer>`
-- **Heading hierarchy:** H1 (once, hero) → H2 (sections) → H3 (subsections only where needed)
-- **Images:** Every image has descriptive alt text; screenshots have alt text explaining the output
-- **Links:** Descriptive text; avoid "click here", "learn more" vagueness
-- **Focus states:** Visible ≥ 3px outline or 2px shadow, 2px offset, contrast ≥ 3:1 against background
-- **Reduced motion:** `prefers-reduced-motion: reduce` disables terminal animation, hero parallax, smooth scrolling
-- **Color contrast:** All text meets 4.5:1 (normal) or 3:1 (large). Design tokens are pre-verified by DESIGN-TOKENS.md
-- **Keyboard nav:** All interactive elements (buttons, links, copy button, form inputs) reachable via Tab; no keyboard traps; logical tab order
+| Requirement | Specifics |
+|-------------|-----------|
+| Semantic HTML | `<header>`, `<main>`, `<section aria-labelledby="…">`, `<footer>` |
+| Heading hierarchy | H1 (once, hero) → H2 (each section) → H3 (subsections only when needed) |
+| Images | Every `<img>` and `<picture>` has descriptive `alt=""` |
+| Focus states | Minimum 3px outline OR 2px shadow with 2px offset; contrast ≥ 3:1 against background |
+| Reduced motion | `prefers-reduced-motion: reduce` disables all CSS animations; page fully functional without motion |
+| Color contrast | Normal text ≥ 4.5:1; large text ≥ 3:1 |
+| Keyboard nav | All interactive elements (buttons, links, inputs) reachable via Tab; no traps; logical order |
 
 ### Anti-Template Checklist
 
-Per global design-quality rules, avoid:
-- Default centered hero + gradient blob + three uniform cards
-- Oversized padding destroying hierarchy
-- Generic stock photos (use terminal screenshot)
-- Uniform radius/shadow everywhere (vary by depth)
-- Safe gray-on-white (use the dark theme intentionally)
-- Emoji in copy or decoration
-
-**Required qualities:** hierarchy via scale contrast, intentional rhythm in spacing, terminal card for depth, Ruda + mono pairing with character, semantic color use (not decorative), designed hover/focus states, asymmetric/editorial composition where appropriate, subtle motion (only where it serves).
+Before marking any component done:
+- [ ] Does NOT look like a default Tailwind or generic template?
+- [ ] Does it have intentional hover/focus/active states?
+- [ ] Does it use hierarchy rather than uniform emphasis?
+- [ ] Would this look credible in a real product screenshot?
 
 ---
 
-## Technology Stack Decisions
+## Technology Stack
 
-**Official Documentation Sources:**
-- Astro v6 Docs: https://docs.astro.build/
-- Bun Docs: https://bun.sh/docs
+**All decisions validated against official docs:**
+- Astro v6: https://docs.astro.build/
+- Bun: https://bun.sh/docs
 - Cloudflare Pages: https://developers.cloudflare.com/pages/
 
-### Framework & Build
+### Framework
 
-**Astro v6 (Static Site Generation)**
-- **Decision:** Astro v6 with vanilla template via `bun create astro`
-- **Rationale:** Ships zero JS by default (pure HTML/CSS); Astro v6 auto-renders components to static HTML; SSG fits landing page exactly
-- **Astro Output Config:** Set `output: 'static'` in `astro.config.mjs`
-- **Image Optimization:** Use `<Picture />` component from `astro:assets` (auto-generates AVIF/WebP with PNG fallback)
-- **Why not Next.js:** Hydration overhead for 95%-static page conflicts with 150kb budget
-- **Why not Vite Plus:** Pre-1.0 alpha, no Bun support, redundant with Astro
+**Astro v6 (SSG)**
+- `output: 'static'` in `astro.config.mjs`
+- Zero JS shipped by default; islands add minimal JS where needed
+- `<Picture />` from `astro:assets` for automatic AVIF/WebP/fallback image optimization
+- Rationale: ships zero JS to browser by default; ideal for static landing page
 
 **Vanilla CSS + CSS Custom Properties**
-- **Decision:** Vanilla CSS (no frameworks)
-- **Rationale:** Direct reuse of DESIGN-TOKENS.md semantic tokens; zero token duplication friction
-- **CSS Architecture:** Extract all tokens to `design-tokens.css` (--color-*, --font-*, --space-*, --line-height-*)
-- **Responsive:** CSS Grid + media queries (never flexbox percentage math like `w-[calc(33%-1rem)]`)
-- **Why not Tailwind v4:** 12–18kb gzipped vs 4–8kb vanilla; exceeds 30kb budget; maintenance burden
+- All tokens extracted verbatim from `docs/internal/designs/DESIGN-TOKENS.md`
+- CSS architecture: `design-tokens.css` → `global.css` → `sections/*.css` → `islands.css`
+- Responsive: CSS Grid + media queries
+- No Tailwind, no PostCSS, no CSS-in-JS
+- Rationale: 4–8kb gzip vs 12–18kb Tailwind; direct token reuse; no duplication
 
-**Build Tool:** Vite (automatic via Astro 6)
-- No custom Vite config needed
-- No PostCSS config needed (vanilla CSS custom properties work natively)
+**Package manager: Bun exclusively**
+- `bun create astro` to scaffold
+- `bun install` to install dependencies
+- `bun run build` to produce static output
+- `bun run dev` to run dev server (Astro default: `http://localhost:4321`)
+- No npm, no npx for project commands (use `bunx` instead)
 
-**Package Manager:** Bun (exclusively)
-- `bun create astro` initializes project
-- `bun install` installs dependencies
-- `bun run build` builds for production
-- `bun run dev` runs dev server
-
-### Hosting & Deployment
+### Hosting
 
 **Cloudflare Pages**
-- Build command: `bun run build` (from web/package.json)
+- Build command: `bun run build` (from `web/package.json`)
 - Output directory: `dist/`
-- Static HTML/CSS/images output (zero Node.js runtime)
-- Domain: `use-charter.dev` (via Worker proxy)
-- **wrangler.toml:** Optional for static sites (Pages dashboard UI config sufficient)
+- Zero Node.js runtime (pure static)
 
-**Worker Routing:** Update existing Cloudflare Worker to route `/` to landing origin while `/docs/*` and `/rules/*` stay on Mintlify.
+**Worker routing:** Existing Cloudflare Worker (`action/` dir or root wrangler config) updated to proxy `/` to `LANDING_ORIGIN` (Cloudflare Pages URL). Existing `/docs/*` and `/rules/*` routes to Mintlify remain unchanged.
 
-**Monorepo:** Astro project lives in `web/` as a new Moon project with dev/build/check tasks.
+**Monorepo:** `web/` is a Moon project (`web/moon.yml` already committed). Add `dev`, `build`, `check` tasks.
 
-### Performance Budgets (Hard Limits)
+### Performance Budgets (hard limits — all gzipped)
 
-**CSS:** ≤ 30kb gzipped
-- Inline critical above-fold CSS (<4kb)
-- Defer non-critical section styling
-- No unused CSS; vanilla CSS aids here
-
-**JavaScript:** ≤ 150kb gzipped
-- Astro outputs zero JS by default (pure HTML/CSS)
-- Island: copy-to-clipboard button (native browser APIs, <1kb)
-- Island: terminal animation (if needed; <5kb if using CSS animation instead of JS)
-- Waitlist form: vanilla fetch, no libraries (<2kb)
-
-**Images:** ≤ 50kb total (all hero + section images)
-- AVIF primary format (highest compression)
-- WebP fallback
-- PNG fallback (screenshots)
-- Explicit `width` and `height` on all images
-- `loading="eager" fetchpriority="high"` for hero image only
-- `loading="lazy"` for below-fold content
-- Screenshot reuse: don't re-optimize; use existing WebP from `docs/product/images/screenshots/`
-
-**Fonts:** ≤ 30kb gzipped (all weights/styles)
-- Preload critical weight only (Ruda 800 for headings; Atkinson Mono regular for code)
-- Self-host (don't use Google Fonts CDN — offline-first ethos)
-- `font-display: swap` (let text render while font loads)
-- Subset if feasible (Latin + symbols only, no CJK)
+| Asset type | Budget |
+|------------|--------|
+| JavaScript | ≤ 150kb (Astro default: 0kb; islands add minimal) |
+| CSS | ≤ 30kb total; ≤ 4kb inline critical CSS in `<head>` |
+| Images | ≤ 50kb total (all hero + section images combined) |
+| Fonts | ≤ 30kb |
 
 **Core Web Vitals targets:**
-- LCP < 1.5s (Largest Contentful Paint)
-- FCP < 1s (First Contentful Paint)
-- INP < 200ms (Interaction to Next Paint)
-- CLS < 0.1 (Cumulative Layout Shift)
-- TBT < 200ms (Total Blocking Time)
+
+| Metric | Target |
+|--------|--------|
+| LCP | < 1.5s |
+| FCP | < 1.0s |
+| INP | < 200ms |
+| CLS | < 0.1 |
+| TBT | < 200ms |
+
+**Image strategy:**
+- Hero image: `loading="eager" fetchpriority="high"` (above fold)
+- Below-fold images: `loading="lazy"`
+- All images: explicit `width` + `height` attributes (prevents CLS)
+- Format: AVIF primary, WebP fallback, PNG last resort
+- Screenshot reuse: use existing WebP from `docs/product/images/screenshots/` as-is
+
+**Font strategy:**
+- Self-hosted (no Google Fonts CDN)
+- `font-display: swap`
+- Preload: Ruda 800 only (heading weight) + Atkinson Mono 400 (code weight)
+- Latin subset only
 
 ---
 
-## Content & Copy
+## Content Rules
 
-All copy is **locked before implementation begins.** Copy sources:
+All copy is **locked before implementation begins.** No drift from these sources.
 
-| Section | Source | Status |
-|---------|--------|--------|
-| Hero headline | Brand tagline "AI-agent readiness, scored." | Locked (DESIGN-TOKENS.md) |
-| Hero subheadline | architecture-2026.md (Commitment: deterministic, offline, rule-based) | Locked |
-| Problem | introduction.mdx ("Teams adopting agents fail not because the model is bad...") | Locked (verbatim) |
-| Solution headline | Brand motif: "Scan · Score · Fix" | Locked |
-| Value props | Readiness axes: Context, Safety, Operability, Governance | Locked (from docs IA) |
-| Trust strip | Ten Commitments (architecture-2026.md lines 55–79) | Locked (select 4) |
+| Section | Source | Lock status |
+|---------|--------|-------------|
+| H1 | Brand tagline (DESIGN-TOKENS.md) | Locked |
+| Hero subheadline | architecture-2026.md commitment language | Locked |
+| Problem copy | `docs/product/introduction.mdx` verbatim | Locked |
+| Solution steps | Brand motif "Scan · Score · Fix" + architecture-2026.md score formula | Locked |
+| Value props axes | Docs IA: Context, Safety, Operability, Governance | Locked |
+| Trust strip | architecture-2026.md lines 57–62 (Ten Commitments #1, 2, 5, 6) verbatim | Locked |
+| CI snippet | `docs/product/how-to/run-in-github-actions.mdx` exact YAML | Locked |
 | CTA copy | "Get started", "View on GitHub", "Read the docs", "Star on GitHub" | Locked |
 
-**Content rules:**
-- No benchmark numbers beyond "<2s" and "50k-file budget" (both verified in architecture docs)
-- Every claim must be derivable from architecture-2026.md, introduction.mdx, or quickstart.mdx
-- Severity/score language must match docs exactly (no drift between landing page and docs)
-- No fabricated social proof; use real GitHub stars + vendor logos only if permissioned
-
----
-
-## Success Criteria
-
-**Technical:**
-- ✅ Lighthouse scores ≥ 90 (Performance, Accessibility, Best Practices)
-- ✅ Core Web Vitals all green (LCP < 1.5s, FCP < 1s, INP < 200ms, CLS < 0.1, TBT < 200ms)
-- ✅ Performance budgets met (JS ≤ 150kb, CSS ≤ 30kb, images ≤ 50kb, fonts ≤ 30kb gzipped)
-- ✅ Build output is pure HTML/CSS + static assets (no Node.js runtime)
-- ✅ Astro `astro check` passes (type safety)
-
-**Accessibility:**
-- ✅ WCAG 2.2 AA compliance (axe-core automated + manual keyboard testing)
-- ✅ Semantic HTML validation (no role abuse, proper heading hierarchy, meaningful alt text)
-- ✅ Focus visible on all interactive elements
-- ✅ Reduced-motion respected (no animation flicker)
-- ✅ Color contrast ≥ 4.5:1 (normal) / 3:1 (large) on all text
-
-**Design:**
-- ✅ Matches terminal-dashboard aesthetic (dark theme, Ruda + mono, semantic colors)
-- ✅ Consistent with existing brand assets (DESIGN-TOKENS.md, brand/README.md, meta.html)
-- ✅ Responsive at 320 / 768 / 1440 (no overflow, sensible reflows, touch targets ≥ 44px)
-- ✅ Avoids template aesthetic; demonstrates intentional composition and interaction states
-
-**Content:**
-- ✅ Copy is locked, sourced from approved product docs, never contradicts Mintlify docs
-- ✅ No fabricated social proof; GitHub stars are real, logos are permissioned or placeholders flagged
-- ✅ Conversion hierarchy clear (primary: install; secondary: GitHub; deferred: waitlist)
-
-**Functional:**
-- ✅ Copy-to-clipboard button works (includes fallback text selection)
-- ✅ All links functional (GitHub repo, Mintlify docs, etc.)
-- ✅ Waitlist email capture posts to TBD endpoint (spec as placeholder; endpoint provided by operations)
-- ✅ Cloudflare Pages deployment successful; Worker routing verified (`/` → landing, `/docs/*` → Mintlify, `/rules/*` → Mintlify)
-
----
-
-## Acceptance Criteria
-
-**Before marking "Done":**
-
-**Responsive & Performance:**
-- [ ] Page renders at 320, 375, 768, 1024, 1440, 1920 without horizontal scroll (except intentional terminal card)
-- [ ] All CTA buttons ≥ 44×44px touch targets (copy, form submit, links)
-- [ ] Hero image with `loading="eager" fetchpriority="high"` loads before LCP
-- [ ] Lighthouse Performance ≥ 90, Accessibility ≥ 90
-- [ ] Core Web Vitals: LCP < 1.5s, FCP < 1s, INP < 200ms, CLS < 0.1
-- [ ] CSS ≤ 30kb gzipped, JS ≤ 150kb gzipped, images ≤ 50kb total, fonts ≤ 30kb gzipped
-
-**Accessibility (WCAG 2.2 AA):**
-- [ ] `astro check` exits 0 (type safety)
-- [ ] axe-core automated scan: zero violations
-- [ ] Manual keyboard test: Tab through entire page, all interactive elements reachable
-- [ ] Focus visible ≥ 3px outline or shadow on all buttons/links/inputs
-- [ ] Heading hierarchy: H1 (once, hero) → H2 (sections) → H3 (subsections only)
-- [ ] Color contrast ≥ 4.5:1 (normal text), ≥ 3:1 (large text) — Chrome DevTools verify
-- [ ] All images + screenshots have descriptive alt text
-- [ ] Form has proper labels (above input), error messages (below), helper text (optional)
-- [ ] `prefers-reduced-motion: reduce` disables animations; page still fully functional
-- [ ] Screen reader test (Mac VoiceOver or Windows NVDA): page structure readable, CTAs announced
-
-**SEO & Metadata:**
-- [ ] Meta tags present: title, description, og:title, og:description, og:image, canonical
-- [ ] All external links semantic + `rel="noopener noreferrer"`
-- [ ] GitHub stars count fetched at build time and cached
-- [ ] No console errors or warnings in production build
-
-**Assets & Security:**
-- [ ] Fonts self-hosted (Ruda, Atkinson Mono, IBM Plex Mono, Share Tech); no Google CDN
-- [ ] Images use `<Picture />` with AVIF primary, WebP fallback, PNG fallback
-- [ ] All images explicit dimensions (`width` + `height` attributes)
-- [ ] Hero terminal card: CSS animation only (no heavy JS)
-- [ ] Icons: Phosphor Light or SVG (no emojis)
-
-**Functionality:**
-- [ ] Copy-to-clipboard button: works on desktop, has text fallback for iOS
-- [ ] Form validation: email regex validates, shows error state with message
-- [ ] Form submission: POST to endpoint, shows loading state (disabled + spinner), success/error toast
-- [ ] All links functional: GitHub, docs, Mintlify paths, waitlist endpoint
-
-**Build & Deployment:**
-- [ ] `bun run build` outputs clean `dist/` directory
-- [ ] Cloudflare Pages deployment succeeds
-- [ ] Worker routing verified: `/` → landing, `/docs/*` → Mintlify, `/rules/*` → Mintlify
-- [ ] HTTPS verified: no cert warnings on use-charter.dev
+**Claim rules:**
+- No benchmark numbers beyond "<2 seconds" and "50k-file budget" (both verified in architecture docs)
+- Every claim derivable from `charter-architecture-2026.md`, `introduction.mdx`, or `quickstart.mdx`
+- Severity/score language must match docs exactly
+- No fabricated social proof
 
 ---
 
 ## Critical Dependencies
 
-1. **Waitlist endpoint (TBD):** Implementation requires a POST endpoint. Endpoint contract:
-   - Accept: `{ email: string }`
-   - Response: `200 + { success: true, message: string }` (on success) or `400/500 + { error: string }` (on failure)
-   - Must handle spam/duplicates gracefully
-   - Must sanitize email input server-side
-   - Must store emails securely (ops/privacy responsibility)
-   - Form must show loading state during POST (disabled button + spinner)
-   - Form must show success toast on 200, error toast on 400+
+### 1. Waitlist endpoint (TBD — blocker for Section 8 form)
 
-2. **GitHub API:** Fetch star count at build time via GitHub API (no auth needed for public repos). Cache in static output; updates at next Pages deploy. Source: https://api.github.com/repos/anthropics/charter
+**Contract:**
+- `POST /api/waitlist`
+- Request body: `{ "email": "string" }`
+- Success: `HTTP 200` + `{ "success": true, "message": "string" }`
+- Failure: `HTTP 400/500` + `{ "error": "string" }`
+- Must validate + sanitize email server-side
+- Must handle duplicate email gracefully (idempotent or 409)
+- Must store securely (ops/privacy responsibility)
 
-3. **Existing assets:** 
-   - Design tokens in `docs/internal/designs/DESIGN-TOKENS.md` (extract to CSS variables exactly)
-   - Brand meta.html in `docs/internal/designs/brand/` (extract `<head>` block)
-   - Screenshots in `docs/product/images/screenshots/` (use as-is; reuse existing WebP, no re-optimization)
-   - Fonts: Ruda, Atkinson Hyperlegible Mono, IBM Plex Mono, Share Tech (self-host in `web/src/fonts/`)
-   - Icons: Phosphor Light (NOT emojis)
+**Implementation plan behavior while TBD:** Form renders. Submit button works. POST fires to placeholder URL `/api/waitlist`. 4xx response shows generic error toast. No fake success state. Uncomment real endpoint URL when ops provides it.
 
-4. **Cloudflare Worker code:** Existing Worker updated to route `/` → landing origin. Implementation plan coordinates this. Source: Cloudflare Worker in repo root.
+### 2. GitHub API (build-time fetch)
 
-5. **Meta Tags Template:** Required in Base.astro:
-   - `<title>` with keyword "AI-agent readiness, scored"
-   - `<meta name="description">` (160 chars)
-   - `<meta property="og:title">` (Open Graph)
-   - `<meta property="og:description">`
-   - `<meta property="og:image">` (hero image AVIF/WebP with PNG fallback)
-   - `<link rel="canonical">` (https://use-charter.dev/)
+- URL: `https://api.github.com/repos/use-charter/charter`
+- Field: `stargazers_count`
+- No auth required (public repo)
+- Failure fallback: render "⭐ Star on GitHub" with no count (never hardcode a number)
+- Caches in static output; updates at next Pages deploy
+
+### 3. Existing assets (all paths verified against live repo)
+
+| Asset | Verified path | Status |
+|-------|--------------|--------|
+| Design tokens | `docs/internal/designs/DESIGN-TOKENS.md` | ✅ Exists |
+| Brand meta.html | `docs/internal/designs/brand/meta.html` | ✅ Exists |
+| og:image | `docs/internal/designs/brand/og.svg` | ✅ Exists |
+| Favicon | `docs/internal/designs/brand/favicon.svg` | ✅ Exists |
+| Screenshots | `docs/product/images/screenshots/*.webp` (13 files) | ✅ Exists |
+| claude-ai icon | `docs/product/images/icons/claude-ai.svg` | ✅ Exists |
+| chatgpt icon | `docs/product/images/icons/chatgpt.svg` | ✅ Exists |
+| grok icon | `docs/product/images/icons/grok.svg` | ✅ Exists |
+| Cursor icon | `docs/product/images/icons/cursor.svg` | ❌ Missing — render as text badge |
+| Windsurf icon | `docs/product/images/icons/windsurf.svg` | ❌ Missing — render as text badge |
+| Copilot icon | `docs/product/images/icons/copilot.svg` | ❌ Missing — render as text badge |
+| Gemini icon | `docs/product/images/icons/gemini.svg` | ❌ Missing — render as text badge |
+| Codex icon | `docs/product/images/icons/codex.svg` | ❌ Missing — render as text badge |
+| Font woff2 files | Generated by `bun scripts/generate-report-fonts.ts` (output: `internal/render/html/assets/fonts.css`) | ✅ Script exists; run to extract @font-face blocks |
+
+### 4. Cloudflare Worker file
+
+The Worker file location must be confirmed before Phase 9 (deployment). Check repo root for `wrangler.toml` or `action/` for the composite action. Worker routing update in Phase 9 modifies the `LANDING_ORIGIN` route.
+
+### 5. Meta tags (required in Base.astro)
+
+```html
+<title>Charter — AI-agent readiness, scored.</title>
+<meta name="description" content="Charter is an offline-first CLI that audits any repo against 18 rules and returns a deterministic 0–100 score in under 2 seconds. No data leaves your machine." />
+<meta property="og:title" content="Charter — AI-agent readiness, scored." />
+<meta property="og:description" content="Offline-first CLI. Deterministic 0–100 score. 18 rules. No LLM calls. No network. Works with Claude Code, Codex, Cursor, Windsurf, Copilot, Gemini." />
+<meta property="og:image" content="/og.svg" />
+<meta property="og:type" content="website" />
+<link rel="canonical" href="https://use-charter.dev/" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+```
+
+---
+
+## Acceptance Criteria
+
+All items must pass before marking "Done."
+
+**Responsive & Performance**
+- [ ] Page renders at 320, 375, 768, 1024, 1440, 1920px without horizontal scroll (except intentional terminal card overflow)
+- [ ] All CTA buttons and links ≥ 44×44px touch targets
+- [ ] Hero image: `loading="eager" fetchpriority="high"` present in output HTML
+- [ ] Lighthouse Performance ≥ 90, Accessibility ≥ 90 (`bunx lighthouse http://localhost:4321`)
+- [ ] LCP < 1.5s, FCP < 1.0s, INP < 200ms, CLS < 0.1 (Lighthouse report)
+- [ ] Gzipped budgets verified: CSS ≤ 30kb, JS ≤ 150kb, images ≤ 50kb, fonts ≤ 30kb
+
+**Accessibility (WCAG 2.2 AA)**
+- [ ] `bun run check` (Astro type-check) exits 0
+- [ ] `bunx @axe-core/cli http://localhost:4321` — zero violations
+- [ ] Manual Tab test: all interactive elements reachable, no keyboard traps, logical order
+- [ ] Focus visible: ≥ 3px outline or shadow on all buttons/links/inputs
+- [ ] Heading hierarchy confirmed: exactly one H1, H2 per section, H3 only as subsections
+- [ ] Color contrast: ≥ 4.5:1 normal text, ≥ 3:1 large text (Chrome DevTools verified)
+- [ ] All `<img>` and `<picture>` elements have non-empty, descriptive `alt` attributes
+- [ ] Form label positioned above input, error text below input, helper text in markup
+- [ ] `@media (prefers-reduced-motion: reduce)` disables animations; page is fully functional without motion
+- [ ] VoiceOver (Mac) or NVDA (Windows): page structure readable, CTAs announced, form labels read correctly
+
+**SEO & Metadata**
+- [ ] All required meta tags present in `<head>` (title, description, og:*, canonical, favicon)
+- [ ] All external links have `rel="noopener noreferrer"`
+- [ ] GitHub stars count rendered (or fallback text, never hardcoded number)
+- [ ] Zero console errors or warnings in `bun run build` output and browser devtools
+
+**Assets & Brand**
+- [ ] Fonts self-hosted (served from `web/public/fonts/`); no CDN link in HTML
+- [ ] All images use `<Picture />` with AVIF primary, WebP fallback
+- [ ] All images have explicit `width` + `height` attributes
+- [ ] Terminal card uses CSS animation only (no JS animation library)
+- [ ] Icons are SVG or Phosphor Light (zero emojis in markup or copy)
+
+**Functionality**
+- [ ] Copy button: copies command to clipboard on desktop; falls back to text selection on iOS (no `execCommand` errors surfacing to user)
+- [ ] Form validation: invalid email shows red border + error message below input; submit disabled until valid
+- [ ] Form submission: POST fires, button disabled + spinner shows during request, success/error toast shows on response
+- [ ] All links navigate: GitHub, Mintlify docs, CI guide, license
+
+**Build & Deployment**
+- [ ] `bun run build` from `web/` outputs clean `dist/` with no errors
+- [ ] Cloudflare Pages deployment succeeds; `dist/index.html` served at root
+- [ ] Worker routing verified: `curl -sI https://use-charter.dev/` → 200; `/docs` → 30x to Mintlify; `/rules` → 30x to Mintlify
+- [ ] HTTPS enforced; no certificate warnings on `use-charter.dev`
 
 ---
 
 ## Delivery Model
 
-Delivered as a series of atomic, GPG-signed commits on `main`. See implementation plan for commit structure and sequencing.
+Delivered as a series of atomic, GPG-signed commits on `main`. Implementation is sub-agent driven — see implementation plan for agent dispatch table and phase execution strategy.
 
 **Spec status:** Locked (2026-06-10)  
-**Ready for implementation:** Yes
+**Ready for implementation:** Yes — all asset paths verified, all copy locked, all dependencies documented

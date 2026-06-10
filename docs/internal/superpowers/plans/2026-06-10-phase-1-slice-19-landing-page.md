@@ -2,247 +2,357 @@
 
 **Document type:** Implementation plan (HOW, not WHAT)  
 **Based on:** `docs/internal/superpowers/specs/2026-06-10-phase-1-slice-19-landing-page.md`  
-**Status:** Ready for execution (validated against all official docs + design skills)  
-**Branch:** `main` (all commits); GPG-signed, `moon run :check` green throughout
+**Status:** Ready for execution  
+**Branch:** `main` (all commits); GPG-signed, `moon run :check` green before every push
 
 ---
 
-## Overview
+## Execution Strategy
 
-Deliver landing page in 9 phases. Each phase produces atomic commit(s) with specific verification checkpoints. No phase starts until prior phase completes.
+**All phases are executed by sub-agents.** The orchestrator (main Claude Code session) dispatches agents per the table below and waits for each agent's checkpoint to pass before moving forward.
 
-**Total scope:** ~2000 lines (HTML/CSS/JS); zero Node.js runtime; static output to Cloudflare Pages.
+### Sub-Agent Dispatch Table
 
-**Tech Stack Validated Against Official Docs:**
-- Astro v6 SSG (https://docs.astro.build/)
-- Bun package manager (https://bun.sh/docs)
-- Cloudflare Pages (https://developers.cloudflare.com/pages/)
-- Vanilla CSS + CSS custom properties
-- `<Picture />` component for image optimization
+| Phase | Agent prompt (copy verbatim to dispatch) | Depends on |
+|-------|------------------------------------------|------------|
+| 1 | `"Execute Phase 1 of Slice 19: scaffold Astro v6 project in web/, extract design tokens from docs/internal/designs/DESIGN-TOKENS.md, generate fonts.css by running bun scripts/generate-report-fonts.ts, self-host fonts in web/public/fonts/, create Base.astro layout with all meta tags from spec Critical Dependencies §5, create web/src/pages/index.astro (empty), wire moon.yml check/build/dev tasks. Verify: bun run build produces dist/index.html; moon run web:check passes. Commit: feat(web): scaffold Astro landing page + design tokens + fonts"` | None |
+| 2 | `"Execute Phase 2 of Slice 19: implement Hero section (split-screen layout, H1, subheadline, CTAs) + TerminalCard component (styled pre block with 94/100 score-zone colors) + CopyButton component (vanilla JS, clipboard API, iOS fallback, 2s feedback). Wire into index.astro. Verify: bun run build, grep checks pass. Commit: feat(web/hero): hero section + terminal card + copy button"` | Phase 1 ✅ |
+| 3 | `"Execute Phase 3 of Slice 19: implement content sections Problem, Solution (three-step flow + screenshots via Picture component), ValuePropCard (4 cards), TrustStrip (4 commitments). Lock copy verbatim from spec. Wire into index.astro. Verify: grep checks pass, screenshots render. Commit: feat(web/sections): problem, solution, value props, trust sections"` | Phase 1 ✅ |
+| 4 | `"Execute Phase 4 of Slice 19: implement SocialProofSection (GitHub stars build-time fetch from https://api.github.com/repos/use-charter/charter, 3 confirmed SVG icons + text badges for missing icons), CISection (locked YAML snippet from spec), FinalCTASection (CopyButton reuse + links), Footer. Wire into index.astro. Verify: grep checks, noopener links. Commit: feat(web/footer): social proof, CI, CTA, footer"` | Phase 1 ✅ |
+| 5 | `"Execute Phase 5 of Slice 19: implement WaitlistForm island (Vitest TDD: write failing tests first for email validation, POST loading state, success/error toasts; then implement; all tests green). Verify: bun run test, bundle ≤ 5kb. Commit: feat(web/islands): waitlist form (TDD)"` | Phase 2 ✅ (CopyButton already done in Phase 2) |
+| 6 | `"Execute Phase 6 of Slice 19: performance optimization — inline above-fold CSS (<4kb), verify image budgets via Picture components, run bunx lighthouse http://localhost:4321 and confirm Performance ≥ 90. Fix any budget failures. Commit: perf(web): inline critical CSS, verify all performance budgets"` | Phases 2-5 ✅ |
+| 7 | `"Execute Phase 7 of Slice 19: accessibility audit — run bunx @axe-core/cli http://localhost:4321 and fix all violations; manual keyboard Tab test; heading hierarchy grep; alt text grep; verify prefers-reduced-motion disables animations. Commit: a11y(web): accessibility audit + focus states"` | Phase 6 ✅ |
+| 8 | `"Execute Phase 8 of Slice 19: responsive refinement — test at 320/375/768/1024/1440/1920px in Chrome DevTools; verify no overflow; verify touch targets ≥ 44px; run bunx lighthouse with mobile throttling; fix any layout issues. Commit: test(web): responsive refinement + cross-browser"` | Phase 7 ✅ |
+| 9 | `"Execute Phase 9 of Slice 19: Cloudflare Pages deploy — create Pages project, set build=bun run build, output=dist/, verify deploy; update Worker routing for / → landing origin; update docs/product/DEPLOY.md with LANDING_ORIGIN URL; final smoke test with curl. Commit: feat(web): deploy to Cloudflare Pages + wire Worker"` | Phase 8 ✅ |
+
+### Parallelism Rules
+
+Phases 2, 3, and 4 can run **in parallel** after Phase 1 completes (all three are independent — different sections, different files).
+
+Phase 5 runs **after Phase 2** only (CopyButton already implemented in Phase 2; form is the only remaining island).
+
+Phases 6 → 7 → 8 → 9 run **strictly sequentially** (each validates output of prior phase).
+
+```
+Phase 1 (scaffold)
+  ↓
+  ├─→ Phase 2 (hero + CopyButton)  ─────────────────┐
+  ├─→ Phase 3 (sections 2–5)                        │
+  └─→ Phase 4 (sections 6–9)                        │
+                                                     ↓
+                                              Phase 5 (form island — after Phase 2)
+                                                     ↓
+                                              Phase 6 (performance)
+                                                     ↓
+                                              Phase 7 (a11y)
+                                                     ↓
+                                              Phase 8 (responsive)
+                                                     ↓
+                                              Phase 9 (deploy)
+```
+
+### Orchestrator Checklist (run between phases)
+
+Before dispatching next phase:
+- [ ] Prior phase committed and pushed
+- [ ] `moon run :check` green (Go tests, lint, docs)
+- [ ] `bun run build` from `web/` exits 0
+- [ ] No regressions in prior phases (spot-check prior sections still render)
 
 ---
 
 ## Phase 1 — Project scaffold & design foundation
 
-**Goal:** Astro project structure, Moon integration, design tokens, clean build.
+**Goal:** Astro project structure, Moon tasks, design tokens, self-hosted fonts, clean build.
+
+**Pre-condition:** `web/` directory already exists with `web/moon.yml` (committed in prior session). Do NOT re-create.
 
 ### Tasks
 
-- [ ] **1.1** Create `web/` directory at repo root
-- [ ] **1.2** Create `web/moon.yml` with dev/build/check tasks (bun-based)
-- [ ] **1.3** Initialize Astro: `bun create astro` (select vanilla template, skip git)
-- [ ] **1.4** Install dependencies: `bun install` inside `web/`
-- [ ] **1.5** Create `web/astro.config.mjs` with `output: 'static'` config
-- [ ] **1.6** Create `web/src/styles/design-tokens.css` with all CSS variables:
-  - Color tokens (surfaces, accents, score-zones)
-  - Typography tokens (font families, sizes, line heights)
-  - Spacing tokens (8-point grid system)
-  - Motion tokens (easing functions, durations)
-  - Extract from `docs/internal/designs/DESIGN-TOKENS.md`
-- [ ] **1.7** Create `web/src/styles/global.css` with:
-  - CSS resets
-  - Base typography styles
-  - Responsive breakpoint definitions (320/768/1440/1920)
-  - Reference all design-tokens variables
-- [ ] **1.8** Create `web/src/layouts/Base.astro` with:
-  - Imports all CSS files
-  - Meta tags template (title, description, og:*, canonical)
-  - Font preload `<link rel="preload">` for Ruda 800 + Atkinson Mono regular
-  - Font declarations with `font-display: swap`
-  - Extract `<head>` block from `docs/internal/designs/brand/meta.html`
-- [ ] **1.9** Self-host fonts in `web/src/fonts/`:
-  - Ruda (400, 500, 700, 800)
-  - Atkinson Hyperlegible Mono (regular, bold)
-  - IBM Plex Mono (regular)
-  - Share Tech (regular)
-  - Copy from `docs/internal/designs/fonts/` or download from source
-- [ ] **1.10** Create `.gitignore` inside `web/` (node_modules, dist, .astro, .env*)
-- [ ] **1.11** Create `web/src/pages/index.astro` (empty layout, will populate in Phase 2)
+- [ ] **1.1** Add `check` script to `web/package.json`: `"check": "astro check"` (required by `web/moon.yml` check task)
+- [ ] **1.2** Verify `web/astro.config.mjs` exists; if not, create with `output: 'static'` and `site: 'https://use-charter.dev'`
+- [ ] **1.3** Run `bun scripts/generate-report-fonts.ts` from repo root to regenerate `internal/render/html/assets/fonts.css`
+- [ ] **1.4** Extract all `@font-face` blocks from `internal/render/html/assets/fonts.css` into `web/src/styles/fonts.css` (keep base64 data URIs intact; no external CDN URLs)
+- [ ] **1.5** Copy brand assets to `web/public/`:
+  - `favicon.svg` ← from `docs/internal/designs/brand/favicon.svg`
+  - `og.svg` ← from `docs/internal/designs/brand/og.svg`
+  - `apple-touch-icon.svg` ← from `docs/internal/designs/brand/apple-touch-icon.svg`
+  - `manifest.json` ← from `docs/internal/designs/brand/manifest.json`
+- [ ] **1.6** Copy vendor icons to `web/public/icons/`:
+  - `claude-ai.svg` ← from `docs/product/images/icons/claude-ai.svg`
+  - `chatgpt.svg` ← from `docs/product/images/icons/chatgpt.svg`
+  - `grok.svg` ← from `docs/product/images/icons/grok.svg`
+- [ ] **1.7** Copy screenshots to `web/public/screenshots/`:
+  - `doctor-overview.webp`, `fix-dry-run.webp`, `doctor-tty.webp` ← from `docs/product/images/screenshots/`
+- [ ] **1.8** Create `web/src/styles/design-tokens.css`:
+  - Extract ALL `--color-*`, `--font-*`, `--space-*`, `--radius-*`, `--shadow-*` variables verbatim from `docs/internal/designs/DESIGN-TOKENS.md`
+  - Add motion tokens: `--ease-enter: cubic-bezier(0.16, 1, 0.3, 1)`, `--ease-exit: cubic-bezier(0.55, 0, 1, 0.45)`, `--duration-fast: 120ms`, `--duration-normal: 250ms`, `--duration-slow: 400ms`
+- [ ] **1.9** Create `web/src/styles/global.css`:
+  - Import `design-tokens.css` and `fonts.css`
+  - CSS reset (box-sizing, margin, padding zero)
+  - Base: `background-color: var(--color-bg, #0D1117)`, `color: var(--color-text, #e6edf3)`
+  - Body: `font-family: var(--font-site, "Ruda", system-ui, sans-serif)`
+  - `min-height: 100dvh` on body (never `100vh`)
+  - Responsive breakpoints comment map: 320/375/768/1024/1440/1920
+- [ ] **1.10** Create `web/src/layouts/Base.astro` with:
+  - All meta tags from spec §Critical Dependencies §5 (exact attributes)
+  - `<link rel="preload">` for Ruda 800 font-face and Atkinson Mono 400 font-face
+  - Import `global.css`
+  - `<slot />` for page content
+- [ ] **1.11** Create `web/src/pages/index.astro` (empty shell using Base layout):
+  ```astro
+  ---
+  import Base from '../layouts/Base.astro';
+  ---
+  <Base>
+    <main><!-- sections injected by phases 2–4 --></main>
+  </Base>
+  ```
 
 ### Verification
 
 ```bash
+# From repo root
+bun scripts/generate-report-fonts.ts
+
+# From web/
 cd web
 bun install
 bun run build
-ls dist/index.html && echo "✓ build output exists"
-wc -l dist/index.html
-du -sh dist/
-moon run web:check && echo "✓ moon task green"
-grep "Ruda" dist/index.html && echo "✓ fonts in output"
-grep "preload" dist/index.html && echo "✓ font preload links present"
+ls dist/index.html && echo "✓ build output"
+grep "AI-agent readiness" dist/index.html && echo "✓ title in head"
+grep "font-face" dist/index.html && echo "✓ fonts embedded"
+grep "canonical" dist/index.html && echo "✓ canonical link"
+grep "preload" dist/index.html && echo "✓ preload links"
+grep "favicon" dist/index.html && echo "✓ favicon"
+
+# Moon integration
+cd ..
+moon run web:check && echo "✓ moon web:check green"
+moon run :check && echo "✓ full repo check green"
 ```
 
-**Checkpoint:** dist/index.html exists, ≤ 200kb uncompressed, all fonts self-hosted, moon tasks green.
+**Checkpoint:** `dist/index.html` exists; fonts embedded; meta tags present; `moon run :check` green.
 
 ### Commit
 
 ```
 feat(web): scaffold Astro landing page + design tokens + fonts
 
-- Initialize Astro v6 (vanilla template) via bun
-- Configure astro.config.mjs with output: 'static'
-- Extract all design tokens to CSS variables (colors, typography, spacing, motion)
-- Create global.css with resets and responsive breakpoints
-- Create Base.astro layout with meta tags + font preload
-- Self-host fonts (Ruda, Atkinson, IBM Plex Mono, Share Tech)
-- Add Moon project configuration
-
-Result: Clean Astro scaffold with zero JS, all tokens/fonts ready.
+- Add astro check script to web/package.json
+- Create astro.config.mjs (output: static, site: use-charter.dev)
+- Generate and embed brand fonts from generate-report-fonts.ts
+- Copy brand assets (favicon, og.svg, apple-touch-icon, manifest) to public/
+- Copy vendor icons (claude-ai, chatgpt, grok) to public/icons/
+- Copy screenshots (doctor-overview, fix-dry-run, doctor-tty) to public/screenshots/
+- Create design-tokens.css (verbatim from DESIGN-TOKENS.md + motion tokens)
+- Create global.css (reset, base styles, min-height: 100dvh)
+- Create Base.astro layout (meta tags, preload, font import)
+- Create index.astro (empty shell)
 ```
 
 ---
 
 ## Phase 2 — Hero section + terminal card + copy button
 
-**Goal:** Above-fold hero with headline, subheadline, CTAs, terminal card component, working copy button.
+**Goal:** Above-fold hero with headline, subheadline, CTAs, terminal card, working copy button.
+
+**Note:** CopyButton is implemented here (Phase 2). Phase 5 does NOT re-implement it. Phase 5 implements the WaitlistForm only.
 
 ### Tasks
 
 - [ ] **2.1** Create `web/src/components/Hero.astro`:
-  - `<header>` wrapper
-  - `<h1>` "AI-agent readiness, scored." (Ruda 700/800, text-4xl md:text-5xl)
-  - `<p>` subheadline (spec § Hero, Ruda 400, text-base/lg)
-  - CTA group: CopyButton + "View on GitHub" link
-  - Terminal card slot (right/below on desktop, below on mobile)
+  - `<header>` wraps the entire hero section
+  - Split-screen layout: content left, terminal card right (desktop); stacked on mobile
+  - `<h1>` exact text: "AI-agent readiness, scored." (Ruda 800, large scale)
+  - `<p>` subheadline: exact text from spec §Section 1
+  - CTA group: `<CopyButton />` + `<a href="https://github.com/use-charter/charter" rel="noopener noreferrer">View on GitHub</a>`
+  - Terminal card slot (right column desktop, below content mobile)
+  - Layout: `display: grid; grid-template-columns: 1fr 1fr;` at 768px+; single column below 768px
+  - `min-height: 100dvh` on hero wrapper
+
 - [ ] **2.2** Create `web/src/components/CopyButton.astro`:
-  - `<button>` with command: `brew install use-charter/tap/charter`
-  - Vanilla JS (no framework): clipboard API + text selection fallback for iOS
-  - States: default → hover (scale 1.02) → active (scale 0.98) → "copied" (text change, 2s timeout)
-  - Icon: Phosphor Light Copy icon (NOT emoji)
-- [ ] **2.3** Create `web/src/components/TerminalCard.astro`:
-  - Render real `charter doctor` output as styled `<pre>` block
-  - Fallback: static screenshot (WebP) from `docs/product/images/screenshots/`
-  - Styling: dark terminal aesthetic with score-zone colors (green/amber/red)
-  - Responsive: horizontal scroll on 320px, normal display on 768px+
-  - Alt text on screenshot: "Charter doctor output showing 94/100 ship-ready score in green zone"
-- [ ] **2.4** Create `web/src/styles/sections/hero.css`:
-  - Hero grid layout (split on desktop, stacked on mobile)
-  - Typography scale (h1 sizing)
-  - Terminal card styling (dark background, rounded corners, border, shadow)
-  - Score-zone colors (success #4ade80, warning #fbbf24, danger #f87171)
-  - Button states: hover, active, focus-visible
-  - Animations: fade-in on scroll, section-up on load
-- [ ] **2.5** Create `web/src/islands/CopyButton.ts` (vanilla JS):
-  - Clipboard API with fallback (text selection for iOS)
-  - Success feedback: button text change "Copied!" for 2s, then revert
-  - Error handling: silently fall back to text selection
-  - No console errors
-- [ ] **2.6** Wire Hero into `web/src/pages/index.astro` as first section
-- [ ] **2.7** Test: `bun run dev` → http://localhost:3000:
-  - Hero visible above fold
-  - Copy button clickable, copies to clipboard
-  - Terminal card renders (or screenshot fallback)
-  - Responsive at 320 and 1440
-  - No console errors
+  - `<button id="copy-btn" type="button">` with visible command text: `brew install use-charter/tap/charter`
+  - Phosphor Light Copy SVG icon (inline SVG, not emoji)
+  - `data-command="brew install use-charter/tap/charter"` attribute
+  - Default state: shows command + copy icon
+  - CSS states: hover (scale 1.02, 200ms ease), active (scale 0.98, 120ms), copied (text change), focus-visible (3px outline)
+  - Inline `<script>` tag with full CopyButton island logic (see task 2.3)
+
+- [ ] **2.3** Inline `<script>` inside CopyButton.astro (vanilla JS only, no imports):
+  ```javascript
+  const btn = document.getElementById('copy-btn');
+  const command = btn.dataset.command;
+  const original = btn.querySelector('.btn-text').textContent;
+  
+  btn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(command);
+    } catch {
+      // Fallback for iOS: select text then execCommand (deprecated but necessary for iOS 16-)
+      const input = document.createElement('input');
+      input.value = command;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy'); // intentionally used: only fallback for iOS
+      document.body.removeChild(input);
+    }
+    btn.querySelector('.btn-text').textContent = 'Copied!';
+    btn.setAttribute('aria-label', 'Command copied to clipboard');
+    setTimeout(() => {
+      btn.querySelector('.btn-text').textContent = original;
+      btn.setAttribute('aria-label', 'Copy install command');
+    }, 2000);
+  });
+  ```
+
+- [ ] **2.4** Create `web/src/components/TerminalCard.astro`:
+  - `<div role="img" aria-label="Charter doctor output showing 94/100 ship-ready score in green zone">`
+  - `<pre>` block with real `charter doctor` output (literal ASCII terminal output with ANSI-to-CSS color classes)
+  - Score zone colors from design tokens: green (#4ade80) for 94/100, amber, red
+  - CSS: `overflow-x: auto` (card scrolls horizontally on small viewports); dark background from tokens; `font-family: var(--font-mono-primary)` (Atkinson Mono)
+  - Fallback: `<picture>` with `doctor-overview.webp` if pre block can't render (use `<noscript>` pattern)
+  - `aria-hidden="true"` on decorative terminal chrome elements (corner dots, title bar)
+
+- [ ] **2.5** Create `web/src/styles/sections/hero.css`:
+  - Hero grid layout variables
+  - H1 scale: `clamp(2.5rem, 5vw + 1rem, 4.5rem)` (no fixed px)
+  - Subheadline: `clamp(1rem, 1.5vw + 0.5rem, 1.25rem)`, `max-width: 65ch`
+  - CTA group gap, button sizing (min 44px height)
+  - Terminal card: dark bg, rounded corners, border, subtle shadow from tokens
+  - Section reveal animation (keyframes: `opacity 0→1, translateY 4rem→0`)
+  - `@media (prefers-reduced-motion: reduce) { .reveal { animation: none; opacity: 1; transform: none; } }`
+
+- [ ] **2.6** Import `hero.css` in `global.css` or directly in `Hero.astro`
+- [ ] **2.7** Wire `<Hero />` into `web/src/pages/index.astro` as first child of `<main>`
 
 ### Verification
 
 ```bash
 cd web
 bun run build
-grep -o "AI-agent readiness" dist/index.html && echo "✓ headline"
-grep -o "brew install" dist/index.html && echo "✓ install command"
-grep -o "<header>" dist/index.html && echo "✓ semantic header"
-grep -o "94/100" dist/index.html && echo "✓ terminal score"
-grep -o "scale-\[1.02\]" dist/index.css && echo "✓ button hover scale"
-# Manual: visit http://localhost:3000 → hero visible, copy works, terminal renders
+grep "AI-agent readiness" dist/index.html && echo "✓ H1 headline"
+grep "brew install use-charter" dist/index.html && echo "✓ install command"
+grep "<header" dist/index.html && echo "✓ semantic header element"
+grep "94/100" dist/index.html && echo "✓ terminal score present"
+grep "data-command" dist/index.html && echo "✓ copy button data attribute"
+grep "prefers-reduced-motion" dist/index.html && echo "✓ reduced-motion CSS present"
+grep "noopener" dist/index.html && echo "✓ GitHub link secured"
+# Start dev server and manually verify at http://localhost:4321
+bun run dev
+# Check: split-screen renders, copy button clicks and shows "Copied!", terminal card renders
 ```
 
-**Checkpoint:** Headline, command, header element, score, button states present. Hero renders properly.
+**Checkpoint:** H1, install command, header element, 94/100 score, data-command, noopener all in output. Copy button works in browser.
 
 ### Commit
 
 ```
 feat(web/hero): hero section + terminal card + copy button
 
-- Create Hero.astro (header, headline, subheadline, CTAs, terminal slot)
-- Create CopyButton.astro (vanilla JS, clipboard API, iOS fallback, state feedback)
-- Create TerminalCard.astro (styled pre or screenshot fallback)
-- Create islands/CopyButton.ts (clipboard logic)
-- Create sections/hero.css (grid, colors, animations, button states)
+- Create Hero.astro (split-screen layout, H1, subheadline, CTA group)
+- Create CopyButton.astro (clipboard API, iOS execCommand fallback, 2s feedback)
+- Create TerminalCard.astro (styled pre block, score-zone colors, horizontal scroll)
+- Create sections/hero.css (grid, typography scale, animation, reduced-motion)
 - Wire Hero into index.astro
 
-Result: Above-fold hero with working copy button, responsive layout.
+Result: Above-fold hero renders; copy button copies to clipboard.
 ```
 
 ---
 
 ## Phase 3 — Content sections 2–5 (Problem, Solution, Value Props, Trust)
 
-**Goal:** Mid-page content with locked copy, semantic HTML, styling.
+**Goal:** Mid-page content with locked copy, semantic HTML, responsive layouts.
 
 ### Tasks
 
 - [ ] **3.1** Create `web/src/components/Section.astro`:
-  - Generic section wrapper: `<section id={id} aria-labelledby={headingId}>`
-  - Props: `title` (string), `id` (string), `children` (slot)
-  - Optional `intro` paragraph slot
-  - Enforces H2 heading inside
+  - Props interface: `{ id: string; title: string; intro?: string }`
+  - Template: `<section id={id} aria-labelledby={\`${id}-heading\`}>`
+  - H2 inside: `<h2 id={\`${id}-heading\`}>{title}</h2>`
+  - Optional intro: `<p class="section-intro">{intro}</p>` if prop provided
+  - `<slot />` for section body content
+  - Note: uses Astro `<slot />`, NOT a `children` prop
+
 - [ ] **3.2** Create `web/src/components/ProblemSection.astro`:
-  - Two-column layout on desktop (mobile: stacked)
-  - H2: "The Problem" (or custom)
-  - Copy from spec § Section 2: "Teams adopting coding agents..." (exact verbatim)
-  - Styling: grid layout, responsive
+  - Wraps `<Section id="problem" title="The Problem">`
+  - Copy: exact verbatim from spec §Section 2 (no paraphrasing, no punctuation changes)
+  - Desktop: two-column (copy left, visual/emphasis right)
+  - Mobile: single column
+
 - [ ] **3.3** Create `web/src/components/SolutionSection.astro`:
-  - Three-step flow (horizontal on desktop, vertical on mobile)
-  - H2: "How It Works"
-  - Step 1/2/3: Scan, Score, Fix (copy from spec § Section 3)
-  - Screenshots reused from `docs/product/images/screenshots/`:
-    - doctor-overview.webp
-    - fix-dry-run.webp
-    - doctor-tty.webp
-  - Use `<Picture />` component (AVIF/WebP/PNG fallback)
-  - Explicit image dimensions
+  - Wraps `<Section id="solution" title="How It Works">`
+  - Three-step layout: horizontal on 768px+, vertical below
+  - Each step: number badge, label (Scan/Score/Fix), description, screenshot
+  - Step 1 (Scan): `<Picture src="/screenshots/doctor-tty.webp" alt="Charter scan output showing all 18 rules checked" width={800} height={500} />`
+  - Step 2 (Score): `<Picture src="/screenshots/doctor-overview.webp" alt="Charter score output showing 94/100 ship-ready in green zone" width={800} height={500} />`
+  - Step 3 (Fix): `<Picture src="/screenshots/fix-dry-run.webp" alt="Charter fix dry-run showing unified diff of proposed changes" width={800} height={500} />`
+  - All `<Picture />` imports: `import { Picture } from 'astro:assets'`
+  - All images: `loading="lazy"` (below fold)
+
 - [ ] **3.4** Create `web/src/components/ValuePropCard.astro`:
-  - Card component for 4 readiness axes
-  - Props: `title`, `description`, `icon`
-  - Styling: consistent card design (no gratuitous elevation)
-  - Four cards: Context, Safety, Operability, Governance (copy from spec § Section 4)
-  - Icons: Phosphor Light (NOT emoji)
-- [ ] **3.5** Create `web/src/components/TrustStrip.astro`:
-  - Badge layout for four commitments
-  - Copy from spec § Section 5 (Ten Commitments, select 4)
-  - Styling: semantic color tokens, text-center
-  - Icons (optional): Phosphor Light check icons
-- [ ] **3.6** Create `web/src/styles/sections/*.css` (one per section):
-  - problem.css (two-column grid)
-  - solution.css (three-step flow + image styling)
-  - value-props.css (four-card grid)
-  - trust.css (badge layout)
-- [ ] **3.7** Wire all sections into `web/src/pages/index.astro`
-- [ ] **3.8** Verify copy matches spec exactly (no drift):
-  - Use `grep` to confirm problem/solution/value/trust text
-  - No capitalization changes, no rewording
+  - Props interface: `{ title: string; description: string; iconSvg: string }`
+  - Renders inline SVG icon (Phosphor Light), H3 title, description paragraph
+  - No emojis
+  - Card has earned elevation (shadow token) — cards here DO communicate hierarchy
+
+- [ ] **3.5** Create `web/src/components/ValuePropsSection.astro`:
+  - Wraps `<Section id="value-props" title="Four Dimensions of Readiness">`
+  - Renders 4 `<ValuePropCard />` instances with locked copy from spec §Section 4
+  - Grid: 2×2 on 768px+, 1-column on mobile
+
+- [ ] **3.6** Create `web/src/components/TrustStrip.astro`:
+  - Wraps `<Section id="trust" title="Built on Ten Commitments">`
+  - 4 items, exact text from spec §Section 5 (verbatim from architecture-2026.md):
+    1. "Never send data anywhere without explicit opt-in."
+    2. "Never call an LLM — all findings are deterministic."
+    3. "Every finding has a rule ID, evidence, and fix suggestion."
+    4. "Every release is signed (cosign) with SLSA Level 3 provenance."
+  - Each item: Phosphor Light CheckCircle SVG icon + `<p>` text
+  - Layout: 2-column on 768px+, 1-column on mobile
+
+- [ ] **3.7** Create section CSS files:
+  - `web/src/styles/sections/problem.css` — two-column grid
+  - `web/src/styles/sections/solution.css` — three-step flow, image sizing
+  - `web/src/styles/sections/value-props.css` — 2×2 card grid
+  - `web/src/styles/sections/trust.css` — 2-column badge layout
+
+- [ ] **3.8** Wire all four components into `web/src/pages/index.astro` inside `<main>`, in order: Hero → Problem → Solution → ValueProps → Trust
 
 ### Verification
 
 ```bash
 cd web
 bun run build
-grep "Teams adopting" dist/index.html && echo "✓ problem section"
-grep "Scan" dist/index.html && grep "Score" dist/index.html && echo "✓ solution section"
-grep "Context" dist/index.html && echo "✓ value props"
-grep "Never calls an LLM" dist/index.html && echo "✓ trust strip"
-# Manual: scroll through sections 2–5 → responsive at 320/768/1440, copy exact
+grep -c "Teams adopting coding agents" dist/index.html && echo "✓ problem copy (verbatim)"
+grep -c "doctor-tty" dist/index.html && echo "✓ scan screenshot"
+grep -c "doctor-overview" dist/index.html && echo "✓ score screenshot"
+grep -c "fix-dry-run" dist/index.html && echo "✓ fix screenshot"
+grep -c "Never send data" dist/index.html && echo "✓ trust strip commitment 1"
+grep -c "Never call an LLM" dist/index.html && echo "✓ trust strip commitment 2"
+grep -c "rule ID" dist/index.html && echo "✓ trust strip commitment 3"
+grep -c "cosign" dist/index.html && echo "✓ trust strip commitment 4"
+grep -c "aria-labelledby" dist/index.html && echo "✓ section aria attributes"
+grep -c 'loading="lazy"' dist/index.html && echo "✓ lazy loading on screenshots"
 ```
 
-**Checkpoint:** All copy present. Responsive layouts. Images load with explicit dimensions.
+**Checkpoint:** All verbatim copy present. All screenshots in output. Section IDs + aria-labelledby wired.
 
 ### Commit
 
 ```
 feat(web/sections): problem, solution, value props, trust sections
 
-- Create Section.astro (generic wrapper)
-- Create ProblemSection.astro (two-column)
-- Create SolutionSection.astro (three-step flow + Picture components)
-- Create ValuePropCard.astro (four cards)
-- Create TrustStrip.astro (four commitment badges)
-- Create sections/*.css (grid, spacing, typography)
-- Wire all into index.astro
+- Create Section.astro (generic wrapper with aria-labelledby pattern)
+- Create ProblemSection.astro (verbatim copy, two-column layout)
+- Create SolutionSection.astro (three-step flow, Picture components for screenshots)
+- Create ValuePropCard.astro + ValuePropsSection.astro (four axes, Phosphor icons)
+- Create TrustStrip.astro (four verbatim commitments from architecture-2026.md)
+- Create sections/*.css (grid layouts)
+- Wire all sections into index.astro
 
-Result: Mid-page content with locked copy, responsive layouts, images optimized.
+Result: Mid-page content rendered with locked copy.
 ```
 
 ---
@@ -254,200 +364,212 @@ Result: Mid-page content with locked copy, responsive layouts, images optimized.
 ### Tasks
 
 - [ ] **4.1** Create `web/src/components/SocialProofSection.astro`:
-  - GitHub stars (fetch at build time via GitHub API)
-  - Vendor icons/logos: Claude Code, Codex, Cursor, Windsurf, Copilot, Gemini
-  - Icons: use SVG files from `docs/product/images/icons/` or inline as SVG
-  - Placeholder slot for real logos (flag as unfilled until permissioned)
-  - NO fabricated numbers; only real GitHub stars + vendor logos
+  - Wraps `<Section id="social-proof" title="Works with every AI coding tool">`
+  - GitHub stars count: fetched in frontmatter at build time:
+    ```astro
+    ---
+    let stars = '';
+    try {
+      const res = await fetch('https://api.github.com/repos/use-charter/charter');
+      if (res.ok) { const data = await res.json(); stars = data.stargazers_count?.toLocaleString(); }
+    } catch {}
+    ---
+    ```
+  - Stars render: `{stars ? `⭐ ${stars} stars` : 'Star on GitHub'}` (fallback is safe; never hardcode)
+  - Vendor icon grid — for each vendor:
+    - Claude Code, ChatGPT, Grok: `<img src="/icons/claude-ai.svg" alt="Claude Code" width="32" height="32" />` etc.
+    - Cursor, Windsurf, Copilot, Gemini, Codex: `<span class="vendor-badge">Cursor</span>` (text badge, no SVG — SVGs not yet available)
+    - Add HTML comment: `<!-- TODO: replace with SVG when icons are sourced/permissioned -->`
+  - Do NOT fabricate "Used by X teams at [logos]"
+
 - [ ] **4.2** Create `web/src/components/CISection.astro`:
-  - H2: "Gate Pull Requests on Agent-Readiness"
-  - Copy: "Short band showing GitHub Action snippet + mention of SARIF 2.1.0 output"
-  - CTA link to `docs/product/how-to/run-in-github-actions.mdx`
-  - Code block styling (use Atkinson Mono for code)
+  - Wraps `<Section id="ci" title="Gate pull requests on agent-readiness">`
+  - Intro text: "Charter's GitHub Action runs the same scan as your local workflow. Gate merges when the score falls below the threshold."
+  - Code block showing locked YAML from spec §Section 7 (render inside `<pre><code>` with Atkinson Mono)
+  - CTA: `<a href="https://use-charter.dev/docs/how-to/run-in-github-actions" rel="noopener noreferrer">Read the GitHub Actions guide →</a>`
+  - One-line mention: "Outputs SARIF 2.1.0. Integrates with GitHub Code Scanning."
+
 - [ ] **4.3** Create `web/src/components/FinalCTASection.astro`:
-  - Repeat install command (reuse CopyButton component)
-  - Links: "Read the docs" → Mintlify, "Star on GitHub" → repo, "Notify me" → waitlist form
-  - High visual hierarchy (primary/secondary CTA distinction)
+  - Wraps `<section id="final-cta" aria-labelledby="final-cta-heading">`
+  - H2: "Start in 30 seconds"
+  - Reuse `<CopyButton />` component (already built in Phase 2)
+  - Three distinct CTA buttons with visual hierarchy:
+    - Primary: "Read the docs" → `https://use-charter.dev/docs`
+    - Secondary: "Star on GitHub" → `https://github.com/use-charter/charter`
+    - Tertiary: `<WaitlistForm />` placeholder — renders static "Notify me" link for now; WaitlistForm island added in Phase 5
+  - All external links: `rel="noopener noreferrer"`
+
 - [ ] **4.4** Create `web/src/components/Footer.astro`:
   - `<footer>` semantic element
-  - Link groups: Docs, Rules, GitHub, Releases, Community (Discord), License, Copyright
-  - All external links: `rel="noopener noreferrer"`
-  - Styling: subtle, clean (not card-based)
-- [ ] **4.5** Wire GitHub API fetch (build-time):
-  - Fetch star count from `https://api.github.com/repos/anthropics/charter`
-  - Cache in static output (updates at next deploy)
-  - Error handling: if fetch fails, use fallback string ("Join our community")
-- [ ] **4.6** Wire favicon + logo into meta (from `brand/meta.html`)
-- [ ] **4.7** Verify all external links have `rel="noopener noreferrer"`
-- [ ] **4.8** Test keyboard navigation:
-  - Tab through footer links
-  - All links reachable
-  - Focus visible on each link
+  - Four link columns:
+    - Product: `<a href="https://use-charter.dev/docs">Documentation</a>`, `<a href="https://use-charter.dev/rules">Rules reference</a>`
+    - Project: `<a href="https://github.com/use-charter/charter" rel="noopener noreferrer">GitHub</a>`, `<a href="https://github.com/use-charter/charter/releases" rel="noopener noreferrer">Releases</a>`
+    - Community: Discord link (render as `<!-- TODO: Discord URL when available -->` placeholder `<span>Community</span>` until URL confirmed)
+    - Legal: `<a href="https://github.com/use-charter/charter/blob/main/LICENSE" rel="noopener noreferrer">Apache-2.0</a>`, `<span>© 2026 Charter</span>`
+  - Clean layout (no card boxing; use `border-top` or negative space)
+
+- [ ] **4.5** Create `web/src/styles/sections/social-proof.css`, `ci.css`, `final-cta.css`, `footer.css`
+- [ ] **4.6** Wire all four components into `web/src/pages/index.astro` in order after Trust section
 
 ### Verification
 
 ```bash
 cd web
 bun run build
-grep "Gate pull requests" dist/index.html && echo "✓ CI section"
-grep "href=" dist/index.html | wc -l | awk '{print "✓ links found:", $1}'
-grep "noopener" dist/index.html | wc -l | awk '{print "✓ noopener links:", $1}'
-grep "favicon" dist/index.html && echo "✓ favicon wired"
-# Manual: Tab through footer → all links navigable, focus visible
+grep "Gate pull requests" dist/index.html && echo "✓ CI section H2"
+grep "use-charter/charter-action" dist/index.html && echo "✓ GitHub Action snippet"
+grep "SARIF" dist/index.html && echo "✓ SARIF mention"
+grep -c 'rel="noopener noreferrer"' dist/index.html | awk '{print "noopener links:", $1}' && echo "✓"
+grep "Apache-2.0" dist/index.html && echo "✓ license in footer"
+grep "<footer" dist/index.html && echo "✓ semantic footer element"
+grep "stargazers_count\|stars" dist/index.html && echo "✓ GitHub stars wired"
 ```
 
-**Checkpoint:** CI section present. External links secured. Footer links keyboard-navigable.
+**Checkpoint:** CI section, GitHub Action YAML, footer, noopener links, semantic footer all present.
 
 ### Commit
 
 ```
 feat(web/footer): social proof, CI, CTA, footer
 
-- Create SocialProofSection.astro (GitHub stars via build-time fetch, vendor icons)
-- Create CISection.astro (GitHub Action band)
-- Create FinalCTASection.astro (repeat install + docs/repo/waitlist links)
-- Create Footer.astro (semantic footer with all links)
-- Wire GitHub API fetch at build time
-- Add favicon/logo to meta
+- Create SocialProofSection.astro (build-time GitHub stars, 3 confirmed SVG icons, text badges for unconfirmed)
+- Create CISection.astro (locked YAML snippet, SARIF mention, CTA link)
+- Create FinalCTASection.astro (CopyButton reuse, three-tier CTA hierarchy)
+- Create Footer.astro (four link columns, semantic footer, noopener on all external links)
+- Wire all sections into index.astro
 
-Result: Full landing page with conversion hierarchy (install → stars → waitlist).
+Result: Full page renders end-to-end.
 ```
 
 ---
 
-## Phase 5 — Interactive islands & form (TDD approach)
+## Phase 5 — WaitlistForm island (TDD)
 
-**Goal:** Copy button, waitlist form, animations. Test-first methodology.
+**Goal:** Waitlist email capture form. Test-first. CopyButton is already done (Phase 2).
 
-### TDD Checklist
+**Test framework:** Vitest. Add as dev dependency: `bun add -D vitest jsdom @vitest/coverage-v8`. Test file: `web/src/islands/WaitlistForm.test.ts`.
 
-**Test 1: Copy Button → Test First**
-- [ ] Write test: copy button copies to clipboard (RED)
-- [ ] Implement CopyButton functionality (GREEN)
-- [ ] Write test: iOS fallback works (RED)
-- [ ] Add fallback (GREEN)
-- [ ] Write test: "copied" feedback appears for 2s (RED)
-- [ ] Add feedback timeout (GREEN)
+### TDD Cycles (vertical slices — one test at a time)
 
-**Test 2: Form Validation → Test First**
-- [ ] Write test: email validation rejects bad emails (RED)
-- [ ] Implement regex validation (GREEN)
-- [ ] Write test: form submits to endpoint (RED)
-- [ ] Implement fetch POST (GREEN)
-- [ ] Write test: form shows loading state during POST (RED)
-- [ ] Add disabled + spinner state (GREEN)
+**Cycle 1: Email validation**
+- [ ] Write test: `it('rejects invalid email: "notanemail"', ...)` → RED
+- [ ] Implement `validateEmail(email: string): boolean` using `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` → GREEN
+- [ ] Write test: `it('accepts valid email: "user@example.com"', ...)` → RED → GREEN
+- [ ] Write test: `it('rejects email with spaces: "user @example.com"', ...)` → RED → GREEN
 
-**Test 3: Form Feedback → Test First**
-- [ ] Write test: success toast shows on 200 (RED)
-- [ ] Implement success state (GREEN)
-- [ ] Write test: error toast shows on 4xx/5xx (RED)
-- [ ] Implement error state (GREEN)
+**Cycle 2: Form submission**
+- [ ] Write test: `it('disables submit button during POST', ...)` using `fetch` mock → RED
+- [ ] Implement loading state: `button.disabled = true` before fetch, `false` after → GREEN
+- [ ] Write test: `it('shows spinner during loading state', ...)` → RED → GREEN
+
+**Cycle 3: Response handling**
+- [ ] Write test: `it('shows success toast on HTTP 200', ...)` → RED
+- [ ] Implement: `showToast('Check your email!', 'success')` on `res.ok` → GREEN
+- [ ] Write test: `it('shows error toast on HTTP 400', ...)` → RED
+- [ ] Implement: `showToast(data.error || 'Something went wrong', 'error')` on `!res.ok` → GREEN
+- [ ] Write test: `it('shows error toast on network failure', ...)` → RED
+- [ ] Implement: catch block with generic error toast → GREEN
 
 ### Tasks
 
-- [ ] **5.1** Create `web/src/islands/CopyButton.ts`:
-  - Vanilla JS (no React/Vue/Svelte)
-  - Clipboard API: `navigator.clipboard.writeText(command)`
-  - Fallback: `document.execCommand('copy')` + text selection
-  - Feedback: button text "Copied!" for 2000ms, then revert
-  - Error handling: silent (no console errors)
-- [ ] **5.2** Create `web/src/components/WaitlistForm.astro`:
-  - Form with email input + submit button
-  - Label above input (from web-design-guidelines skill)
-  - Error text below input on validation failure
-  - Form state management (vanilla JS or Astro island)
-- [ ] **5.3** Create `web/src/islands/WaitlistForm.ts`:
-  - Email regex validation: `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`
-  - POST to endpoint (TBD) with `{ email: string }`
-  - Loading state: `button.disabled = true`, show spinner
-  - Success: toast message "Check your email!"
-  - Error: toast message from response or generic "Something went wrong"
-  - No console errors
-- [ ] **5.4** Create `web/src/styles/islands.css`:
-  - Button states (hover, active, disabled, focus-visible)
-  - Form input styling (border, focus, error states)
-  - Toast styling (success/error colors)
-  - Spinner animation (CSS only, respects `prefers-reduced-motion`)
-- [ ] **5.5** Optional: Create `web/src/islands/TerminalAnimation.ts`:
-  - CSS-only animation for terminal card (preferred)
-  - Fade-in + slide-up on scroll reveal
-  - Respects `prefers-reduced-motion: reduce`
-  - Timing: 300-500ms easing: `cubic-bezier(0.16, 1, 0.3, 1)`
-- [ ] **5.6** Test copy button:
-  - Desktop: click → clipboard receives text
-  - iOS: fallback text selection works
-  - No console errors
-- [ ] **5.7** Test form:
-  - Invalid email rejected (red border + error text)
-  - Valid email: submit button enabled
-  - Submit: button disabled, spinner shows
-  - Success: toast "Check your email!"
-  - Network error: toast with error message
-- [ ] **5.8** Bundle size check: islands ≤ 5kb combined JS
+- [ ] **5.1** Add Vitest config: `web/vitest.config.ts` with `environment: 'jsdom'`
+- [ ] **5.2** Add test script to `web/package.json`: `"test": "vitest run"`, `"test:watch": "vitest"`
+- [ ] **5.3** Create `web/src/islands/WaitlistForm.ts` (vanilla JS, no frameworks):
+  - Attach to `<form id="waitlist-form">` via `DOMContentLoaded`
+  - Email validation using `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`
+  - Inline validation: show error `<span id="email-error">` on blur if invalid; clear on input
+  - Submit handler: `event.preventDefault()`, disable button, show spinner
+  - POST to `/api/waitlist` with `{ email }` body, `Content-Type: application/json`
+  - Success (res.ok): show success toast `"Check your email!"`, clear form
+  - Error (!res.ok or network): show error toast with `data.error || "Something went wrong"`
+  - Toast: injected `<div role="alert" aria-live="polite">` element; auto-dismiss after 4s
+
+- [ ] **5.4** Create `web/src/components/WaitlistForm.astro`:
+  - `<form id="waitlist-form" action="#" method="post" novalidate>`
+  - `<label for="waitlist-email">Email address</label>` (above input)
+  - `<input type="email" id="waitlist-email" name="email" required autocomplete="email" placeholder="you@example.com" />`
+  - `<span id="email-error" role="alert" aria-live="polite"></span>` (below input, empty by default)
+  - `<button type="submit" id="waitlist-submit">Notify me</button>`
+  - `<script>` tag importing `WaitlistForm.ts` island
+
+- [ ] **5.5** Replace `<WaitlistForm />` placeholder in `FinalCTASection.astro` with real component
+
+- [ ] **5.6** Create `web/src/styles/islands.css`:
+  - Form layout: label above, gap between label/input/error
+  - Input: border from tokens, focus transition 200ms
+  - Input `[aria-invalid="true"]`: red border
+  - Submit button: full states (hover scale 1.02, active scale 0.98, disabled opacity)
+  - Spinner: CSS `@keyframes spin`, `border-top` trick, `animation: none` under `prefers-reduced-motion`
+  - Toast: fixed bottom-right, success/error color tokens, fade animation
 
 ### Verification
 
 ```bash
 cd web
+bun run test && echo "✓ all Vitest tests pass"
 bun run build
-ls -lh dist/_astro/*.js | awk '{sum+=$5} END {print "Total JS:", sum, "bytes"}'
-grep "prefers-reduced-motion" dist/*.css && echo "✓ reduced-motion query"
-# Manual: click copy → clipboard works; submit form → loading/success/error states
+ls -lh dist/_astro/*.js 2>/dev/null | awk '{sum+=$5} END {print "Total JS:", sum, "bytes (target: <5120)"}' || echo "no JS bundles (islands inline)"
+grep "waitlist-form" dist/index.html && echo "✓ form in output"
+grep 'for="waitlist-email"' dist/index.html && echo "✓ label wired to input"
+grep 'aria-live' dist/index.html && echo "✓ live region for toast"
+grep "prefers-reduced-motion" dist/index.html && echo "✓ reduced-motion in CSS"
 ```
 
-**Checkpoint:** JS bundle ≤ 5kb. Copy button + form fully functional with all states.
+**Checkpoint:** All Vitest tests green. Form in output. Label above input. aria-live present. Spinner respects reduced-motion.
 
 ### Commit
 
 ```
-feat(web/islands): copy button + waitlist form (TDD)
+feat(web/islands): waitlist form (TDD — Vitest)
 
-- Create CopyButton.ts (vanilla JS, clipboard API + iOS fallback, 2s feedback)
-- Create WaitlistForm.ts (email validation, POST, loading/success/error states)
-- Create islands.css (button states, form styling, toast, spinner)
-- Optional: TerminalAnimation.ts (CSS-only scroll reveal)
-- Test copy on desktop + iOS
-- Test form validation + submission
-- Verify bundle ≤ 5kb
+- Add Vitest config (jsdom environment)
+- Create WaitlistForm.ts island (email validation, POST, loading/success/error states)
+- Create WaitlistForm.astro (label above input, error below, aria-live toast)
+- Create islands.css (form states, spinner, toast, reduced-motion)
+- All 10 Vitest tests passing
 
-Result: Interactive islands for copy and email capture, <5kb JS.
+Result: Email capture form with full state machine.
 ```
 
 ---
 
 ## Phase 6 — Performance optimization
 
-**Goal:** Hit all performance budgets; inline critical CSS; optimize images/fonts.
+**Goal:** All performance budgets met. Lighthouse ≥ 90.
 
 ### Tasks
 
-- [ ] **6.1** Audit CSS: identify above-fold styles (hero + headline + buttons)
-  - Inline <4kb into `<style>` tag in Base.astro `<head>`
-  - Extract below-fold CSS into deferred `<link rel="stylesheet">`
-- [ ] **6.2** Optimize hero image:
-  - Use `<Picture />` component (auto-generates AVIF/WebP)
-  - Add explicit `width` + `height` attributes
-  - Add `loading="eager" fetchpriority="high"`
-  - Verify AVIF < 40kb, WebP < 50kb, PNG < 80kb
-- [ ] **6.3** Optimize section images (screenshots):
-  - Use existing WebP from `docs/product/images/screenshots/`
-  - Use `<Picture />` with AVIF/WebP fallback
-  - Add explicit dimensions
-  - Add `loading="lazy"` (below-fold)
-  - Verify total images ≤ 50kb
-- [ ] **6.4** Verify font strategy:
-  - Fonts self-hosted (done in Phase 1)
-  - Preload links in `<head>` (done in Phase 1)
-  - `font-display: swap` in @font-face (done in Phase 1)
-  - Only Ruda 800 + Atkinson Mono regular preloaded
-  - Verify fonts ≤ 30kb gzipped
-- [ ] **6.5** Verify Astro minification (default enabled)
-  - Check `astro.config.mjs` has minifyHTML/CSS enabled
-  - Run `bun run build` and verify output is minified
-- [ ] **6.6** Run Lighthouse locally:
-  - `bun run dev` on http://localhost:3000
-  - Run: `npx lighthouse --output-path=lighthouse.html`
-  - Target: Performance ≥ 90, Accessibility ≥ 90
+- [ ] **6.1** Identify above-fold CSS (hero section only: typography, layout, button, terminal card):
+  - Move these styles into a `<style>` block in `Base.astro` `<head>` (inline, <4kb target)
+  - Move below-fold section CSS to `<link rel="stylesheet" media="print" onload="this.media='all'">` (deferred)
+
+- [ ] **6.2** Verify hero image optimization:
+  - `<Picture />` component auto-generates AVIF + WebP
+  - Verify `loading="eager" fetchpriority="high"` on hero image only
+  - Verify AVIF < 40kb, WebP < 50kb in `dist/` (check actual generated files)
+
+- [ ] **6.3** Verify all below-fold images:
+  - All use `<Picture />` with explicit `width` and `height`
+  - All have `loading="lazy"`
+  - Verify total `dist/_astro/*.avif` + `*.webp` + `*.png` ≤ 50kb combined
+
+- [ ] **6.4** Verify font budget:
+  - Fonts are base64 in `fonts.css` — check gzip size: `gzip -c web/src/styles/fonts.css | wc -c`
+  - Must be ≤ 30kb gzip
+  - If over budget: subset further (Latin only, drop unused weights)
+
+- [ ] **6.5** Verify Astro builds with minification:
+  - Confirm `astro.config.mjs` does NOT disable `compressHTML` (default: enabled)
+  - Run `bun run build` and check `dist/index.html` is minified (no extra whitespace between tags)
+
+- [ ] **6.6** Run Lighthouse performance audit:
+  ```bash
+  # Start dev server (separate terminal)
+  bun run dev &
+  # Run Lighthouse (use bunx)
+  bunx lighthouse http://localhost:4321 --output html --output-path ./lighthouse-desktop.html --chrome-flags="--headless"
+  # Target: Performance ≥ 90, Accessibility ≥ 90
+  ```
 
 ### Verification
 
@@ -455,349 +577,387 @@ Result: Interactive islands for copy and email capture, <5kb JS.
 cd web
 bun run build
 
-# CSS budgets
-wc -c dist/index.html | awk '{sum=$1; gzip=system("gzip -c dist/index.html | wc -c"); print "HTML:", sum, "bytes; gzipped:", gzip}'
+# CSS inline check
+grep -o '<style>' dist/index.html | wc -l | awk '{print "Inline style blocks:", $1}'
 
 # Image budgets
-find dist -name "*.webp" -o -name "*.png" -o -name "*.avif" | xargs du -c | tail -1
+find dist -name "*.avif" -o -name "*.webp" -o -name "*.png" 2>/dev/null | xargs du -cb 2>/dev/null | tail -1
 
-# Font budgets
-du -sh dist/fonts/
+# Font budget
+gzip -c src/styles/fonts.css | wc -c | awk '{print "Fonts gzipped:", $1, "bytes (target: <30720)"}'
 
-# Total output
-du -sh dist/
+# Total HTML gzip
+gzip -c dist/index.html | wc -c | awk '{print "HTML gzipped:", $1, "bytes"}'
 
 # Lighthouse
-npx lighthouse http://localhost:3000 --output-path=lighthouse.html
-# Target: Performance ≥ 90
+bunx lighthouse http://localhost:4321 --output json --output-path /tmp/lh.json --chrome-flags="--headless" --quiet
+node -e "const r=require('/tmp/lh.json'); console.log('Perf:', Math.round(r.categories.performance.score*100), '| A11y:', Math.round(r.categories.accessibility.score*100))"
 ```
 
-**Checkpoint:** Performance ≥ 90, Accessibility ≥ 90. All budgets met.
+**Checkpoint:** Lighthouse Performance ≥ 90, Accessibility ≥ 90. All budgets within limits.
 
 ### Commit
 
 ```
-perf(web): inline critical CSS, optimize images + fonts
+perf(web): inline critical CSS, verify all performance budgets
 
-- Inline above-fold CSS (<4kb)
-- Defer below-fold stylesheet
-- Optimize hero image (AVIF + WebP + explicit dimensions)
-- Optimize section images (lazy loading, explicit dimensions)
-- Verify font strategy (self-hosted, preload, swap)
-- Achieve Lighthouse Performance ≥ 90
-
-Result: Page meets all performance budgets and Core Web Vitals targets.
+- Inline above-fold CSS (<4kb) into Base.astro head
+- Defer below-fold section CSS (media=print trick)
+- Verify hero image: eager loading, explicit dimensions
+- Verify below-fold images: lazy loading, Picture components
+- Verify font budget: ≤30kb gzip
+- Lighthouse Performance ≥ 90, Accessibility ≥ 90 confirmed
 ```
 
 ---
 
-## Phase 7 — Accessibility audit + focus states
+## Phase 7 — Accessibility audit
 
-**Goal:** WCAG 2.2 AA compliance; keyboard nav; contrast; reduced-motion.
+**Goal:** WCAG 2.2 AA compliance. Zero axe-core violations. Keyboard nav verified.
+
+**Note:** axe-core CLI requires a running dev server, not a file path.
 
 ### Tasks
 
-- [ ] **7.1** Run axe-core automated scan:
-  - `npx axe-core dist/` (or use axe DevTools extension)
-  - Fix all violations (must be zero)
-  - Document any intentional exclusions
-- [ ] **7.2** Manual keyboard testing:
-  - Tab through entire page from top to bottom
-  - Verify all interactive elements reachable: buttons, links, inputs, form
-  - Verify focus visible (≥3px outline or shadow) on each
-  - No keyboard traps (tabbing gets stuck)
-  - Tab order makes sense (left-to-right, top-to-bottom)
-- [ ] **7.3** Verify heading hierarchy:
-  - H1 (once, hero section): "AI-agent readiness, scored."
-  - H2 (sections): "Problem", "How It Works", "Value Props", etc.
-  - H3 (subsections only): use sparingly, if at all
-  - Check via: `grep -o "<h[1-3]" dist/index.html | sort | uniq -c`
-- [ ] **7.4** Verify all images have descriptive alt text:
-  - Hero image: "Terminal showing Charter doctor output with 94/100 score"
-  - Screenshots: describe what's visible (e.g., "Screenshot showing Charter fix dry-run output")
-  - Icons: already semantic, no alt needed if decorative
-  - Check via: `grep -c "alt=" dist/index.html`
-- [ ] **7.5** Verify color contrast (4.5:1 normal, 3:1 large):
-  - Use Chrome DevTools Accessibility tab
-  - Check all text on dark + light backgrounds
-  - Flag any violations
-- [ ] **7.6** Verify `prefers-reduced-motion: reduce`:
-  - Terminal animation disabled (no CSS animations)
-  - Page still fully functional (no visual dependency on motion)
-  - Test in Chrome DevTools: Rendering → Emulate CSS media feature prefers-reduced-motion
-- [ ] **7.7** Verify semantic HTML:
-  - `<header>` wrapper in hero
-  - `<main>` wrapper for content sections
-  - `<section>` wrappers with `aria-labelledby` for each section
-  - `<footer>` wrapper at bottom
-  - No `role` abuse (no `role="button"` on non-button elements)
-  - Check via: `grep -o "<header>\|<main>\|<section>\|<footer>" dist/index.html`
-- [ ] **7.8** Screen reader test (pick one):
-  - **Mac:** VoiceOver (Cmd+F5) → read through page
-  - **Windows:** NVDA (free download) → read through page
-  - Verify: page structure understandable, CTAs announced, forms labeled
-  - Test: keyboard-only nav through all interactive elements
+- [ ] **7.1** Run automated accessibility scan:
+  ```bash
+  # Start dev server
+  bun run dev &
+  sleep 3
+  # Run axe-core against running server
+  bunx @axe-core/cli http://localhost:4321 --exit
+  ```
+  Fix every reported violation to zero. Do NOT disable rules to suppress counts.
+
+- [ ] **7.2** Verify heading hierarchy:
+  ```bash
+  grep -oP '<h[1-6][^>]*>' dist/index.html | sort | uniq -c
+  # Must have: exactly 1 <h1>, multiple <h2>, no <h2> skipped to <h4>
+  ```
+
+- [ ] **7.3** Verify all images have descriptive alt text:
+  ```bash
+  # Count img elements
+  grep -c '<img\|<picture' dist/index.html
+  # Count alt attributes (must equal img count)
+  grep -c 'alt="' dist/index.html
+  # Flag any alt="" (empty) on non-decorative images
+  grep 'alt=""' dist/index.html && echo "WARNING: empty alt found"
+  ```
+
+- [ ] **7.4** Verify semantic structure:
+  ```bash
+  grep -c '<header' dist/index.html && echo "✓ header"
+  grep -c '<main' dist/index.html && echo "✓ main"
+  grep -c '<footer' dist/index.html && echo "✓ footer"
+  grep -c '<section' dist/index.html | awk '{print "sections:", $1}'
+  grep -c 'aria-labelledby' dist/index.html | awk '{print "aria-labelledby:", $1}'
+  ```
+
+- [ ] **7.5** Verify color contrast in Chrome DevTools:
+  - Open `http://localhost:4321` in Chrome
+  - DevTools → Accessibility → Full page accessibility tree
+  - Flag any contrast failures
+  - All text on `#0D1117` background must pass 4.5:1 (normal) or 3:1 (large)
+
+- [ ] **7.6** Verify reduced-motion:
+  ```bash
+  grep -c "prefers-reduced-motion" dist/index.html && echo "✓ reduced-motion query present"
+  # In Chrome DevTools: Rendering → Emulate CSS prefers-reduced-motion: reduce
+  # Verify: no animations play, page still fully usable
+  ```
+
+- [ ] **7.7** Manual keyboard test:
+  - Open `http://localhost:4321` in browser
+  - Tab from top of page to bottom
+  - Verify: every button, link, input reachable; focus ring visible (≥3px outline); no traps; order logical
+  - Test: press Enter on copy button → "Copied!" feedback
+  - Test: Tab into email input → type → Tab to submit → Enter
+  - Test: Shift+Tab reverses correctly
+
+- [ ] **7.8** Screen reader test:
+  - Mac VoiceOver: `Cmd+F5` → read through entire page
+  - Verify: page title announced, section headings announced, CTAs have meaningful labels, form fields labeled, errors described
 
 ### Verification
 
 ```bash
-cd web
-bun run build
-npx axe-core dist/ && echo "✓ axe-core: zero violations"
-
-# Heading hierarchy
-grep -o "<h[1-3]" dist/index.html | sort | uniq -c
-
-# Alt text count
-grep -c "alt=" dist/index.html
-
-# Semantic HTML
-grep -c "<header>" dist/index.html && grep -c "<main>" dist/index.html && grep -c "<footer>" dist/index.html
-
-# Manual tests:
-# - Tab through entire page
-# - VoiceOver/NVDA read-through
-# - prefers-reduced-motion toggle in DevTools
+bun run dev &
+sleep 3
+bunx @axe-core/cli http://localhost:4321 --exit && echo "✓ axe-core: zero violations"
 ```
 
-**Checkpoint:** axe-core passes. All alt text present. Keyboard nav works. Screen reader usable.
+**Checkpoint:** axe-core exits 0. Heading hierarchy correct. All alt text present. Keyboard nav works. Screen reader passes.
 
 ### Commit
 
 ```
-a11y(web): accessibility audit + focus states
+a11y(web): accessibility audit — zero violations
 
-- Run axe-core automated scan (zero violations)
-- Manual keyboard testing (Tab through entire page)
-- Verify heading hierarchy (H1/H2/H3)
+- Fix all axe-core violations (zero remaining)
+- Verify heading hierarchy: 1×H1, N×H2
 - Verify all images have descriptive alt text
-- Verify color contrast (4.5:1 normal, 3:1 large)
-- Verify prefers-reduced-motion is respected
-- Verify semantic HTML (`<header>`, `<main>`, `<section>`, `<footer>`)
-- Manual screen reader test (VoiceOver/NVDA)
-
-Result: WCAG 2.2 AA compliance achieved.
+- Verify color contrast ≥ 4.5:1 normal / 3:1 large
+- Verify prefers-reduced-motion disables animations
+- Verify semantic HTML (header, main, section, footer)
+- Manual keyboard + VoiceOver test passed
 ```
 
 ---
 
-## Phase 8 — Responsive refinement + cross-browser testing
+## Phase 8 — Responsive refinement + cross-browser
 
-**Goal:** Perfect behavior at all breakpoints; cross-browser compatibility.
+**Goal:** No layout breakage at any supported viewport. Mobile Lighthouse targets met.
 
 ### Tasks
 
-- [ ] **8.1** Test viewport sizes (manual or automated):
-  - 320px (iPhone SE)
-  - 375px (iPhone 14)
-  - 768px (iPad)
-  - 1024px (iPad Pro)
-  - 1440px (desktop)
-  - 1920px (ultra-wide)
-  - Verify layout sensible at each breakpoint
-- [ ] **8.2** Verify no horizontal scroll (except intentional terminal card):
-  - Terminal card can scroll horizontally (containment prevents page overflow)
-  - All other content fits viewport width
+- [ ] **8.1** Test in Chrome DevTools Device Mode at each breakpoint:
+  - 320px: no horizontal overflow on body (terminal card internal scroll OK); all text readable
+  - 375px: hero CTA buttons stacked correctly, not overlapping
+  - 768px: hero shifts from stacked to split-screen; section grids engage
+  - 1024px: no over-stretched elements
+  - 1440px: max-width container contains all content; no full-bleed text
+  - 1920px: content doesn't span the entire viewport; max-width constrains layout
+
+- [ ] **8.2** Fix any overflow issues:
+  ```bash
+  # Check for elements wider than viewport
+  # Open DevTools console and run:
+  # Array.from(document.querySelectorAll('*')).filter(e => e.offsetWidth > document.body.offsetWidth)
+  ```
+
 - [ ] **8.3** Verify touch targets ≥ 44×44px:
-  - Copy button, form submit, all links
-  - Use Chrome DevTools Device Mode → pointer events overlay
-- [ ] **8.4** Verify images scale correctly:
-  - No stretching or clipping
-  - Explicit dimensions prevent layout shift
-  - Responsive images via `<Picture />`
-- [ ] **8.5** Test on Chrome, Firefox, Safari (desktop + mobile):
-  - Text rendering consistent
-  - Font loading consistent
-  - Button behavior consistent
-  - CSS Grid layout works
-  - No vendor-specific issues
-- [ ] **8.6** Run Lighthouse on mobile simulation:
-  - `npx lighthouse --throttling.cpuSlowdownMultiplier=4 http://localhost:3000`
-  - Target: LCP < 2.5s, FCP < 1.8s (mobile relaxed targets)
-- [ ] **8.7** Check CLS (Cumulative Layout Shift):
-  - Use Chrome DevTools Performance tab
-  - Verify no unexpected reflows
-  - Buttons don't jump when loading
-  - Images don't cause shift after load
-- [ ] **8.8** Test form at all breakpoints:
-  - Label visible above input
-  - Input readable (font size ≥ 16px on mobile)
-  - Error messages visible
-  - Success/error toast visible
+  - Copy button: measured in DevTools
+  - Email input height: ≥ 44px
+  - Submit button: ≥ 44px height
+  - Footer links: adequate line height + padding
+
+- [ ] **8.4** Run mobile-throttled Lighthouse:
+  ```bash
+  bunx lighthouse http://localhost:4321 \
+    --output html \
+    --output-path ./lighthouse-mobile.html \
+    --form-factor=mobile \
+    --screenEmulation.mobile=true \
+    --screenEmulation.width=375 \
+    --screenEmulation.height=812 \
+    --chrome-flags="--headless"
+  # Open lighthouse-mobile.html — target: LCP < 2.5s, FCP < 1.8s, CLS < 0.1
+  ```
+
+- [ ] **8.5** Verify CLS:
+  - Chrome DevTools Performance tab → record page load → inspect Layout Shifts
+  - Fonts must not cause reflow (font-display: swap + preload handles this)
+  - Images must not shift (explicit width+height handles this)
+
+- [ ] **8.6** Cross-browser spot check (manual):
+  - Firefox: layout renders, fonts load, copy button works
+  - Safari: layout renders, copy button works (iOS clipboard fallback)
+  - Verify CSS Grid properties used have cross-browser support (all target browsers support CSS Grid)
 
 ### Verification
 
 ```bash
-cd web
-# Responsive testing (manual in Chrome DevTools)
-# 320px, 375px, 768px, 1024px, 1440px, 1920px → no overflow
-
 # Mobile Lighthouse
-npx lighthouse --throttling.cpuSlowdownMultiplier=4 http://localhost:3000 --output-path=mobile-lighthouse.html
-# Target: LCP < 2.5s, FCP < 1.8s, CLS < 0.1
-
-# Manual: test on real device (iOS/Android) → no layout shift, touch works
+bunx lighthouse http://localhost:4321 \
+  --output json \
+  --output-path /tmp/lh-mobile.json \
+  --form-factor=mobile \
+  --screenEmulation.mobile=true \
+  --chrome-flags="--headless" \
+  --quiet
+node -e "const r=require('/tmp/lh-mobile.json'); const lcp=r.audits['largest-contentful-paint'].numericValue; const cls=r.audits['cumulative-layout-shift'].numericValue; console.log('LCP:', Math.round(lcp)+'ms (target:<2500) | CLS:', cls.toFixed(3), '(target:<0.1)')"
 ```
 
-**Checkpoint:** All breakpoints tested. No overflow. Mobile Lighthouse targets met.
+**Checkpoint:** LCP < 2500ms, CLS < 0.1 on mobile. No overflow at any breakpoint. Touch targets ≥ 44px.
 
 ### Commit
 
 ```
 test(web): responsive refinement + cross-browser verification
 
-- Test at 320, 375, 768, 1024, 1440, 1920px
-- Verify no horizontal scroll (except terminal)
-- Verify touch targets ≥ 44px
-- Verify images scale correctly
-- Test on Chrome, Firefox, Safari (desktop + mobile)
-- Mobile Lighthouse: LCP < 2.5s, FCP < 1.8s, CLS < 0.1
-- Manual device testing: iOS/Android
-
-Result: Responsive and cross-browser compatible.
+- Test at 320, 375, 768, 1024, 1440, 1920px — no overflow
+- Verify touch targets ≥ 44px (copy, input, submit, links)
+- Mobile Lighthouse: LCP < 2.5s, CLS < 0.1
+- Cross-browser: Chrome, Firefox, Safari tested
 ```
 
 ---
 
 ## Phase 9 — Deployment & Worker integration
 
-**Goal:** Deploy to Cloudflare Pages; wire Worker routing; verify production setup.
+**Goal:** Landing page live at `use-charter.dev/`. Worker routing correct. HTTPS verified.
+
+### Pre-conditions
+
+- All phases 1–8 committed and passing
+- Cloudflare account access available
+- `wrangler` CLI available or Cloudflare Pages dashboard used directly
 
 ### Tasks
 
-- [ ] **9.1** Create Cloudflare Pages project for `web/` directory
-- [ ] **9.2** Set Pages build command: `bun run build`
-- [ ] **9.3** Set Pages output directory: `dist/`
-- [ ] **9.4** Verify Pages deployment succeeds:
-  - Visit `<project-id>.pages.dev`
-  - Landing page renders
-  - All links work
-  - Copy button works
-  - Form submits successfully
-- [ ] **9.5** Update Cloudflare Worker code to add landing route:
-  - Add branch for `/`:
-    ```javascript
-    case '/':
-      return fetch(`https://<landing-pages-url>/${path}`)
-    ```
-  - Existing `/docs/*` and `/rules/*` routes unchanged
-  - Verify no conflicts
-- [ ] **9.6** Verify Worker routing end-to-end:
-  - `/` routes to landing
-  - `/docs/*` routes to Mintlify (unchanged)
-  - `/rules/*` routes to Mintlify (unchanged)
-  - Test: `curl -sI https://use-charter.dev/`
-- [ ] **9.7** Update `docs/product/DEPLOY.md` with:
-  - New `LANDING_ORIGIN` URL
-  - Deployment steps for landing page
-  - How to update Worker code for landing integration
-- [ ] **9.8** Final smoke test:
-  - Visit `https://use-charter.dev/` in browser
-  - Hero loads
-  - Copy button works
-  - All links navigate
-  - `/docs` redirects to Mintlify
-  - `/rules` redirects to Mintlify
-- [ ] **9.9** Verify SSL/TLS:
-  - HTTPS enforced
-  - No certificate warnings
-  - `use-charter.dev` secure
+- [ ] **9.1** Create Cloudflare Pages project:
+  - Project name: `charter-landing` (or similar)
+  - Connect to `use-charter/charter` GitHub repo
+  - Build command: `bun run build`
+  - Root directory: `web`
+  - Output directory: `dist`
+  - Branch to deploy: `main`
+
+- [ ] **9.2** Verify first Pages deployment:
+  - Visit `https://charter-landing.pages.dev/` (or assigned pages.dev URL)
+  - Hero renders, terminal card shows, copy button works
+  - No 404s on assets (fonts, screenshots, icons)
+
+- [ ] **9.3** Locate existing Cloudflare Worker:
+  - Check repo for `wrangler.toml` at root (confirmed present: `./.miserc.toml` is mise config, separate from wrangler)
+  - If Worker is deployed outside repo (CF dashboard), access via `wrangler whoami` + `wrangler deploy`
+  - Worker currently routes: `/docs/*` → Mintlify, `/rules/*` → Mintlify
+
+- [ ] **9.4** Update Worker to route `/` → landing origin:
+  - Add `LANDING_ORIGIN` environment variable: set to `https://charter-landing.pages.dev`
+  - Add route handler for `/` (and assets like `/_astro/*`, `/fonts/*`, `/icons/*`, `/screenshots/*`, `/favicon.svg`, `/og.svg`)
+  - Preserve existing Mintlify routes unchanged
+  - Test locally with `wrangler dev` before deploying
+
+- [ ] **9.5** Deploy updated Worker:
+  ```bash
+  wrangler deploy
+  ```
+
+- [ ] **9.6** Verify end-to-end routing:
+  ```bash
+  curl -sI https://use-charter.dev/ | head -10
+  # → HTTP/2 200, content-type: text/html
+
+  curl -sI https://use-charter.dev/docs | head -5
+  # → HTTP/2 302 or 301 to Mintlify
+
+  curl -sI https://use-charter.dev/rules | head -5
+  # → HTTP/2 302 or 301 to Mintlify
+
+  curl -sI https://use-charter.dev/favicon.svg | head -5
+  # → HTTP/2 200, content-type: image/svg+xml
+  ```
+
+- [ ] **9.7** Update `docs/product/DEPLOY.md`:
+  - Add new section: "Landing page (Cloudflare Pages)"
+  - Document `LANDING_ORIGIN` environment variable
+  - Document how to deploy: `bun run build` from `web/`; Pages auto-deploys on push to `main`
+  - Document Worker routing: which routes go where
+
+- [ ] **9.8** Final smoke test (browser):
+  - Visit `https://use-charter.dev/`
+  - Copy button: click → "Copied!" → clipboard has `brew install use-charter/tap/charter`
+  - Terminal card: renders with 94/100 green
+  - "View on GitHub" link: opens github.com/use-charter/charter
+  - "Read the docs" link: opens use-charter.dev/docs
+  - Form: type email → submit → loading spinner → response handling
+
+- [ ] **9.9** Verify HTTPS:
+  ```bash
+  curl -sI https://use-charter.dev/ | grep -i "strict-transport"
+  # Cloudflare enforces HSTS by default
+  ```
 
 ### Verification
 
 ```bash
-# After Pages deploy
-curl -sI https://use-charter.dev/ | head -5
-# → HTTP/2 200, Content-Type: text/html
+curl -sv https://use-charter.dev/ 2>&1 | grep -E "HTTP/|< content-type:|< server:"
+# Expected: HTTP/2 200, content-type: text/html, server: cloudflare
 
-curl -sI https://use-charter.dev/docs | head -5
-# → HTTP/2 30x (redirect to Mintlify)
+curl -sI https://use-charter.dev/docs
+# Expected: 301 or 302 to Mintlify URL
 
-curl -sI https://use-charter.dev/rules | head -5
-# → HTTP/2 30x (redirect to Mintlify)
-
-# Manual: visit https://use-charter.dev in browser
-# → hero visible, copy works, all links functional, HTTPS verified
+curl -sI https://use-charter.dev/rules
+# Expected: 301 or 302 to Mintlify URL
 ```
 
-**Checkpoint:** Pages deployed. Worker routing verified. Smoke test passes. Production HTTPS ready.
+**Checkpoint:** Landing live at use-charter.dev. Worker routing correct. HTTPS enforced. Smoke test passes.
 
 ### Commit
 
 ```
-feat(web): deploy to Cloudflare Pages + wire Worker
+feat(web): deploy to Cloudflare Pages + wire Worker routing
 
-- Create Cloudflare Pages project for web/
-- Set build command: bun run build
-- Set output directory: dist/
-- Update Worker code to route / → landing origin
-- Verify Worker routing: / → landing, /docs/* → Mintlify, /rules/* → Mintlify
-- Update docs/product/DEPLOY.md with LANDING_ORIGIN URL
-- Verify production: HTTPS, all links, copy button, form submit
-
-Result: Landing page live at use-charter.dev with proper routing.
+- Create Cloudflare Pages project (build: bun run build, output: dist/)
+- Update Cloudflare Worker: add LANDING_ORIGIN route for /
+- Preserve existing /docs/* and /rules/* Mintlify routes
+- Update docs/product/DEPLOY.md with LANDING_ORIGIN and Pages setup
+- Verified: curl shows 200 at /, 30x at /docs and /rules
+- HTTPS enforced, smoke test passed
 ```
 
 ---
 
 ## Commit Sequence Summary
 
-| Phase | Commit Message | Key Files |
-|-------|---|---|
-| 1 | `feat(web): scaffold Astro landing page + design tokens + fonts` | `web/`, astro.config.mjs, design-tokens.css, fonts |
-| 2 | `feat(web/hero): hero section + terminal card + copy button` | Hero.astro, CopyButton.ts, TerminalCard.astro, hero.css |
-| 3 | `feat(web/sections): problem, solution, value props, trust sections` | Section.astro, Problem/Solution/ValueProp/Trust components |
-| 4 | `feat(web/footer): social proof, CI, CTA, footer` | SocialProof/CI/FinalCTA/Footer components |
-| 5 | `feat(web/islands): copy button + waitlist form (TDD)` | CopyButton.ts, WaitlistForm.ts, islands.css |
-| 6 | `perf(web): inline critical CSS, optimize images + fonts` | All CSS files, Picture components |
-| 7 | `a11y(web): accessibility audit + focus states` | All HTML/CSS files |
-| 8 | `test(web): responsive refinement + cross-browser verification` | Responsive CSS tweaks |
-| 9 | `feat(web): deploy to Cloudflare Pages + wire Worker` | docs/product/DEPLOY.md, Worker code |
+| Phase | Commit type | Scope | Summary |
+|-------|-------------|-------|---------|
+| 1 | feat | web | scaffold Astro + design tokens + fonts |
+| 2 | feat | web/hero | hero + terminal card + copy button |
+| 3 | feat | web/sections | problem, solution, value props, trust |
+| 4 | feat | web/footer | social proof, CI, CTA, footer |
+| 5 | feat | web/islands | waitlist form (TDD — Vitest) |
+| 6 | perf | web | inline critical CSS, verify all budgets |
+| 7 | a11y | web | accessibility audit — zero violations |
+| 8 | test | web | responsive refinement + cross-browser |
+| 9 | feat | web | deploy to Cloudflare Pages + wire Worker |
 
-Each commit includes:
+All commits GPG-signed. Attribution:
 ```
-🤖 Generated with Claude Code
-
-Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
 ---
 
 ## Cross-Task Invariants
 
-- **No Go changes.** Web project isolated; charter CLI unchanged.
-- **`moon run :check` green at every commit.** Verified before push.
-- **GPG-signed commits.** All pushes use `-S` flag.
-- **`use-charter.dev/` URL stable throughout.** No DNS changes mid-implementation.
-- **Copy locked.** Never drift from spec sections 1–9 (verbatim).
-- **No third-party JS libraries.** Islands use vanilla JS only.
-- **No analytics/tracking.** Raw HTML/CSS only.
-- **Performance budgets are hard limits:** JS ≤ 150kb, CSS ≤ 30kb, images ≤ 50kb, fonts ≤ 30kb (all gzipped).
-- **Tech stack locked:** Astro v6 SSG + vanilla CSS + Bun package manager. No changes mid-phase.
+These hold across all phases. An agent violating any of these must stop and report before continuing.
+
+| Invariant | Rule |
+|-----------|------|
+| Go codebase untouched | No changes to Go source, tests, or CLI |
+| `moon run :check` green | Must pass before every push (Go tests, lint, docs all cached or green) |
+| GPG-signed commits | All commits use `-S` flag |
+| Bun exclusively | No `npm`, no `npx` — use `bunx` for one-off CLI tools |
+| Copy verbatim | Never reword locked copy; every section's text matches spec exactly |
+| No third-party JS | Islands use vanilla JS only; no React, no Vue, no libraries |
+| No analytics or tracking | Pure static output; no tracking scripts |
+| Performance budgets are hard limits | JS ≤ 150kb, CSS ≤ 30kb, images ≤ 50kb, fonts ≤ 30kb (all gzipped) |
+| Tech stack locked | Astro v6 + vanilla CSS + Bun. No changes mid-phase |
+| Dev server port | Astro default: `http://localhost:4321` (not 3000) |
 
 ---
 
-## Phase Dependencies
+## Phase Dependency Map
 
 ```
-Phase 1 (scaffold)
+Phase 1 (scaffold — must complete first)
   ↓
-  ├─→ Phase 2 (hero)
-  ├─→ Phase 3 (sections 2–5)
-  ├─→ Phase 4 (sections 6–9)
-  └─→ Phase 5 (islands)
-      ↓
-  Phase 6 (optimization)
-      ↓
-  Phase 7 (a11y) [can run parallel with Phase 6]
-      ↓
-  Phase 8 (responsive)
-      ↓
-  Phase 9 (deploy)
+  ├─────────────────────────────────────────────────┐
+  ├─→ Phase 2 (hero + CopyButton) ←─────────────┐  │
+  │                                              │  │
+  ├─→ Phase 3 (sections 2–5)                    │  │
+  │                                              │  │
+  └─→ Phase 4 (sections 6–9)                    │  │
+                                                 │  │
+  [Phase 2 must complete before Phase 5]         │  │
+                                                 ↓  │
+                                          Phase 5   │
+                                          (form)  ←─┘
+                                             ↓
+                                          Phase 6 (perf)
+                                             ↓
+                                          Phase 7 (a11y)
+                                             ↓
+                                          Phase 8 (responsive)
+                                             ↓
+                                          Phase 9 (deploy)
 ```
 
-**Critical path:** 1 → (2/3/4/5 parallel) → 6 → (7 parallel) → 8 → 9
+**Parallel window:** After Phase 1, dispatch Phases 2 + 3 + 4 simultaneously. Block on all three before dispatching Phase 5.
 
 ---
 
-**Plan status:** Ready for execution (all official docs validated, all design skills consulted, all TDD patterns documented).
+**Plan status:** Ready for execution. All asset paths verified. All copy locked. All dependencies documented. Sub-agent dispatch prompts ready.
