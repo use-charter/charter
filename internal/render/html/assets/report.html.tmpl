@@ -45,24 +45,26 @@
     <section id="score" class="sec" aria-labelledby="score-h">
       <h2 id="score-h" class="sr-only">Score</h2>
       <div class="hero">
-        <div>
-          <div class="hero-score">
+        <div class="hero-score">
+          <div>
             <span class="hero-num zone-{{.Score.Zone}}" aria-label="Score {{.Score.Value}} out of 100">{{.Score.Value}}</span>
             <span class="hero-den" aria-hidden="true">/100</span>
-            <div class="hero-meta">
-              <span class="status-pill {{if .Score.Pass}}pass{{else}}fail{{end}}">
-                <span class="icon" aria-hidden="true">{{if .Score.Pass}}{{icon "check"}}{{else}}{{icon "x"}}{{end}}</span>{{.Score.StatusText}}
-              </span>
-              <span class="zone-label">{{.Score.ZoneLabel}}</span>
-            </div>
+          </div>
+          <div class="hero-meta">
+            <span class="status-pill {{if .Score.Pass}}pass{{else}}fail{{end}}">
+              <span class="icon" aria-hidden="true">{{if .Score.Pass}}{{icon "check"}}{{else}}{{icon "x"}}{{end}}</span>{{.Score.StatusText}}
+            </span>
+            <span class="zone-label">{{.Score.ZoneLabel}}</span>
           </div>
         </div>
         <div class="hero-bar">
-          <div class="bar-track" role="progressbar" aria-valuenow="{{.Score.Value}}" aria-valuemin="0" aria-valuemax="100" aria-label="Readiness score {{.Score.Value}} of 100">
-            <div class="bar-fill zone-{{.Score.Zone}}" style="width:{{.Score.Value}}%" aria-hidden="true"></div>
-          </div>
-          <div class="bar-ticks" aria-hidden="true">
-            <span>0</span><span>60</span><span>80</span><span>100</span>
+          <div>
+            <div class="bar-track" role="progressbar" aria-valuenow="{{.Score.Value}}" aria-valuemin="0" aria-valuemax="100" aria-label="Readiness score {{.Score.Value}} of 100">
+              <div class="bar-fill zone-{{.Score.Zone}}" style="width:{{.Score.Value}}%" aria-hidden="true"></div>
+            </div>
+            <div class="bar-ticks" aria-hidden="true">
+              <span>0</span><span>60</span><span>80</span><span>100</span>
+            </div>
           </div>
           <p class="formula" aria-label="Score calculation">
             100{{range .Formula.Parts}} − {{.Per}}×{{.Count}}<span class="{{.Class}}">{{.Letter}}</span>{{end}} = <strong>{{.Formula.Base}}</strong>{{if .Formula.Capped}} &nbsp;→&nbsp; cap &nbsp;→&nbsp; <strong class="r">{{.Formula.Final}}</strong>{{end}}
