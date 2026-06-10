@@ -165,27 +165,30 @@ function renderDoctor(d: DoctorResult, displayName: string): string {
   if (d.summary.low > 0)     summary += `${dot}${c(SEV.LOW, `${d.summary.low} LOW`)}`;
   lines.push(summary);
 
-  // Scorecard: "readiness by category"
+  // Scorecard — colored dot indicator per category
   if (d.categories.length > 0) {
     lines.push("");
     lines.push(c(T.textSecondary, "readiness by category"));
     for (const cat of d.categories) {
-      const sc   = sevFg(cat.worst_severity);
-      const name = c(T.textSecondary, `  ${cat.category.padEnd(12)}`);
-      const ded  = c(sc, `−${cat.deduction.toString().padEnd(3)}`);
-      const det  = c(T.textTertiary, `${cat.findings} finding(s), worst ${cat.worst_severity}`);
-      lines.push(`${name} ${ded} ${det}`);
+      const hasIssues = cat.findings > 0;
+      const dotColor  = hasIssues ? sevFg(cat.worst_severity) : "#3fb950";
+      const dot       = `<span style="color:${dotColor}">●</span>`;
+      const name      = c(T.textTertiary, `  ${cat.category.padEnd(13)}`);
+      const status    = hasIssues
+        ? `${c(dotColor, `${cat.findings} finding${cat.findings > 1 ? "s" : ""}`, true)}  ${c(T.textTertiary, `worst ${cat.worst_severity}`)}`
+        : c("#3fb950", "passed");
+      lines.push(`  ${dot}${name} ${status}`);
     }
   }
 
-  // Score hero
+  // Score hero — score number prominent, bar, verdict badge
   lines.push("");
   lines.push(DIVIDER);
-  const scoreTok  = d.passed ? T.textSuccess : T.textDanger;
-  const verdict   = d.passed ? "PASS ✓" : "FAIL ✗";
-  const scoreNum  = `${c(scoreTok, String(d.score.final), true)}${c(T.textTertiary, "/100")}`;
-  const bar24     = scoreBar(d.score.final, scoreTok);
-  const badge2    = c(scoreTok, verdict, true);
+  const scoreTok = d.passed ? T.textSuccess : T.textDanger;
+  const verdict  = d.passed ? "PASS ✓" : "FAIL ✗";
+  const scoreNum = `<span style="color:${scoreTok};font-weight:700;font-size:1.05em">${d.score.final}</span>${c(T.textTertiary, "/100")}`;
+  const bar24    = scoreBar(d.score.final, scoreTok);
+  const badge2   = `<span style="color:${scoreTok};font-weight:700">${verdict}</span>`;
   lines.push(`${c(T.textSecondary, "Score ")}${scoreNum}  ${bar24}  ${badge2}`);
   if (d.score.final < d.score.base) {
     lines.push(`      ${c(T.textDanger, `cap   score capped at ${d.score.final}`)}`);
@@ -207,38 +210,42 @@ function highlightDiff(raw: string): string {
     .replace(/(›)/g, `<span style="color:${T.textInfo}">$1</span>`);
 }
 
-// ─── explain renderer (mirrors explain.go textStyled exactly) ────────────
+// ─── explain renderer ─────────────────────────────────────────────────────
 interface ExplainEntry { ID: string; Name: string; Category: string; ShortDescription: string; HelpURI: string; Severity?: string; }
 
 function renderExplain(e: ExplainEntry): string {
-  const sev = e.Severity ?? "";
-  const sevColor = sev ? (SEV[sev as keyof typeof SEV] ?? T.textTertiary) : T.textTertiary;
-  const lines: string[] = [];
-  lines.push(`${c(T.textInfo, e.ID, true)}  ${c(T.textPrimary, e.Name, true)}`);
-  if (sev) {
-    lines.push(
-      `${c(T.textTertiary, "Severity  ")}` +
-      `<span style="color:${sevColor};font-weight:600;background:${SEV_BORDER[sev as keyof typeof SEV] ?? "transparent"}20;padding:1px 6px;border-radius:4px">${sev}</span>`
-    );
-  }
-  lines.push(`${c(T.textTertiary, "Category  ")}${c(T.textSecondary, e.Category)}`);
-  lines.push(`${c(T.textTertiary, "Summary   ")}${c(T.textPrimary, e.ShortDescription)}`);
-  lines.push(`${c(T.textTertiary, "Docs      ")}${c(T.textInfo, e.HelpURI)}`);
-  return lines.join("\n");
+  const DIV = c(T.textTertiary, "─".repeat(52));
+  return [
+    `${c(T.textInfo, e.ID, true)}  ${c(T.textPrimary, e.Name, true)}`,
+    DIV,
+    "",
+    `  ${c(T.textTertiary, "category  ")}${c(T.textSecondary, e.Category)}`,
+    "",
+    `  ${c(T.textPrimary, e.ShortDescription)}`,
+    "",
+    DIV,
+    `  ${c(T.textTertiary, "docs  ")}${c(T.textInfo, e.HelpURI)}`,
+  ].join("\n");
 }
 
 // ─── version renderer ────────────────────────────────────────────────────
 interface VersionData { version: string; commit: string; date: string; go: string; platform: string; }
 
 function renderVersion(v: VersionData): string {
-  const row = (label: string, val: string, valColor = T.textSecondary) =>
-    `${c(T.textTertiary, label.padEnd(10))}${c(valColor, val)}`;
+  const DIV = c(T.textTertiary, "─".repeat(36));
+  const commit = v.commit.slice(0, 8);
+  const built  = v.date.slice(0, 10); // just the date part
+  const row    = (label: string, val: string) =>
+    `  ${c(T.textTertiary, label.padEnd(10))}${c(T.textSecondary, val)}`;
   return [
-    row("charter", v.version, T.textInfo),
-    row("commit",  v.commit.slice(0, 8)),
-    row("built",   v.date),
+    `${c(T.textInfo, "[C]", true)} ${c(T.textInfo, "charter", true)}  ${c(T.textPrimary, v.version, true)}`,
+    "",
+    `  ${c(T.textTertiary, "platform  ")}${c(T.textSecondary, v.platform)}`,
+    "",
+    DIV,
+    row("commit",  commit),
+    row("built",   built),
     row("go",      v.go),
-    row("platform",v.platform),
   ].join("\n");
 }
 
@@ -276,23 +283,22 @@ function renderInit(displayName: string, actions: InitAction[]): string {
 
 // ─── suppress renderer ───────────────────────────────────────────────────
 function renderSuppress(rule: string, reason: string, expires: string, dryRun = true): string {
-  const lines: string[] = [];
-  const DIV = c(T.textTertiary, "─".repeat(44));
-  lines.push(
-    `${c(T.textInfo, "[C]", true)} ${c(T.textInfo, "charter", true)}` +
-    `${c(T.textTertiary, "  v1.0.0")}`
-  );
-  lines.push("");
-  lines.push(`${c(T.textSecondary, "Suppressing  ")}${c(T.textInfo, rule, true)}`);
-  lines.push(`${c(T.textTertiary, "  reason:   ")}${c(T.textSecondary, reason)}`);
-  lines.push(`${c(T.textTertiary, "  expires:  ")}${c(T.textSecondary, expires)}`);
-  lines.push(DIV);
-  if (dryRun) {
-    lines.push(c(T.textWarning, "dry run — .charter-suppress.yml not written"));
-  } else {
-    lines.push(`${c(T.textSuccess, "✓")} ${c(T.textSecondary, "Written  .charter-suppress.yml")}`);
-  }
-  return lines.join("\n");
+  const DIV = c(T.textTertiary, "─".repeat(48));
+  const kv  = (label: string, val: string) =>
+    `  ${c(T.textTertiary, label.padEnd(10))}${c(T.textSecondary, val)}`;
+  return [
+    `${c(T.textInfo, "[C]", true)} ${c(T.textInfo, "charter", true)}  ${c(T.textTertiary, "suppress")}`,
+    "",
+    `  ${c(T.textInfo, "⏺", true)}  ${c(T.textInfo, rule, true)}  ${c(T.textTertiary, "→  .charter-suppress.yml")}`,
+    "",
+    kv("reason",  reason),
+    kv("expires", expires),
+    "",
+    DIV,
+    dryRun
+      ? `  ${c(T.textWarning, "▸")}  ${c(T.textWarning, "dry run")}  ${c(T.textTertiary, "— no files written")}\n  ${c(T.textTertiary, "run without --dry-run to apply")}`
+      : `  ${c(T.textSuccess, "✓")}  ${c(T.textSuccess, "written")}  ${c(T.textTertiary, ".charter-suppress.yml")}`,
+  ].join("\n");
 }
 
 // ─── HTML wrapper ──────────────────────────────────────────────────────────
