@@ -18,7 +18,7 @@
 | 1 | `"Execute Phase 1 of Slice 19: scaffold Astro v6 project in web/, extract design tokens from docs/internal/designs/DESIGN-TOKENS.md, generate fonts.css by running bun scripts/generate-report-fonts.ts, self-host fonts in web/public/fonts/, create Base.astro layout with all meta tags from spec Critical Dependencies §5, create web/src/pages/index.astro (empty), wire moon.yml check/build/dev tasks. Verify: bun run build produces dist/index.html; moon run web:check passes. Commit: feat(web): scaffold Astro landing page + design tokens + fonts"` | None |
 | 2 | `"Execute Phase 2 of Slice 19: implement Hero section (split-screen layout, H1, subheadline, CTAs) + TerminalCard component (styled pre block with 94/100 score-zone colors) + CopyButton component (vanilla JS, clipboard API, iOS fallback, 2s feedback). Wire into index.astro. Verify: bun run build, grep checks pass. Commit: feat(web/hero): hero section + terminal card + copy button"` | Phase 1 ✅ |
 | 3 | `"Execute Phase 3 of Slice 19: implement content sections Problem, Solution (three-step flow + screenshots via Picture component), ValuePropCard (4 cards), TrustStrip (4 commitments). Lock copy verbatim from spec. Wire into index.astro. Verify: grep checks pass, screenshots render. Commit: feat(web/sections): problem, solution, value props, trust sections"` | Phase 1 ✅ |
-| 4 | `"Execute Phase 4 of Slice 19: implement SocialProofSection (GitHub stars build-time fetch from https://api.github.com/repos/use-charter/charter, 3 confirmed SVG icons + text badges for missing icons), CISection (locked YAML snippet from spec), FinalCTASection (CopyButton reuse + links), Footer. Wire into index.astro. Verify: grep checks, noopener links. Commit: feat(web/footer): social proof, CI, CTA, footer"` | Phase 1 ✅ |
+| 4 | `"Execute Phase 4 of Slice 19: implement SocialProofSection (GitHub stars build-time fetch from https://api.github.com/repos/use-charter/charter, all 8 vendor SVG icons with correct CSS classes per spec §Vendor Icon Adaptation), CISection (locked YAML snippet from spec), FinalCTASection (CopyButton reuse + links), Footer. Wire into index.astro. Verify: grep checks, noopener links. Commit: feat(web/footer): social proof, CI, CTA, footer"` | Phase 1 ✅ |
 | 5 | `"Execute Phase 5 of Slice 19: implement WaitlistForm island (Vitest TDD: write failing tests first for email validation, POST loading state, success/error toasts; then implement; all tests green). Verify: bun run test, bundle ≤ 5kb. Commit: feat(web/islands): waitlist form (TDD)"` | Phase 2 ✅ (CopyButton already done in Phase 2) |
 | 6 | `"Execute Phase 6 of Slice 19: performance optimization — inline above-fold CSS (<4kb), verify image budgets via Picture components, run bunx lighthouse http://localhost:4321 and confirm Performance ≥ 90. Fix any budget failures. Commit: perf(web): inline critical CSS, verify all performance budgets"` | Phases 2-5 ✅ |
 | 7 | `"Execute Phase 7 of Slice 19: accessibility audit — run bunx @axe-core/cli http://localhost:4321 and fix all violations; manual keyboard Tab test; heading hierarchy grep; alt text grep; verify prefers-reduced-motion disables animations. Commit: a11y(web): accessibility audit + focus states"` | Phase 6 ✅ |
@@ -81,8 +81,9 @@ Before dispatching next phase:
 - [ ] **1.6** Copy all vendor icons to `web/public/icons/` (all 8 confirmed in `docs/product/images/icons/`):
   - `claude-ai.svg`, `chatgpt.svg`, `grok.svg`, `cursor.svg`, `windsurf.svg`
   - `github-copilot.svg`, `google-gemini.svg`, `codex.svg`
-- [ ] **1.7** Copy screenshots to `web/public/screenshots/`:
+- [ ] **1.7** Copy screenshots to `web/src/assets/screenshots/` (NOT `public/` — must be in `src/` for Astro `<Picture />` optimization):
   - `doctor-overview.webp`, `fix-dry-run.webp`, `doctor-tty.webp` ← from `docs/product/images/screenshots/`
+  - Create directory: `mkdir -p web/src/assets/screenshots/`
 - [ ] **1.8** Create `web/src/styles/design-tokens.css`:
   - Extract ALL `--color-*`, `--font-*`, `--space-*`, `--radius-*`, `--shadow-*` variables verbatim from `docs/internal/designs/DESIGN-TOKENS.md`
   - Add motion tokens: `--ease-enter: cubic-bezier(0.16, 1, 0.3, 1)`, `--ease-exit: cubic-bezier(0.55, 0, 1, 0.45)`, `--duration-fast: 120ms`, `--duration-normal: 250ms`, `--duration-slow: 400ms`
@@ -156,8 +157,8 @@ feat(web): scaffold Astro landing page + design tokens + fonts
 - Create astro.config.mjs (output: static, site: use-charter.dev)
 - Generate and embed brand fonts from generate-report-fonts.ts
 - Copy brand assets (favicon, og.svg, apple-touch-icon, manifest) to public/
-- Copy vendor icons (claude-ai, chatgpt, grok) to public/icons/
-- Copy screenshots (doctor-overview, fix-dry-run, doctor-tty) to public/screenshots/
+- Copy all 8 vendor icons to public/icons/ (claude-ai, chatgpt, grok, cursor, windsurf, github-copilot, google-gemini, codex)
+- Copy screenshots to src/assets/screenshots/ (NOT public/ — required for Astro Picture optimization)
 - Create design-tokens.css (verbatim from DESIGN-TOKENS.md + motion tokens)
 - Create global.css (reset, base styles, min-height: 100dvh)
 - Create Base.astro layout (meta tags, preload, font import)
@@ -185,7 +186,7 @@ feat(web): scaffold Astro landing page + design tokens + fonts
   - `min-height: 100dvh` on hero wrapper
 
 - [ ] **2.2** Create `web/src/components/CopyButton.astro`:
-  - `<button id="copy-btn" type="button">` with visible command text: `brew install use-charter/tap/charter`
+  - `<button type="button" class="copy-btn">` — use class, NOT id (component used twice: hero + final CTA; duplicate IDs break document validity)
   - Phosphor Light Copy SVG icon (inline SVG, not emoji)
   - `data-command="brew install use-charter/tap/charter"` attribute
   - Default state: shows command + copy icon
@@ -194,38 +195,57 @@ feat(web): scaffold Astro landing page + design tokens + fonts
 
 - [ ] **2.3** Inline `<script>` inside CopyButton.astro (vanilla JS only, no imports):
   ```javascript
-  const btn = document.getElementById('copy-btn');
-  const command = btn.dataset.command;
-  const original = btn.querySelector('.btn-text').textContent;
-  
-  btn.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(command);
-    } catch {
-      // Fallback for iOS: select text then execCommand (deprecated but necessary for iOS 16-)
-      const input = document.createElement('input');
-      input.value = command;
-      document.body.appendChild(input);
-      input.select();
-      document.execCommand('copy'); // intentionally used: only fallback for iOS
-      document.body.removeChild(input);
-    }
-    btn.querySelector('.btn-text').textContent = 'Copied!';
-    btn.setAttribute('aria-label', 'Command copied to clipboard');
-    setTimeout(() => {
-      btn.querySelector('.btn-text').textContent = original;
-      btn.setAttribute('aria-label', 'Copy install command');
-    }, 2000);
+  // Use querySelectorAll — CopyButton appears in both hero and final CTA
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    const command = btn.dataset.command;
+    const textEl = btn.querySelector('.btn-text');
+    const original = textEl.textContent;
+
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(command);
+      } catch {
+        // Fallback for iOS 16-: execCommand is deprecated but necessary
+        const input = document.createElement('input');
+        input.value = command;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy'); // intentionally used: only fallback for iOS
+        document.body.removeChild(input);
+      }
+      textEl.textContent = 'Copied!';
+      btn.setAttribute('aria-label', 'Command copied to clipboard');
+      setTimeout(() => {
+        textEl.textContent = original;
+        btn.setAttribute('aria-label', 'Copy install command');
+      }, 2000);
+    });
   });
   ```
 
 - [ ] **2.4** Create `web/src/components/TerminalCard.astro`:
-  - `<div role="img" aria-label="Charter doctor output showing 94/100 ship-ready score in green zone">`
-  - `<pre>` block with real `charter doctor` output (literal ASCII terminal output with ANSI-to-CSS color classes)
-  - Score zone colors from design tokens: green (#4ade80) for 94/100, amber, red
-  - CSS: `overflow-x: auto` (card scrolls horizontally on small viewports); dark background from tokens; `font-family: var(--font-mono-primary)` (Atkinson Mono)
-  - Fallback: `<picture>` with `doctor-overview.webp` if pre block can't render (use `<noscript>` pattern)
-  - `aria-hidden="true"` on decorative terminal chrome elements (corner dots, title bar)
+  - This is a pure SSG component — no noscript pattern needed (server renders everything unconditionally)
+  - Structure:
+    ```astro
+    ---
+    import { Picture } from 'astro:assets';
+    import doctorOverview from '../assets/screenshots/doctor-overview.webp';
+    ---
+    <div class="terminal-card" role="region" aria-label="Charter doctor output showing 94/100 ship-ready score in green zone">
+      <div class="terminal-chrome" aria-hidden="true"><!-- dots, title bar --></div>
+      <pre class="terminal-output"><code><!-- real charter doctor ASCII output with CSS color classes --></code></pre>
+      <div class="terminal-screenshot" aria-hidden="true">
+        <Picture src={doctorOverview} alt="" width={864} loading="eager" fetchpriority="high" />
+        <!-- aria-hidden + empty alt: decorative screenshot alongside the pre block -->
+        <!-- loading=eager + fetchpriority=high: this is the LCP element -->
+      </div>
+    </div>
+    ```
+  - The `<pre>` block contains the primary accessible content (screen reader reads it)
+  - The `<Picture>` is decorative reinforcement (`aria-hidden="true"`, `alt=""`)
+  - Score zone colors from design tokens: green (#4ade80) for 94/100
+  - CSS: `overflow-x: auto` on `.terminal-output`; `overflow-x: hidden` inherited from body
+  - `font-family: var(--font-mono-primary)` (Atkinson Mono) on pre/code
 
 - [ ] **2.5** Create `web/src/styles/sections/hero.css`:
   - Hero grid layout variables
@@ -298,11 +318,20 @@ Result: Above-fold hero renders; copy button copies to clipboard.
   - Wraps `<Section id="solution" title="How It Works">`
   - Three-step layout: horizontal on 768px+, vertical below
   - Each step: number badge, label (Scan/Score/Fix), description, screenshot
-  - Step 1 (Scan): `<Picture src="/screenshots/doctor-tty.webp" alt="Charter scan output showing all 18 rules checked" width={800} height={500} />`
-  - Step 2 (Score): `<Picture src="/screenshots/doctor-overview.webp" alt="Charter score output showing 94/100 ship-ready in green zone" width={800} height={500} />`
-  - Step 3 (Fix): `<Picture src="/screenshots/fix-dry-run.webp" alt="Charter fix dry-run showing unified diff of proposed changes" width={800} height={500} />`
-  - All `<Picture />` imports: `import { Picture } from 'astro:assets'`
-  - All images: `loading="lazy"` (below fold)
+  - Import screenshots as ES modules (required for Astro optimization — images in `src/` only):
+    ```astro
+    ---
+    import { Picture } from 'astro:assets';
+    import doctorTty from '../assets/screenshots/doctor-tty.webp';
+    import doctorOverview from '../assets/screenshots/doctor-overview.webp';
+    import fixDryRun from '../assets/screenshots/fix-dry-run.webp';
+    ---
+    ```
+  - Step 1 (Scan): `<Picture src={doctorTty} alt="Charter scan output showing all 18 rules checked" width={864} loading="lazy" />`
+  - Step 2 (Score): `<Picture src={doctorOverview} alt="Charter score output showing 94/100 ship-ready in green zone" width={864} loading="lazy" />`
+  - Step 3 (Fix): `<Picture src={fixDryRun} alt="Charter fix dry-run showing unified diff of proposed changes" width={864} loading="lazy" />`
+  - `width={864}` = 50% of source 1728px — gives Astro room to generate ≤50kb AVIF total (verify in Phase 6)
+  - Note: do NOT use string paths starting with `/` for `<Picture />` — those bypass optimization
 
 - [ ] **3.4** Create `web/src/components/ValuePropCard.astro`:
   - Props interface: `{ title: string; description: string; iconSvg: string }`
@@ -388,7 +417,7 @@ Result: Mid-page content rendered with locked copy.
     } catch {}
     ---
     ```
-  - Stars render: `{stars ? `⭐ ${stars} stars` : 'Star on GitHub'}` (fallback is safe; never hardcode)
+  - Stars render: `{stars ? `${stars} stars on GitHub` : 'Star on GitHub'}` (no emoji; fallback is safe; never hardcode a number)
   - Vendor icon grid — all 8 SVGs confirmed. Apply CSS class per icon for dark/light mode adaptation (see spec §Vendor Icon Adaptation):
     ```html
     <!-- icon--colored: no filter needed, brand colors work in both modes -->
@@ -455,7 +484,7 @@ grep "stargazers_count\|stars" dist/index.html && echo "✓ GitHub stars wired"
 ```
 feat(web/footer): social proof, CI, CTA, footer
 
-- Create SocialProofSection.astro (build-time GitHub stars, 3 confirmed SVG icons, text badges for unconfirmed)
+- Create SocialProofSection.astro (build-time GitHub stars, all 8 vendor SVG icons with icon--colored/dark-invert/light-invert CSS classes)
 - Create CISection.astro (locked YAML snippet, SARIF mention, CTA link)
 - Create FinalCTASection.astro (CopyButton reuse, three-tier CTA hierarchy)
 - Create Footer.astro (four link columns, semantic footer, noopener on all external links)
@@ -505,13 +534,15 @@ Result: Full page renders end-to-end.
   - POST to `/api/waitlist` with `{ email }` body, `Content-Type: application/json`
   - Success (res.ok): show success toast `"Check your email!"`, clear form
   - Error (!res.ok or network): show error toast with `data.error || "Something went wrong"`
-  - Toast: injected `<div role="alert" aria-live="polite">` element; auto-dismiss after 4s
+  - Toast: injected `<div role="status" aria-live="polite" aria-atomic="true">` element; auto-dismiss after 4s
+    - Note: `role="status"` + `aria-live="polite"` is correct for non-urgent feedback; `role="alert"` implies `aria-live="assertive"` which would interrupt screen reader mid-sentence
+    - The inline validation `<span id="email-error">` (for invalid email) uses `role="alert"` (urgent, immediate) — different from the post-submission toast
 
 - [ ] **5.4** Create `web/src/components/WaitlistForm.astro`:
   - `<form id="waitlist-form" action="#" method="post" novalidate>`
   - `<label for="waitlist-email">Email address</label>` (above input)
   - `<input type="email" id="waitlist-email" name="email" required autocomplete="email" placeholder="you@example.com" />`
-  - `<span id="email-error" role="alert" aria-live="polite"></span>` (below input, empty by default)
+  - `<span id="email-error" role="alert" aria-atomic="true"></span>` (below input, empty by default; `role="alert"` already implies `aria-live="assertive"` — do not add `aria-live` separately)
   - `<button type="submit" id="waitlist-submit">Notify me</button>`
   - `<script>` tag importing `WaitlistForm.ts` island
 
@@ -690,7 +721,7 @@ perf(web): inline critical CSS, verify all performance budgets
   # Verify: no animations play, page still fully usable
   ```
 
-- [ ] **7.9** Verify color mode (dark + light):
+- [ ] **7.7** Verify color mode (dark + light):
   - Chrome DevTools → Rendering → Emulate `prefers-color-scheme: dark`
     - All text readable; all 8 vendor icons visible
     - `icon--dark-invert` icons appear white (grok, copilot, cursor, windsurf, codex)
@@ -703,7 +734,7 @@ perf(web): inline critical CSS, verify all performance budgets
     - Accent color (#2563EB) readable on light bg (passes 4.5:1)
   - Verify `<meta name="color-scheme" content="dark light">` in `dist/index.html`
 
-- [ ] **7.7** Manual keyboard test:
+- [ ] **7.8** Manual keyboard test:
   - Open `http://localhost:4321` in browser
   - Tab from top of page to bottom
   - Verify: every button, link, input reachable; focus ring visible (≥3px outline); no traps; order logical
@@ -711,7 +742,7 @@ perf(web): inline critical CSS, verify all performance budgets
   - Test: Tab into email input → type → Tab to submit → Enter
   - Test: Shift+Tab reverses correctly
 
-- [ ] **7.8** Screen reader test:
+- [ ] **7.9** Screen reader test:
   - Mac VoiceOver: `Cmd+F5` → read through entire page
   - Verify: page title announced, section headings announced, CTAs have meaningful labels, form fields labeled, errors described
 
