@@ -201,13 +201,44 @@ function renderDoctor(d: DoctorResult, displayName: string): string {
 // ─── Diff highlighter (for fix --dry-run) ────────────────────────────────
 function highlightDiff(raw: string): string {
   const safe = raw.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  return safe
-    .replace(/\b(AE-[A-Z]+-\d+)\b/g, `<span style="color:${T.textInfo};font-weight:600">$1</span>`)
-    .replace(/^(\+[^+].*)$/gm, `<span style="color:${T.textSuccess}">$1</span>`)
-    .replace(/^(-[^-].*)$/gm, `<span style="color:${T.textDanger}">$1</span>`)
-    .replace(/^(@@.+@@.*)$/gm, `<span style="color:${T.textInfo}">$1</span>`)
-    .replace(/(─{3,}|-{3,})/g, `<span style="color:#21262d">$1</span>`)
-    .replace(/(›)/g, `<span style="color:${T.textInfo}">$1</span>`);
+  const DIV  = `<span style="color:#21262d">${"─".repeat(52)}</span>`;
+
+  // Parse into rule blocks then re-render with styled headers
+  const blocks: string[] = [];
+  let current: string[] = [];
+  let ruleCount = 0;
+
+  for (const line of safe.split("\n")) {
+    const ruleMatch = line.match(/^(AE-[A-Z]+-\d+)\s+(.+)$/);
+    if (ruleMatch) {
+      if (current.length) blocks.push(current.join("\n"));
+      current = [];
+      ruleCount++;
+      const ruleId   = `<span style="color:${T.textInfo};font-weight:600">${ruleMatch[1]}</span>`;
+      const filePath = `<span style="color:${T.textTertiary}">${ruleMatch[2]}</span>`;
+      current.push(`${ruleId}  ${filePath}`);
+    } else if (line.startsWith("+") && !line.startsWith("+++")) {
+      current.push(`<span style="color:${T.textSuccess}">${line}</span>`);
+    } else if (line.startsWith("-") && !line.startsWith("---")) {
+      current.push(`<span style="color:${T.textDanger}">${line}</span>`);
+    } else if (line.startsWith("@@")) {
+      current.push(`<span style="color:#444d56">${line}</span>`);
+    } else if (line.startsWith("---") || line.startsWith("+++")) {
+      current.push(`<span style="color:#30363d">${line}</span>`);
+    } else if (line.trim()) {
+      current.push(`<span style="color:${T.textTertiary}">${line}</span>`);
+    } else {
+      current.push("");
+    }
+  }
+  if (current.length) blocks.push(current.join("\n"));
+
+  const footer = [
+    DIV,
+    `<span style="color:${T.textWarning}">▸</span>  <span style="color:${T.textWarning}">dry run</span>  <span style="color:${T.textTertiary}">·  ${ruleCount} fix${ruleCount !== 1 ? "es" : ""} ready  ·  </span><span style="color:${T.textInfo}">charter fix</span><span style="color:${T.textTertiary}"> to apply</span>`,
+  ].join("\n");
+
+  return blocks.join(`\n${DIV}\n`) + `\n\n${footer}`;
 }
 
 // ─── explain renderer ─────────────────────────────────────────────────────
@@ -232,21 +263,19 @@ function renderExplain(e: ExplainEntry): string {
 interface VersionData { version: string; commit: string; date: string; go: string; platform: string; }
 
 function renderVersion(v: VersionData): string {
-  const DIV = c(T.textTertiary, "─".repeat(36));
   const commit = v.commit.slice(0, 8);
-  const built  = v.date.slice(0, 10); // just the date part
-  const row    = (label: string, val: string) =>
-    `  ${c(T.textTertiary, label.padEnd(10))}${c(T.textSecondary, val)}`;
-  return [
-    `${c(T.textInfo, "[C]", true)} ${c(T.textInfo, "charter", true)}  ${c(T.textPrimary, v.version, true)}`,
-    "",
-    `  ${c(T.textTertiary, "platform  ")}${c(T.textSecondary, v.platform)}`,
-    "",
-    DIV,
-    row("commit",  commit),
-    row("built",   built),
-    row("go",      v.go),
-  ].join("\n");
+  const built  = v.date.slice(0, 10);
+  const sep    = c(T.textTertiary, "  ·  ");
+  // Single headline: brand + version
+  const headline = `${c(T.textInfo, "[C]", true)} ${c(T.textInfo, "charter", true)}  ${c(T.textPrimary, v.version, true)}`;
+  // One compact metadata line — all context on a single dim row
+  const meta = [
+    c(T.textTertiary, `go ${v.go}`),
+    c(T.textTertiary, v.platform),
+    c(T.textTertiary, `commit ${commit}`),
+    c(T.textTertiary, built),
+  ].join(sep);
+  return [headline, "", `  ${meta}`].join("\n");
 }
 
 // ─── init --dry-run renderer ──────────────────────────────────────────────
@@ -283,21 +312,23 @@ function renderInit(displayName: string, actions: InitAction[]): string {
 
 // ─── suppress renderer ───────────────────────────────────────────────────
 function renderSuppress(rule: string, reason: string, expires: string, dryRun = true): string {
-  const DIV = c(T.textTertiary, "─".repeat(48));
+  const DIV = c(T.textTertiary, "─".repeat(52));
   const kv  = (label: string, val: string) =>
     `  ${c(T.textTertiary, label.padEnd(10))}${c(T.textSecondary, val)}`;
+  // Headline: brand + command + rule all on one row
+  const headline = `${c(T.textInfo, "[C]", true)} ${c(T.textInfo, "charter", true)}  ${c(T.textTertiary, "suppress")}  ${c(T.textInfo, rule, true)}`;
+  const outcome  = dryRun
+    ? `  ${c(T.textWarning, "▸")} ${c(T.textWarning, "dry run")}${c(T.textTertiary, "  ·  .charter-suppress.yml not written  ·  remove --dry-run to apply")}`
+    : `  ${c(T.textSuccess, "✓")} ${c(T.textSuccess, "written")}${c(T.textTertiary, "  .charter-suppress.yml")}`;
   return [
-    `${c(T.textInfo, "[C]", true)} ${c(T.textInfo, "charter", true)}  ${c(T.textTertiary, "suppress")}`,
-    "",
-    `  ${c(T.textInfo, "⏺", true)}  ${c(T.textInfo, rule, true)}  ${c(T.textTertiary, "→  .charter-suppress.yml")}`,
+    headline,
+    DIV,
     "",
     kv("reason",  reason),
     kv("expires", expires),
     "",
     DIV,
-    dryRun
-      ? `  ${c(T.textWarning, "▸")}  ${c(T.textWarning, "dry run")}  ${c(T.textTertiary, "— no files written")}\n  ${c(T.textTertiary, "run without --dry-run to apply")}`
-      : `  ${c(T.textSuccess, "✓")}  ${c(T.textSuccess, "written")}  ${c(T.textTertiary, ".charter-suppress.yml")}`,
+    outcome,
   ].join("\n");
 }
 
