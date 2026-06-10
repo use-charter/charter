@@ -75,9 +75,18 @@ Before dispatching next phase:
 - [ ] **1.4** Extract all `@font-face` blocks from `internal/render/html/assets/fonts.css` into `web/src/styles/fonts.css` (keep base64 data URIs intact; no external CDN URLs)
 - [ ] **1.5** Copy brand assets to `web/public/`:
   - `favicon.svg` ← from `docs/internal/designs/brand/favicon.svg`
-  - `og.svg` ← from `docs/internal/designs/brand/og.svg`
   - `apple-touch-icon.svg` ← from `docs/internal/designs/brand/apple-touch-icon.svg`
   - `manifest.json` ← from `docs/internal/designs/brand/manifest.json`
+  - **Generate `og.png`** (1200×630px PNG) from `docs/internal/designs/brand/og.svg`:
+    ```bash
+    # Option A: rsvg-convert (librsvg — install via brew install librsvg)
+    rsvg-convert -w 1200 -h 630 docs/internal/designs/brand/og.svg -o web/public/og.png
+    # Option B: Inkscape
+    inkscape --export-type=png --export-width=1200 --export-height=630 --export-filename=web/public/og.png docs/internal/designs/brand/og.svg
+    # Option C: sharp (Node/Bun)
+    bunx sharp-cli --input docs/internal/designs/brand/og.svg --output web/public/og.png --width 1200 --height 630
+    ```
+  - Note: og.svg is NOT suitable as an OG image — Twitter/LinkedIn/Slack require PNG/JPEG
 - [ ] **1.6** Copy all vendor icons to `web/public/icons/` (all 8 confirmed in `docs/product/images/icons/`):
   - `claude-ai.svg`, `chatgpt.svg`, `grok.svg`, `cursor.svg`, `windsurf.svg`
   - `github-copilot.svg`, `google-gemini.svg`, `codex.svg`
@@ -106,10 +115,10 @@ Before dispatching next phase:
   - `min-height: 100dvh` on body (never `100vh`)
   - Responsive breakpoints comment map: 320/375/768/1024/1440/1920
 - [ ] **1.10** Create `web/src/layouts/Base.astro` with:
-  - All meta tags from spec §Critical Dependencies §5 (exact attributes)
+  - All meta tags from spec §Critical Dependencies §5 (exact attributes, including `og:url` and `twitter:card`)
   - `<meta name="color-scheme" content="dark light" />` (required — tells browser color mode)
-  - `<link rel="preload">` for Ruda 800 font-face and Atkinson Mono 400 font-face
-  - Import `global.css`
+  - **No `<link rel="preload" as="font">` tags** — fonts are base64 data URIs in `fonts.css`; there is no URL to preload; browser loads fonts when CSS is parsed
+  - Import `global.css` (which imports `fonts.css` and `design-tokens.css`)
   - `<slot />` for page content
 - [ ] **1.11** Create `web/src/pages/index.astro` (empty shell using Base layout):
   ```astro
@@ -135,10 +144,16 @@ ls dist/index.html && echo "✓ build output"
 grep "AI-agent readiness" dist/index.html && echo "✓ title in head"
 grep "font-face" dist/index.html && echo "✓ fonts embedded"
 grep "canonical" dist/index.html && echo "✓ canonical link"
-grep "preload" dist/index.html && echo "✓ preload links"
+grep "og:url" dist/index.html && echo "✓ og:url meta present"
+grep "twitter:card" dist/index.html && echo "✓ twitter:card meta present"
 grep "favicon" dist/index.html && echo "✓ favicon"
+grep "og:url" dist/index.html && echo "✓ og:url present"
+grep "twitter:card" dist/index.html && echo "✓ twitter:card present"
+ls web/public/og.png && echo "✓ og.png exists (required for OG preview)"
 grep "color-scheme" dist/index.html && echo "✓ color-scheme meta present"
 grep "prefers-color-scheme" dist/index.html && echo "✓ light mode overrides in CSS"
+# Confirm NO external font CDN URLs
+grep "fonts.googleapis" dist/index.html && echo "FAIL: CDN font found" || echo "✓ no CDN fonts"
 
 # Moon integration
 cd ..
@@ -474,7 +489,8 @@ grep "SARIF" dist/index.html && echo "✓ SARIF mention"
 grep -c 'rel="noopener noreferrer"' dist/index.html | awk '{print "noopener links:", $1}' && echo "✓"
 grep "Apache-2.0" dist/index.html && echo "✓ license in footer"
 grep "<footer" dist/index.html && echo "✓ semantic footer element"
-grep "stargazers_count\|stars" dist/index.html && echo "✓ GitHub stars wired"
+grep "stars on GitHub\|Star on GitHub" dist/index.html && echo "✓ GitHub stars rendered (count or fallback)"
+# Note: 'stargazers_count' is an Astro frontmatter variable — it never appears in rendered HTML
 ```
 
 **Checkpoint:** CI section, GitHub Action YAML, footer, noopener links, semantic footer all present.
@@ -598,9 +614,19 @@ Result: Email capture form with full state machine.
   - Move below-fold section CSS to `<link rel="stylesheet" media="print" onload="this.media='all'">` (deferred)
 
 - [ ] **6.2** Verify hero image optimization:
-  - `<Picture />` component auto-generates AVIF + WebP
-  - Verify `loading="eager" fetchpriority="high"` on hero image only
-  - Verify AVIF < 40kb, WebP < 50kb in `dist/` (check actual generated files)
+  - The "hero image" is the `<Picture>` inside `TerminalCard.astro` (doctor-overview.webp with `loading="eager" fetchpriority="high"`)
+  - `<Picture />` component auto-generates AVIF + WebP from `src/assets/screenshots/doctor-overview.webp`
+  - Verify attributes in built output:
+    ```bash
+    grep "fetchpriority" dist/index.html && echo "✓ fetchpriority=high on hero image"
+    grep 'loading="eager"' dist/index.html | head -3 && echo "✓ eager loading set"
+    # Verify only ONE image has eager loading (all others must be lazy)
+    grep -c 'loading="eager"' dist/index.html | awk '{if($1==1) print "✓ exactly 1 eager image"; else print "WARN: " $1 " eager images"}'
+    ```
+  - Verify AVIF output exists and check sizes:
+    ```bash
+    find dist/_astro -name "*.avif" | xargs ls -lh 2>/dev/null | awk '{print $5, $9}'
+    ```
 
 - [ ] **6.3** Verify all below-fold images:
   - All use `<Picture />` with explicit `width` and `height`
@@ -883,7 +909,13 @@ test(web): responsive refinement + cross-browser verification
 
 - [ ] **9.4** Update Worker to route `/` → landing origin:
   - Add `LANDING_ORIGIN` environment variable: set to `https://charter-landing.pages.dev`
-  - Add route handler for `/` (and assets like `/_astro/*`, `/fonts/*`, `/icons/*`, `/screenshots/*`, `/favicon.svg`, `/og.svg`)
+  - Add route handler for `/` and all Cloudflare Pages static assets:
+    - `/_astro/*` — hashed JS/CSS/image bundles (Astro build output)
+    - `/icons/*` — vendor SVG icons (from `web/public/icons/`)
+    - `/favicon.svg` — favicon
+    - `/og.png` — OG image (PNG, not SVG)
+    - `/apple-touch-icon.svg`, `/manifest.json` — PWA assets
+    - Note: fonts are **base64 in CSS** (no `/fonts/*` path exists); screenshots are in `/_astro/*` (hashed by Astro build)
   - Preserve existing Mintlify routes unchanged
   - Test locally with `wrangler dev` before deploying
 
