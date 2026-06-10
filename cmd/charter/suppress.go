@@ -9,9 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"charm.land/lipgloss/v2"
 	"github.com/spf13/cobra"
 	"go.use-charter.dev/charter/internal/repository"
 	"go.use-charter.dev/charter/internal/suppress"
+	"go.use-charter.dev/charter/internal/terminal"
 )
 
 var (
@@ -22,6 +24,8 @@ var (
 func newSuppressCommand() *cobra.Command {
 	var path, reason, expires, approver string
 	var dryRun bool
+	var colorFlag string
+	var noColor bool
 
 	cmd := &cobra.Command{
 		Use:   "suppress <RULE-ID>",
@@ -52,24 +56,74 @@ func newSuppressCommand() *cobra.Command {
 				return commandExitError{message: err.Error(), exitCode: 2}
 			}
 
+			mode, merr := resolveColorMode(colorFlag, noColor)
+			if merr != nil {
+				return commandExitError{message: merr.Error(), exitCode: 2}
+			}
+			caps, pal := terminalContext(cmd, "", mode)
+
+			st := func(tok terminal.Token) lipgloss.Style {
+				resolved := pal.Resolve(tok)
+				s := lipgloss.NewStyle()
+				if resolved.HasColor() {
+					s = s.Foreground(resolved.Color)
+				}
+				if resolved.Bold {
+					s = s.Bold(true)
+				}
+				if resolved.Faint {
+					s = s.Faint(true)
+				}
+				if resolved.Reverse {
+					s = s.Reverse(true)
+				}
+				return s
+			}
+
 			w := cmd.OutOrStdout()
-			if warn != "" {
-				_, _ = fmt.Fprintln(w, "warning: "+warn)
+
+			if caps.ColorEnabled() {
+				ruleStyled := st(terminal.TextInfo).Bold(true).Render(entry.Rule)
+				label := func(name string) string {
+					return st(terminal.TextTertiary).Render(fmt.Sprintf("  %-10s", name))
+				}
+				val := func(v string) string { return st(terminal.TextSecondary).Render(v) }
+
+				_, _ = fmt.Fprintln(w, st(terminal.TextSecondary).Render("suppress ")+ruleStyled)
+				_, _ = fmt.Fprintln(w, label("reason:")+val(entry.Reason))
+				_, _ = fmt.Fprintln(w, label("expires:")+val(entry.Expires))
+				if entry.Approver != "" {
+					_, _ = fmt.Fprintln(w, label("approver:")+val(entry.Approver))
+				}
+				_, _ = fmt.Fprintln(w, st(terminal.TextTertiary).Render(strings.Repeat("─", 44)))
+				if dryRun {
+					_, _ = fmt.Fprintln(w, st(terminal.TextWarning).Render("dry run — "+suppress.File+" not written"))
+				} else {
+					// #nosec G306 -- governance config is meant to be world-readable and committed.
+					if err := os.WriteFile(filepath.Join(root, suppress.File), out, 0o644); err != nil {
+						return commandExitError{message: err.Error(), exitCode: 2}
+					}
+					_, _ = fmt.Fprintln(w, st(terminal.TextSuccess).Render("✓ written  "+suppress.File))
+				}
+			} else {
+				if warn != "" {
+					_, _ = fmt.Fprintln(w, "warning: "+warn)
+				}
+				_, _ = fmt.Fprintf(w, "suppress %s\n  reason:   %s\n", entry.Rule, entry.Reason)
+				_, _ = fmt.Fprintf(w, "  expires:  %s\n", entry.Expires)
+				if entry.Approver != "" {
+					_, _ = fmt.Fprintf(w, "  approver: %s\n", entry.Approver)
+				}
+				if dryRun {
+					_, _ = fmt.Fprintf(w, "(dry run — %s not written)\n", suppress.File)
+					return nil
+				}
+				// #nosec G306 -- governance config is meant to be world-readable and committed.
+				if err := os.WriteFile(filepath.Join(root, suppress.File), out, 0o644); err != nil {
+					return commandExitError{message: err.Error(), exitCode: 2}
+				}
+				_, _ = fmt.Fprintf(w, "written %s\n", suppress.File)
 			}
-			_, _ = fmt.Fprintf(w, "suppress %s\n  reason:   %s\n", entry.Rule, entry.Reason)
-			_, _ = fmt.Fprintf(w, "  expires:  %s\n", entry.Expires)
-			if entry.Approver != "" {
-				_, _ = fmt.Fprintf(w, "  approver: %s\n", entry.Approver)
-			}
-			if dryRun {
-				_, _ = fmt.Fprintf(w, "(dry run — %s not written)\n", suppress.File)
-				return nil
-			}
-			// #nosec G306 -- governance config is meant to be world-readable and committed.
-			if err := os.WriteFile(filepath.Join(root, suppress.File), out, 0o644); err != nil {
-				return commandExitError{message: err.Error(), exitCode: 2}
-			}
-			_, _ = fmt.Fprintf(w, "written %s\n", suppress.File)
 			return nil
 		},
 	}
@@ -79,6 +133,8 @@ func newSuppressCommand() *cobra.Command {
 	cmd.Flags().StringVar(&expires, "expires", "90d", "expiry: a duration (e.g. 90d), an ISO date (YYYY-MM-DD), or 'permanent'")
 	cmd.Flags().StringVar(&approver, "approver", "", "approver handle (required for a permanent waiver to be honored)")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "print the entry without writing the file")
+	cmd.Flags().StringVar(&colorFlag, "color", "auto", "color output: auto, always, or never")
+	cmd.Flags().BoolVar(&noColor, "no-color", false, "disable color (equivalent to --color=never; wins over --color)")
 	return cmd
 }
 
