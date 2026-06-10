@@ -370,8 +370,41 @@ if (existsSync(fnApiPath)) {
   await shot(f, join(screenshotsDir, "init-output.webp"));
 }
 
-// 5. HTML report
-console.log("\n📸 5/5  HTML report");
+// 5. explain AE-CTX-001
+console.log("\n📸 5/7  explain AE-CTX-001");
+{
+  const raw = runCharter("explain", "AE-CTX-001");
+  const f = join(tmpDir, "explain.html");
+  writeFileSync(f, html("~/projects/my-platform", "charter explain AE-CTX-001", highlight(raw)));
+  await shot(f, join(screenshotsDir, "explain-output.webp"));
+}
+
+// 6. suppress --dry-run
+if (existsSync(fnApiPath)) {
+  console.log("\n📸 6/7  suppress --dry-run");
+  const raw = runCharter(
+    "suppress", "AE-CI-002",
+    "--reason", "CI integration scheduled for next sprint",
+    "--expires", "90d",
+    "--path", fnApiPath,
+    "--dry-run",
+  );
+  const f = join(tmpDir, "suppress.html");
+  writeFileSync(f, html("~/work/backend-api", 'charter suppress AE-CI-002 --reason "..." --expires 90d --dry-run', highlight(raw)));
+  await shot(f, join(screenshotsDir, "suppress-output.webp"));
+}
+
+// 7. version
+console.log("\n📸 7/7  version");
+{
+  const raw = runCharter("version");
+  const f = join(tmpDir, "version.html");
+  writeFileSync(f, html("~/projects/my-platform", "charter version", highlight(raw)));
+  await shot(f, join(screenshotsDir, "version-output.webp"));
+}
+
+// 8. HTML report
+console.log("\n📸 8/8  HTML report");
 const reportPath = join(tmpDir, "charter-report.html");
 runCharter("report", "--path", repoRoot, "--out", reportPath);
 if (existsSync(reportPath)) {
