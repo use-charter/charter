@@ -222,17 +222,10 @@ function html(cwd: string, cmd: string, body: string): string {
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+/* Transparent page — Playwright omitBackground:true makes corners transparent */
 html,body{background:transparent}
-/* The .wrap is what we screenshot — includes the bg + glow */
-.wrap{
-  display:inline-block;
-  padding:56px 64px;
-  background:
-    radial-gradient(ellipse 75% 65% at 12% 18%, rgba(37,99,235,0.30) 0%, transparent 56%),
-    radial-gradient(ellipse 55% 55% at 88% 82%, rgba(99,60,255,0.22) 0%, transparent 50%),
-    #08090f;
-  border-radius:20px;
-}
+/* .wrap = transparent padding container so box-shadow has room to render */
+.wrap{display:inline-block;padding:48px 52px;background:transparent}
 .win{
   width:760px;border-radius:12px;overflow:hidden;
   border:1px solid rgba(255,255,255,0.08);
@@ -294,15 +287,19 @@ async function getBrowser() {
 async function shot(htmlFile: string, outFile: string) {
   const b = await getBrowser();
   const p = await b.newPage();
-  // Extra-wide viewport so nothing clips
   await p.setViewportSize({ width: 1200, height: 2000 });
   await p.emulateMedia({ colorScheme: "dark" });
   await p.goto(`file://${htmlFile}`);
   await p.waitForTimeout(1800); // Google Fonts load
-  // Screenshot the .wrap element — includes background + rounded corners
   const el = await p.$(".wrap");
-  if (el) await el.screenshot({ path: outFile, type: "png" });
-  else await p.screenshot({ path: outFile, type: "png", fullPage: false });
+  if (el) {
+    // omitBackground: true → page background is transparent so border-radius
+    // corners and shadow edges anti-alias against transparent, giving a
+    // properly-rounded PNG with no square background.
+    await el.screenshot({ path: outFile, type: "png", omitBackground: true });
+  } else {
+    await p.screenshot({ path: outFile, type: "png", omitBackground: true, fullPage: false });
+  }
   await p.close();
   console.log(`   ✓ ${outFile.split("/").pop()}`);
 }
