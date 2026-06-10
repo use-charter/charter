@@ -238,7 +238,7 @@ function highlightDiff(raw: string): string {
     `<span style="color:${T.textWarning}">▸</span>  <span style="color:${T.textWarning}">dry run</span>  <span style="color:${T.textTertiary}">·  ${ruleCount} fix${ruleCount !== 1 ? "es" : ""} ready  ·  </span><span style="color:${T.textInfo}">charter fix</span><span style="color:${T.textTertiary}"> to apply</span>`,
   ].join("\n");
 
-  return blocks.join(`\n${DIV}\n`) + `\n\n${footer}`;
+  return `${blocks.join(`\n${DIV}\n`)}\n\n${footer}`;
 }
 
 // ─── explain renderer ─────────────────────────────────────────────────────
@@ -429,20 +429,6 @@ async function shot(htmlFile: string, outFile: string) {
   console.log(`   ✓ ${outFile.split("/").pop()}`);
 }
 
-async function shotUrl(url: string, outFile: string) {
-  const b = await getBrowser();
-  const ctx = await b.newContext({ deviceScaleFactor: 2 });
-  const p = await ctx.newPage();
-  await p.setViewportSize({ width: 1440, height: 900 });
-  await p.emulateMedia({ colorScheme: "dark" });
-  await p.goto(url);
-  await p.waitForTimeout(2000);
-  const buf = await p.screenshot({ type: "png", fullPage: false });
-  await toWebp(buf, outFile);
-  await ctx.close();
-  console.log(`   ✓ ${outFile.split("/").pop()}`);
-}
-
 // ─── Jobs ──────────────────────────────────────────────────────────────────
 const fnApiPath = `${HOME}/FN-Projects/fn-api-v3`;
 
@@ -546,8 +532,18 @@ console.log("\n📸 8/8  HTML report");
 const reportPath = join(tmpDir, "charter-report.html");
 runCharter("report", "--path", repoRoot, "--out", reportPath);
 if (existsSync(reportPath)) {
-  await shotUrl(`file://${reportPath}`, join(screenshotsDir, "report-html.webp"));
-  await shotUrl(`file://${reportPath}`, join(screenshotsDir, "report-overview.webp"));
+  await shot(reportPath, join(screenshotsDir, "report-full.webp"));
+  const b = await getBrowser();
+  const ctx = await b.newContext({ deviceScaleFactor: 2 });
+  const p = await ctx.newPage();
+  await p.setViewportSize({ width: 1440, height: 900 });
+  await p.emulateMedia({ colorScheme: "dark" });
+  await p.goto(`file://${reportPath}`);
+  await p.waitForTimeout(2000);
+  const buf = await p.screenshot({ type: "png", fullPage: false });
+  await toWebp(buf, join(screenshotsDir, "report-hero.webp"));
+  await ctx.close();
+  console.log(`   ✓ report-hero.webp`);
 }
 
 if (browser != null) await (browser as Awaited<ReturnType<typeof chromium.launch>>).close();
