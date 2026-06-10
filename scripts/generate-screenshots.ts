@@ -12,6 +12,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
+import sharp from "sharp";
 
 // Destructuring avoids noPropertyAccessFromIndexSignature without bracket notation
 const { HOME: rawHome = "/tmp", PATH: rawPath = "" } = process.env;
@@ -284,9 +285,15 @@ async function getBrowser() {
   return browser;
 }
 
+// Playwright PNG buffer → sharp lossless WebP.
+// Lossless WebP: bit-perfect quality like PNG, typically 25–35% smaller.
+async function toWebp(buf: Buffer, outFile: string): Promise<void> {
+  await sharp(buf).webp({ lossless: true }).toFile(outFile);
+}
+
 async function shot(htmlFile: string, outFile: string) {
   const b = await getBrowser();
-  // deviceScaleFactor:2 = retina density — lossless PNG at 2× pixels = crystal clear
+  // deviceScaleFactor:2 — retina 2× pixel density
   const ctx = await b.newContext({ deviceScaleFactor: 2 });
   const p = await ctx.newPage();
   await p.setViewportSize({ width: 1200, height: 2000 });
@@ -294,13 +301,12 @@ async function shot(htmlFile: string, outFile: string) {
   await p.goto(`file://${htmlFile}`);
   await p.waitForTimeout(1800); // Google Fonts load
   const el = await p.$(".wrap");
-  if (el) {
-    // omitBackground:true → transparent page bg → border-radius corners are
-    // transparent in the output PNG, not square-clipped to an opaque colour.
-    await el.screenshot({ path: outFile, type: "png", omitBackground: true });
-  } else {
-    await p.screenshot({ path: outFile, type: "png", omitBackground: true, fullPage: false });
-  }
+  // omitBackground:true → transparent page → border-radius corners are
+  // transparent pixels in the WebP, not clipped to an opaque square.
+  const buf = el
+    ? await el.screenshot({ type: "png", omitBackground: true })
+    : await p.screenshot({ type: "png", omitBackground: true, fullPage: false });
+  await toWebp(buf, outFile);
   await ctx.close();
   console.log(`   ✓ ${outFile.split("/").pop()}`);
 }
@@ -313,7 +319,8 @@ async function shotUrl(url: string, outFile: string) {
   await p.emulateMedia({ colorScheme: "dark" });
   await p.goto(url);
   await p.waitForTimeout(2000);
-  await p.screenshot({ path: outFile, type: "png", fullPage: false });
+  const buf = await p.screenshot({ type: "png", fullPage: false });
+  await toWebp(buf, outFile);
   await ctx.close();
   console.log(`   ✓ ${outFile.split("/").pop()}`);
 }
@@ -328,9 +335,9 @@ if (passData) {
   const body = renderDoctor(passData, "~/projects/my-platform");
   const f = join(tmpDir, "doctor-pass.html");
   writeFileSync(f, html("~/projects/my-platform", "charter doctor", body));
-  await shot(f, join(screenshotsDir, "doctor-overview.png"));
-  await shot(f, join(screenshotsDir, "doctor-tty.png"));
-  await shot(f, join(screenshotsDir, "quickstart-scan.png"));
+  await shot(f, join(screenshotsDir, "doctor-overview.webp"));
+  await shot(f, join(screenshotsDir, "doctor-tty.webp"));
+  await shot(f, join(screenshotsDir, "quickstart-scan.webp"));
 }
 
 // 2. doctor FAIL
@@ -341,7 +348,7 @@ if (existsSync(fnApiPath)) {
     const body = renderDoctor(failData, "~/work/backend-api");
     const f = join(tmpDir, "doctor-fail.html");
     writeFileSync(f, html("~/work/backend-api", "charter doctor", body));
-    await shot(f, join(screenshotsDir, "adopt-first-scan.png"));
+    await shot(f, join(screenshotsDir, "adopt-first-scan.webp"));
   }
 }
 
@@ -351,7 +358,7 @@ if (existsSync(fnApiPath)) {
   const raw = runCharter("fix", "--path", fnApiPath, "--dry-run");
   const f = join(tmpDir, "fix.html");
   writeFileSync(f, html("~/work/backend-api", "charter fix --dry-run", highlight(raw)));
-  await shot(f, join(screenshotsDir, "fix-dry-run.png"));
+  await shot(f, join(screenshotsDir, "fix-dry-run.webp"));
 }
 
 // 4. init --dry-run
@@ -360,7 +367,7 @@ if (existsSync(fnApiPath)) {
   const raw = runCharter("init", "--path", fnApiPath, "--dry-run");
   const f = join(tmpDir, "init.html");
   writeFileSync(f, html("~/work/backend-api", "charter init --dry-run", highlight(raw)));
-  await shot(f, join(screenshotsDir, "init-output.png"));
+  await shot(f, join(screenshotsDir, "init-output.webp"));
 }
 
 // 5. HTML report
@@ -368,15 +375,15 @@ console.log("\n📸 5/5  HTML report");
 const reportPath = join(tmpDir, "charter-report.html");
 runCharter("report", "--path", repoRoot, "--out", reportPath);
 if (existsSync(reportPath)) {
-  await shotUrl(`file://${reportPath}`, join(screenshotsDir, "report-html.png"));
-  await shotUrl(`file://${reportPath}`, join(screenshotsDir, "report-overview.png"));
+  await shotUrl(`file://${reportPath}`, join(screenshotsDir, "report-html.webp"));
+  await shotUrl(`file://${reportPath}`, join(screenshotsDir, "report-overview.webp"));
 }
 
 if (browser != null) await (browser as Awaited<ReturnType<typeof chromium.launch>>).close();
 
 console.log("\n✅ Done:");
 for (const f of readdirSync(screenshotsDir)) {
-  if (f.endsWith(".png")) {
+  if (f.endsWith(".webp")) {
     const kb = Math.round(statSync(join(screenshotsDir, f)).size / 1024);
     console.log(`  ${f.padEnd(40)} ${kb}kb`);
   }
