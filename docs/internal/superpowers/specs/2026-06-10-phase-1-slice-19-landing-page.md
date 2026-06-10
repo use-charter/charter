@@ -209,19 +209,78 @@ All external links: `rel="noopener noreferrer"`.
 
 ## Visual Direction
 
+### Color Mode
+
+**Decision: dark-first, system-aware.** The page defaults to dark. Honors `prefers-color-scheme: light` via CSS custom property overrides — no JS toggle, no manual switch.
+
+**`<meta name="color-scheme" content="dark light" />`** — declare in `<head>`. This tells browser to use its dark UI chrome by default, while allowing light fallback.
+
+**Implementation:** Two CSS layers:
+1. Root tokens: dark values by default (`:root { --color-bg: #0D1117; ... }`)
+2. Light overrides: `@media (prefers-color-scheme: light) { :root { --color-bg: #ffffff; --color-text: #0D1117; ... } }`
+
+All components use `var(--color-*)` tokens only — never raw hex values. This ensures both modes work automatically.
+
 ### Design System
 
 **Source of truth:** `docs/internal/designs/DESIGN-TOKENS.md` and `docs/internal/designs/brand/README.md`. Do NOT re-invent; extract exactly.
 
-**Color palette:**
+**Color palette (dark mode defaults):**
 
 | Token | Value | Use |
 |-------|-------|-----|
-| Primary surface | `#0D1117` | Page background (dark-first) |
-| Primary accent | `#2563EB` | Buttons, links, active states |
-| Success (score ≥80) | `#4ade80` | Terminal score green zone |
-| Warning (score 60–79) | `#fbbf24` | Terminal score amber zone |
-| Danger (score <60) | `#f87171` | Terminal score red zone |
+| `--color-bg` | `#0D1117` | Page background |
+| `--color-surface` | `#161b22` | Card surfaces |
+| `--color-text` | `#e6edf3` | Primary text |
+| `--color-text-muted` | `#8b949e` | Secondary text |
+| `--color-accent` | `#2563EB` | Buttons, links, active states |
+| `--color-success` | `#4ade80` | Score ≥80 (green zone) |
+| `--color-warning` | `#fbbf24` | Score 60–79 (amber zone) |
+| `--color-danger` | `#f87171` | Score <60 (red zone) |
+| `--color-border` | `rgba(255,255,255,0.08)` | Subtle borders |
+
+**Light mode overrides (under `@media (prefers-color-scheme: light)`):**
+
+| Token | Light value |
+|-------|------------|
+| `--color-bg` | `#ffffff` |
+| `--color-surface` | `#f6f8fa` |
+| `--color-text` | `#0D1117` |
+| `--color-text-muted` | `#57606a` |
+| `--color-border` | `rgba(0,0,0,0.08)` |
+
+Accent and score-zone colors remain identical in both modes (already meet contrast in both).
+
+### Vendor Icon Adaptation (Color Mode)
+
+Each icon SVG has a hardcoded fill. Most are dark-fill and invisible on the dark background. CSS `filter` adapts each icon per mode. **No SVG edits required.**
+
+| Icon | SVG fill | Dark bg behavior | Light bg behavior | CSS class |
+|------|----------|-------------------|-------------------|-----------|
+| `claude-ai.svg` | `#d97757` orange | ✅ visible as-is | ✅ visible as-is | `icon--colored` |
+| `google-gemini.svg` | blue gradients | ✅ visible as-is | ✅ visible as-is | `icon--colored` |
+| `chatgpt.svg` | `#fff` white | ✅ visible as-is | ❌ invisible → apply `filter: brightness(0)` | `icon--light-invert` |
+| `grok.svg` | no fill (inherits black) | ❌ invisible → apply `filter: brightness(0) invert(1)` | ✅ visible as-is | `icon--dark-invert` |
+| `github-copilot.svg` | no fill (inherits black) | ❌ invisible → apply `filter: brightness(0) invert(1)` | ✅ visible as-is | `icon--dark-invert` |
+| `cursor.svg` | `#26251e` near-black | ❌ invisible → apply `filter: brightness(0) invert(1)` | ✅ visible as-is | `icon--dark-invert` |
+| `windsurf.svg` | `#0b100f` near-black | ❌ invisible → apply `filter: brightness(0) invert(1)` | ✅ visible as-is | `icon--dark-invert` |
+| `codex.svg` | `#111` black | ❌ invisible → apply `filter: brightness(0) invert(1)` | ✅ visible as-is | `icon--dark-invert` |
+
+**CSS rules (in `design-tokens.css` or `global.css`):**
+```css
+/* Dark mode (default): invert dark-fill icons to white */
+.icon--dark-invert  { filter: brightness(0) invert(1); }
+.icon--light-invert { /* no filter needed in dark mode */ }
+.icon--colored      { /* no filter */ }
+
+/* Light mode: invert chatgpt's white fill to black; restore dark-fill icons */
+@media (prefers-color-scheme: light) {
+  .icon--dark-invert  { filter: none; }
+  .icon--light-invert { filter: brightness(0); }
+}
+```
+
+This covers all 8 icons with no SVG modifications.
 
 **Typography (weights confirmed in `DESIGN-TOKENS.md`):**
 
@@ -476,6 +535,15 @@ All items must pass before marking "Done."
 - [ ] All external links have `rel="noopener noreferrer"`
 - [ ] GitHub stars count rendered (or fallback text, never hardcoded number)
 - [ ] Zero console errors or warnings in `bun run build` output and browser devtools
+
+**Color Mode**
+- [ ] `<meta name="color-scheme" content="dark light" />` present in `<head>`
+- [ ] Dark mode (default): all text readable, all 8 vendor icons visible, accent/score colors correct
+- [ ] Light mode (`prefers-color-scheme: light`): all text readable, all 8 vendor icons visible
+- [ ] `icon--dark-invert` CSS filter applied to grok, copilot, cursor, windsurf, codex icons (visible in dark, invisible in light without filter)
+- [ ] `icon--light-invert` CSS filter applied to chatgpt icon (visible in dark, invisible in light without filter)
+- [ ] Terminal card: background token used (not hardcoded hex) — ensures readable in both modes
+- [ ] Test in Chrome DevTools: Rendering → Emulate `prefers-color-scheme: dark` and `light` — both modes fully usable
 
 **Assets & Brand**
 - [ ] Fonts self-hosted (served from `web/public/fonts/`); no CDN link in HTML

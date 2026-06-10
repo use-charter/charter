@@ -86,6 +86,17 @@ Before dispatching next phase:
 - [ ] **1.8** Create `web/src/styles/design-tokens.css`:
   - Extract ALL `--color-*`, `--font-*`, `--space-*`, `--radius-*`, `--shadow-*` variables verbatim from `docs/internal/designs/DESIGN-TOKENS.md`
   - Add motion tokens: `--ease-enter: cubic-bezier(0.16, 1, 0.3, 1)`, `--ease-exit: cubic-bezier(0.55, 0, 1, 0.45)`, `--duration-fast: 120ms`, `--duration-normal: 250ms`, `--duration-slow: 400ms`
+  - Dark mode defaults in `:root { ... }`
+  - Light mode overrides in `@media (prefers-color-scheme: light) { :root { ... } }` with exact values from spec §Color Mode
+  - Icon adaptation CSS classes (from spec §Vendor Icon Adaptation):
+    ```css
+    .icon--dark-invert  { filter: brightness(0) invert(1); }
+    .icon--light-invert { /* no filter in dark mode */ }
+    @media (prefers-color-scheme: light) {
+      .icon--dark-invert  { filter: none; }
+      .icon--light-invert { filter: brightness(0); }
+    }
+    ```
 - [ ] **1.9** Create `web/src/styles/global.css`:
   - Import `design-tokens.css` and `fonts.css`
   - CSS reset (box-sizing, margin, padding zero)
@@ -95,6 +106,7 @@ Before dispatching next phase:
   - Responsive breakpoints comment map: 320/375/768/1024/1440/1920
 - [ ] **1.10** Create `web/src/layouts/Base.astro` with:
   - All meta tags from spec §Critical Dependencies §5 (exact attributes)
+  - `<meta name="color-scheme" content="dark light" />` (required — tells browser color mode)
   - `<link rel="preload">` for Ruda 800 font-face and Atkinson Mono 400 font-face
   - Import `global.css`
   - `<slot />` for page content
@@ -124,6 +136,8 @@ grep "font-face" dist/index.html && echo "✓ fonts embedded"
 grep "canonical" dist/index.html && echo "✓ canonical link"
 grep "preload" dist/index.html && echo "✓ preload links"
 grep "favicon" dist/index.html && echo "✓ favicon"
+grep "color-scheme" dist/index.html && echo "✓ color-scheme meta present"
+grep "prefers-color-scheme" dist/index.html && echo "✓ light mode overrides in CSS"
 
 # Moon integration
 cd ..
@@ -375,16 +389,19 @@ Result: Mid-page content rendered with locked copy.
     ---
     ```
   - Stars render: `{stars ? `⭐ ${stars} stars` : 'Star on GitHub'}` (fallback is safe; never hardcode)
-  - Vendor icon grid — all 8 SVGs confirmed, render all as `<img>`:
+  - Vendor icon grid — all 8 SVGs confirmed. Apply CSS class per icon for dark/light mode adaptation (see spec §Vendor Icon Adaptation):
     ```html
-    <img src="/icons/claude-ai.svg"      alt="Claude Code" width="32" height="32" />
-    <img src="/icons/chatgpt.svg"        alt="ChatGPT"     width="32" height="32" />
-    <img src="/icons/grok.svg"           alt="Grok"        width="32" height="32" />
-    <img src="/icons/cursor.svg"         alt="Cursor"      width="32" height="32" />
-    <img src="/icons/windsurf.svg"       alt="Windsurf"    width="32" height="32" />
-    <img src="/icons/github-copilot.svg" alt="Copilot"     width="32" height="32" />
-    <img src="/icons/google-gemini.svg"  alt="Gemini"      width="32" height="32" />
-    <img src="/icons/codex.svg"          alt="Codex"       width="32" height="32" />
+    <!-- icon--colored: no filter needed, brand colors work in both modes -->
+    <img src="/icons/claude-ai.svg"      class="vendor-icon icon--colored"      alt="Claude Code" width="32" height="32" />
+    <img src="/icons/google-gemini.svg"  class="vendor-icon icon--colored"      alt="Gemini"      width="32" height="32" />
+    <!-- icon--light-invert: white fill; needs brightness(0) in light mode -->
+    <img src="/icons/chatgpt.svg"        class="vendor-icon icon--light-invert" alt="ChatGPT"     width="32" height="32" />
+    <!-- icon--dark-invert: dark/black fill; needs invert in dark mode -->
+    <img src="/icons/grok.svg"           class="vendor-icon icon--dark-invert"  alt="Grok"        width="32" height="32" />
+    <img src="/icons/cursor.svg"         class="vendor-icon icon--dark-invert"  alt="Cursor"      width="32" height="32" />
+    <img src="/icons/windsurf.svg"       class="vendor-icon icon--dark-invert"  alt="Windsurf"    width="32" height="32" />
+    <img src="/icons/github-copilot.svg" class="vendor-icon icon--dark-invert"  alt="Copilot"     width="32" height="32" />
+    <img src="/icons/codex.svg"          class="vendor-icon icon--dark-invert"  alt="Codex"       width="32" height="32" />
     ```
   - Do NOT fabricate "Used by X teams at [logos]"
 
@@ -672,6 +689,19 @@ perf(web): inline critical CSS, verify all performance budgets
   # In Chrome DevTools: Rendering → Emulate CSS prefers-reduced-motion: reduce
   # Verify: no animations play, page still fully usable
   ```
+
+- [ ] **7.9** Verify color mode (dark + light):
+  - Chrome DevTools → Rendering → Emulate `prefers-color-scheme: dark`
+    - All text readable; all 8 vendor icons visible
+    - `icon--dark-invert` icons appear white (grok, copilot, cursor, windsurf, codex)
+    - `icon--light-invert` chatgpt icon visible as white
+    - Score zone colors (green/amber/red) readable on dark bg
+  - Chrome DevTools → Rendering → Emulate `prefers-color-scheme: light`
+    - All text readable on light bg
+    - `icon--dark-invert` icons appear dark (filter removed) ✓
+    - `icon--light-invert` chatgpt icon now black (filter: brightness(0)) ✓
+    - Accent color (#2563EB) readable on light bg (passes 4.5:1)
+  - Verify `<meta name="color-scheme" content="dark light">` in `dist/index.html`
 
 - [ ] **7.7** Manual keyboard test:
   - Open `http://localhost:4321` in browser
