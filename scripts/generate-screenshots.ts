@@ -13,10 +13,10 @@ import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "nod
 import { join, resolve } from "node:path";
 import { chromium } from "playwright";
 
-// biome-ignore lint/complexity/useLiteralKeys: noPropertyAccessFromIndexSignature
-const HOME = process.env["HOME"] ?? "/tmp";
-// biome-ignore lint/complexity/useLiteralKeys: noPropertyAccessFromIndexSignature
-const PATH_ENV = `/opt/homebrew/bin:/usr/bin:/bin:${process.env["PATH"] ?? ""}`;
+// Destructuring avoids noPropertyAccessFromIndexSignature without bracket notation
+const { HOME: rawHome = "/tmp", PATH: rawPath = "" } = process.env;
+const HOME: string = rawHome;
+const PATH_ENV = `/opt/homebrew/bin:/usr/bin:/bin:${rawPath}`;
 
 const repoRoot = resolve(import.meta.dirname, "..");
 const screenshotsDir = join(repoRoot, "docs", "product", "images", "screenshots");
@@ -51,23 +51,31 @@ const T = {
   bgSecondary:   "#161b22",
 };
 
-// Severity → color mapping
-const SEV: Record<string, string> = {
+// satisfies Record<string,string> lets TypeScript infer the specific key union
+// so dot notation is valid (no index signature) while still checking values.
+const SEV = {
   BLOCKER:       T.textDanger,
   HIGH:          T.textWarning,
   MEDIUM:        "#fcd34d",
   LOW:           T.textInfo,
   INFORMATIONAL: T.textTertiary,
-};
+} satisfies Record<string, string>;
 
-// Border color per severity (the │ bar)
-const SEV_BORDER: Record<string, string> = {
-  BLOCKER: "#ef4444",
-  HIGH:    "#f59e0b",
-  MEDIUM:  "#eab308",
-  LOW:     "#3b82f6",
+const SEV_BORDER = {
+  BLOCKER:       "#ef4444",
+  HIGH:          "#f59e0b",
+  MEDIUM:        "#eab308",
+  LOW:           "#3b82f6",
   INFORMATIONAL: "#374151",
-};
+} satisfies Record<string, string>;
+
+// Dynamic runtime lookups (severity value comes from JSON at runtime)
+function sevFg(sev: string): string {
+  return (SEV as Record<string, string>)[sev] ?? T.textPrimary;
+}
+function sevBar(sev: string): string {
+  return (SEV_BORDER as Record<string, string>)[sev] ?? T.textTertiary;
+}
 
 // ─── Severity icon (matches render.go unicodeGlyphs) ──────────────────────
 function sevIcon(sev: string): string {
@@ -120,23 +128,24 @@ function renderDoctor(d: DoctorResult, displayName: string): string {
   if (d.findings.length > 0) {
     lines.push(c(T.textSecondary, "Findings"));
     for (const f of d.findings) {
-      const sevColor  = SEV[f.severity]        ?? T.textPrimary;
-      const barColor  = SEV_BORDER[f.severity] ?? T.textTertiary;
-      const bar       = c(barColor, "│") + " ";
-      const icon      = c(sevColor, sevIcon(f.severity));
-      const badge     = c(sevColor, f.severity, true);
-      const ruleId    = c(T.textInfo, f.rule_id, true);
-      const cat       = f.category ? "  " + c(T.textTertiary, f.category) : "";
-      lines.push(bar + icon + " " + badge + "  " + ruleId + cat);
-      lines.push(bar + c(T.textPrimary, f.summary));
+      const fgColor  = sevFg(f.severity);
+      const bgColor  = sevBar(f.severity);
+      const bar      = `${c(bgColor, "│")} `;
+      const icon     = c(fgColor, sevIcon(f.severity));
+      const badge    = c(fgColor, f.severity, true);
+      const ruleId   = c(T.textInfo, f.rule_id, true);
+      const cat      = f.category ? `  ${c(T.textTertiary, f.category)}` : "";
+      lines.push(`${bar}${icon} ${badge}  ${ruleId}${cat}`);
+      lines.push(`${bar}${c(T.textPrimary, f.summary)}`);
       for (const loc of f.locations ?? []) {
-        lines.push(bar + c(T.textTertiary, "loc ") + c(T.textTertiary, loc.path + (loc.line > 0 ? `:${loc.line}` : "")));
+        const locText = loc.line > 0 ? `${loc.path}:${loc.line}` : loc.path;
+        lines.push(`${bar}${c(T.textTertiary, "loc ")}${c(T.textTertiary, locText)}`);
       }
       for (const ev of (f.evidence ?? []).slice(0, 3)) {
-        lines.push(bar + c(T.textTertiary, "• ") + c(T.textSecondary, ev));
+        lines.push(`${bar}${c(T.textTertiary, "• ")}${c(T.textSecondary, ev)}`);
       }
       if (f.remediation) {
-        lines.push(bar + c(T.textTertiary, "fix ") + c(T.textSecondary, f.remediation));
+        lines.push(`${bar}${c(T.textTertiary, "fix ")}${c(T.textSecondary, f.remediation)}`);
       }
       lines.push("");
     }
@@ -145,14 +154,14 @@ function renderDoctor(d: DoctorResult, displayName: string): string {
   // Summary: "Checked 18 rules · N findings · 1 BLOCKER"
   const dot = c(T.textTertiary, " · ");
   const total = d.findings.length;
-  const worstSev = d.findings[0]?.severity ?? "INFORMATIONAL";
-  const countColor = total > 0 ? (SEV[worstSev] ?? T.textPrimary) : T.textSuccess;
+  const worstSev   = d.findings[0]?.severity ?? "INFORMATIONAL";
+  const countColor = total > 0 ? sevFg(worstSev) : T.textSuccess;
   const countText  = total > 0 ? `${total} finding${total > 1 ? "s" : ""}` : "0 findings ✓";
-  let summary = c(T.textSecondary, "Checked 18 rules") + dot + c(countColor, countText);
-  if (d.summary.blocker > 0) summary += dot + c(SEV["BLOCKER"] ?? T.textDanger, `${d.summary.blocker} BLOCKER`, true);
-  if (d.summary.high > 0) summary += dot + c(SEV["HIGH"] ?? T.textWarning, `${d.summary.high} HIGH`);
-  if (d.summary.medium > 0) summary += dot + c(SEV["MEDIUM"] ?? "#fcd34d", `${d.summary.medium} MEDIUM`);
-  if (d.summary.low > 0) summary += dot + c(SEV["LOW"] ?? T.textInfo, `${d.summary.low} LOW`);
+  let summary = `${c(T.textSecondary, "Checked 18 rules")}${dot}${c(countColor, countText)}`;
+  if (d.summary.blocker > 0) summary += `${dot}${c(SEV.BLOCKER, `${d.summary.blocker} BLOCKER`, true)}`;
+  if (d.summary.high > 0)    summary += `${dot}${c(SEV.HIGH, `${d.summary.high} HIGH`)}`;
+  if (d.summary.medium > 0)  summary += `${dot}${c(SEV.MEDIUM, `${d.summary.medium} MEDIUM`)}`;
+  if (d.summary.low > 0)     summary += `${dot}${c(SEV.LOW, `${d.summary.low} LOW`)}`;
   lines.push(summary);
 
   // Scorecard: "readiness by category"
@@ -160,11 +169,11 @@ function renderDoctor(d: DoctorResult, displayName: string): string {
     lines.push("");
     lines.push(c(T.textSecondary, "readiness by category"));
     for (const cat of d.categories) {
-      const sc = SEV[cat.worst_severity] ?? T.textTertiary;
+      const sc   = sevFg(cat.worst_severity);
       const name = c(T.textSecondary, `  ${cat.category.padEnd(12)}`);
       const ded  = c(sc, `−${cat.deduction.toString().padEnd(3)}`);
       const det  = c(T.textTertiary, `${cat.findings} finding(s), worst ${cat.worst_severity}`);
-      lines.push(name + " " + ded + " " + det);
+      lines.push(`${name} ${ded} ${det}`);
     }
   }
 
@@ -173,14 +182,14 @@ function renderDoctor(d: DoctorResult, displayName: string): string {
   lines.push(DIVIDER);
   const scoreTok  = d.passed ? T.textSuccess : T.textDanger;
   const verdict   = d.passed ? "PASS ✓" : "FAIL ✗";
-  const scoreNum  = c(scoreTok, String(d.score.final), true) + c(T.textTertiary, "/100");
+  const scoreNum  = `${c(scoreTok, String(d.score.final), true)}${c(T.textTertiary, "/100")}`;
   const bar24     = scoreBar(d.score.final, scoreTok);
   const badge2    = c(scoreTok, verdict, true);
-  lines.push(c(T.textSecondary, "Score ") + scoreNum + "  " + bar24 + "  " + badge2);
+  lines.push(`${c(T.textSecondary, "Score ")}${scoreNum}  ${bar24}  ${badge2}`);
   if (d.score.final < d.score.base) {
-    lines.push("      " + c(T.textDanger, `cap   score capped at ${d.score.final}`));
+    lines.push(`      ${c(T.textDanger, `cap   score capped at ${d.score.final}`)}`);
   }
-  lines.push("      " + c(T.textTertiary, `threshold ${d.threshold}`));
+  lines.push(`      ${c(T.textTertiary, `threshold ${d.threshold}`)}`);
 
   return lines.join("\n");
 }
@@ -198,8 +207,8 @@ function highlight(raw: string): string {
     .replace(/^(\+[^+].*)$/gm, `<span style="color:${T.textSuccess}">$1</span>`)
     .replace(/^(-[^-].*)$/gm, `<span style="color:${T.textDanger}">$1</span>`)
     .replace(/^(@@.+@@.*)$/gm, `<span style="color:${T.textInfo}">$1</span>`)
-    .replace(/(\✓)/g, `<span style="color:${T.textSuccess}">$1</span>`)
-    .replace(/(\✗|✘)/g, `<span style="color:${T.textDanger}">$1</span>`)
+    .replace(/(✓)/g, `<span style="color:${T.textSuccess}">$1</span>`)
+    .replace(/(✗|✘)/g, `<span style="color:${T.textDanger}">$1</span>`)
     .replace(/(─{3,}|-{3,})/g, `<span style="color:#21262d">$1</span>`)
     .replace(/(›)/g, `<span style="color:${T.textInfo}">$1</span>`);
 }
