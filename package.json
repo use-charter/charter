@@ -8,6 +8,7 @@
     "@types/node": "24.12.4",
     "marked": "18.0.5",
     "playwright": "^1.60.0",
+    "sharp": "^0.34.5",
     "typescript": "6.0.3"
   }
 }
