@@ -251,7 +251,7 @@ function renderInit(displayName: string, actions: InitAction[]): string {
 
   lines.push(`${c(T.textInfo, "[C]", true)} ${c(T.textInfo, "charter", true)}${c(T.textTertiary, `  v1.0.0  ·  ${displayName}`)}`);
   lines.push("");
-  lines.push(c(T.textSecondary, "Creating") + "  " + c(T.textTertiary, "(dry run)"));
+  lines.push(`${c(T.textSecondary, "Creating")}  ${c(T.textTertiary, "(dry run)")}`);
 
   for (const a of actions) {
     const name   = c("#79c0ff", a.path);
