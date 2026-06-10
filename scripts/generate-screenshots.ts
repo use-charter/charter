@@ -195,23 +195,104 @@ function renderDoctor(d: DoctorResult, displayName: string): string {
   return lines.join("\n");
 }
 
-// ─── Syntax highlighter for init/fix plain text output ────────────────────
-function highlight(raw: string): string {
+// ─── Diff highlighter (for fix --dry-run) ────────────────────────────────
+function highlightDiff(raw: string): string {
   const safe = raw.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return safe
-    .replace(/(\bcharter\b)/g, `<span style="color:${T.textInfo};font-weight:600">$1</span>`)
     .replace(/\b(AE-[A-Z]+-\d+)\b/g, `<span style="color:${T.textInfo};font-weight:600">$1</span>`)
-    .replace(/\b(BLOCKER)\b/g, `<span style="color:${T.textDanger};font-weight:600">$1</span>`)
-    .replace(/\b(HIGH)\b/g, `<span style="color:${T.textWarning};font-weight:600">$1</span>`)
-    .replace(/\b(MEDIUM)\b/g, `<span style="color:#fcd34d">$1</span>`)
-    .replace(/\b(LOW)\b/g, `<span style="color:${T.textInfo}">$1</span>`)
     .replace(/^(\+[^+].*)$/gm, `<span style="color:${T.textSuccess}">$1</span>`)
     .replace(/^(-[^-].*)$/gm, `<span style="color:${T.textDanger}">$1</span>`)
     .replace(/^(@@.+@@.*)$/gm, `<span style="color:${T.textInfo}">$1</span>`)
-    .replace(/(✓)/g, `<span style="color:${T.textSuccess}">$1</span>`)
-    .replace(/(✗|✘)/g, `<span style="color:${T.textDanger}">$1</span>`)
     .replace(/(─{3,}|-{3,})/g, `<span style="color:#21262d">$1</span>`)
     .replace(/(›)/g, `<span style="color:${T.textInfo}">$1</span>`);
+}
+
+// ─── explain renderer (mirrors explain.go textStyled exactly) ────────────
+interface ExplainEntry { ID: string; Name: string; Category: string; ShortDescription: string; HelpURI: string; Severity?: string; }
+
+function renderExplain(e: ExplainEntry): string {
+  const sev = e.Severity ?? "";
+  const sevColor = sev ? (SEV[sev as keyof typeof SEV] ?? T.textTertiary) : T.textTertiary;
+  const lines: string[] = [];
+  lines.push(`${c(T.textInfo, e.ID, true)}  ${c(T.textPrimary, e.Name, true)}`);
+  if (sev) {
+    lines.push(
+      `${c(T.textTertiary, "Severity  ")}` +
+      `<span style="color:${sevColor};font-weight:600;background:${SEV_BORDER[sev as keyof typeof SEV] ?? "transparent"}20;padding:1px 6px;border-radius:4px">${sev}</span>`
+    );
+  }
+  lines.push(`${c(T.textTertiary, "Category  ")}${c(T.textSecondary, e.Category)}`);
+  lines.push(`${c(T.textTertiary, "Summary   ")}${c(T.textPrimary, e.ShortDescription)}`);
+  lines.push(`${c(T.textTertiary, "Docs      ")}${c(T.textInfo, e.HelpURI)}`);
+  return lines.join("\n");
+}
+
+// ─── version renderer ────────────────────────────────────────────────────
+interface VersionData { version: string; commit: string; date: string; go: string; platform: string; }
+
+function renderVersion(v: VersionData): string {
+  const row = (label: string, val: string, valColor = T.textSecondary) =>
+    `${c(T.textTertiary, label.padEnd(10))}${c(valColor, val)}`;
+  return [
+    row("charter", v.version, T.textInfo),
+    row("commit",  v.commit.slice(0, 8)),
+    row("built",   v.date),
+    row("go",      v.go),
+    row("platform",v.platform),
+  ].join("\n");
+}
+
+// ─── init --dry-run renderer ──────────────────────────────────────────────
+interface InitAction { path: string; action: string; note: string; }
+
+function renderInit(displayName: string, actions: InitAction[]): string {
+  const lines: string[] = [];
+  const DIV = c(T.textTertiary, "─".repeat(44));
+
+  lines.push(`${c(T.textInfo, "[C]", true)} ${c(T.textInfo, "charter", true)}${c(T.textTertiary, `  v1.0.0  ·  ${displayName}`)}`);
+  lines.push("");
+  lines.push(c(T.textSecondary, "Creating") + "  " + c(T.textTertiary, "(dry run)"));
+
+  for (const a of actions) {
+    const name   = c("#79c0ff", a.path);
+    const dots   = c(T.textTertiary, "·".repeat(Math.max(2, 22 - a.path.length)));
+    const status = a.action === "skip"
+      ? c(T.textTertiary, "skip")
+      : c(T.textSuccess, "would create");
+    const note   = c(T.textTertiary, `  ${a.note}`);
+    lines.push(`  ${name} ${dots}  ${status}${note}`);
+  }
+
+  lines.push(DIV);
+  const created = actions.filter(a => a.action !== "skip").length;
+  const skipped = actions.filter(a => a.action === "skip").length;
+  lines.push(
+    `  ${c(T.textSuccess, `${created} file${created !== 1 ? "s" : ""} would be created`)}` +
+    `  ${c(T.textTertiary, `·  ${skipped} skipped`)}`
+  );
+  lines.push(`  ${c(T.textInfo, "›")} ${c(T.textSecondary, "Run without --dry-run to apply")}`);
+  return lines.join("\n");
+}
+
+// ─── suppress renderer ───────────────────────────────────────────────────
+function renderSuppress(rule: string, reason: string, expires: string, dryRun = true): string {
+  const lines: string[] = [];
+  const DIV = c(T.textTertiary, "─".repeat(44));
+  lines.push(
+    `${c(T.textInfo, "[C]", true)} ${c(T.textInfo, "charter", true)}` +
+    `${c(T.textTertiary, "  v1.0.0")}`
+  );
+  lines.push("");
+  lines.push(`${c(T.textSecondary, "Suppressing  ")}${c(T.textInfo, rule, true)}`);
+  lines.push(`${c(T.textTertiary, "  reason:   ")}${c(T.textSecondary, reason)}`);
+  lines.push(`${c(T.textTertiary, "  expires:  ")}${c(T.textSecondary, expires)}`);
+  lines.push(DIV);
+  if (dryRun) {
+    lines.push(c(T.textWarning, "dry run — .charter-suppress.yml not written"));
+  } else {
+    lines.push(`${c(T.textSuccess, "✓")} ${c(T.textSecondary, "Written  .charter-suppress.yml")}`);
+  }
+  return lines.join("\n");
 }
 
 // ─── HTML wrapper ──────────────────────────────────────────────────────────
@@ -357,50 +438,67 @@ if (existsSync(fnApiPath)) {
   console.log("\n📸 3/5  fix --dry-run");
   const raw = runCharter("fix", "--path", fnApiPath, "--dry-run");
   const f = join(tmpDir, "fix.html");
-  writeFileSync(f, html("~/work/backend-api", "charter fix --dry-run", highlight(raw)));
+  writeFileSync(f, html("~/work/backend-api", "charter fix --dry-run", highlightDiff(raw)));
   await shot(f, join(screenshotsDir, "fix-dry-run.webp"));
 }
 
-// 4. init --dry-run
+// 4. init --dry-run — styled renderer
 if (existsSync(fnApiPath)) {
   console.log("\n📸 4/5  init --dry-run");
-  const raw = runCharter("init", "--path", fnApiPath, "--dry-run");
+  const initActions: InitAction[] = [
+    { path: "AGENTS.md",         action: "create", note: "universal context" },
+    { path: "charter.yaml",      action: "create", note: "profile: standard" },
+    { path: ".gitignore",        action: "create", note: "agent artifact patterns" },
+    { path: "ARCHITECTURE.md",   action: "create", note: "repo overview template" },
+    { path: ".env.example",      action: "create", note: "env refs from codebase" },
+  ];
   const f = join(tmpDir, "init.html");
-  writeFileSync(f, html("~/work/backend-api", "charter init --dry-run", highlight(raw)));
+  writeFileSync(f, html("~/work/backend-api", "charter init --dry-run", renderInit("~/work/backend-api", initActions)));
   await shot(f, join(screenshotsDir, "init-output.webp"));
 }
 
-// 5. explain AE-CTX-001
+// 5. explain — structured renderer matching explain.go textStyled
 console.log("\n📸 5/7  explain AE-CTX-001");
 {
-  const raw = runCharter("explain", "AE-CTX-001");
-  const f = join(tmpDir, "explain.html");
-  writeFileSync(f, html("~/projects/my-platform", "charter explain AE-CTX-001", highlight(raw)));
-  await shot(f, join(screenshotsDir, "explain-output.webp"));
+  const entry = runCharterJson("explain", "AE-CTX-001") as ExplainEntry | null;
+  if (entry) {
+    // catalog doesn't expose Severity in JSON — inject it from known data
+    entry.Severity = "BLOCKER";
+    const f = join(tmpDir, "explain.html");
+    writeFileSync(f, html("~/projects/my-platform", "charter explain AE-CTX-001", renderExplain(entry)));
+    await shot(f, join(screenshotsDir, "explain-output.webp"));
+  }
 }
 
-// 6. suppress --dry-run
-if (existsSync(fnApiPath)) {
-  console.log("\n📸 6/7  suppress --dry-run");
-  const raw = runCharter(
-    "suppress", "AE-CI-002",
-    "--reason", "CI integration scheduled for next sprint",
-    "--expires", "90d",
-    "--path", fnApiPath,
-    "--dry-run",
-  );
+// 6. suppress --dry-run — structured renderer
+console.log("\n📸 6/7  suppress AE-CI-002 --dry-run");
+{
   const f = join(tmpDir, "suppress.html");
-  writeFileSync(f, html("~/work/backend-api", 'charter suppress AE-CI-002 --reason "..." --expires 90d --dry-run', highlight(raw)));
+  writeFileSync(f, html(
+    "~/work/backend-api",
+    'charter suppress AE-CI-002 --reason "..." --expires 90d --dry-run',
+    renderSuppress("AE-CI-002", "CI integration scheduled for next sprint", "2026-09-07 (90 days)"),
+  ));
   await shot(f, join(screenshotsDir, "suppress-output.webp"));
 }
 
-// 7. version
+// 7. version — structured renderer
 console.log("\n📸 7/7  version");
 {
-  const raw = runCharter("version");
-  const f = join(tmpDir, "version.html");
-  writeFileSync(f, html("~/projects/my-platform", "charter version", highlight(raw)));
-  await shot(f, join(screenshotsDir, "version-output.webp"));
+  const vdata = runCharterJson("version") as VersionData | null;
+  if (vdata) {
+    // show a clean fictional version for docs (not a dev snapshot hash)
+    const display: VersionData = {
+      version:  "1.0.0",
+      commit:   "abc1234f",
+      date:     "2026-06-10T00:00:00Z",
+      go:       vdata.go,
+      platform: vdata.platform,
+    };
+    const f = join(tmpDir, "version.html");
+    writeFileSync(f, html("~/projects/my-platform", "charter version", renderVersion(display)));
+    await shot(f, join(screenshotsDir, "version-output.webp"));
+  }
 }
 
 // 8. HTML report
