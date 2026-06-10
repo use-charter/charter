@@ -1,10 +1,31 @@
-id: "web"
+project:
+  name: web
+  type: node
 
 tasks:
-  lint:
+  dev:
+    command: astro
+    args:
+      - dev
+    options:
+      interactive: true
+  build:
+    command: astro
+    args:
+      - build
+    inputs:
+      - src/**
+      - public/**
+      - astro.config.mjs
+      - package.json
+    outputs:
+      - dist
+  check:
     command: "bun"
     args:
-      - "../scripts/check-file-exists.ts"
-      - "README.md"
+      - "run"
+      - "check"
     inputs:
-      - "README.md"
+      - src/**
+      - astro.config.mjs
+      - package.json
