@@ -64,12 +64,20 @@ func newVersionCommand() *cobra.Command {
 				}
 
 				if caps.ColorEnabled() {
-					label := st(terminal.TextTertiary)
-					_, _ = fmt.Fprintf(out, "%s%s\n", label.Render(fmt.Sprintf("%-10s", "charter")), st(terminal.TextInfo).Bold(true).Render(version.Version()))
-					_, _ = fmt.Fprintf(out, "%s%s\n", label.Render(fmt.Sprintf("%-10s", "commit")), st(terminal.TextSecondary).Render(commit))
-					_, _ = fmt.Fprintf(out, "%s%s\n", label.Render(fmt.Sprintf("%-10s", "built")), st(terminal.TextSecondary).Render(version.Date()))
-					_, _ = fmt.Fprintf(out, "%s%s\n", label.Render(fmt.Sprintf("%-10s", "go")), st(terminal.TextSecondary).Render(goVersion))
-					_, _ = fmt.Fprintf(out, "%s%s\n", label.Render(fmt.Sprintf("%-10s", "platform")), st(terminal.TextSecondary).Render(platform))
+					brand := st(terminal.TextInfo).Bold(true).Render("[C] charter")
+					ver := st(terminal.TextPrimary).Bold(true).Render(version.Version())
+					_, _ = fmt.Fprintln(out, brand+"  "+ver)
+					_, _ = fmt.Fprintln(out)
+					dot := st(terminal.TextTertiary).Render("  ·  ")
+					built := version.Date()
+					if len(built) > 10 {
+						built = built[:10]
+					}
+					meta := st(terminal.TextTertiary).Render("  go "+goVersion) +
+						dot + st(terminal.TextTertiary).Render(platform) +
+						dot + st(terminal.TextTertiary).Render("commit "+commit) +
+						dot + st(terminal.TextTertiary).Render(built)
+					_, _ = fmt.Fprintln(out, meta)
 				} else {
 					_, _ = fmt.Fprintf(out, "charter   %s\n", version.Version())
 					_, _ = fmt.Fprintf(out, "commit    %s\n", commit)

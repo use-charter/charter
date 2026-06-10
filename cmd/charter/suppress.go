@@ -83,27 +83,48 @@ func newSuppressCommand() *cobra.Command {
 			w := cmd.OutOrStdout()
 
 			if caps.ColorEnabled() {
+				if warn != "" {
+					_, _ = fmt.Fprintln(w, "warning: "+warn)
+				}
+
+				brand := st(terminal.TextInfo).Bold(true).Render("[C] charter")
+				sup := st(terminal.TextTertiary).Render("suppress")
 				ruleStyled := st(terminal.TextInfo).Bold(true).Render(entry.Rule)
+				divider := st(terminal.TextTertiary).Render(strings.Repeat("─", 52))
+				dot := st(terminal.TextTertiary).Render("  ·  ")
+
 				label := func(name string) string {
-					return st(terminal.TextTertiary).Render(fmt.Sprintf("  %-10s", name))
+					return "  " + st(terminal.TextTertiary).Render(fmt.Sprintf("%-10s", name))
 				}
 				val := func(v string) string { return st(terminal.TextSecondary).Render(v) }
 
-				_, _ = fmt.Fprintln(w, st(terminal.TextSecondary).Render("suppress ")+ruleStyled)
-				_, _ = fmt.Fprintln(w, label("reason:")+val(entry.Reason))
-				_, _ = fmt.Fprintln(w, label("expires:")+val(entry.Expires))
+				_, _ = fmt.Fprintln(w, brand+"  "+sup+"  "+ruleStyled)
+				_, _ = fmt.Fprintln(w, divider)
+				_, _ = fmt.Fprintln(w)
+				_, _ = fmt.Fprintln(w, label("reason")+val(entry.Reason))
+				_, _ = fmt.Fprintln(w, label("expires")+val(entry.Expires))
 				if entry.Approver != "" {
-					_, _ = fmt.Fprintln(w, label("approver:")+val(entry.Approver))
+					_, _ = fmt.Fprintln(w, label("approver")+val(entry.Approver))
 				}
-				_, _ = fmt.Fprintln(w, st(terminal.TextTertiary).Render(strings.Repeat("─", 44)))
+				_, _ = fmt.Fprintln(w)
+				_, _ = fmt.Fprintln(w, divider)
 				if dryRun {
-					_, _ = fmt.Fprintln(w, st(terminal.TextWarning).Render("dry run — "+suppress.File+" not written"))
+					_, _ = fmt.Fprintln(w, "  "+
+						st(terminal.TextWarning).Render("▸")+" "+
+						st(terminal.TextWarning).Render("dry run")+
+						dot+
+						st(terminal.TextTertiary).Render(".charter-suppress.yml not written")+
+						dot+
+						st(terminal.TextTertiary).Render("remove --dry-run to apply"))
 				} else {
 					// #nosec G306 -- governance config is meant to be world-readable and committed.
 					if err := os.WriteFile(filepath.Join(root, suppress.File), out, 0o644); err != nil {
 						return commandExitError{message: err.Error(), exitCode: 2}
 					}
-					_, _ = fmt.Fprintln(w, st(terminal.TextSuccess).Render("✓ written  "+suppress.File))
+					_, _ = fmt.Fprintln(w, "  "+
+						st(terminal.TextSuccess).Render("✓")+" "+
+						st(terminal.TextSuccess).Render("written")+
+						st(terminal.TextTertiary).Render("  .charter-suppress.yml"))
 				}
 			} else {
 				if warn != "" {

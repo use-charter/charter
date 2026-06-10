@@ -16,6 +16,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"charm.land/lipgloss/v2"
 	"go.use-charter.dev/charter/internal/rules/catalog"
@@ -79,12 +80,19 @@ func textStyled(e catalog.Entry, caps terminal.Capabilities, pal terminal.Palett
 		return s
 	}
 
+	divider := st(terminal.TextTertiary).Render(strings.Repeat("─", 52))
+
 	var b bytes.Buffer
 	id := link(st(terminal.TextInfo).Bold(true)).Render(e.ID)
 	name := st(terminal.TextPrimary).Bold(true).Render(e.Name)
 	fmt.Fprintln(&b, id+"  "+name)
-	fmt.Fprintln(&b, st(terminal.TextTertiary).Render("Category  ")+st(terminal.TextSecondary).Render(e.Category))
-	fmt.Fprintln(&b, st(terminal.TextTertiary).Render("Summary   ")+st(terminal.TextPrimary).Render(e.ShortDescription))
-	fmt.Fprintln(&b, st(terminal.TextTertiary).Render("Docs      ")+link(st(terminal.TextInfo)).Render(e.HelpURI))
+	fmt.Fprintln(&b, divider)
+	fmt.Fprintln(&b)
+	fmt.Fprintln(&b, "  "+st(terminal.TextTertiary).Render("category")+"  "+st(terminal.TextSecondary).Render(e.Category))
+	fmt.Fprintln(&b)
+	fmt.Fprintln(&b, "  "+st(terminal.TextPrimary).Render(e.ShortDescription))
+	fmt.Fprintln(&b)
+	fmt.Fprintln(&b, divider)
+	fmt.Fprintln(&b, "  "+st(terminal.TextTertiary).Render("docs")+"  "+link(st(terminal.TextInfo)).Render(e.HelpURI))
 	return b.Bytes()
 }
