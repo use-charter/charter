@@ -286,33 +286,35 @@ async function getBrowser() {
 
 async function shot(htmlFile: string, outFile: string) {
   const b = await getBrowser();
-  const p = await b.newPage();
+  // deviceScaleFactor:2 = retina density — lossless PNG at 2× pixels = crystal clear
+  const ctx = await b.newContext({ deviceScaleFactor: 2 });
+  const p = await ctx.newPage();
   await p.setViewportSize({ width: 1200, height: 2000 });
   await p.emulateMedia({ colorScheme: "dark" });
   await p.goto(`file://${htmlFile}`);
   await p.waitForTimeout(1800); // Google Fonts load
   const el = await p.$(".wrap");
   if (el) {
-    // omitBackground: true → page background is transparent so border-radius
-    // corners and shadow edges anti-alias against transparent, giving a
-    // properly-rounded PNG with no square background.
+    // omitBackground:true → transparent page bg → border-radius corners are
+    // transparent in the output PNG, not square-clipped to an opaque colour.
     await el.screenshot({ path: outFile, type: "png", omitBackground: true });
   } else {
     await p.screenshot({ path: outFile, type: "png", omitBackground: true, fullPage: false });
   }
-  await p.close();
+  await ctx.close();
   console.log(`   ✓ ${outFile.split("/").pop()}`);
 }
 
 async function shotUrl(url: string, outFile: string) {
   const b = await getBrowser();
-  const p = await b.newPage();
+  const ctx = await b.newContext({ deviceScaleFactor: 2 });
+  const p = await ctx.newPage();
   await p.setViewportSize({ width: 1440, height: 900 });
   await p.emulateMedia({ colorScheme: "dark" });
   await p.goto(url);
   await p.waitForTimeout(2000);
   await p.screenshot({ path: outFile, type: "png", fullPage: false });
-  await p.close();
+  await ctx.close();
   console.log(`   ✓ ${outFile.split("/").pop()}`);
 }
 
