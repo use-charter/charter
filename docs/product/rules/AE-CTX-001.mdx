@@ -3,40 +3,96 @@ title: "AE-CTX-001"
 description: "Agent context file must exist, be meaningful, and fit budget."
 ---
 
-**Rule ID:** AE-CTX-001 · **Severity:** Blocker · **Category:** Context · **Auto-fixable:** Yes — `charter fix --rule AE-CTX-001`
+**Rule ID:** AE-CTX-001 · **Severity:** <Badge color="red">Blocker</Badge> · **Category:** Context · **Auto-fixable:** Yes — `charter fix --rule AE-CTX-001`
 
 ## Why this rule
 
-Agents operate from what they can read in the repo. A missing or empty context file means the agent starts every session with no orientation, guesses at the stack, and may edit files it should leave alone.
+Agents operate from what they can read in the repo. A missing or empty context file means the agent starts every session with no orientation — it guesses at the stack, invents build commands, and may edit files it should leave alone. A context file that exceeds the token budget gets truncated, which is often worse than no file at all because the agent receives partial, misleading instructions.
 
 ## What triggers it
 
-Charter looks for a context file (`AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, or equivalent) in the repo root. The finding fires if no context file exists, if the file is empty or contains only placeholder text, or if the file exceeds the 600-token budget that agent context windows reliably fit.
+Charter looks for any of the following files in the repo root: `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, `.windsurfrules`, `.github/copilot-instructions.md`, `opencode.md`, `codex.md`, `DESIGN.md`, `SKILL.md`.
+
+The finding fires when:
+- No recognized context file exists
+- The file is empty or contains only placeholder text (e.g. "Add your project details here")
+- The file exceeds the **600-token budget** that agent context windows reliably fit
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    ```
+    # No AGENTS.md or equivalent exists in the repo root
+    ```
 
-The repo has no `AGENTS.md` or equivalent, an empty `AGENTS.md`, a file with only boilerplate like "Add your project details here", or a file that runs so long it would be truncated in the agent's context window.
+    ```markdown AGENTS.md (placeholder)
+    # My Project
 
-### Passing
+    Add your project details here.
+    ```
 
-`AGENTS.md` at the repo root with a project summary, the active tech stack, a verification command (`moon run :check`), and explicit edit boundaries. Under 600 tokens.
+    ```markdown AGENTS.md (over budget)
+    # My Project
+
+    [... 900+ tokens of exhaustive documentation ...]
+    # Section 47: Legacy Migration Notes
+    # Section 48: Deprecated API Compatibility
+    # Section 49: Historical Architecture Decisions
+    ```
+  </Tab>
+  <Tab title="Passing">
+    ```markdown AGENTS.md
+    # My Project
+
+    Stack: Go 1.26, Bun, Moonrepo
+    Verification: moon run :check
+
+    ## Hard constraints
+    - No LLM calls in core
+    - Never delete user files
+    - Off-limits: .env*, secrets/, signing keys
+
+    ## Edit scope
+    - Default: Go source, tests, specs, docs
+    - Ask before: CI workflows, Moon/mise config
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-Run `charter fix --rule AE-CTX-001` to scaffold a minimal `AGENTS.md`. Edit it to reflect your actual stack, commands, and off-limits paths. Keep it tight — the value of a context file degrades when it grows past the token budget.
+<Steps>
+  <Step title="Preview the scaffolded file">
+    Run `charter fix --rule AE-CTX-001 --dry-run` to see what Charter will create before writing anything.
+  </Step>
+  <Step title="Create the context file">
+    Run `charter fix --rule AE-CTX-001` to scaffold a minimal `AGENTS.md` at the repo root.
+  </Step>
+  <Step title="Reflect your actual project">
+    Edit the file to include your real stack, verification command, edit boundaries, and any hard constraints. Generic scaffolding still satisfies the rule syntactically but gives agents nothing useful.
+  </Step>
+  <Step title="Stay within budget">
+    Aim for under 400 tokens. The value of a context file degrades when it grows past the 600-token budget — trim ruthlessly and link to longer docs rather than inlining them.
+  </Step>
+</Steps>
+
+## Score impact
+
+<Note>
+  Blocker severity: −20 to the base score. The hard cap at ≤ 59 applies while this finding is active — the repo cannot reach a passing score until AE-CTX-001 is resolved.
+</Note>
 
 ## Edge cases
 
-a repo using `CLAUDE.md`, `DESIGN.md`, or `SKILL.md` instead of `AGENTS.md` can pass if the file satisfies the same content requirements.
+A repo using `CLAUDE.md`, `DESIGN.md`, or `SKILL.md` instead of `AGENTS.md` passes if the file satisfies the same content requirements. Charter accepts any recognized filename — the check is on content and budget, not the specific filename.
 
 ## Related rules
 
-- [AE-CTX-002](/rules/AE-CTX-002)
-- [AE-CTX-004](/rules/AE-CTX-004)
-- [AE-CTX-006](/rules/AE-CTX-006)
-- [AE-CC-002](/rules/AE-CC-002)
+- [AE-CTX-002](/rules/AE-CTX-002) — context file must stay consistent with the actual repo state
+- [AE-CTX-004](/rules/AE-CTX-004) — agent session artifacts must be gitignored
+- [AE-CTX-006](/rules/AE-CTX-006) — emphatic directive density
+- [AE-CC-002](/rules/AE-CC-002) — edit scope must be declared
 
 ## CLI
 

@@ -3,46 +3,88 @@ title: "Rules Overview"
 description: "Charter evaluates 18 rules across context, safety, operability, and governance to score AI-agent readiness."
 ---
 
-Charter's v1 rule set evaluates whether a repository is safe, understandable, and runnable for coding agents.
+Charter's v1 rule set evaluates whether a repository is safe, understandable, and runnable for coding agents. 18 rules across 9 categories — each one targeting a failure mode that causes agents to make confident mistakes, leak credentials, or become impossible to verify.
 
-## What the Rules Cover
+## Rule Categories
 
-| Category | Rules | Focus |
-| --- | --- | --- |
-| Context | 4 | Agent instructions exist, stay current, and avoid local artifact noise. |
-| Secrets | 2 | Raw credentials never land in agent-visible files or MCP config. |
-| MCP Safety | 3 | MCP servers are pinned, trusted, and authenticated. |
-| Agent Config | 2 | Hook configs stay safe and agent edit scope is explicit. |
-| Environment | 1 | Toolchains and repo setup stay reproducible. |
-| CI | 1 | Charter and workflow-quality checks run in CI. |
-| Testing | 1 | Active languages have automated tests. |
-| Autonomy | 1 | The verification command is discoverable and runnable. |
-| Governance | 3 | Suppressions stay reasoned, bounded, and reviewable. |
+<CardGroup cols={3}>
+  <Card title="Context" icon="file-text" href="/rules/AE-CTX-001">
+    4 rules — agent instructions exist, stay current, and avoid noise. Agents that start with no orientation guess at the stack and edit files they shouldn't.
+  </Card>
+  <Card title="Secrets" icon="lock" href="/rules/AE-SEC-001">
+    2 rules — raw credentials never reach agent-visible locations. Exposure at commit time means rotation is already required.
+  </Card>
+  <Card title="MCP Safety" icon="shield" href="/rules/AE-MCP-001">
+    3 rules — MCP servers are pinned to exact versions, sourced from trusted origins, and protected by declared auth.
+  </Card>
+  <Card title="Agent Config" icon="bot" href="/rules/AE-CC-001">
+    2 rules — hook configurations are safe, and the agent edit scope is explicit so agents know what they can and cannot touch.
+  </Card>
+  <Card title="Environment & CI" icon="wrench" href="/rules/AE-ENV-001">
+    2 rules — a reproducible toolchain and Charter running in CI so every pull request gets scored automatically.
+  </Card>
+  <Card title="Testing" icon="flask-conical" href="/rules/AE-TEST-001">
+    1 rule — every active language in the repo has automated tests the agent can run to verify its own changes.
+  </Card>
+  <Card title="Autonomy" icon="route" href="/rules/AE-AUTO-001">
+    1 rule — a discoverable verification command lets agents confirm their work without needing human guidance.
+  </Card>
+  <Card title="Governance" icon="scale" href="/rules/AE-SUPPRESS-001">
+    3 rules — suppressions are reasoned, bounded, and carry an approver so the score stays meaningful over time.
+  </Card>
+</CardGroup>
 
 ## Score Formula
 
-```text
-score = max(0, 100 - B×20 - H×10 - M×4 - L×1)
-final = min(base, applicable_cap)
-```
+<Note>
+  **Score formula:** `score = max(0, 100 − B×20 − H×10 − M×4 − L×1)` where B = Blocker findings, H = High, M = Medium, L = Low.
 
-- `B` = blocker findings
-- `H` = high findings
-- `M` = medium findings
-- `L` = low findings
+  **Hard caps:** Any active Blocker holds the final score at ≤ 59. Any active secret finding (AE-SEC-001 or AE-SEC-002) holds the final score at ≤ 49. Caps apply after the base formula.
+</Note>
 
-Hard caps still apply. Raw secrets cap the score at `49`, and any active blocker caps the score at `59`.
+## All 18 Rules
 
-[Read more about scoring and caps.](/concepts/scoring-and-caps)
+| Rule | Name | Category | Severity | Auto-fixable |
+|------|------|----------|----------|-------------|
+| [AE-CTX-001](/rules/AE-CTX-001) | AgentContextFilePresent | Context | Blocker | ✅ Yes |
+| [AE-CTX-002](/rules/AE-CTX-002) | AgentContextConsistency | Context | Medium | ❌ No |
+| [AE-CTX-004](/rules/AE-CTX-004) | AgentArtifactsGitignored | Context | Medium | ✅ Yes |
+| [AE-CTX-006](/rules/AE-CTX-006) | ContextOverEmphasis | Context | Informational | ❌ No |
+| [AE-SEC-001](/rules/AE-SEC-001) | NoSecretsInAgentContext | Secrets | Blocker | ❌ No |
+| [AE-SEC-002](/rules/AE-SEC-002) | NoSecretsInMCPConfig | Secrets | Blocker | ❌ No |
+| [AE-MCP-001](/rules/AE-MCP-001) | MCPServerPinned | MCP Safety | High | ✅ Yes (partial) |
+| [AE-MCP-002](/rules/AE-MCP-002) | MCPRemoteTrusted | MCP Safety | High | ❌ No |
+| [AE-MCP-003](/rules/AE-MCP-003) | MCPAuthDeclared | MCP Safety | High | ❌ No |
+| [AE-CC-001](/rules/AE-CC-001) | NoDangerousHookCommands | Agent Config | Blocker | ❌ No |
+| [AE-CC-002](/rules/AE-CC-002) | AgentEditScopeDeclared | Agent Config | High | ❌ No |
+| [AE-ENV-001](/rules/AE-ENV-001) | ReproducibleToolchain | Environment | Medium | ❌ No |
+| [AE-CI-002](/rules/AE-CI-002) | CharterInCI | CI | Low | ✅ Yes |
+| [AE-TEST-001](/rules/AE-TEST-001) | TestsPresent | Testing | High | ❌ No |
+| [AE-AUTO-001](/rules/AE-AUTO-001) | AutomationCommandDiscoverable | Autonomy | Medium | ❌ No |
+| [AE-SUPPRESS-001](/rules/AE-SUPPRESS-001) | SuppressionHasReason | Governance | Medium | ❌ No |
+| [AE-SUPPRESS-002](/rules/AE-SUPPRESS-002) | PermanentSuppressionHasApprover | Governance | High | ❌ No |
+| [AE-SUPPRESS-003](/rules/AE-SUPPRESS-003) | HighSuppressionRate | Governance | Informational | ❌ No |
 
-## Using Rule Pages
+<Tip>
+  Every rule has a dedicated page at `/rules/AE-*`. Use `charter explain <RULE-ID>` for a quick CLI lookup without leaving your terminal.
+</Tip>
 
-- Every CLI explanation path matches the public rule URL contract at `/rules/AE-*`.
+## Severity Reference
 
-## Rule Navigation
-
-Use the Rules navigation tab to browse by category, or jump directly from the CLI:
-
-```bash
-charter explain AE-CTX-001
-```
+<AccordionGroup>
+  <Accordion title="Blocker — −20 per finding, score capped at ≤59">
+    The most severe class. A Blocker means the repo is not safe or understandable enough for autonomous agent work. Active Blockers hold the final score below 60 regardless of other findings. Rules: AE-CTX-001, AE-SEC-001, AE-SEC-002, AE-CC-001.
+  </Accordion>
+  <Accordion title="High — −10 per finding">
+    Significant gaps that materially impair agent safety or reliability. No hard cap, but multiple High findings rapidly pull the score below useful thresholds. Rules: AE-MCP-001, AE-MCP-002, AE-MCP-003, AE-CC-002, AE-TEST-001, AE-SUPPRESS-002.
+  </Accordion>
+  <Accordion title="Medium — −4 per finding">
+    Friction that degrades agent quality without being immediately dangerous. Rules: AE-CTX-002, AE-CTX-004, AE-ENV-001, AE-AUTO-001, AE-SUPPRESS-001.
+  </Accordion>
+  <Accordion title="Low — −1 per finding">
+    Minor issues and hygiene gaps. Rules: AE-CI-002.
+  </Accordion>
+  <Accordion title="Informational — 0 points deducted">
+    Surfaces signal worth reviewing but does not affect the score. Rules: AE-CTX-006, AE-SUPPRESS-003.
+  </Accordion>
+</AccordionGroup>

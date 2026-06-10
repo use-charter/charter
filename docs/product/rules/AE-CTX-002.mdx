@@ -1,40 +1,96 @@
 ---
 title: "AE-CTX-002"
-description: "Agent context must remain current with repo reality."
+description: "Agent context file must match the actual repo state — stack, commands, and edit boundaries."
 ---
 
-**Rule ID:** AE-CTX-002 · **Severity:** Medium · **Category:** Context · **Auto-fixable:** No
+**Rule ID:** AE-CTX-002 · **Severity:** <Badge color="yellow">Medium</Badge> · **Category:** Context · **Auto-fixable:** No
 
 ## Why this rule
 
-An agent that reads a context file describing the wrong stack or stale commands will make confident mistakes — wrong build commands, wrong test paths, wrong edit scope.
+An agent that reads a context file describing the wrong stack makes confident mistakes — wrong build commands, wrong test paths, wrong edit scope. A drifted context file is often more dangerous than no file at all: it provides authoritative-looking guidance that is simply wrong.
 
 ## What triggers it
 
-Charter reads the context file and compares its claims against the repo's actual state. The finding fires when the stated tech stack doesn't match the manifests Charter can see, when the stated test command doesn't exist in any task runner or script, or when declared off-limits paths don't match the repo structure.
+Charter compares the context file's stated tech stack and commands against manifest files it can observe in the repo. The finding fires when:
+
+- The stated stack names a language or framework but no corresponding manifest exists (`package.json`, `go.mod`, `Gemfile`, `pyproject.toml`, `Cargo.toml`, etc.)
+- The stated verification command does not appear in any task runner config Charter can find (`moon.yml`, `Makefile`, `package.json` scripts, `Justfile`)
+- Declared off-limits paths reference directories that do not exist in the repo
+
+<Note>
+  An old date alone is not enough to fail this rule. AE-CTX-002 fires on factual mismatches — stack claims with no manifest evidence, commands that don't exist, paths that aren't real — not on timestamp staleness.
+</Note>
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    ```markdown AGENTS.md
+    Stack: React, Node.js
+    Verification: npm test
+    ```
 
-The context file references stale runtimes, a test command that no longer exists, or edit-scope boundaries that don't match the current directory structure.
+    ```
+    # Repo contains: go.mod, moon.yml
+    # No package.json found — React/Node.js claim has no manifest evidence
+    # npm test not present in any task runner config
+    ```
 
-### Passing
+    ---
 
-`AGENTS.md` points at a recognized verification command (e.g. `charter doctor`, `moon run :check`), mentions `hk.pkl`, and matches the current toolchain and repo boundaries.
+    ```markdown AGENTS.md
+    Off-limits: legacy/, v1-archive/
+    ```
+
+    ```
+    # Neither legacy/ nor v1-archive/ exists in the repo tree
+    ```
+  </Tab>
+  <Tab title="Passing">
+    ```markdown AGENTS.md
+    Stack: Go 1.26, Bun
+    Verification: moon run :check
+    ```
+
+    ```
+    # Repo contains: go.mod ✓, package.json (Bun) ✓
+    # moon.yml contains a :check task ✓
+    # All stated off-limits paths map to real directories ✓
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-Update the context file to reflect the repo's current state. Check that the tech stack, test command, and edit boundaries match what's actually in the repo. Run `charter doctor` after updating to confirm the finding clears.
+Review each mismatch listed in the finding evidence and update the context file to reflect repo reality.
 
-## Edge cases
+<AccordionGroup>
+  <Accordion title="Stack mismatch">
+    Update the stack declaration to match what manifests are actually present. If you removed a language, remove it from the context file. If you added one, add it. Charter looks for `go.mod`, `package.json`, `pyproject.toml`, `Gemfile`, `Cargo.toml`, and similar.
+  </Accordion>
+  <Accordion title="Verification command mismatch">
+    Confirm the stated command runs successfully from the repo root. Update it to match the actual task runner entry — or add the task to your runner config if it is genuinely missing.
+  </Accordion>
+  <Accordion title="Off-limits path mismatch">
+    Remove references to paths that no longer exist, or create the directory if the boundary is still intended. Phantom off-limits declarations confuse agents rather than protecting anything.
+  </Accordion>
+</AccordionGroup>
 
-an old date alone is not enough to fail the rule if the content is still factually accurate.
+Run `charter doctor` after any update to confirm the finding clears.
+
+<Tip>
+  Treat `AGENTS.md` like a living document — update it whenever you add or remove a language, change your test runner, rename directories, or modify edit-scope boundaries. Drift happens silently; Charter surfaces it before the agent reaches it.
+</Tip>
+
+## Score impact
+
+Medium severity: −4 to the base score. No hard cap (caps are reserved for Blocker and secret findings).
 
 ## Related rules
 
-- [AE-CTX-001](/rules/AE-CTX-001)
-- [AE-AUTO-001](/rules/AE-AUTO-001)
+- [AE-CTX-001](/rules/AE-CTX-001) — context file must exist and be within budget
+- [AE-AUTO-001](/rules/AE-AUTO-001) — verification command must be discoverable
+- [AE-CTX-006](/rules/AE-CTX-006) — emphatic directive density
 
 ## CLI
 

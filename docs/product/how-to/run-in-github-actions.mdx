@@ -1,18 +1,13 @@
 ---
-title: "Run in GitHub Actions"
-description: "Add Charter to a GitHub Actions workflow, upload SARIF, and gate merges on the score threshold."
+title: "Run Charter in GitHub Actions"
+description: "Add a Charter gate to every pull request and upload SARIF findings to GitHub Code Scanning."
 ---
 
-Use Charter in GitHub Actions when you want every pull request to run the same repo scan your local workflow runs.
+Use Charter in GitHub Actions when you want every pull request to run the same repo scan your local workflow runs. This guide adds a dedicated Charter workflow, sets the score threshold, uploads SARIF to GitHub Code Scanning, and blocks merges when the score falls below the gate.
 
-This guide covers:
+<Steps>
 
-- adding a dedicated Charter workflow
-- setting the score threshold
-- uploading SARIF to GitHub Code Scanning
-- failing the workflow when the score falls below the gate
-
-## 1. Create the workflow file
+<Step title="Add the workflow file">
 
 Create `.github/workflows/charter.yaml`:
 
@@ -34,125 +29,133 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: use-charter/charter-action@<published-major>
+      - uses: use-charter/charter-action@v1
         with:
-          version: <published-tag>
           threshold: "80"
 ```
 
-Why these permissions matter:
+<Note>
+The `security-events: write` permission is required to upload SARIF to GitHub Code Scanning. Without it, findings won't appear in the GitHub Security tab, but the threshold gate still works.
+</Note>
 
-- `contents: read`: lets the workflow read the repo.
-- `security-events: write`: lets GitHub accept the uploaded SARIF report.
-- `actions: read`: may be required for Code Scanning upload in private repos.
+Why each permission is present:
 
-## 2. Set the threshold
+| Permission | Why it's needed |
+|-----------|----------------|
+| `contents: read` | Lets the workflow read the repository |
+| `security-events: write` | Required for SARIF upload to Code Scanning |
+| `actions: read` | May be required for SARIF upload in private repos |
 
-Pick the gate you want:
+</Step>
 
-- `80`: the standard Charter default.
-- `90`: strict gate.
-- `60`: relaxed gate.
+<Step title="Configure the threshold">
 
-You can set the threshold in either place:
+Set the minimum passing score in the workflow or in `charter.yaml`. Common values:
 
-- in the workflow with `threshold: "80"`
-- in `charter.yaml` with `policy.profile` or `policy.threshold`
+<Tabs>
 
-Precedence is:
+<Tab title="Standard (80)">
 
-1. workflow `threshold` input
-2. `charter.yaml` `policy.threshold`
-3. `charter.yaml` `policy.profile`
-4. default `80`
-
-If you want the workflow to defer to repo config, omit the `threshold` input.
-
-## 3. Upload SARIF to Code Scanning
-
-The action runs:
-
-```bash
-charter doctor --format sarif
-```
-
-and uploads the SARIF report to GitHub Code Scanning.
-
-That gives you:
-
-- PR annotations on findings with locations
-- Security tab visibility for Charter results
-- a durable record of the scan in GitHub
-
-Repo-verified: `action/README.md` documents SARIF upload as the default behavior when `upload` is left at `true`.
-
-## 4. Fail the workflow below threshold
-
-By default, the action preserves Charter's exit semantics:
-
-- exit `0`: score passed
-- exit `1`: score below threshold
-- exit `2`: scan or setup error
-
-With the default `fail-below: true`, a below-threshold score fails the job after SARIF upload completes.
-
-That means:
-
-- you still get Code Scanning annotations
-- the PR still gets blocked when the repo is below the gate
-
-If you want reporting without blocking, set:
+The default for most repos. Enforces the baseline agent-readiness rules without requiring a fully optimized repo.
 
 ```yaml
-with:
-  fail-below: "false"
-```
-
-## 5. Optional inputs
-
-Common variants:
-
-```yaml
-- uses: use-charter/charter-action@<published-major>
+- uses: use-charter/charter-action@v1
   with:
-    path: .
+    threshold: "80"
+```
+
+</Tab>
+
+<Tab title="Strict (90)">
+
+A higher bar for security-sensitive repos, production services, or teams that have resolved the common findings and want to hold the line.
+
+```yaml
+- uses: use-charter/charter-action@v1
+  with:
     threshold: "90"
-    category: charter
-    verify: "true"
-    upload: "true"
 ```
 
-Useful notes:
+</Tab>
 
-- `verify: true` keeps cosign + checksum verification on.
-- `upload: false` skips Code Scanning upload if you only want gate behavior.
-- `category` lets you separate Charter results from other SARIF producers.
+<Tab title="Defer to charter.yaml">
 
-## 6. Verify the workflow
+Omit the `threshold` input to let the action defer to whatever `policy.threshold` or `policy.profile` is set in your repo's `charter.yaml`.
 
-After adding the workflow:
-
-1. open a pull request
-2. confirm the `Charter` job runs
-3. confirm the workflow uploads SARIF successfully
-4. confirm the job fails when the score is below the configured threshold
-
-If you want to check locally first:
-
-```bash
-charter doctor --path . --threshold 80
+```yaml
+- uses: use-charter/charter-action@v1
 ```
+
+</Tab>
+
+</Tabs>
+
+**Threshold precedence** (highest to lowest):
+
+1. `threshold` workflow input
+2. `policy.threshold` in `charter.yaml`
+3. `policy.profile` default in `charter.yaml`
+4. Built-in default: **80**
+
+</Step>
+
+<Step title="View results in the GitHub Security tab">
+
+After the workflow runs, Charter findings appear in the GitHub Security tab as code scanning alerts:
+
+<Frame caption="GitHub Code Scanning — Charter findings as security alerts">
+  <img src="/images/screenshots/github-security-tab.png" alt="Charter findings in GitHub Security tab" />
+</Frame>
+
+Each finding includes:
+
+- the rule ID and severity
+- the file and line where Charter detected the issue
+- a link to the rule documentation
+
+</Step>
+
+<Step title="Understand exit behavior">
+
+Charter preserves its CLI exit semantics through the action:
+
+| Exit code | Meaning | Job result |
+|-----------|---------|-----------|
+| `0` | Score meets or exceeds threshold | Job passes |
+| `1` | Score below threshold | Job fails (with `fail-below: true`) |
+| `2` | Scan or setup error | Job fails |
+
+<Tip>
+SARIF upload completes before the threshold check. Even on a failing score, you still get Code Scanning annotations AND a failed CI check — both are useful for triage.
+</Tip>
+
+If you want annotations without blocking merges, set `fail-below: false`:
+
+```yaml
+- uses: use-charter/charter-action@v1
+  with:
+    threshold: "80"
+    fail-below: "false"
+```
+
+</Step>
+
+</Steps>
 
 ## Troubleshooting
 
-If the action fails before the scan runs:
+<AccordionGroup>
 
-- check that the published `use-charter/charter-action@<published-major>` ref exists yet
-- check workflow permissions, especially `security-events: write`
-- check that your runner has the shell tooling described in `action/README.md` if you are on self-hosted runners
+<Accordion title="The Security tab shows no findings after the workflow ran">
+Confirm `security-events: write` is present in the workflow permissions block. Also check that the workflow log shows a successful SARIF upload step — look for the `upload-sarif` action output.
+</Accordion>
 
-If the scan runs but the PR still passes unexpectedly:
+<Accordion title="The PR passes even though the score is below the threshold">
+Check that `fail-below` is not set to `"false"`. Then confirm the effective threshold by looking at Charter's output in the workflow log — the threshold in use is printed at scan start.
+</Accordion>
 
-- confirm `fail-below` is not set to `false`
-- confirm the effective threshold is what you expected
-- inspect the uploaded SARIF and the workflow logs for Charter's exit code
+<Accordion title="The action fails before the scan runs">
+Check that the `use-charter/charter-action@v1` ref is published and reachable. On self-hosted runners, confirm `bash`, `gh`, `curl`, `tar`, and `sha256sum` are available in the shell environment.
+</Accordion>
+
+</AccordionGroup>

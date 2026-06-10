@@ -1,36 +1,21 @@
 ---
 title: "Investigate MCP Findings"
-description: "Work through MCP safety findings by checking package pins, trusted remotes, and auth declarations."
+description: "Understand what each MCP safety rule is flagging and how to resolve it."
 ---
 
-Use this guide when `charter doctor` reports one of the MCP safety rules:
-
-- `AE-MCP-001`: unpinned, deprecated, advisory-affected, or behind-stable MCP package
-- `AE-MCP-002`: remote MCP origin is not trusted
-- `AE-MCP-003`: remote MCP server declares no auth metadata
-
-## 1. Start with the rule ID
-
-If you already have the rule ID from `charter doctor`, look it up first:
+Use this guide when `charter doctor` reports one of the three MCP safety rules. MCP findings are often the highest-signal findings in a repo because they touch dependency integrity, origin trust, and remote authentication.
 
 ```bash
-charter explain AE-MCP-001
+charter explain AE-MCP-001   # compact rule metadata + link to full docs
 ```
 
-That gives you the compact rule metadata and points you at the full rule docs.
+<Tabs>
 
-## 2. Inspect the MCP config file
+<Tab title="AE-MCP-001 — Version pinning">
 
-Repo-verified: Charter scans these JSON MCP config paths:
+**What it means:** An MCP server entry is using a floating version (`@latest`, a semver range like `^1.2.3`, a missing version entirely, or a deprecated/archived package). Charter requires exact version pins for supply-chain auditability.
 
-- `.mcp.json`
-- `mcp.json`
-- `.cursor/mcp.json`
-- `.vscode/mcp.json`
-
-Open the file named in the finding and inspect the specific server entry.
-
-Example:
+**Example finding:**
 
 ```json
 {
@@ -43,119 +28,170 @@ Example:
 }
 ```
 
-## 3. Resolve `AE-MCP-001`
+**Fix pattern — pin to an exact version:**
 
-Look for the package token in the runner args.
+<CodeGroup>
 
-Common problems:
-
-- `@latest`
-- missing version entirely
-- semver ranges like `^1.2.3` or `~1.2.3`
-- floating git refs
-- deprecated catalog packages
-
-Fix shape:
-
-```json
+```json Before
 {
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem@<exact-version>"]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@latest"]
     }
   }
 }
 ```
 
-Use the exact version Charter names in the finding, or preview the safe bump it recommends with:
+```json After
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem@0.6.2"]
+    }
+  }
+}
+```
+
+</CodeGroup>
+
+Or let Charter apply a catalog-aware bump for you:
 
 ```bash
-charter fix --path . --rule AE-MCP-001 --dry-run
+charter fix --rule AE-MCP-001 --dry-run   # review first
+charter fix --rule AE-MCP-001             # apply
 ```
 
-If the package is deprecated, migrate to the successor named by Charter instead of just pinning the old package.
+<Note>
+Deprecated packages (such as `@modelcontextprotocol/server-github`) cannot be auto-fixed — the migration path is a different package entirely. Charter provides the successor package name in the finding output. You must make that migration manually.
+</Note>
 
-## 4. Resolve `AE-MCP-002`
+**Common version problems Charter flags:**
 
-Check whether the remote server host belongs in your repo's allowlist.
+| Pattern | Example | Status |
+|---------|---------|--------|
+| Floating tag | `@latest` | Fail |
+| Semver range | `^1.2.3` or `~1.2.3` | Fail |
+| Missing version | `npx -y mcp-server-git` | Fail |
+| Floating git ref | `git+https://...#main` | Fail |
+| Exact pin | `@2026.1.14` | Pass |
 
-Review `charter.yaml`:
+</Tab>
+
+<Tab title="AE-MCP-002 — Trusted remotes">
+
+**What it means:** A remote MCP server URL's hostname is not in Charter's built-in catalog of known vendor-operated hosts, and it's not in your repo's `charter.yaml` allowlist. Charter flags unknown origins because remote MCP servers receive tool calls from your agent — the origin should be explicitly reviewed.
+
+**Example finding:** Charter reports a remote server at `api.your-internal-tool.com` that isn't in the catalog.
+
+**Resolution — add the host to your allowlist:**
 
 ```yaml
+# charter.yaml
 mcp:
   trustedRemotes:
-    - mcp.asana.com
+    - "api.your-internal-tool.com"
+    - "mcp.your-company.com"
 ```
 
-Questions to ask:
+Before adding a host, ask:
 
-- Is this a reviewed vendor host?
-- Is this your own trusted internal endpoint?
-- Is this an unexpected remote that should not be present at all?
+- Is this a reviewed vendor host or your own trusted internal endpoint?
+- Should this remote actually be present in this repo at all?
+- Is this an unexpected entry that should be removed instead?
 
-If the host is valid for your repo, add it to `mcp.trustedRemotes`. If it is not, remove or replace the MCP server entry.
+<Warning>
+If the remote origin is unexpected or unreviewed, the correct resolution is to remove or replace the MCP server entry — not to add it to the allowlist. Only add hosts you have explicitly reviewed.
+</Warning>
 
-## 5. Resolve `AE-MCP-003`
+**Hosts that are always exempt:** local origins (`localhost`, `127.0.0.1`, `::1`) are never flagged regardless of allowlist contents.
 
-For remote servers, verify that auth metadata is declared.
+</Tab>
 
-Example pass shape:
+<Tab title="AE-MCP-003 — Auth declaration">
+
+**What it means:** A remote HTTP or SSE MCP server entry has no recognized auth header declared. Charter requires that remote servers declare authentication metadata so agents don't silently make unauthenticated calls to external services.
+
+**Example finding:**
 
 ```json
 {
   "mcpServers": {
-    "asana": {
+    "my-service": {
       "type": "http",
-      "url": "https://mcp.asana.com/mcp",
+      "url": "https://your-mcp-server.com"
+    }
+  }
+}
+```
+
+**Fix — add an auth header to the server entry:**
+
+```json
+{
+  "mcpServers": {
+    "my-service": {
+      "type": "http",
+      "url": "https://your-mcp-server.com",
       "headers": {
-        "Authorization": "Bearer ${ASANA_TOKEN}"
+        "Authorization": "${YOUR_API_KEY}"
       }
     }
   }
 }
 ```
 
-Accepted auth header names include:
+<Tip>
+Use environment variable references (`${VAR}`) in headers — never literal credential values. Charter will flag a literal secret value as an `AE-SEC-001` finding.
+</Tip>
 
-- `Authorization`
-- `X-Api-Key`
-- `Api-Key`
-- `X-Auth-Token`
+**Accepted auth header names:**
 
-Use environment-variable references, not literal credentials.
+| Header | Example |
+|--------|---------|
+| `Authorization` | `Bearer ${TOKEN}` |
+| `X-Api-Key` | `${API_KEY}` |
+| `Api-Key` | `${API_KEY}` |
+| `X-Auth-Token` | `${AUTH_TOKEN}` |
 
-## 6. Re-run the scan
+Any of the four accepted header names satisfies the rule. Charter does not validate the header value — only that a recognized auth header is declared.
 
-After editing MCP config or `charter.yaml`:
+</Tab>
+
+</Tabs>
+
+## Re-scan after changes
+
+After editing your MCP config or `charter.yaml`:
 
 ```bash
-charter doctor --path . --threshold 80
+charter doctor
 ```
 
-If you only want to focus on MCP findings while iterating:
+To focus on MCP findings only while iterating:
 
 ```bash
-charter doctor --path . --rule AE-MCP-001,AE-MCP-002,AE-MCP-003
+charter doctor --rule AE-MCP-001,AE-MCP-002,AE-MCP-003
 ```
 
 ## Fast investigation loop
 
 ```bash
-charter doctor --path . --threshold 80
+charter doctor
 charter explain AE-MCP-001
-charter fix --path . --rule AE-MCP-001 --dry-run
-charter doctor --path . --threshold 80
+charter fix --rule AE-MCP-001 --dry-run
+charter fix --rule AE-MCP-001
+charter doctor
 ```
 
-## When not to suppress
+## When not to suppress MCP findings
 
-Do not jump straight to suppression for MCP findings that point at real supply-chain or trust problems.
+MCP findings are high-signal. Do not jump straight to suppression for findings that point at real supply-chain or trust problems.
 
 Suppress only when:
 
-- the repo intentionally carries a reviewed exception
-- the host or package is correct for a fixture or test harness
-- you have a real reason and, if permanent, an approver
+- the repo intentionally carries a reviewed exception (e.g., a vendored test fixture)
+- you have a real reason and, for permanent suppressions, an approver
 
-MCP findings are often some of the highest-signal findings in the repo because they touch dependency integrity, origin trust, and remote auth.
+See [Suppress a Finding](/how-to/suppress-a-finding) for the full suppression workflow.

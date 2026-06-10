@@ -3,44 +3,93 @@ title: "AE-SEC-001"
 description: "No raw secret patterns in agent-visible context files — AGENTS.md, CLAUDE.md, .cursor/rules, .windsurfrules, .github/copilot-instructions.md, opencode.md, codex.md, DESIGN.md, SKILL.md."
 ---
 
-**Rule ID:** AE-SEC-001 · **Severity:** Blocker · **Category:** Secrets · **Auto-fixable:** No
+**Rule ID:** AE-SEC-001 · **Severity:** <Badge color="red">Blocker</Badge> · **Category:** Secrets · **Auto-fixable:** No
+
+<Warning>
+  Charter never auto-fixes secret findings. Removing the literal value from the file is not a complete fix — the credential must be rotated externally first. Assume it was exposed the moment it was committed.
+</Warning>
 
 ## Why this rule
 
-Agent context files are read on every task. A raw credential in AGENTS.md is visible to every model, every session, and every log that captures context windows. Rotation after exposure is the only safe recovery.
+Agent context files are read on every task. A raw credential in `AGENTS.md` is visible to every model session, every log that captures context windows, and every tool invocation that passes the context forward. Rotation after exposure is the only safe recovery — the secret cannot be "un-seen."
 
 ## What triggers it
 
-Charter scans agent-visible context files that are tracked in git. It applies high-confidence pattern matching for credential formats: OpenAI tokens (`sk-` prefix, 20+ chars), GitHub tokens (`ghp_` prefix, 30+ chars), AWS access keys (`AKIA` prefix, 16 chars), Slack tokens (`xoxb-` prefix, 20+ chars), and PEM private key headers.
+Charter scans git-tracked agent-visible files for high-confidence credential patterns:
 
-Environment variable references (`${VAR}`, `$VAR`) and the placeholder string `your-api-key-here` are explicitly neutralized and do not trigger the rule. Only git-tracked files are scanned — uncommitted local files are out of scope by design.
+| Pattern | Example prefix | Min length |
+|---------|---------------|------------|
+| OpenAI API token | `sk-` | 20 characters |
+| GitHub personal access token | `ghp_` | 30 characters |
+| AWS access key ID | `AKIA` | 16 characters |
+| Slack bot token | `xoxb-` | 20 characters |
+| PEM private key | `-----BEGIN ... PRIVATE KEY-----` | — |
+
+**Scanned files:** `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, `.windsurfrules`, `.github/copilot-instructions.md`, `opencode.md`, `codex.md`, `DESIGN.md`, `SKILL.md`.
+
+**Neutralized (never fire):** Environment variable references (`${VAR}`, `$VAR`) and the placeholder string `your-api-key-here` are explicitly excluded. Only literal credential values trigger the finding. Detected values are redacted in Charter output (first 4 characters followed by `…`).
+
+**Out of scope by design:** Uncommitted local files are never scanned. Only git-tracked files are in scope.
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    ```markdown AGENTS.md
+    # Setup
 
-`AGENTS.md` containing `"OPENAI_API_KEY": "sk-proj-abc123…T3BlbkFJXxyzABC"` (a real `sk-` token of length ≥ 20) — detected and redacted as `sk-p…`.
+    OPENAI_API_KEY=sk-proj-REPLACE_WITH_REAL_VALUE
+    ```
 
-### Passing
+    ```
+    # Charter detects: sk-p… (redacted) in AGENTS.md — fires Blocker
+    ```
+  </Tab>
+  <Tab title="Passing">
+    ```markdown AGENTS.md
+    # Setup
 
-`AGENTS.md` containing `"key": "${OPENAI_API_KEY}"` or `"placeholder": "your-api-key-here"` — both pass because env-refs and placeholder are neutralized.
+    OPENAI_API_KEY=${OPENAI_API_KEY}
+    ```
+
+    ```markdown AGENTS.md (placeholder also passes)
+    # Setup
+
+    OPENAI_API_KEY=your-api-key-here
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-Remove the literal credential from the file. Rotate the secret externally — assume it was exposed the moment it was committed. Replace it with an environment variable reference: `${OPENAI_API_KEY}` instead of the raw value. Commit the fix.
+<Steps>
+  <Step title="Rotate the credential externally">
+    Revoke and regenerate the secret in the provider's dashboard. The commit that introduced the literal value exposed it — assume it is compromised regardless of repo visibility.
+  </Step>
+  <Step title="Remove the literal value from the file">
+    Delete the raw credential from the context file. Do not just move it to a comment or mask part of it.
+  </Step>
+  <Step title="Replace with an environment variable reference">
+    Use `${OPENAI_API_KEY}` or `$OPENAI_API_KEY` in place of the literal value. Most agent runtimes and CI systems resolve env refs at execution time.
+  </Step>
+  <Step title="Commit the fix">
+    Commit the updated file. Charter will re-scan on next run and clear the finding once no literal credential is detected.
+  </Step>
+  <Step title="If the secret is already in git history">
+    The secret is compromised. Rotate first (step 1), then consider a history rewrite (`git filter-repo`) — but note that history rewriting is destructive and requires coordination with all collaborators.
+  </Step>
+</Steps>
 
 ## Score impact
 
-when any AE-SEC-001 or AE-SEC-002 finding is present, final Charter score is hard-capped at **49**.
-
-## Edge cases
-
-file must be in repo inventory AND git-tracked to be scanned; uncommitted local scratch files are safe by design; `.gitignore`d files are never scanned.
+<Warning>
+  Secret findings apply a hard cap: the final Charter score is held at **≤ 49** while AE-SEC-001 or AE-SEC-002 is active. This overrides the base formula and all other scoring — the repo cannot reach 50 or above until the finding is resolved.
+</Warning>
 
 ## Related rules
 
-- [AE-SEC-002](/rules/AE-SEC-002)
-- [AE-CTX-001](/rules/AE-CTX-001)
+- [AE-SEC-002](/rules/AE-SEC-002) — same patterns applied to MCP config files
+- [AE-CTX-001](/rules/AE-CTX-001) — context file must exist and be within budget
 
 ## CLI
 

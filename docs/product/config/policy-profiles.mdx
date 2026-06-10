@@ -1,42 +1,37 @@
 ---
 title: "Policy Profiles"
-description: "Use policy profiles to set a consistent score threshold across a team or repo without per-run flags."
+description: "Use standard or strict profiles to set a consistent threshold without per-run flags."
 ---
 
-A policy profile is a named preset that sets the minimum passing score for your repo. Configuring a profile in `charter.yaml` means every invocation of `charter doctor` — on any machine, in any CI run — uses the same threshold without anyone needing to pass a flag.
-
-## What a profile does
-
-A profile sets the score threshold below which `charter doctor` exits with a non-zero status. When the score meets or exceeds the threshold, Charter exits 0. When it falls below, Charter exits 1 and prints the failing findings.
-
-Using a profile in `charter.yaml` is equivalent to passing `--threshold <value>` on every run, but committed to the repo so the threshold is part of the codebase rather than a per-engineer convention.
+A policy profile is a named threshold preset stored in `charter.yaml`. Configuring a profile means every invocation of `charter doctor` — on any machine, in any CI run — uses the same threshold without anyone needing to pass a flag.
 
 ## Available profiles
 
 | Profile | Threshold | When to use |
-|---|---|---|
-| `standard` | 80 | Default. A solid baseline for most repos, including active development projects that are progressively adopting agent tooling. |
-| `strict` | 90 | A higher bar suitable for security-sensitive repos, production services, or teams that have already resolved the common findings and want to hold the line. |
+|---------|-----------|-------------|
+| `standard` | 80 | Default for most repos. A solid baseline for active development projects progressively adopting agent tooling. |
+| `strict` | 90 | Security-sensitive repos, production services, or teams that have resolved the common findings and want to hold the line. |
 
-## Setting a profile in charter.yaml
+## Setting a profile
 
 ```yaml
+# charter.yaml
 policy:
   profile: strict
 ```
 
-Place `charter.yaml` in the root of your repo. Charter discovers it automatically.
+Place `charter.yaml` in the root of your repo. Charter discovers it automatically. With this config, every `charter doctor` invocation gates at 90 — no `--threshold` flag needed.
 
 ## Setting an exact threshold
 
-If neither profile maps to the threshold you want, set an explicit value:
+If neither profile maps to the threshold you want, set an explicit numeric value:
 
 ```yaml
 policy:
   threshold: 85
 ```
 
-`policy.threshold` overrides the default for the selected profile. You can use it alongside `policy.profile` if you want to name the intent clearly:
+You can use `policy.threshold` alongside `policy.profile` if you want to name the intent clearly:
 
 ```yaml
 policy:
@@ -44,24 +39,35 @@ policy:
   threshold: 85
 ```
 
-In this case, `threshold: 85` takes effect — the profile label is documentation only.
+<Tip>
+When both `profile` and `threshold` are set, `threshold` always wins. The `profile` label becomes documentation only — it has no effect on the gate value.
+</Tip>
+
+## Threshold precedence
+
+When multiple threshold sources are present, Charter applies them from highest to lowest priority:
+
+1. `--threshold` flag on the command line
+2. `policy.threshold` in `charter.yaml`
+3. The default for the configured `policy.profile` (80 for `standard`, 90 for `strict`)
+4. Built-in default: **80** (when `charter.yaml` is absent or has no policy section)
 
 ## Command-line override
 
-Passing `--threshold` at invocation time wins over everything in `charter.yaml`. This is useful for CI jobs that need a different gate than the repo default, or for one-off checks during development:
+Passing `--threshold` at invocation time overrides everything in `charter.yaml`. The config file is not modified:
 
 ```bash
 # Temporarily lower the threshold during a migration
 charter doctor --threshold 70
+
+# One-off strict check without changing charter.yaml
+charter doctor --threshold 90
 ```
 
-The `charter.yaml` file is not modified by `--threshold`.
+This is useful for CI jobs that need a different gate than the repo default, or for one-off checks during development.
 
-## Threshold precedence
+## See also
 
-When multiple threshold sources are present, Charter applies them in this order (highest priority first):
-
-1. `--threshold` flag on the command line
-2. `policy.threshold` in `charter.yaml`
-3. The default threshold for the `policy.profile` (80 for `standard`, 90 for `strict`)
-4. Built-in default: **80** (applied when `charter.yaml` is absent or has no policy section)
+- [charter.yaml Reference](/config/charter-yaml)
+- [Run in GitHub Actions](/how-to/run-in-github-actions)
+- [GitHub Action](/ci/github-action)

@@ -3,44 +3,152 @@ title: "AE-ENV-001"
 description: "Toolchain, lockfiles, and hooks should make the repo reproducible."
 ---
 
-**Rule ID:** AE-ENV-001 · **Severity:** Medium · **Category:** Environment · **Auto-fixable:** No
+**Rule ID:** AE-ENV-001 · **Severity:** <Badge color="yellow">Medium</Badge> · **Category:** Environment · **Auto-fixable:** No
 
 ## Why this rule
 
 An agent that cannot reproduce the project's toolchain installs the wrong version, runs tests against the wrong runtime, and produces fixes that pass locally but break in CI or on a colleague's machine.
 
+Reproducibility is not just a developer convenience — it is the foundation of an agent's ability to self-verify. Without a pinned, committed toolchain, the agent's environment is undefined. A fix that works in one environment may silently fail in another.
+
 ## What triggers it
 
-Charter checks that every active language in the repo has a pinned, committed toolchain declaration. Accepted forms include `mise.toml` or `.mise.toml` (universal version manager), language-native files such as `go.mod toolchain`, `.nvmrc` or `.node-version` for Node.js, `pyproject.toml` `requires-python`, or `rust-toolchain.toml`, and environment-level alternatives such as `devcontainer.json` or `flake.nix`. If no toolchain declaration exists for an active language, Charter flags the finding.
+Charter checks three things independently. Any one of them can fire the finding:
 
-The finding also fires in two additional cases: no lockfile is committed for a language that produces one (for example `go.sum`, `package-lock.json`, `yarn.lock`, `Cargo.lock`, or `uv.lock`), or no hook manager configuration is committed to the repo. Accepted hook manager files include `hk.pkl`, any file under `.husky/`, `lefthook.yml`, and `.pre-commit-config.yaml`. Without a committed hook config, pre-commit enforcement is local-only and cannot be verified by an agent or reproduced in CI.
+**1. Missing toolchain declaration** — No pinned runtime file exists for an active language.
+
+**2. Missing lockfile** — A language that produces a lockfile has not committed one.
+
+**3. Missing hook manager config** — No hook manager configuration is committed to the repo, so pre-commit enforcement is local-only and cannot be verified by an agent or reproduced in CI.
+
+<AccordionGroup>
+  <Accordion title="Accepted toolchain declarations">
+    Charter recognizes the following files as valid toolchain declarations:
+
+    | Scope | Accepted files |
+    |---|---|
+    | Universal | `mise.toml`, `.mise.toml`, `.tool-versions`, `devcontainer.json`, `flake.nix` |
+    | Go | `go.mod` with a `toolchain` directive |
+    | JavaScript / TypeScript | `.nvmrc`, `.node-version`, `bunfig.toml`, `package.json#volta` |
+    | Python | `pyproject.toml` with `requires-python` |
+    | Rust | `rust-toolchain.toml` |
+    | Swift | `.swift-version` |
+    | Kotlin / JVM | `gradle-wrapper.properties` |
+    | Ruby | `.ruby-version` |
+  </Accordion>
+  <Accordion title="Accepted lockfiles">
+    | Language | Lockfile |
+    |---|---|
+    | Go | `go.sum` |
+    | JavaScript (npm) | `package-lock.json` |
+    | JavaScript (yarn) | `yarn.lock` |
+    | JavaScript (pnpm) | `pnpm-lock.yaml` |
+    | Rust | `Cargo.lock` |
+    | Python (uv) | `uv.lock` |
+    | Python (pip) | `requirements.txt` pinned with exact versions |
+  </Accordion>
+  <Accordion title="Accepted hook manager configs">
+    | Hook manager | Config file |
+    |---|---|
+    | hk | `hk.pkl` |
+    | husky | Any file under `.husky/` |
+    | lefthook | `lefthook.yml` |
+    | pre-commit | `.pre-commit-config.yaml` |
+  </Accordion>
+</AccordionGroup>
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    A Node.js repo with `package.json` but no `.nvmrc`, no `engines` field, and no `package-lock.json` committed — the runtime is floating and the dependency graph is not reproducible.
 
-A Node.js repo with `package.json` but no `.nvmrc`, no `engines` field, and no `package-lock.json` committed — the runtime is floating and the dependency graph is not reproducible.
+    A Go repo with `go.mod` but no `go.sum` committed — the lockfile is missing.
 
-A Go repo with `go.mod` but no `go.sum` committed — the lockfile is missing.
+    A repo with CI and tests but no committed hook manager config — local hook behavior is unverifiable.
+  </Tab>
+  <Tab title="Passing">
+    A repo with `mise.toml` pinning Go and Node versions, `go.sum` and `package-lock.json` committed, and `hk.pkl` declaring pre-commit hooks:
 
-A repo with CI and tests but no committed hook manager config — local hook behavior is unverifiable.
+    ```toml mise.toml
+    [tools]
+    go   = "1.26.3"
+    node = "22.0.0"
+    ```
 
-### Passing
+    ```toml mise.lock
+    # generated — committed to repo
+    ```
 
-A repo with `mise.toml` pinning Go and Node versions, `go.sum` and `package-lock.json` committed, and `hk.pkl` declaring pre-commit hooks — fully reproducible from tracked files.
+    ```pkl hk.pkl
+    hooks {
+      preCommit = ["moon run :lint", "moon run :docs"]
+      prePush   = ["moon run :test", "moon run :security"]
+    }
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-Pin each active language runtime in a tracked config file and commit the corresponding lockfile. Add a hook manager config file (`hk.pkl`, `.husky/`, `lefthook.yml`, or `.pre-commit-config.yaml`) so that pre-commit behavior is defined in the repo rather than relying on local developer setup.
+<Tabs>
+  <Tab title="mise (recommended)">
+    `mise` is a universal version manager that covers every language in a single file:
+
+    ```toml mise.toml
+    [tools]
+    go     = "1.26.3"
+    node   = "22.0.0"
+    python = "3.12.4"
+    ```
+
+    Run `mise install` to generate `mise.lock`, then commit both files. Add `mise install` to your onboarding docs.
+  </Tab>
+  <Tab title="Language-native">
+    Use the language's own toolchain file if you prefer not to add `mise`:
+
+    ```text .nvmrc (Node.js)
+    22.0.0
+    ```
+
+    ```toml rust-toolchain.toml (Rust)
+    [toolchain]
+    channel = "1.79.0"
+    ```
+
+    ```text .python-version (Python via pyenv)
+    3.12.4
+    ```
+
+    Commit the toolchain file and the corresponding lockfile together.
+  </Tab>
+</Tabs>
+
+## Score impact
+
+`Medium` (−4); no hard cap. Each sub-check (toolchain, lockfile, hook config) is a separate finding instance, so a repo missing all three can incur −12 points from this rule alone.
 
 ## Edge cases
 
-partial language coverage is acceptable only if the uncovered language is not active in the repo; local-only helper scripts do not satisfy reproducibility for tracked task config.
+<AccordionGroup>
+  <Accordion title="Partial language coverage">
+    Partial language coverage is acceptable only if the uncovered language is not active in the repo. See AE-TEST-001 for how Charter determines whether a language is active.
+  </Accordion>
+  <Accordion title="Local-only helper scripts">
+    Local-only helper scripts do not satisfy reproducibility for tracked task config. The toolchain declaration and lockfile must be committed to the repo.
+  </Accordion>
+</AccordionGroup>
 
 ## Related rules
 
-- [AE-CI-002](/rules/AE-CI-002)
-- [AE-AUTO-001](/rules/AE-AUTO-001)
+<CardGroup cols={2}>
+  <Card title="AE-CI-002" icon="circle-check" href="/rules/AE-CI-002">
+    Requires Charter to run in CI so the reproducible environment is verified on every PR.
+  </Card>
+  <Card title="AE-AUTO-001" icon="play" href="/rules/AE-AUTO-001">
+    Requires a discoverable test command — meaningless without a reproducible runtime.
+  </Card>
+</CardGroup>
 
 ## CLI
 

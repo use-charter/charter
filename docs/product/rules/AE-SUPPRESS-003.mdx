@@ -1,52 +1,79 @@
 ---
 title: "AE-SUPPRESS-003"
-description: "A repository that suppresses a large share of its findings has likely stopped trusting Charter or accumulated unreviewed risk; this surfaces that signal without punishing the score, so teams self-correct rather than mute Charter entirely."
+description: "High suppression rate — surfaces when suppressions account for more than 30% of total findings, prompting a review without penalising the score."
 ---
 
-**Rule ID:** AE-SUPPRESS-003 · **Severity:** Medium (informational — does not deduct points or affect the score) · **Category:** Governance · **Auto-fixable:** No
+**Rule ID:** AE-SUPPRESS-003 · **Severity:** <Badge color="gray">Informational</Badge> · **Category:** Governance · **Auto-fixable:** No
+
+<Info>
+  AE-SUPPRESS-003 is **informational only**. It carries no point deduction, does not engage any score cap, and cannot itself be suppressed. It surfaces so the pattern is visible during reviews — it does not change your score.
+</Info>
 
 ## Why this rule
 
-A high suppression rate signals that either the tool is misconfigured for this repo or the team is systematically bypassing its controls. It does not deduct points — it surfaces so the pattern is visible during reviews.
+A high suppression rate is a signal that either the tool is misconfigured for this repo or the team is systematically bypassing its controls. Both patterns are worth surfacing explicitly so teams self-correct rather than silently diverge from the score.
+
+A suppression rate above 30% doesn't automatically mean something is wrong — a freshly migrated repo may legitimately carry many accepted findings during initial calibration. The point is intentional suppression, not the absence of it.
 
 ## What triggers it
 
-After scoring, Charter computes the suppression rate for the repo: the number of suppressed findings divided by the total of active plus suppressed findings (governance findings like this one are excluded from the denominator). When that rate exceeds 30% and there is at least one suppression in the repo, Charter surfaces a single informational finding.
+Charter computes the suppression rate after scoring:
 
-This finding is **informational only** — it carries no point deduction, does not engage any score cap, and cannot itself be suppressed. It is listed in Charter output so the pattern is visible, but it does not change the score.
+```
+rate = suppressed findings / (active findings + suppressed findings)
+```
+
+Governance findings like AE-SUPPRESS-003 itself are excluded from the denominator to prevent a feedback loop. The finding fires when the rate exceeds **30%** and at least one suppression exists.
 
 ## Examples
 
 ### Triggers
 
-A repo with 3 active findings and 6 suppressions has a suppression rate of 67% — one informational finding is reported. The score reflects only the 3 active findings and is unchanged by this notice.
+A repo with 3 active findings and 6 suppressions has a rate of 67% — AE-SUPPRESS-003 is reported. The score is unchanged. The 3 active findings still deduct normally; the 6 suppressions are already excluded from the base score.
 
 ### Does not trigger
 
-A repo with 10 active findings and 1 suppression has a rate of 9% — below the 30% threshold, no finding. A repo with no suppressions at all also produces no finding.
+- A repo with 10 active findings and 1 suppression: rate = 9% — below threshold, no finding.
+- A repo with zero suppressions: zero denominator — never fires.
 
 ## How to fix
 
-This finding is a prompt to review, not a defect to silence. Examine the suppressed findings and ask whether each one represents a genuine, documented acceptance of risk:
+This finding is a prompt to review, not a defect to silence.
 
-- If a finding was suppressed to avoid noise rather than because the risk was evaluated, consider fixing the underlying problem instead.
-- If suppressions are accurate but accumulating, review whether any can be lifted as the codebase improves.
-- Confirm that each remaining suppression has a `reason:` and, where it is permanent, an `approver:` (see AE-SUPPRESS-001 and AE-SUPPRESS-002).
-
-A high suppression rate is not automatically wrong — a freshly migrated repo may legitimately have many accepted findings during initial calibration. The goal is intentional suppression, not the absence of it.
+<Steps>
+  <Step title="Audit each suppression">
+    Open `.charter-suppress.yml` and review each entry. Ask: was this suppressed because the risk was genuinely evaluated and accepted — or to avoid noise?
+  </Step>
+  <Step title="Fix what can be fixed">
+    If a suppression was added to avoid fixing a real issue, address the underlying finding and remove the suppression entry.
+  </Step>
+  <Step title="Confirm governance fields are complete">
+    Every remaining suppression should have `reason:`. Permanent suppressions require `approver:`. Missing fields will trigger AE-SUPPRESS-001 or AE-SUPPRESS-002 independently.
+  </Step>
+  <Step title="Let the rate drop naturally">
+    As findings are fixed and suppressions are lifted, the rate falls. No special action is needed once the denominator balance is restored.
+  </Step>
+</Steps>
 
 ## Score impact
 
-none — informational only; the finding is excluded from the severity tally and all caps.
+None. AE-SUPPRESS-003 is excluded from the severity tally and all caps. It appears in output and in the HTML report as an informational notice, but does not affect the numeric score or gate result.
 
 ## Edge cases
 
-zero suppressions (zero denominator) ⇒ never fires; the finding is itself never suppressible and never counted in the denominator (no feedback loop); because it is informational, it does not move a passing repo below threshold; a freshly migrated repo may legitimately trip it during calibration — this is the intended prompt-to-review, and remains advisory only.
+<AccordionGroup>
+  <Accordion title="Freshly migrated repos">
+    A repo that has just adopted Charter may have many accepted findings under suppression during the initial calibration period. AE-SUPPRESS-003 fires as intended — it's the prompt to review those suppressions and decide which ones to lift as the codebase improves. This is advisory, not blocking.
+  </Accordion>
+  <Accordion title="Can AE-SUPPRESS-003 be suppressed?">
+    No. It is never counted in its own denominator and cannot be suppressed. This prevents the feedback loop where suppressing the governance finding further increases the suppression rate.
+  </Accordion>
+</AccordionGroup>
 
 ## Related rules
 
-- [AE-SUPPRESS-001](/rules/AE-SUPPRESS-001)
-- [AE-SUPPRESS-002](/rules/AE-SUPPRESS-002)
+- [AE-SUPPRESS-001](/rules/AE-SUPPRESS-001) — suppression missing `reason:` field
+- [AE-SUPPRESS-002](/rules/AE-SUPPRESS-002) — permanent suppression missing `approver:` field
 
 ## CLI
 

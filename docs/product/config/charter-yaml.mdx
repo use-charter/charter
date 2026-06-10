@@ -1,109 +1,86 @@
 ---
-title: "charter.yaml"
-description: "Reference for Charter's repo-root config file: policy gating and MCP trusted remotes."
+title: "charter.yaml Reference"
+description: "Configure Charter's policy, MCP allowlist, and behavior via charter.yaml."
 ---
 
-`charter.yaml` is Charter's repo-root configuration file. In v1 it exposes two configuration surfaces:
+`charter.yaml` is Charter's repo-root configuration file. It is optional — Charter still runs with built-in defaults when the file is absent. In v1 it exposes two configuration surfaces: `policy` for score gating and `mcp.trustedRemotes` for reviewed remote MCP hosts.
 
-- `policy` for score gating
-- `mcp.trustedRemotes` for reviewed remote MCP hosts
+**File location:** repo root. Auto-discovered by all Charter commands.
 
-Charter reads `charter.yaml` from the repository root. The config is optional: if the file is absent, Charter still runs using its built-in defaults.
-
-## Schema
-
-The machine-readable contract is in-repo at `schemas/charter-config.schema.json`.
-
-Its intended canonical public URL is `https://use-charter.dev/schemas/charter-config.schema.json` once the docs and domain surface are live. Until then, treat the in-repo schema file as the source of truth for allowed keys and value shapes. The examples below match the current shipped CLI behavior.
-
-## Full Example
+## Full example
 
 ```yaml
 policy:
-  profile: standard
+  profile: standard    # standard (80) or strict (90)
+  threshold: 85        # optional: overrides the profile's default threshold
 
 mcp:
   trustedRemotes:
-    - mcp.asana.com
-    - api.githubcopilot.com
+    - "api.your-internal-tool.com"
+    - "mcp.your-company.com"
 ```
 
-## `policy.profile`
+## Fields
 
-`policy.profile` selects one of Charter's built-in passing thresholds:
+<ResponseField name="policy.profile" type="string">
+Named threshold preset. Accepted values:
 
-| Profile | Threshold | Meaning |
-| --- | ---: | --- |
-| `strict` | `90` | High bar for repos that want a tighter gate. |
-| `standard` | `80` | The default v1 ship-ready threshold. |
-| `relaxed` | `60` | Lower-friction adoption gate for early rollout. |
+| Value | Threshold | When to use |
+|-------|-----------|-------------|
+| `standard` | 80 | Default for most repos |
+| `strict` | 90 | Security-sensitive or production repos |
 
-Example:
+Default: `standard`
+</ResponseField>
 
-```yaml
-policy:
-  profile: strict
+<ResponseField name="policy.threshold" type="integer">
+Explicit numeric threshold. Accepted range: `0`–`100`.
+
+Overrides the default threshold for the selected `policy.profile`. Use this when you want an exact gate that doesn't map cleanly to the named profiles (for example, `85`).
+</ResponseField>
+
+<ResponseField name="mcp.trustedRemotes" type="string[]">
+List of remote MCP server hostnames to add to the trusted allowlist for `AE-MCP-002`.
+
+Entries are hostnames, not full URLs. This repo-level list is combined with Charter's built-in catalog of known vendor-operated hosts. Local origins (`localhost`, `127.0.0.1`) are always exempt and do not need to be listed.
+</ResponseField>
+
+## Threshold precedence
+
+<Note>
+When multiple threshold sources are present, Charter applies them in this order:
+
+```
+--threshold flag  >  policy.threshold  >  policy.profile default  >  built-in default (80)
 ```
 
-With no explicit `--threshold` flag and no `policy.threshold`, this makes `charter doctor` gate at `90`.
+If you set both `profile` and `threshold`, the `threshold` value wins. The `profile` label becomes documentation only.
+</Note>
 
-## `policy.threshold`
-
-`policy.threshold` is the explicit numeric override. It accepts an integer from `0` to `100`.
-
-Example:
-
-```yaml
-policy:
-  threshold: 85
-```
-
-Use `policy.threshold` when you want an exact gate that does not map cleanly to the three named profiles.
-
-## Precedence
-
-Charter resolves the effective threshold using this precedence order:
-
-1. `--threshold` flag
-2. `policy.threshold`
-3. `policy.profile`
-4. default `80`
-
-That means a CLI invocation like this always wins over the repo config:
+Example: a CLI invocation always wins over the repo config:
 
 ```bash
 charter doctor --threshold 95
 ```
 
-If `charter.yaml` contains both `profile` and `threshold`, the numeric `threshold` wins.
+This gates at 95 regardless of what `charter.yaml` says, without modifying the file.
 
-## `mcp.trustedRemotes`
+## Validation
 
-`mcp.trustedRemotes` is a list of reviewed remote MCP hostnames.
+Charter fails fast on invalid configuration:
 
-Example:
+- Unknown `policy.profile` values → error at startup
+- `policy.threshold` outside `0..100` → error at startup
+- Malformed YAML → error at startup
 
-```yaml
-mcp:
-  trustedRemotes:
-    - mcp.asana.com
-    - self-hosted.example.com
-```
+## Schema
 
-Notes:
+<Tip>
+The full JSON Schema is at `schemas/charter-config.schema.json` in the Charter repo. Its intended canonical public URL is `https://use-charter.dev/schemas/charter-config.schema.json` once the domain is live.
+</Tip>
 
-- Entries are hostnames, not full URLs.
-- Charter compares remote MCP server hosts against this allowlist for `AE-MCP-002`.
-- This repo-level list is combined with Charter's built-in catalog of trusted vendor hosts.
+## See also
 
-## Validation Rules
-
-- Unknown `policy.profile` values fail fast.
-- `policy.threshold` outside `0..100` fails fast.
-- Malformed `charter.yaml` fails fast.
-
-## See Also
-
-- [Quickstart](/quickstart)
+- [Policy Profiles](/config/policy-profiles)
 - [GitHub Action](/ci/github-action)
-- [Rules Overview](/rules/overview)
+- [Investigate MCP Findings](/how-to/investigate-mcp-findings)

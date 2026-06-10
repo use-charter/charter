@@ -3,44 +3,106 @@ title: "AE-SEC-002"
 description: "No raw secret patterns in MCP or adjacent config files — .mcp.json, .mcp.yml, .cursor/mcp.json, .claude/settings.json, claude_desktop_config.json, cline_mcp_settings.json, and any `*.pkl` file with path containing `mcp` or `config`."
 ---
 
-**Rule ID:** AE-SEC-002 · **Severity:** Blocker · **Category:** Secrets · **Auto-fixable:** No
+**Rule ID:** AE-SEC-002 · **Severity:** <Badge color="red">Blocker</Badge> · **Category:** Secrets · **Auto-fixable:** No
+
+<Warning>
+  Charter never auto-fixes secret findings. Removing the literal value is not a complete fix — rotate the credential externally first. Assume it was exposed the moment it was committed.
+</Warning>
 
 ## Why this rule
 
-MCP configurations are read by the agent runtime before tools execute. A raw credential in mcp.json is exposed to any model or log that processes the tool-call context — and unlike source code, MCP configs are intentionally agent-visible by design.
+MCP configurations are read by the agent runtime before tools execute. Unlike source code that may only be read occasionally, MCP configs are intentionally agent-visible by design — every tool invocation passes through them. A raw credential here is exposed to every model, every session, and every tool-call log that processes this context.
 
 ## What triggers it
 
-Charter scans tracked MCP configuration files — `.mcp.json`, `mcp.json`, `.cursor/mcp.json`, and `.vscode/mcp.json` — for the same high-confidence token patterns used by AE-SEC-001. It looks for literal values matching known secret prefixes: OpenAI `sk-` tokens (20+ characters), GitHub `ghp_` tokens (30+ characters), AWS access key IDs beginning with `AKIA`, Slack bot tokens starting with `xoxb-`, and PEM private key headers.
+Charter scans tracked MCP configuration files for the same high-confidence credential patterns as AE-SEC-001:
 
-Environment variable references — both `${VAR}` and `$VAR` syntax — are neutralized before matching and always pass. Placeholder strings such as `your-api-key-here` also pass. Only literal credential values trigger the finding. Detected secrets are redacted in Charter output (first 4 characters followed by `…`).
+| Pattern | Example prefix | Min length |
+|---------|---------------|------------|
+| OpenAI API token | `sk-` | 20 characters |
+| GitHub personal access token | `ghp_` | 30 characters |
+| AWS access key ID | `AKIA` | 16 characters |
+| Slack bot token | `xoxb-` | 20 characters |
+| PEM private key | `-----BEGIN ... PRIVATE KEY-----` | — |
+
+**Scanned files:** `.mcp.json`, `mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`, `.claude/settings.json`, `claude_desktop_config.json`, `cline_mcp_settings.json`, and any `*.pkl` file whose path contains `mcp` or `config`.
+
+**Neutralized (never fire):** Environment variable references (`${VAR}`, `$VAR`) and placeholder strings (`your-api-key-here`) are explicitly excluded. Only literal credential values trigger the finding. Detected values are redacted in Charter output (first 4 characters followed by `…`).
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    ```json .mcp.json
+    {
+      "mcpServers": {
+        "my-server": {
+          "type": "http",
+          "url": "https://my-mcp-server.example.com",
+          "headers": {
+            "Authorization": "Bearer sk-proj-abc123T3BlbkFJXxyzABCDEF"
+          }
+        }
+      }
+    }
+    ```
 
-`.mcp.json` containing `"api_key": "sk-proj-abc123…T3BlbkFJXxyzABC"` — a real OpenAI token of sufficient length is detected and reported as `sk-p…`.
-
-### Passing
-
-`.mcp.json` with `"env": {"OPENAI_API_KEY": "${OPENAI_API_KEY}"}` — the env-var reference is safe and passes. A field set to `"your-api-key-here"` also passes.
+    ```
+    # Charter detects: sk-p… (redacted) in .mcp.json — fires Blocker
+    ```
+  </Tab>
+  <Tab title="Passing">
+    ```json .mcp.json
+    {
+      "mcpServers": {
+        "my-server": {
+          "type": "http",
+          "url": "https://my-mcp-server.example.com",
+          "headers": {
+            "Authorization": "Bearer ${MCP_API_KEY}"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-Remove the literal secret from the MCP config file, rotate it externally, and replace it with an environment variable reference — for example `"key": "${ENV_VAR_NAME}"`. Move runtime credentials to a secrets manager and inject them at startup rather than storing them in tracked config files.
+<Steps>
+  <Step title="Rotate the credential externally">
+    Revoke and regenerate the secret in the provider's dashboard before touching any files. The commit that introduced the literal value exposed it.
+  </Step>
+  <Step title="Remove the literal value from the MCP config">
+    Delete the raw credential from the header value in the config file.
+  </Step>
+  <Step title="Replace with an environment variable reference">
+    Use `${MCP_API_KEY}` or `$MCP_API_KEY` in place of the literal value. Most MCP runtimes (`npx`, `uvx`) resolve environment variables at tool invocation time.
+  </Step>
+  <Step title="Commit the fix">
+    Commit the updated config file. Charter re-scans on next run and clears the finding once no literal credential is detected.
+  </Step>
+  <Step title="If the secret is already in git history">
+    The credential is compromised. Rotate first, then consider a history rewrite (`git filter-repo`) — coordinate with all collaborators before rewriting shared history.
+  </Step>
+</Steps>
 
 ## Score impact
 
-when any AE-SEC-001 or AE-SEC-002 finding is present, final Charter score is hard-capped at **49**.
+<Warning>
+  Secret findings apply a hard cap: the final Charter score is held at **≤ 49** while AE-SEC-001 or AE-SEC-002 is active. This overrides the base formula and all other scoring.
+</Warning>
 
-## Edge cases
-
-environment variable references (both `${VAR}` and `$VAR` syntax) are intentionally safe and never flagged; only literal string values match detection.
+<Tip>
+  Use env var references in MCP auth headers. Most MCP runtimes resolve environment variables at tool invocation time — the credential never needs to live in the config file itself.
+</Tip>
 
 ## Related rules
 
-- [AE-SEC-001](/rules/AE-SEC-001)
-- [AE-MCP-001](/rules/AE-MCP-001)
+- [AE-SEC-001](/rules/AE-SEC-001) — same patterns applied to agent context files
+- [AE-MCP-001](/rules/AE-MCP-001) — MCP servers must be pinned to exact versions
+- [AE-MCP-003](/rules/AE-MCP-003) — remote MCP servers must declare auth
 
 ## CLI
 

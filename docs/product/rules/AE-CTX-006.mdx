@@ -1,44 +1,92 @@
 ---
 title: "AE-CTX-006"
-description: "Agent instructions should be concise and declarative. Instruction-following research shows that stacked emphatic directives (`IMPORTANT`/`NEVER`/`MUST`/`CRITICAL`/…) create a fragile, competitive instruction topology that *degrades* adherence, while declarative phrasing transfers more reliably. AE-CTX-006 is a quality nudge for context files that over-use emphatic directives."
+description: "Agent instructions should be concise and declarative — stacked emphatic directives degrade adherence."
 ---
 
-**Rule ID:** AE-CTX-006 · **Severity:** Low (informational — does **not** deduct points or affect score) · **Category:** Context · **Auto-fixable:** No
+**Rule ID:** AE-CTX-006 · **Severity:** <Badge color="gray">Informational</Badge> · **Category:** Context · **Auto-fixable:** No
+
+<Info>
+  AE-CTX-006 is informational — it does not deduct points or affect your Charter score. It surfaces so you can review instruction density before it quietly degrades agent behavior.
+</Info>
 
 ## Why this rule
 
-Agents that receive a high density of emphatic directives (IMPORTANT, NEVER, MUST) show measurably reduced instruction adherence. The signal degrades into noise when every sentence demands priority.
+Agents that receive a high density of emphatic directives show measurably reduced instruction adherence. When every sentence opens with `IMPORTANT:` or `NEVER`, the signal-to-noise ratio collapses — nothing stands out as genuinely exceptional, so the agent discounts them all equally.
+
+Declarative phrasing transfers more reliably: "Tests run with `go test`. No silent mutation." is easier for an agent to act on than a paragraph of stacked imperatives saying the same thing louder.
 
 ## What triggers it
 
-Charter counts emphatic directive words — `IMPORTANT`, `NEVER`, `MUST`, `ALWAYS`, `CRITICAL`, `WARNING`, and similar — in the context file and computes a density relative to word count. The finding fires informally (no score deduction) when that density exceeds roughly 15 per 1,000 words.
+Charter counts emphatic directive words in the context file — `IMPORTANT`, `NEVER`, `MUST`, `ALWAYS`, `CRITICAL`, `WARNING`, and similar — and computes a density relative to word count. The finding fires when density exceeds roughly **15 per 1,000 words**.
+
+The finding reports the exact count and density so you can judge how far over the threshold the file sits.
+
+<Note>
+  This rule only fires when a context file exists. A missing context file is AE-CTX-001's concern, not AE-CTX-006's.
+</Note>
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="High density (finding fires)">
+    ```markdown AGENTS.md
+    IMPORTANT: Always run tests before committing.
+    NEVER edit files outside src/.
+    CRITICAL: Do not delete user data.
+    IMPORTANT: Use the project's formatter.
+    NEVER commit directly to main.
+    MUST use conventional commits.
+    CRITICAL: Check the .env example before adding env vars.
+    IMPORTANT: Keep functions under 50 lines.
+    ```
 
-A context file where nearly every instruction starts with `IMPORTANT:` or `NEVER`, or where multiple `CRITICAL` blocks are stacked in sequence. The finding reports the exact count and density.
+    ```
+    # 8 emphatic words in ~60 words = ~133 per 1,000 — well above threshold
+    ```
+  </Tab>
+  <Tab title="Selective use (passes)">
+    ```markdown AGENTS.md
+    Tests run with `moon run :test`. Verification: `moon run :check`.
 
-### Passing
+    Off-limits: .env*, secrets/, signing keys.
 
-A context file that uses emphatic words selectively — reserving them for genuinely exceptional constraints rather than routine instructions. Plain declarative sentences like "Tests run with `go test`. No silent mutation. Fail fast." keep density well below the threshold.
+    ## Hard constraints
+    - NEVER delete user files — this is the one constraint that cannot be undone.
+    - No LLM calls in core.
+    - Fail fast. No speculative refactors.
+    ```
+
+    ```
+    # 1 emphatic word in ~50 words = ~20 per 1,000
+    # Borderline but the single NEVER is genuinely exceptional — passes with a nudge
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-Review the context file for stacked imperatives. Reserve `IMPORTANT`, `NEVER`, and `MUST` for constraints that would cause real harm if missed. Rewrite routine guidance as plain declarative sentences. The goal is signal density, not volume.
+Review the context file for stacked imperatives and convert routine guidance to plain declarative sentences.
+
+<AccordionGroup>
+  <Accordion title="Replace imperative stacks with declarative sentences">
+    Instead of `IMPORTANT: Always run tests before committing`, write `Run tests before committing` or just list the verification command. The instruction is the same; the emphatic wrapper adds no information.
+  </Accordion>
+  <Accordion title="Reserve emphatic words for genuine exceptions">
+    Keep `NEVER` and `CRITICAL` for constraints where a violation would cause real, hard-to-reverse harm — deleting user data, committing credentials, bypassing security controls. Use them for one or two things, not for every routine convention.
+  </Accordion>
+  <Accordion title="Rewrite as structured sections">
+    A short "Hard constraints" section with three plain bullet points is more scannable — and more adherence-inducing — than ten `IMPORTANT:` lines scattered through the file.
+  </Accordion>
+</AccordionGroup>
 
 ## Score impact
 
-informational — listed in output, re-surfaces, but contributes **0** to the score (mirrors AE-SUPPRESS-003).
-
-## Edge cases
-
-fires only when a context file exists (absence is AE-CTX-001's concern); empty file → no finding.
+Informational: **0 points deducted**. The finding appears in `charter doctor` output and re-surfaces on each run, but it does not affect the numeric score.
 
 ## Related rules
 
-- [AE-CTX-001](/rules/AE-CTX-001)
-- [AE-CTX-002](/rules/AE-CTX-002)
+- [AE-CTX-001](/rules/AE-CTX-001) — context file must exist and be within budget
+- [AE-CTX-002](/rules/AE-CTX-002) — context file must match repo reality
 
 ## CLI
 

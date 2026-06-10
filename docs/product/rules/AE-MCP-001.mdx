@@ -3,49 +3,120 @@ title: "AE-MCP-001"
 description: "Every MCP server entry in a repo's MCP configuration must be pinned to an exact version or digest. Floating references — `@latest`, missing versions, dist-tags, semver ranges, and branch/commit-less git sources — are a supply-chain risk (OWASP MCP Top 10 beta, MCP04 Software Supply Chain Attacks & Dependency Tampering)."
 ---
 
-**Rule ID:** AE-MCP-001 · **Severity:** High · **Category:** MCP Safety · **Auto-fixable:** Yes — `charter fix --rule AE-MCP-001` (safe version bump to catalog stable; deprecated packages require manual migration)
+**Rule ID:** AE-MCP-001 · **Severity:** <Badge color="orange">High</Badge> · **Category:** MCP Safety · **Auto-fixable:** Yes (partial) — `charter fix --rule AE-MCP-001`
+
+<Note>
+  AE-MCP-001 is **partially** auto-fixable. Charter can bump unpinned or behind-stable packages to the catalog's stable version. Deprecated or archived packages require manual migration — Charter provides the successor package name in the finding evidence, but will not rewrite the entry automatically.
+</Note>
 
 ## Why this rule
 
-An MCP server at `@latest` can change behavior between runs without any change to the repo. A package can be deprecated, archived, or found to contain a known vulnerability after a repo first passed Charter. Pinning to an exact version ties the tool definition to a reviewable artifact.
+An MCP server at `@latest` can change behavior between runs without any change to the repo. A package can be deprecated, archived, or found to contain a known vulnerability after a repo first passed Charter. Pinning to an exact version ties the tool definition to a reviewable artifact — every tool-call behavior is deterministic across machines and runs.
 
 ## What triggers it
 
-Charter scans MCP configuration files (`.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`) for server entries launched by package runners (`npx`, `bunx`, `uvx`, `pnpm dlx`). For each entry, Charter extracts the package spec and checks whether it pins an exact version.
+Charter scans MCP configuration files for server entries launched by package runners and checks whether each entry pins an exact version.
 
-Unpinned forms that trigger this rule: `@latest`, a missing version, semver ranges (`^1.0.0`, `~1.0.0`, `>=1.0.0`), floating git refs, or dynamic values like `pkg@${VERSION}`.
+**Scanned files:** `.mcp.json`, `mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`
 
-Charter's catalog adds additional signal: a deprecated or archived package fires High regardless of whether it's pinned. A pinned version covered by a known CVE or GHSA advisory also fires High. A pinned version that's simply behind the catalog's stable release fires informational only — it surfaces but doesn't deduct points.
+**Scanned runners:** `npx`, `bunx`, `uvx`, `pnpm dlx`
+
+The finding ladder based on signal type:
+
+| Signal | Severity | Example |
+|--------|----------|---------|
+| Deprecated or archived package | High | `@modelcontextprotocol/server-github` |
+| Known CVE / GHSA advisory on pinned version | High | `mcp-server-git@2025.8.0` |
+| Unpinned reference (`@latest`, semver range, missing version) | High | `mcp-server-git@latest` |
+| Behind catalog stable, no advisory | Informational | Old exact pin, no known issues |
+
+**Unpinned forms that fire High:** `@latest`, a missing version suffix, semver ranges (`^1.0.0`, `~1.0.0`, `>=1.0.0`), floating git refs, or dynamic values like `pkg@${VERSION}`.
 
 ## Examples
 
-### Failing
+<Tabs>
+  <Tab title="Failing">
+    ```json .mcp.json (floating tag)
+    {
+      "mcpServers": {
+        "git": {
+          "command": "npx",
+          "args": ["-y", "mcp-server-git@latest"]
+        }
+      }
+    }
+    ```
 
-`.mcp.json` with `"args": ["-y", "gumroad-mcp@latest"]` — floating tag, fires High.
+    ```json .mcp.json (archived package)
+    {
+      "mcpServers": {
+        "github": {
+          "command": "npx",
+          "args": ["-y", "@modelcontextprotocol/server-github@1.0.0"]
+        }
+      }
+    }
+    ```
 
-`.mcp.json` with `"args": ["-y", "@modelcontextprotocol/server-github@1.0.0"]` — archived package, fires High with migration guidance.
+    ```
+    # @modelcontextprotocol/server-github is archived — fires High
+    # even though the version is pinned exactly
+    ```
+  </Tab>
+  <Tab title="Passing">
+    ```json .mcp.json
+    {
+      "mcpServers": {
+        "filesystem": {
+          "command": "npx",
+          "args": ["-y", "@modelcontextprotocol/server-filesystem@2026.1.14"]
+        }
+      }
+    }
+    ```
 
-### Passing
-
-`.mcp.json` with `"args": ["-y", "@modelcontextprotocol/server-filesystem@2026.1.14"]` — exact CalVer version, catalog-known, no advisory.
+    ```json .mcp.json (uvx runner)
+    {
+      "mcpServers": {
+        "git": {
+          "command": "uvx",
+          "args": ["mcp-server-git@2026.1.14"]
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
-Run `charter fix --rule AE-MCP-001` for a safe diff-first version bump. For unpinned or behind-stable packages, the fixer updates the package spec to the catalog's stable version. For deprecated packages, migration is manual — the finding includes the recommended successor.
+<CodeGroup>
+  ```bash Preview the fix
+  charter fix --rule AE-MCP-001 --dry-run
+  ```
+
+  ```bash Apply the fix
+  charter fix --rule AE-MCP-001
+  ```
+</CodeGroup>
+
+For unpinned or behind-stable packages, the auto-fixer updates the package spec to the catalog's stable version as a diff-first preview before writing anything.
+
+For **deprecated or archived packages**, migration is manual — the finding evidence includes the recommended successor package name. Update the entry to use the successor at its current stable version.
 
 ## Score impact
 
-deprecated/unpinned/advisory findings are `High` (−10); the behind-stable nudge is informational (0). No hard cap (caps are reserved for raw-secret findings).
+Deprecated, unpinned, or advisory-covered findings are `High` (−10 each). The behind-stable-only nudge is Informational (0). No hard cap applies to MCP findings — caps are reserved for raw-secret findings.
 
 ## Edge cases
 
-package specs are resolved only for direct runners (`npx`, `bunx`, `uvx`) and the `dlx` subcommand of `pnpm`/`yarn`; local path args (`./`, `/`, `../`) and the `exec`/`run` forms launch local binaries and are not treated as registry packages. Scoped packages (`@scope/name@1.2.3`) are pinned only when the trailing version is exact; `pkg@${VERSION}` is treated as unpinned; other runners are out of scope for v1.
+Package specs are resolved only for direct runners (`npx`, `bunx`, `uvx`) and the `dlx` subcommand of `pnpm`/`yarn`. Local path arguments (`./`, `/`, `../`) and `exec`/`run` forms launch local binaries and are not treated as registry packages. Scoped packages (`@scope/name@1.2.3`) are pinned only when the trailing version is exact. A dynamic `pkg@${VERSION}` reference is treated as unpinned.
 
 ## Related rules
 
-- [AE-MCP-002](/rules/AE-MCP-002)
-- [AE-MCP-003](/rules/AE-MCP-003)
-- [AE-SEC-002](/rules/AE-SEC-002)
+- [AE-MCP-002](/rules/AE-MCP-002) — remote MCP server origins must be trusted
+- [AE-MCP-003](/rules/AE-MCP-003) — remote MCP servers must declare auth
+- [AE-SEC-002](/rules/AE-SEC-002) — no raw secrets in MCP config files
 
 ## CLI
 
