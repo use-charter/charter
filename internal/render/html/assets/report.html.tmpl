@@ -207,10 +207,10 @@
         <button type="button" class="link-btn" data-filter-reset aria-label="Clear filters and show all findings">Show all {{.FindingsTotal}}</button>
       </div>
       {{else}}
-      <div class="callout info" role="status">
+      <div class="callout info callout-pass" role="status">
         <span class="icon" aria-hidden="true">{{icon "check"}}</span>
         <div>
-          <p class="callout-title g">No active findings</p>
+          <p class="callout-title">No active findings</p>
           <p class="callout-body">Every Charter rule passed. This repository is ready for autonomous AI-agent work.</p>
         </div>
       </div>
