@@ -78,10 +78,9 @@ Before dispatching next phase:
   - `og.svg` ← from `docs/internal/designs/brand/og.svg`
   - `apple-touch-icon.svg` ← from `docs/internal/designs/brand/apple-touch-icon.svg`
   - `manifest.json` ← from `docs/internal/designs/brand/manifest.json`
-- [ ] **1.6** Copy vendor icons to `web/public/icons/`:
-  - `claude-ai.svg` ← from `docs/product/images/icons/claude-ai.svg`
-  - `chatgpt.svg` ← from `docs/product/images/icons/chatgpt.svg`
-  - `grok.svg` ← from `docs/product/images/icons/grok.svg`
+- [ ] **1.6** Copy all vendor icons to `web/public/icons/` (all 8 confirmed in `docs/product/images/icons/`):
+  - `claude-ai.svg`, `chatgpt.svg`, `grok.svg`, `cursor.svg`, `windsurf.svg`
+  - `github-copilot.svg`, `google-gemini.svg`, `codex.svg`
 - [ ] **1.7** Copy screenshots to `web/public/screenshots/`:
   - `doctor-overview.webp`, `fix-dry-run.webp`, `doctor-tty.webp` ← from `docs/product/images/screenshots/`
 - [ ] **1.8** Create `web/src/styles/design-tokens.css`:
@@ -376,10 +375,17 @@ Result: Mid-page content rendered with locked copy.
     ---
     ```
   - Stars render: `{stars ? `⭐ ${stars} stars` : 'Star on GitHub'}` (fallback is safe; never hardcode)
-  - Vendor icon grid — for each vendor:
-    - Claude Code, ChatGPT, Grok: `<img src="/icons/claude-ai.svg" alt="Claude Code" width="32" height="32" />` etc.
-    - Cursor, Windsurf, Copilot, Gemini, Codex: `<span class="vendor-badge">Cursor</span>` (text badge, no SVG — SVGs not yet available)
-    - Add HTML comment: `<!-- TODO: replace with SVG when icons are sourced/permissioned -->`
+  - Vendor icon grid — all 8 SVGs confirmed, render all as `<img>`:
+    ```html
+    <img src="/icons/claude-ai.svg"      alt="Claude Code" width="32" height="32" />
+    <img src="/icons/chatgpt.svg"        alt="ChatGPT"     width="32" height="32" />
+    <img src="/icons/grok.svg"           alt="Grok"        width="32" height="32" />
+    <img src="/icons/cursor.svg"         alt="Cursor"      width="32" height="32" />
+    <img src="/icons/windsurf.svg"       alt="Windsurf"    width="32" height="32" />
+    <img src="/icons/github-copilot.svg" alt="Copilot"     width="32" height="32" />
+    <img src="/icons/google-gemini.svg"  alt="Gemini"      width="32" height="32" />
+    <img src="/icons/codex.svg"          alt="Codex"       width="32" height="32" />
+    ```
   - Do NOT fabricate "Used by X teams at [logos]"
 
 - [ ] **4.2** Create `web/src/components/CISection.astro`:
