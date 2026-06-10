@@ -532,17 +532,32 @@ console.log("\n📸 8/8  HTML report");
 const reportPath = join(tmpDir, "charter-report.html");
 runCharter("report", "--path", repoRoot, "--out", reportPath);
 if (existsSync(reportPath)) {
-  await shot(reportPath, join(screenshotsDir, "report-full.webp"));
+  // Full page: capture .report element to avoid excess body padding
   const b = await getBrowser();
   const ctx = await b.newContext({ deviceScaleFactor: 2 });
   const p = await ctx.newPage();
-  await p.setViewportSize({ width: 1440, height: 900 });
+  await p.setViewportSize({ width: 1200, height: 2000 });
   await p.emulateMedia({ colorScheme: "dark" });
   await p.goto(`file://${reportPath}`);
-  await p.waitForTimeout(2000);
-  const buf = await p.screenshot({ type: "png", fullPage: false });
-  await toWebp(buf, join(screenshotsDir, "report-hero.webp"));
+  await p.waitForTimeout(1800);
+  const reportEl = await p.$(".report");
+  const buf = reportEl
+    ? await reportEl.screenshot({ type: "png", omitBackground: true })
+    : await p.screenshot({ type: "png", omitBackground: true, fullPage: true });
+  await toWebp(buf, join(screenshotsDir, "report-full.webp"));
   await ctx.close();
+  console.log(`   ✓ report-full.webp`);
+
+  // Hero section: viewport capture
+  const ctx2 = await b.newContext({ deviceScaleFactor: 2 });
+  const p2 = await ctx2.newPage();
+  await p2.setViewportSize({ width: 1440, height: 900 });
+  await p2.emulateMedia({ colorScheme: "dark" });
+  await p2.goto(`file://${reportPath}`);
+  await p2.waitForTimeout(2000);
+  const buf2 = await p2.screenshot({ type: "png", fullPage: false });
+  await toWebp(buf2, join(screenshotsDir, "report-hero.webp"));
+  await ctx2.close();
   console.log(`   ✓ report-hero.webp`);
 }
 
