@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Charter",
-  "theme": "maple",
+  "theme": "mint",
   "colors": {
     "primary": "#2563EB",
     "light": "#60A5FA",
@@ -10,13 +10,6 @@
   "appearance": {
     "default": "dark"
   },
-  "background": {
-    "decoration": "gradient",
-    "color": {
-      "dark": "#0D1117",
-      "light": "#FFFFFF"
-    }
-  },
   "icons": {
     "library": "tabler"
   },
@@ -24,9 +17,6 @@
     "heading": {
       "family": "Ruda",
       "weight": 700
-    },
-    "body": {
-      "family": "Ruda"
     }
   },
   "errors": {
