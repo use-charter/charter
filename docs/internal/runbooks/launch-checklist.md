@@ -65,7 +65,7 @@ Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topolo
 - [x] `CHANGELOG.md` + versioning policy (`CONTRIBUTING.md#versioning-policy`). `code`
 - [x] `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1). `code`
 - [x] `SECURITY.md`, `CONTRIBUTING.md`, issue templates + `config.yml`. `code`
-- [ ] Ensure `conduct@use-charter.dev` (CoC) and `security@`/advisory routing actually deliver (Cloudflare Email Routing). `external`
+- [x] Cloudflare Email Routing live — `updates@`, `security@`, `conduct@` → maintainer inbox (verified). `external`
 - [ ] **ADR-0010 trademark → `CLEARED` or `RENAMED`** (currently "Pending external clearance"). `decision` — hard blocker.
 
 ## 7. Launch monitoring & assets
