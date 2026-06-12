@@ -10,14 +10,14 @@
 // Mirrors the worker documented in docs/product/DEPLOY.md.
 
 export interface Env {
-  // Mintlify subdomain serving the product docs (e.g. charter.mintlify.dev).
+  // Mintlify subdomain serving the product docs (e.g. charter.mintlify.app).
   MINTLIFY_ORIGIN?: string;
   // Pages hostname for the landing site (e.g. charter-landing.pages.dev).
   // Until it is set, the worker returns a plain-text placeholder.
   LANDING_ORIGIN?: string;
 }
 
-const DEFAULT_MINTLIFY_ORIGIN = 'charter.mintlify.dev';
+const DEFAULT_MINTLIFY_ORIGIN = 'charter.mintlify.app';
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
