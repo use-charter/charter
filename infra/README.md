@@ -11,7 +11,7 @@ public domains. The landing site itself is a **Cloudflare Pages** project
 
 ```
                  ┌──────────────────────────── use-charter.dev ────────────────────────────┐
-   request ──▶  charter-router  ──┬─ /docs/*, /rules/*  ──▶  charter.mintlify.app
+   request ──▶  charter-router  ──┬─ /docs/*, /rules/*  ──▶  tashfiq.mintlify.app
                                   └─ /*                 ──▶  LANDING_ORIGIN (charter-landing.pages.dev)
                                                                  └─ /api/waitlist → Resend
 
@@ -43,7 +43,7 @@ bun run deploy           # deploy both
    Note its `*.pages.dev` hostname.
 2. **`charter-router`** — `bun run deploy:router`, then in the dashboard set
    `LANDING_ORIGIN` to the `pages.dev` hostname from step 1, and set
-   `MINTLIFY_ORIGIN` (defaults to `charter.mintlify.app`). The `use-charter.dev/*`
+   `MINTLIFY_ORIGIN` (defaults to `tashfiq.mintlify.app`). The `use-charter.dev/*`
    route needs a proxied (orange-cloud) DNS record at the apex to bind.
 3. **`charter-go-vanity`** — `bun run deploy:go-vanity`. The `custom_domain`
    route auto-provisions `go.use-charter.dev` + its TLS cert. Verify:
