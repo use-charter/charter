@@ -41,7 +41,8 @@ Definition of done for the gate: every box below is `[x]`, the RC dry-run
 - [ ] Landing site live on Cloudflare Pages; footer product-updates form delivers via Resend. `external`
 - [ ] `go.use-charter.dev` vanity worker deployed (CF-4). `external`
 - [ ] Set repo secrets `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`, then repo variable `DEPLOY_WORKERS=true` to enable `deploy-workers.yml`. `admin`
-- [ ] Verify the Resend sending domain (`use-charter.dev`); set Pages `RESEND_API_KEY` (encrypted) + `WAITLIST_TO`. `external`
+- [x] Verify the Resend sending domain — apex `use-charter.dev` verified (2026-06-12, ready to send). `external`
+- [ ] Set Pages `RESEND_API_KEY` (encrypted) + `WAITLIST_TO` (Batch B). `admin`
 - [ ] Worker `LANDING_ORIGIN` set to the `*.pages.dev` host; apex has a proxied DNS record. `external`
 
 Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topology rationale: ADR-0026.

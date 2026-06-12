@@ -20,16 +20,14 @@ needs the repo public; the rest of A can be done anytime.
 Docs: https://resend.com/docs/dashboard/domains/introduction · Cloudflare DNS
 guide: https://resend.com/docs/knowledge-base/cloudflare
 
-The footer form posts to `/api/waitlist`, which sends via Resend from
-`updates@use-charter.dev` (see `web/functions/api/waitlist.ts`). For that `from`
-to be accepted, verify the **apex** `use-charter.dev` in Resend.
+**Status: DONE.** The **apex** `use-charter.dev` is verified in Resend
+(provider Cloudflare, region us-east-1, "ready to send"). The footer form sends
+from `updates@use-charter.dev` (`web/functions/api/waitlist.ts`), which the
+verified apex covers — **no code change**. Steps 1–4 below are kept for
+reference / re-verification only.
 
 1. **Add the domain.** https://resend.com/domains → **Add Domain** → enter
-   `use-charter.dev` → pick the region closest to you → **Add**.
-   - Resend suggests a subdomain (e.g. `send.use-charter.dev`) for reputation.
-     If you choose that instead, the code's `from` must change — tell me and I
-     update `FROM` in `web/functions/api/waitlist.ts` + `WAITLIST_TO`. Verifying
-     the apex needs **no** code change, so start there.
+   `use-charter.dev` → choose region → **Add**.
 2. **Copy the generated records.** Resend shows an **MX** (bounce feedback), an
    **SPF** `TXT`, a **DKIM** `TXT`, and a **DMARC** record.
 3. **Add them to Cloudflare DNS.** Dashboard → `use-charter.dev` → **DNS** →
@@ -39,7 +37,12 @@ to be accepted, verify the **apex** `use-charter.dev` in Resend.
      If Resend says the name is `resend._domainkey.use-charter.dev`, enter only
      `resend._domainkey` in Cloudflare (do not type the full domain twice).
 4. **Verify.** Back in Resend → the domain → **Verify DNS Records**. Status goes
-   `pending` → `verified` (can take up to 72h; usually minutes on Cloudflare).
+   `pending` → `verified`.
+
+> **Tracking metrics (optional, skip):** the domain page's "Enable tracking
+> metrics" is the *only* place a subdomain appears — a custom tracking subdomain
+> for click/open tracking. Charter's signup form needs none of it. Leave it off.
+
 5. **Make sure `WAITLIST_TO` is a real inbox.** Signup notices are sent *to*
    `WAITLIST_TO` (you set this in Batch B). If you use an `@use-charter.dev`
    address, add a Cloudflare **Email Routing** rule (zone → **Email** → Routing)
