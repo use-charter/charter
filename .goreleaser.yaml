@@ -57,6 +57,8 @@ homebrew_casks:
       owner: "{{ .Env.TAP_OWNER }}"
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    # Skip the tap on prereleases (e.g. v0.9.0-rc); publish only on stable tags.
+    skip_upload: "auto"
     homepage: "https://use-charter.dev"
     description: "Offline-first scanner that scores a repo's AI-agent readiness"
     license: "Apache-2.0"
