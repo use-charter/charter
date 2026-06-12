@@ -31,3 +31,14 @@ paths = [
   '''^dist/''',
   '''^coverage/''',
 ]
+
+# Gitignored local environment files (e.g. web/.env.local holding a Resend key
+# for `wrangler pages dev`). `.env*` is gitignored — `.env.example` excepted —
+# so these never enter the committed tree; the `gitleaks git` history scan
+# still covers everything that is committed. This only suppresses the
+# working-tree `gitleaks dir` false positive on developer-local secrets.
+[[allowlists]]
+description = "Gitignored local environment files (never committed)"
+paths = [
+  '''(^|/)\.env($|\.)''',
+]
