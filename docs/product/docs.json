@@ -23,7 +23,7 @@
     "404": {
       "redirect": false,
       "title": "Page not found",
-      "description": "This page scored 0/100. Head back to the [introduction](/introduction) or browse the [rules reference](/rules/overview)."
+      "description": "This page scored 0/100. Head back to the [introduction](/docs/introduction) or browse the [rules reference](/rules/overview)."
     }
   },
   "logo": {
@@ -63,7 +63,7 @@
     "primary": {
       "type": "button",
       "label": "Get Started",
-      "href": "/quickstart"
+      "href": "/docs/quickstart"
     }
   },
   "footer": {
@@ -71,7 +71,9 @@
       "github": "https://github.com/use-charter/charter"
     }
   },
-  "redirects": [],
+  "redirects": [
+    { "source": "/docs", "destination": "/docs/introduction" }
+  ],
   "navigation": {
     "tabs": [
       {
@@ -80,45 +82,45 @@
           {
             "anchor": "Getting Started",
             "icon": "player-play",
-            "pages": ["introduction", "installation", "quickstart"]
+            "pages": ["docs/introduction", "docs/installation", "docs/quickstart"]
           },
           {
             "anchor": "How Charter Works",
             "icon": "compass",
             "pages": [
-              "concepts/agent-readiness-model",
-              "concepts/scoring-and-caps",
-              "concepts/fix-engine",
-              "concepts/mcp-safety-model",
-              "concepts/suppression-governance"
+              "docs/concepts/agent-readiness-model",
+              "docs/concepts/scoring-and-caps",
+              "docs/concepts/fix-engine",
+              "docs/concepts/mcp-safety-model",
+              "docs/concepts/suppression-governance"
             ]
           },
           {
             "anchor": "Guides",
             "icon": "list-check",
             "pages": [
-              "how-to/adopt-in-existing-repo",
-              "how-to/run-in-github-actions",
-              "how-to/use-charter-fix-safely",
-              "how-to/suppress-a-finding",
-              "how-to/investigate-mcp-findings",
-              "how-to/pre-commit-hook"
+              "docs/how-to/adopt-in-existing-repo",
+              "docs/how-to/run-in-github-actions",
+              "docs/how-to/use-charter-fix-safely",
+              "docs/how-to/suppress-a-finding",
+              "docs/how-to/investigate-mcp-findings",
+              "docs/how-to/pre-commit-hook"
             ]
           },
           {
             "anchor": "Configuration",
             "icon": "adjustments-horizontal",
-            "pages": ["config/charter-yaml", "config/policy-profiles"]
+            "pages": ["docs/config/charter-yaml", "docs/config/policy-profiles"]
           },
           {
             "anchor": "CI & GitHub Action",
             "icon": "brand-github",
-            "pages": ["ci/github-action"]
+            "pages": ["docs/ci/github-action"]
           },
           {
             "anchor": "Design Philosophy",
             "icon": "bulb",
-            "pages": ["design-philosophy"]
+            "pages": ["docs/design-philosophy"]
           }
         ]
       },
