@@ -23,22 +23,6 @@ export async function submitWaitlist(email: string): Promise<SubmitResult> {
   }
 }
 
-export function showToast(message: string, type: 'success' | 'error'): void {
-  const existing = document.getElementById('waitlist-toast');
-  if (existing) existing.remove();
-
-  const toast = document.createElement('div');
-  toast.id = 'waitlist-toast';
-  toast.setAttribute('role', 'status');
-  toast.setAttribute('aria-live', 'polite');
-  toast.setAttribute('aria-atomic', 'true');
-  toast.className = `toast toast--${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-
-  setTimeout(() => toast.remove(), 4000);
-}
-
 export function initWaitlistForm(): void {
   const form = document.getElementById('waitlist-form') as HTMLFormElement | null;
   if (!form) return;
@@ -46,7 +30,8 @@ export function initWaitlistForm(): void {
   const input = document.getElementById('waitlist-email') as HTMLInputElement | null;
   const errorSpan = document.getElementById('email-error') as HTMLElement | null;
   const submitBtn = document.getElementById('waitlist-submit') as HTMLButtonElement | null;
-  if (!input || !errorSpan || !submitBtn) return;
+  const successText = form.querySelector('.ck-foot__success-text') as HTMLElement | null;
+  if (!input || !errorSpan || !submitBtn || !successText) return;
 
   input.addEventListener('blur', () => {
     if (input.value && !validateEmail(input.value)) {
@@ -78,13 +63,13 @@ export function initWaitlistForm(): void {
     submitBtn.disabled = false;
 
     if (result.success) {
-      showToast(result.message, 'success');
+      // The form row morphs into an inline confirmation, then reverts.
+      successText.textContent = result.message;
       form.reset();
-      // Flash the success checkmark on the submit button (mirrors CopyButton).
-      submitBtn.classList.add('is-done');
-      setTimeout(() => submitBtn.classList.remove('is-done'), 2000);
+      form.classList.add('is-sent');
+      setTimeout(() => form.classList.remove('is-sent'), 4000);
     } else {
-      showToast(result.error, 'error');
+      errorSpan.textContent = result.error;
     }
   });
 }
