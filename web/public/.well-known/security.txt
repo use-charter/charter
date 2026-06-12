@@ -1,0 +1,6 @@
+# Security contact for use-charter.dev (RFC 9116).
+Contact: https://github.com/use-charter/charter/security/advisories/new
+Expires: 2027-06-12T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://use-charter.dev/.well-known/security.txt
+Policy: https://github.com/use-charter/charter/security/policy

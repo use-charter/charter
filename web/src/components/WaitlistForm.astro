@@ -1,0 +1,32 @@
+---
+// No props
+---
+<form id="waitlist-form" action="#" method="post" novalidate class="waitlist-form">
+  <label for="waitlist-email" class="waitlist-form__label">Email address</label>
+  <div class="waitlist-form__row">
+    <input
+      type="email"
+      id="waitlist-email"
+      name="email"
+      required
+      autocomplete="email"
+      placeholder="you@example.com"
+      class="waitlist-form__input"
+      aria-describedby="email-error"
+    />
+    <button type="submit" id="waitlist-submit" class="waitlist-form__submit">
+      Notify me
+    </button>
+  </div>
+  <span id="email-error" role="alert" aria-atomic="true" class="waitlist-form__error"></span>
+</form>
+
+<script>
+  import { initWaitlistForm } from '../islands/WaitlistForm';
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWaitlistForm);
+  } else {
+    initWaitlistForm();
+  }
+</script>

@@ -1,0 +1,39 @@
+---
+import { Picture } from 'astro:assets';
+import doctorOverview from '../assets/screenshots/doctor-overview.webp';
+---
+<div class="terminal-card">
+  <div class="terminal-card__chrome" aria-hidden="true">
+    <span class="terminal-card__dot terminal-card__dot--red"></span>
+    <span class="terminal-card__dot terminal-card__dot--yellow"></span>
+    <span class="terminal-card__dot terminal-card__dot--green"></span>
+    <span class="terminal-card__title">charter doctor</span>
+  </div>
+  <div class="terminal-card__body" role="region" aria-label="Charter doctor output showing 94/100 ship-ready score in green zone">
+    <pre class="terminal-card__output"><code><span class="t-muted">  charter </span><span class="t-accent">doctor</span>
+
+<span class="t-muted">  Scanning </span><span class="t-text">use-charter/charter</span><span class="t-muted"> · 18 rules</span>
+
+  <span class="t-success">✔</span> <span class="t-text">AE-CTX-001</span>  <span class="t-muted">AGENTS.md present and non-empty</span>
+  <span class="t-success">✔</span> <span class="t-text">AE-CTX-002</span>  <span class="t-muted">AGENTS.md references verify command</span>
+  <span class="t-success">✔</span> <span class="t-text">AE-ENV-001</span>  <span class="t-muted">.env.example present</span>
+  <span class="t-success">✔</span> <span class="t-text">AE-CI-002</span>   <span class="t-muted">CI workflow present</span>
+  <span class="t-success">✔</span> <span class="t-text">AE-SEC-001</span>  <span class="t-muted">No secrets in agent-visible paths</span>
+  <span class="t-success">✔</span> <span class="t-text">AE-SEC-002</span>  <span class="t-muted">Secret scanning configured</span>
+  <span class="t-success">✔</span> <span class="t-text">AE-MCP-001</span>  <span class="t-muted">MCP servers pinned</span>
+  <span class="t-muted">  ··· 11 more rules passed</span>
+
+<span class="t-muted">  Score  </span><span class="t-success t-score">94 / 100</span>  <span class="t-success">Ship-ready</span>
+
+<span class="t-muted">  Completed in 1.3s · No findings</span></code></pre>
+    <Picture
+      src={doctorOverview}
+      alt=""
+      width={864}
+      loading="eager"
+      fetchpriority="high"
+      class="terminal-card__screenshot"
+      aria-hidden="true"
+    />
+  </div>
+</div>

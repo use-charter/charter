@@ -1,0 +1,52 @@
+---
+import { Icon } from 'astro-icon/components';
+import Nav from '../components/Nav.astro';
+import FooterSection from '../components/FooterSection.astro';
+import Base from '../layouts/Base.astro';
+---
+<Base
+  title="Page not found"
+  description="That page isn't in the repository — it was never committed, or it moved. Head back to something real."
+  path="/404"
+>
+  <Nav />
+
+  <main class="ck-404">
+    <div class="ck-404__inner">
+      <span class="label-caps ck-404__eyebrow">Error 404</span>
+      <h1 class="ck-404__title">This page left <span class="accent-blue">no trace.</span></h1>
+      <p class="ck-404__lede">
+        Even an offline tool can&rsquo;t scan a route that was never committed. Let&rsquo;s get you back to something that exists.
+      </p>
+
+      <div class="ck-terminal ck-404__term" role="img" aria-label="charter explain AE-404: page not found">
+        <div class="ck-terminal__chrome">
+          <span class="ck-terminal__dot ck-terminal__dot--r"></span>
+          <span class="ck-terminal__dot ck-terminal__dot--y"></span>
+          <span class="ck-terminal__dot ck-terminal__dot--g"></span>
+          <span class="ck-terminal__title">~/charter &mdash; 404</span>
+        </div>
+        <div class="ck-terminal__body">
+          <div class="ck-terminal__line"><span class="ck-ss"><span class="ck-ss__seg ck-ss__dir">charter</span><span class="ck-ss__seg ck-ss__git">main</span><span class="ck-ss__seg ck-ss__node">v24.16.0</span></span></div>
+          <div class="ck-terminal__line"><span class="ck-ss__char">&#10095;</span> <span class="t-cmd">charter</span> <span class="t-sub">explain</span> <span class="t-rule">AE-404</span></div>
+          <div class="ck-terminal__line">&nbsp;</div>
+          <div class="ck-terminal__line"><span class="t-brand">[C] charter</span> <span class="t-dim">v1.0.0</span></div>
+          <div class="ck-terminal__line"><span class="t-div">────────────────────────────────────────</span></div>
+          <div class="ck-terminal__line"><span class="t-fail">&#10007; AE-404</span> <span class="t-dim">Page Not Found</span></div>
+          <div class="ck-terminal__line"><span class="t-dim">&nbsp;&nbsp;this route isn&rsquo;t in the repository — never</span></div>
+          <div class="ck-terminal__line"><span class="t-dim">&nbsp;&nbsp;committed, or it moved.</span></div>
+          <div class="ck-terminal__line"><span class="t-pass">&nbsp;&nbsp;fix</span> <span class="t-dim">head back to a page that exists ↓</span></div>
+          <div class="ck-terminal__line"><span class="t-div">────────────────────────────────────────</span></div>
+          <div class="ck-terminal__line">Score <span class="t-fail">—</span><span class="t-dim">/100  ░░░░░░░░░░░░░░░░░░░░  </span><span class="t-fail">NOT FOUND</span></div>
+        </div>
+      </div>
+
+      <div class="ck-404__actions">
+        <a href="/" class="ck-btn ck-btn--primary ck-btn--lg"><Icon name="ph:house" />Back home</a>
+        <a href="https://use-charter.dev/docs" rel="noopener noreferrer" target="_blank" class="ck-btn ck-btn--ghost ck-btn--lg">Read the docs<Icon name="ph:arrow-up-right" /></a>
+      </div>
+    </div>
+  </main>
+
+  <FooterSection />
+</Base>

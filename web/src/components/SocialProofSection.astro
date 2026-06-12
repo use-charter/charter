@@ -1,0 +1,72 @@
+---
+// Build-time GitHub stars fetch
+let stars = '';
+try {
+  const res = await fetch('https://api.github.com/repos/use-charter/charter');
+  if (res.ok) {
+    const data = await res.json();
+    const count = data.stargazers_count;
+    if (typeof count === 'number') {
+      stars = count.toLocaleString();
+    }
+  }
+} catch {
+  // Silently fall back — never hardcode a number
+}
+---
+<section id="social-proof" aria-labelledby="social-proof-heading" class="section social-proof">
+  <h2 id="social-proof-heading" class="section__title">Works with every AI coding tool</h2>
+
+  {stars && (
+    <p class="social-proof__stars">
+      <a href="https://github.com/use-charter/charter" rel="noopener noreferrer" class="social-proof__stars-link">
+        {stars} stars on GitHub
+      </a>
+    </p>
+  )}
+  {!stars && (
+    <p class="social-proof__stars">
+      <a href="https://github.com/use-charter/charter" rel="noopener noreferrer" class="social-proof__stars-link">
+        Star on GitHub
+      </a>
+    </p>
+  )}
+
+  <div class="social-proof__icons reveal" role="list" aria-label="Compatible AI coding tools">
+    <!-- icon--colored: brand colors visible in both modes -->
+    <div role="listitem" class="social-proof__icon-item">
+      <img src="/icons/claude-ai.svg" class="vendor-icon icon--colored" alt="Claude Code" width="32" height="32" />
+      <span class="social-proof__icon-label">Claude Code</span>
+    </div>
+    <div role="listitem" class="social-proof__icon-item">
+      <img src="/icons/google-gemini.svg" class="vendor-icon icon--colored" alt="Gemini" width="32" height="32" />
+      <span class="social-proof__icon-label">Gemini</span>
+    </div>
+    <!-- icon--light-invert: white fill — needs brightness(0) in light mode -->
+    <div role="listitem" class="social-proof__icon-item">
+      <img src="/icons/chatgpt.svg" class="vendor-icon icon--light-invert" alt="ChatGPT" width="32" height="32" />
+      <span class="social-proof__icon-label">ChatGPT</span>
+    </div>
+    <!-- icon--dark-invert: dark/black fill — needs invert in dark mode -->
+    <div role="listitem" class="social-proof__icon-item">
+      <img src="/icons/cursor.svg" class="vendor-icon icon--dark-invert" alt="Cursor" width="32" height="32" />
+      <span class="social-proof__icon-label">Cursor</span>
+    </div>
+    <div role="listitem" class="social-proof__icon-item">
+      <img src="/icons/windsurf.svg" class="vendor-icon icon--dark-invert" alt="Windsurf" width="32" height="32" />
+      <span class="social-proof__icon-label">Windsurf</span>
+    </div>
+    <div role="listitem" class="social-proof__icon-item">
+      <img src="/icons/github-copilot.svg" class="vendor-icon icon--dark-invert" alt="GitHub Copilot" width="32" height="32" />
+      <span class="social-proof__icon-label">Copilot</span>
+    </div>
+    <div role="listitem" class="social-proof__icon-item">
+      <img src="/icons/grok.svg" class="vendor-icon icon--dark-invert" alt="Grok" width="32" height="32" />
+      <span class="social-proof__icon-label">Grok</span>
+    </div>
+    <div role="listitem" class="social-proof__icon-item">
+      <img src="/icons/codex.svg" class="vendor-icon icon--dark-invert" alt="Codex" width="32" height="32" />
+      <span class="social-proof__icon-label">Codex</span>
+    </div>
+  </div>
+</section>

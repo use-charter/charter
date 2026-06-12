@@ -1,0 +1,33 @@
+---
+// No imports needed
+---
+<section id="ci" aria-labelledby="ci-heading" class="section ci-section">
+  <h2 id="ci-heading" class="section__title">Gate pull requests on agent-readiness</h2>
+  <p class="ci-section__intro">Charter's GitHub Action runs the same scan as your local workflow. Gate merges when the score falls below the threshold.</p>
+
+  <div class="ci-section__code-block">
+    <pre class="ci-section__pre"><code class="ci-section__code">name: Charter
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+jobs:
+  charter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: use-charter/charter-action@v1
+        with:
+          threshold: "80"</code></pre>
+  </div>
+
+  <p class="ci-section__sarif">Outputs SARIF 2.1.0. Integrates with GitHub Code Scanning.</p>
+
+  <a href="https://use-charter.dev/docs/how-to/run-in-github-actions" rel="noopener noreferrer" class="ci-section__cta">
+    Read the GitHub Actions guide &#x2192;
+  </a>
+</section>

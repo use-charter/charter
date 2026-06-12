@@ -1,0 +1,40 @@
+<!--
+  Charter Apple Touch Icon — 180×180 (iOS / iPad home screen).
+  Apple crops to a rounded rect automatically; a subtle rx is kept so it
+  previews well in plain browsers too. Export to a 180×180 PNG (squoosh,
+  sharp, or resvg) as apple-touch-icon.png before deploying.
+  Mark: white [C] on Charter Dark, centred with 16px breathing room.
+-->
+<svg viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <title>Charter</title>
+
+  <!-- Background -->
+  <rect width="180" height="180" rx="38" fill="#0D1117"/>
+
+  <!--
+    Mark scaled 2.8125× from 64×64 canonical
+    bw = 4 × 2.8125 = 11.25  →  11.5
+    cl = 11 × 2.8125 = 30.9  →  31
+    bh = 40 × 2.8125 = 112.5 →  113
+    mark outer: x=16, y=34  (centred: 16px inset each side; 180 − 164 = 16)
+  -->
+
+  <!-- Left bracket [ -->
+  <rect x="16"  y="34"  width="11.5" height="113" fill="#FFFFFF"/>
+  <rect x="16"  y="34"  width="31"   height="11.5" fill="#FFFFFF"/>
+  <rect x="16"  y="135.5" width="31" height="11.5" fill="#FFFFFF"/>
+
+  <!-- Right bracket ] -->
+  <rect x="152.5" y="34"  width="11.5" height="113" fill="#FFFFFF"/>
+  <rect x="133"   y="34"  width="31"   height="11.5" fill="#FFFFFF"/>
+  <rect x="133"   y="135.5" width="31" height="11.5" fill="#FFFFFF"/>
+
+  <!--
+    Geometric C · centre (90,90.5) · r=30.9≈31 · stroke-width=16.9≈17 · 300° arc
+    Start −30°: (90 + 31·0.866, 90.5 − 31·0.5) = (116.85, 75)
+    End   +30°: (116.85, 106)
+  -->
+  <path d="M116.85,75 A31,31 0 1 0 116.85,106"
+        fill="none" stroke="#FFFFFF"
+        stroke-width="17" stroke-linecap="butt"/>
+</svg>

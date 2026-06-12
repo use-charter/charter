@@ -1,0 +1,191 @@
+---
+import '../styles/global.css';
+
+const SITE = 'https://use-charter.dev';
+const TITLE = 'Charter — AI-agent readiness, scored.';
+const DESCRIPTION =
+  'Charter is an offline-first CLI that audits any repo against 18 rules and returns a deterministic 0–100 score in under 2 seconds.';
+const OG_IMAGE = `${SITE}/og.png`;
+const REPO = 'https://github.com/use-charter/charter';
+
+// Per-page overrides; defaults render the home page unchanged.
+interface Props {
+  title?: string;
+  description?: string;
+  path?: string;
+}
+const { title = TITLE, description = DESCRIPTION, path = '/' } = Astro.props;
+const canonical = `${SITE}${path}`;
+
+// schema.org graph — read by search engines (rich results) and AI answer
+// engines to understand and cite the product. SoftwareApplication is the
+// primary entity; WebSite and Organization give it context.
+const STRUCTURED_DATA = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE}/#website`,
+      url: `${SITE}/`,
+      name: 'Charter',
+      description: DESCRIPTION,
+      inLanguage: 'en',
+      publisher: { '@id': `${SITE}/#organization` },
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${SITE}/#organization`,
+      name: 'Charter',
+      url: `${SITE}/`,
+      logo: `${SITE}/icon-512.png`,
+      sameAs: [REPO],
+    },
+    {
+      '@type': 'SoftwareApplication',
+      '@id': `${SITE}/#software`,
+      name: 'Charter',
+      description: DESCRIPTION,
+      url: `${SITE}/`,
+      applicationCategory: 'DeveloperApplication',
+      operatingSystem: 'macOS, Linux, Windows',
+      softwareVersion: '1.0.0',
+      license: 'https://www.apache.org/licenses/LICENSE-2.0',
+      codeRepository: REPO,
+      downloadUrl: REPO,
+      isAccessibleForFree: true,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      author: { '@id': `${SITE}/#organization` },
+    },
+  ],
+};
+---
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script is:inline>
+    try { document.documentElement.setAttribute('data-theme', localStorage.getItem('charter-theme') || 'dark'); } catch(e) {}
+    try { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) { document.documentElement.classList.add('reveals-armed'); } } catch(e) {}
+  </script>
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Charter" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:image" content={OG_IMAGE} />
+  <meta property="og:image:secure_url" content={OG_IMAGE} />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Charter — AI-agent readiness, scored." />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={OG_IMAGE} />
+  <meta name="twitter:image:alt" content="Charter — AI-agent readiness, scored." />
+
+  <link rel="canonical" href={canonical} />
+  <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
+  <link rel="preload" href="/fonts/ruda-400-800.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/atkinson-hyperlegible-mono-400-700.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  <script type="application/ld+json" set:html={JSON.stringify(STRUCTURED_DATA)} is:inline></script>
+</head>
+<body>
+  <div class="ck-page">
+    <slot />
+  </div>
+  <div class="ck-grain" aria-hidden="true"></div>
+  <script is:inline>
+    // Scroll reveal — rAF animate --rv 0→1.4 per [data-reveal] section
+    if (document.documentElement.classList.contains('reveals-armed')) {
+      var secs = Array.from(document.querySelectorAll('[data-reveal]'));
+      secs.forEach(function(s) { s.style.setProperty('--rv', '0'); });
+      var animating = new Set();
+      function runReveal(s) {
+        if (animating.has(s) || s.dataset.revealed) return;
+        animating.add(s);
+        var start;
+        var dur = 760;
+        var tick = function(ts) {
+          if (!start) start = ts;
+          var p = Math.min(1, (ts - start) / dur);
+          s.style.setProperty('--rv', ((1 - Math.pow(1 - p, 3)) * 1.4).toFixed(3));
+          if (p < 1) requestAnimationFrame(tick);
+          else { s.dataset.revealed = '1'; animating.delete(s); }
+        };
+        requestAnimationFrame(tick);
+      }
+      var raf = 0;
+      function checkReveal() {
+        var vh = window.innerHeight;
+        var rem = 0;
+        secs.forEach(function(s) {
+          if (s.dataset.revealed) return;
+          var r = s.getBoundingClientRect();
+          if (r.top < vh * 0.86 && r.bottom > 0) runReveal(s);
+          else rem++;
+        });
+        return rem;
+      }
+      function onScroll() {
+        if (raf) return;
+        raf = requestAnimationFrame(function() { raf = 0; if (checkReveal() === 0) detach(); });
+      }
+      function detach() {
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onScroll);
+      }
+      checkReveal();
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll);
+      setTimeout(function() {
+        secs.forEach(function(s) {
+          if (!s.dataset.revealed) { s.style.setProperty('--rv', '1.4'); s.dataset.revealed = '1'; }
+        });
+        detach();
+      }, 5000);
+    }
+  </script>
+
+  <script is:inline>
+    // Nav densifies once the page is scrolled past the hero edge
+    (function () {
+      var nav = document.querySelector('.ck-nav');
+      if (nav) {
+        var onScroll = function () { nav.classList.toggle('is-scrolled', window.scrollY > 12); };
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+      }
+
+      // Cursor spotlight — cards track the pointer via --mx / --my
+      var SPOT = '.c-cc, .ck-pillar, .c-finding, .ck-pr, .ck-life__card, .ck-compat__item, .ck-cmd__tab';
+      if (window.matchMedia && !window.matchMedia('(hover: none)').matches) {
+        document.querySelectorAll(SPOT).forEach(function (el) {
+          // Cache the rect on enter so pointermove never forces a reflow
+          var rect = null;
+          el.addEventListener('pointerenter', function () { rect = el.getBoundingClientRect(); });
+          el.addEventListener('pointermove', function (e) {
+            if (!rect) rect = el.getBoundingClientRect();
+            el.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
+            el.style.setProperty('--my', (e.clientY - rect.top) + 'px');
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -13,17 +13,19 @@
 
 ### Sub-Agent Dispatch Table
 
-| Phase | Agent prompt (copy verbatim to dispatch) | Depends on |
-|-------|------------------------------------------|------------|
-| 1 | `"Execute Phase 1 of Slice 19: scaffold Astro v6 project in web/, extract design tokens from docs/internal/designs/DESIGN-TOKENS.md, generate fonts.css by running bun scripts/generate-report-fonts.ts, self-host fonts in web/public/fonts/, create Base.astro layout with all meta tags from spec Critical Dependencies §5, create web/src/pages/index.astro (empty), wire moon.yml check/build/dev tasks. Verify: bun run build produces dist/index.html; moon run web:check passes. Commit: feat(web): scaffold Astro landing page + design tokens + fonts"` | None |
-| 2 | `"Execute Phase 2 of Slice 19: implement Hero section (split-screen layout, H1, subheadline, CTAs) + TerminalCard component (styled pre block with 94/100 score-zone colors) + CopyButton component (vanilla JS, clipboard API, iOS fallback, 2s feedback). Wire into index.astro. Verify: bun run build, grep checks pass. Commit: feat(web/hero): hero section + terminal card + copy button"` | Phase 1 ✅ |
-| 3 | `"Execute Phase 3 of Slice 19: implement content sections Problem, Solution (three-step flow + screenshots via Picture component), ValuePropCard (4 cards), TrustStrip (4 commitments). Lock copy verbatim from spec. Wire into index.astro. Verify: grep checks pass, screenshots render. Commit: feat(web/sections): problem, solution, value props, trust sections"` | Phase 1 ✅ |
-| 4 | `"Execute Phase 4 of Slice 19: implement SocialProofSection (GitHub stars build-time fetch from https://api.github.com/repos/use-charter/charter, all 8 vendor SVG icons with correct CSS classes per spec §Vendor Icon Adaptation), CISection (locked YAML snippet from spec), FinalCTASection (CopyButton reuse + links), Footer. Wire into index.astro. Verify: grep checks, noopener links. Commit: feat(web/footer): social proof, CI, CTA, footer"` | Phase 1 ✅ |
-| 5 | `"Execute Phase 5 of Slice 19: implement WaitlistForm island (Vitest TDD: write failing tests first for email validation, POST loading state, success/error toasts; then implement; all tests green). Verify: bun run test, bundle ≤ 5kb. Commit: feat(web/islands): waitlist form (TDD)"` | Phase 2 ✅ (CopyButton already done in Phase 2) |
-| 6 | `"Execute Phase 6 of Slice 19: performance optimization — inline above-fold CSS (<4kb), verify image budgets via Picture components, run bunx lighthouse http://localhost:4321 and confirm Performance ≥ 90. Fix any budget failures. Commit: perf(web): inline critical CSS, verify all performance budgets"` | Phases 2-5 ✅ |
-| 7 | `"Execute Phase 7 of Slice 19: accessibility audit — run bunx @axe-core/cli http://localhost:4321 and fix all violations; manual keyboard Tab test; heading hierarchy grep; alt text grep; verify prefers-reduced-motion disables animations. Commit: a11y(web): accessibility audit + focus states"` | Phase 6 ✅ |
-| 8 | `"Execute Phase 8 of Slice 19: responsive refinement — test at 320/375/768/1024/1440/1920px in Chrome DevTools; verify no overflow; verify touch targets ≥ 44px; run bunx lighthouse with mobile throttling; fix any layout issues. Commit: test(web): responsive refinement + cross-browser"` | Phase 7 ✅ |
-| 9 | `"Execute Phase 9 of Slice 19: Cloudflare Pages deploy — create Pages project, set build=bun run build, output=dist/, verify deploy; update Worker routing for / → landing origin; update docs/product/DEPLOY.md with LANDING_ORIGIN URL; final smoke test with curl. Commit: feat(web): deploy to Cloudflare Pages + wire Worker"` | Phase 8 ✅ |
+
+| Phase | Agent prompt (copy verbatim to dispatch)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Depends on                                     |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| 1     | `"Execute Phase 1 of Slice 19: scaffold Astro v6 project in web/, extract design tokens from docs/internal/designs/DESIGN-TOKENS.md, generate fonts.css by running bun scripts/generate-report-fonts.ts, self-host fonts in web/public/fonts/, create Base.astro layout with all meta tags from spec Critical Dependencies §5, create web/src/pages/index.astro (empty), wire moon.yml check/build/dev tasks. Verify: bun run build produces dist/index.html; moon run web:check passes. Commit: feat(web): scaffold Astro landing page + design tokens + fonts"` | None                                           |
+| 2     | `"Execute Phase 2 of Slice 19: implement Hero section (split-screen layout, H1, subheadline, CTAs) + TerminalCard component (styled pre block with 94/100 score-zone colors) + CopyButton component (vanilla JS, clipboard API, iOS fallback, 2s feedback). Wire into index.astro. Verify: bun run build, grep checks pass. Commit: feat(web/hero): hero section + terminal card + copy button"`                                                                                                                                                                  | Phase 1 ✅                                      |
+| 3     | `"Execute Phase 3 of Slice 19: implement content sections Problem, Solution (three-step flow + screenshots via Picture component), ValuePropCard (4 cards), TrustStrip (4 commitments). Lock copy verbatim from spec. Wire into index.astro. Verify: grep checks pass, screenshots render. Commit: feat(web/sections): problem, solution, value props, trust sections"`                                                                                                                                                                                           | Phase 1 ✅                                      |
+| 4     | `"Execute Phase 4 of Slice 19: implement SocialProofSection (GitHub stars build-time fetch from https://api.github.com/repos/use-charter/charter, all 8 vendor SVG icons with correct CSS classes per spec §Vendor Icon Adaptation), CISection (locked YAML snippet from spec), FinalCTASection (CopyButton reuse + links), Footer. Wire into index.astro. Verify: grep checks, noopener links. Commit: feat(web/footer): social proof, CI, CTA, footer"`                                                                                                         | Phase 1 ✅                                      |
+| 5     | `"Execute Phase 5 of Slice 19: implement WaitlistForm island (Vitest TDD: write failing tests first for email validation, POST loading state, success/error toasts; then implement; all tests green). Verify: bun run test, bundle ≤ 5kb. Commit: feat(web/islands): waitlist form (TDD)"`                                                                                                                                                                                                                                                                        | Phase 2 ✅ (CopyButton already done in Phase 2) |
+| 6     | `"Execute Phase 6 of Slice 19: performance optimization — inline above-fold CSS (<4kb), verify image budgets via Picture components, run bunx lighthouse http://localhost:4321 and confirm Performance ≥ 90. Fix any budget failures. Commit: perf(web): inline critical CSS, verify all performance budgets"`                                                                                                                                                                                                                                                    | Phases 2-5 ✅                                   |
+| 7     | `"Execute Phase 7 of Slice 19: accessibility audit — run bunx @axe-core/cli http://localhost:4321 and fix all violations; manual keyboard Tab test; heading hierarchy grep; alt text grep; verify prefers-reduced-motion disables animations. Commit: a11y(web): accessibility audit + focus states"`                                                                                                                                                                                                                                                             | Phase 6 ✅                                      |
+| 8     | `"Execute Phase 8 of Slice 19: responsive refinement — test at 320/375/768/1024/1440/1920px in Chrome DevTools; verify no overflow; verify touch targets ≥ 44px; run bunx lighthouse with mobile throttling; fix any layout issues. Commit: test(web): responsive refinement + cross-browser"`                                                                                                                                                                                                                                                                    | Phase 7 ✅                                      |
+| 9     | `"Execute Phase 9 of Slice 19: Cloudflare Pages deploy — create Pages project, set build=bun run build, output=dist/, verify deploy; update Worker routing for / → landing origin; update docs/product/DEPLOY.md with LANDING_ORIGIN URL; final smoke test with curl. Commit: feat(web): deploy to Cloudflare Pages + wire Worker"`                                                                                                                                                                                                                               | Phase 8 ✅                                      |
+
 
 ### Parallelism Rules
 
@@ -54,6 +56,7 @@ Phase 1 (scaffold)
 ### Orchestrator Checklist (run between phases)
 
 Before dispatching next phase:
+
 - [ ] Prior phase committed and pushed
 - [ ] `moon run :check` green (Go tests, lint, docs)
 - [ ] `bun run build` from `web/` exits 0
@@ -94,7 +97,7 @@ Before dispatching next phase:
   - `doctor-overview.webp`, `fix-dry-run.webp`, `doctor-tty.webp` ← from `docs/product/images/screenshots/`
   - Create directory: `mkdir -p web/src/assets/screenshots/`
 - [ ] **1.8** Create `web/src/styles/design-tokens.css`:
-  - Extract ALL `--color-*`, `--font-*`, `--space-*`, `--radius-*`, `--shadow-*` variables verbatim from `docs/internal/designs/DESIGN-TOKENS.md`
+  - Extract ALL `--color-`*, `--font-*`, `--space-*`, `--radius-*`, `--shadow-*` variables verbatim from `docs/internal/designs/DESIGN-TOKENS.md`
   - Add motion tokens: `--ease-enter: cubic-bezier(0.16, 1, 0.3, 1)`, `--ease-exit: cubic-bezier(0.55, 0, 1, 0.45)`, `--duration-fast: 120ms`, `--duration-normal: 250ms`, `--duration-slow: 400ms`
   - Dark mode defaults in `:root { ... }`
   - Light mode overrides in `@media (prefers-color-scheme: light) { :root { ... } }` with exact values from spec §Color Mode
@@ -317,8 +320,8 @@ Result: Above-fold hero renders; copy button copies to clipboard.
 
 - [ ] **3.1** Create `web/src/components/Section.astro`:
   - Props interface: `{ id: string; title: string; intro?: string }`
-  - Template: `<section id={id} aria-labelledby={\`${id}-heading\`}>`
-  - H2 inside: `<h2 id={\`${id}-heading\`}>{title}</h2>`
+  - Template: `<section id={id} aria-labelledby={\`${id}-heading}>`
+  - H2 inside: `<h2 id={\`${id}-heading}>{title}`
   - Optional intro: `<p class="section-intro">{intro}</p>` if prop provided
   - `<slot />` for section body content
   - Note: uses Astro `<slot />`, NOT a `children` prop
@@ -432,7 +435,7 @@ Result: Mid-page content rendered with locked copy.
     } catch {}
     ---
     ```
-  - Stars render: `{stars ? `${stars} stars on GitHub` : 'Star on GitHub'}` (no emoji; fallback is safe; never hardcode a number)
+  - Stars render: `{stars ?` ${stars} stars on GitHub `: 'Star on GitHub'}` (no emoji; fallback is safe; never hardcode a number)
   - Vendor icon grid — all 8 SVGs confirmed. Apply CSS class per icon for dark/light mode adaptation (see spec §Vendor Icon Adaptation):
     ```html
     <!-- icon--colored: no filter needed, brand colors work in both modes -->
@@ -520,17 +523,20 @@ Result: Full page renders end-to-end.
 ### TDD Cycles (vertical slices — one test at a time)
 
 **Cycle 1: Email validation**
+
 - [ ] Write test: `it('rejects invalid email: "notanemail"', ...)` → RED
 - [ ] Implement `validateEmail(email: string): boolean` using `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` → GREEN
 - [ ] Write test: `it('accepts valid email: "user@example.com"', ...)` → RED → GREEN
 - [ ] Write test: `it('rejects email with spaces: "user @example.com"', ...)` → RED → GREEN
 
 **Cycle 2: Form submission**
+
 - [ ] Write test: `it('disables submit button during POST', ...)` using `fetch` mock → RED
 - [ ] Implement loading state: `button.disabled = true` before fetch, `false` after → GREEN
 - [ ] Write test: `it('shows spinner during loading state', ...)` → RED → GREEN
 
 **Cycle 3: Response handling**
+
 - [ ] Write test: `it('shows success toast on HTTP 200', ...)` → RED
 - [ ] Implement: `showToast('Check your email!', 'success')` on `res.ok` → GREEN
 - [ ] Write test: `it('shows error toast on HTTP 400', ...)` → RED
@@ -590,15 +596,7 @@ grep "prefers-reduced-motion" dist/index.html && echo "✓ reduced-motion in CSS
 ### Commit
 
 ```
-feat(web/islands): waitlist form (TDD — Vitest)
-
-- Add Vitest config (jsdom environment)
-- Create WaitlistForm.ts island (email validation, POST, loading/success/error states)
-- Create WaitlistForm.astro (label above input, error below, aria-live toast)
-- Create islands.css (form states, spinner, toast, reduced-motion)
-- All 10 Vitest tests passing
-
-Result: Email capture form with full state machine.
+ç
 ```
 
 ---
@@ -905,17 +903,17 @@ test(web): responsive refinement + cross-browser verification
 - [ ] **9.3** Locate existing Cloudflare Worker:
   - Check repo for `wrangler.toml` at root (confirmed present: `./.miserc.toml` is mise config, separate from wrangler)
   - If Worker is deployed outside repo (CF dashboard), access via `wrangler whoami` + `wrangler deploy`
-  - Worker currently routes: `/docs/*` → Mintlify, `/rules/*` → Mintlify
+  - Worker currently routes: `/docs/`* → Mintlify, `/rules/*` → Mintlify
 
 - [ ] **9.4** Update Worker to route `/` → landing origin:
   - Add `LANDING_ORIGIN` environment variable: set to `https://charter-landing.pages.dev`
   - Add route handler for `/` and all Cloudflare Pages static assets:
-    - `/_astro/*` — hashed JS/CSS/image bundles (Astro build output)
+    - `/_astro/`* — hashed JS/CSS/image bundles (Astro build output)
     - `/icons/*` — vendor SVG icons (from `web/public/icons/`)
     - `/favicon.svg` — favicon
     - `/og.png` — OG image (PNG, not SVG)
     - `/apple-touch-icon.svg`, `/manifest.json` — PWA assets
-    - Note: fonts are **base64 in CSS** (no `/fonts/*` path exists); screenshots are in `/_astro/*` (hashed by Astro build)
+    - Note: fonts are **base64 in CSS** (no `/fonts/`* path exists); screenshots are in `/_astro/*` (hashed by Astro build)
   - Preserve existing Mintlify routes unchanged
   - Test locally with `wrangler dev` before deploying
 
@@ -991,19 +989,22 @@ feat(web): deploy to Cloudflare Pages + wire Worker routing
 
 ## Commit Sequence Summary
 
-| Phase | Commit type | Scope | Summary |
-|-------|-------------|-------|---------|
-| 1 | feat | web | scaffold Astro + design tokens + fonts |
-| 2 | feat | web/hero | hero + terminal card + copy button |
-| 3 | feat | web/sections | problem, solution, value props, trust |
-| 4 | feat | web/footer | social proof, CI, CTA, footer |
-| 5 | feat | web/islands | waitlist form (TDD — Vitest) |
-| 6 | perf | web | inline critical CSS, verify all budgets |
-| 7 | a11y | web | accessibility audit — zero violations |
-| 8 | test | web | responsive refinement + cross-browser |
-| 9 | feat | web | deploy to Cloudflare Pages + wire Worker |
+
+| Phase | Commit type | Scope        | Summary                                  |
+| ----- | ----------- | ------------ | ---------------------------------------- |
+| 1     | feat        | web          | scaffold Astro + design tokens + fonts   |
+| 2     | feat        | web/hero     | hero + terminal card + copy button       |
+| 3     | feat        | web/sections | problem, solution, value props, trust    |
+| 4     | feat        | web/footer   | social proof, CI, CTA, footer            |
+| 5     | feat        | web/islands  | waitlist form (TDD — Vitest)             |
+| 6     | perf        | web          | inline critical CSS, verify all budgets  |
+| 7     | a11y        | web          | accessibility audit — zero violations    |
+| 8     | test        | web          | responsive refinement + cross-browser    |
+| 9     | feat        | web          | deploy to Cloudflare Pages + wire Worker |
+
 
 All commits GPG-signed. Attribution:
+
 ```
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
@@ -1014,18 +1015,20 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 
 These hold across all phases. An agent violating any of these must stop and report before continuing.
 
-| Invariant | Rule |
-|-----------|------|
-| Go codebase untouched | No changes to Go source, tests, or CLI |
-| `moon run :check` green | Must pass before every push (Go tests, lint, docs all cached or green) |
-| GPG-signed commits | All commits use `-S` flag |
-| Bun exclusively | No `npm`, no `npx` — use `bunx` for one-off CLI tools |
-| Copy verbatim | Never reword locked copy; every section's text matches spec exactly |
-| No third-party JS | Islands use vanilla JS only; no React, no Vue, no libraries |
-| No analytics or tracking | Pure static output; no tracking scripts |
-| Performance budgets are hard limits | JS ≤ 150kb, CSS ≤ 30kb, images ≤ 50kb, fonts ≤ 30kb (all gzipped) |
-| Tech stack locked | Astro v6 + vanilla CSS + Bun. No changes mid-phase |
-| Dev server port | Astro default: `http://localhost:4321` (not 3000) |
+
+| Invariant                           | Rule                                                                   |
+| ----------------------------------- | ---------------------------------------------------------------------- |
+| Go codebase untouched               | No changes to Go source, tests, or CLI                                 |
+| `moon run :check` green             | Must pass before every push (Go tests, lint, docs all cached or green) |
+| GPG-signed commits                  | All commits use `-S` flag                                              |
+| Bun exclusively                     | No `npm`, no `npx` — use `bunx` for one-off CLI tools                  |
+| Copy verbatim                       | Never reword locked copy; every section's text matches spec exactly    |
+| No third-party JS                   | Islands use vanilla JS only; no React, no Vue, no libraries            |
+| No analytics or tracking            | Pure static output; no tracking scripts                                |
+| Performance budgets are hard limits | JS ≤ 150kb, CSS ≤ 30kb, images ≤ 50kb, fonts ≤ 30kb (all gzipped)      |
+| Tech stack locked                   | Astro v6 + vanilla CSS + Bun. No changes mid-phase                     |
+| Dev server port                     | Astro default: `http://localhost:4321` (not 3000)                      |
+
 
 ---
 

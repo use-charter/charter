@@ -1,0 +1,56 @@
+@import './design-tokens.css';
+@import './fonts.css';
+@import './marketing.css';
+
+/* ─────────────────────────────────────────────────────────────
+   Charter — Base element defaults, wired to the canonical tokens.
+   ───────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font: var(--body);
+  color: var(--color-text-primary);
+  background: var(--color-background-secondary);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 { margin: 0; color: var(--color-text-primary); text-wrap: balance; }
+h1 { font: var(--h1); letter-spacing: var(--tracking-tight); }
+h2 { font: var(--h2); letter-spacing: var(--tracking-tight); }
+h3 { font: var(--h3); }
+h4 { font: var(--h4); }
+
+p { margin: 0; text-wrap: pretty; }
+
+a { color: var(--color-text-info); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+code, kbd, samp, pre { font-family: var(--font-code); font-size: var(--text-sm); }
+
+::selection { background: color-mix(in srgb, var(--color-text-info) 22%, transparent); }
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+hr { border: 0; border-top: var(--hairline); margin: var(--space-8) 0; }
+small { font-size: var(--text-sm); }
+
+.mono   { font-family: var(--font-code); }
+.meta   { font-family: var(--font-meta); }
+.accent { font-family: var(--font-accent); letter-spacing: var(--tracking-wide); }
+
+.label-caps {
+  font-family: var(--font-accent);
+  font-size: var(--text-2xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--tracking-accent);
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}

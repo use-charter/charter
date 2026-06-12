@@ -1,0 +1,217 @@
+---
+// Starship segment helper — colored chips: directory · git · runtime
+const ss = (dir: string, branch: string, dirty = false, rt = 'v24.16.0') =>
+  `<span class="ck-ss">` +
+    `<span class="ck-ss__seg ck-ss__dir">${dir}</span>` +
+    `<span class="ck-ss__seg ck-ss__git">${branch}${dirty ? ' <span class="ck-ss__dirty">!</span>' : ''}</span>` +
+    `<span class="ck-ss__seg ck-ss__node">${rt}</span>` +
+  `</span>`;
+
+// Token helpers — shell syntax colour classes
+const cmd   = (s: string) => `<span class="t-cmd">${s}</span>`;
+const sub   = (s: string) => `<span class="t-sub">${s}</span>`;
+const flag  = (s: string) => `<span class="t-flag">${s}</span>`;
+const rule  = (s: string) => `<span class="t-rule">${s}</span>`;
+const str   = (s: string) => `<span class="t-str">${s}</span>`;
+const path  = (s: string) => `<span class="t-path">${s}</span>`;
+const dim   = (s: string) => `<span class="t-dim">${s}</span>`;
+const pass  = (s: string) => `<span class="t-pass">${s}</span>`;
+const fail  = (s: string) => `<span class="t-fail">${s}</span>`;
+const warn  = (s: string) => `<span class="t-warn">${s}</span>`;
+const brand = (s: string) => `<span class="t-brand">${s}</span>`;
+const div_  = (s: string) => `<span class="t-div">${s}</span>`;
+const chr   = `<span class="ck-ss__char">❯</span>`;
+
+const COMMANDS = [
+  {
+    cmd: 'doctor',
+    sig: 'charter doctor',
+    desc: 'Scan the repo and print a 0–100 readiness score with a per-category breakdown. Exit 0 = pass, 1 = below threshold, 2 = error.',
+    lines: [
+      ss('acme-api', 'main', true),
+      `${chr} ${cmd('charter')} ${sub('doctor')}`,
+      '',
+      `${brand('[C] charter')} ${dim('v1.0.0 · ~/acme-api')}`,
+      div_('────────────────────────────────────────'),
+      dim('Checked 18 rules · 3 findings · 1 BLOCKER · 1 HIGH · 1 MEDIUM'),
+      '',
+      `${fail('✗ BLOCKER')}  ${rule('AE-SEC-001')}  ${dim('Secrets')}`,
+      dim('  raw secret in an agent-visible file'),
+      `${warn('⚠ HIGH')}     ${rule('AE-MCP-001')}  ${dim('MCP Safety')}`,
+      `${warn('⚠ MEDIUM')}   ${rule('AE-AUTO-001')} ${dim('Autonomy')}`,
+      '',
+      div_('────────────────────────────────────────'),
+      `Score ${pass('82')}${dim('/100  ████████████████░░░░  ')}${pass('PASS ✓')}`,
+      dim('      threshold 80 · 1.84s · offline'),
+    ],
+  },
+  {
+    cmd: 'init',
+    sig: 'charter init',
+    desc: 'Scaffold the context files an agent needs — AGENTS.md, charter.yaml, .gitignore — so the next scan starts from a clean baseline.',
+    lines: [
+      ss('acme-api', 'main', true),
+      `${chr} ${cmd('charter')} ${sub('init')}`,
+      '',
+      `${brand('[C] charter')} ${dim('v1.0.0 · ~/acme-api')}`,
+      dim('scaffolding missing context files…'),
+      '',
+      `${pass('+')} ${path('AGENTS.md')}           ${dim('agent config scaffold')}`,
+      `${pass('+')} ${path('charter.yaml')}         ${dim('policy defaults')}`,
+      `${pass('+')} ${path('.gitignore')}            ${dim('(agent artifacts)')}`,
+      '',
+      `${pass('✓')} ${dim('3 files written · baseline ready')}`,
+    ],
+  },
+  {
+    cmd: 'fix',
+    sig: 'charter fix',
+    desc: 'Diff-first auto-repair for supported rules. Nothing is written until you approve the unified diff. Secrets rules are never auto-touched.',
+    lines: [
+      ss('acme-api', 'fix/mcp-pin', true),
+      `${chr} ${cmd('charter')} ${sub('fix')} ${rule('AE-MCP-001')}`,
+      '',
+      dim('proposed patch · .mcp.json'),
+      div_('────────────────────────────────────────'),
+      `${fail('- mcp-server-git')}`,
+      `${pass('+ mcp-server-git@2026.1.14')}`,
+      div_('────────────────────────────────────────'),
+      `${dim('apply this patch?')} ${str('[y/N]')} ${dim('›')} ${pass('y')}`,
+      '',
+      `${pass('✓')} ${dim('patch applied · 1 file written')}`,
+    ],
+  },
+  {
+    cmd: 'suppress',
+    sig: 'charter suppress',
+    desc: 'Record a governed waiver with a reason, owner, and optional expiry — an audit trail, not a mute button.',
+    lines: [
+      ss('acme-api', 'main', false),
+      `${chr} ${cmd('charter')} ${sub('suppress')} ${rule('AE-MCP-002')} ${flag('--reason')} ${str('vendored')} ${flag('--expires')} ${str('90d')}`,
+      '',
+      dim('writing waiver to charter.yaml…'),
+      '',
+      `${pass('✓')} ${rule('AE-MCP-002')} ${dim('waived by')} ${str('@dana')}`,
+      dim('  reason:  vendored'),
+      dim('  expires: 2026-09-10'),
+      '',
+      dim('Suppression governed. Re-surfaces on expiry.'),
+    ],
+  },
+  {
+    cmd: 'explain',
+    sig: 'charter explain',
+    desc: 'Print the catalog metadata for any rule: id, name, category, severity impact, summary, and docs URL.',
+    lines: [
+      ss('acme-api', 'main', false),
+      `${chr} ${cmd('charter')} ${sub('explain')} ${rule('AE-SEC-001')}`,
+      '',
+      `${rule('AE-SEC-001')}  ${dim('NoRawSecretsInContext')}`,
+      dim('─────────────────────────────────'),
+      `${dim('category')}  ${pass('Secrets')}`,
+      `${dim('severity')}  ${fail('BLOCKER')}  ${dim('(−20 pts)')}`,
+      `${dim('summary')}   ${dim('Raw secret pattern in an agent-visible file')}`,
+      `${dim('auto-fix')}  ${pass('yes')}`,
+      '',
+      `${dim('→')} ${path('use-charter.dev/rules/AE-SEC-001')}`,
+    ],
+  },
+  {
+    cmd: 'report',
+    sig: 'charter report',
+    desc: 'Write a self-contained, offline single-file HTML report — fonts and data inlined, opens from file:// with zero network.',
+    lines: [
+      ss('acme-api', 'main', false),
+      `${chr} ${cmd('charter')} ${sub('report')} ${flag('--open')}`,
+      '',
+      dim('scanning…'),
+      dim('rendering HTML report…'),
+      '',
+      `${pass('✓')} ${dim('written')}  ${path('charter-report.html')}  ${dim('(~143 KB)')}`,
+      dim('  self-contained · WCAG 2.2 AA · offline'),
+      dim('  SARIF 2.1.0 embedded'),
+      '',
+      dim('opening in browser…'),
+    ],
+  },
+  {
+    cmd: 'version',
+    sig: 'charter version',
+    desc: 'Print the version, build provenance, commit SHA, and supply-chain verification status. Useful in CI logs and bug reports.',
+    lines: [
+      ss('acme-api', 'main', false),
+      `${chr} ${cmd('charter')} ${sub('version')}`,
+      '',
+      `${brand('[C] charter')}  ${pass('v1.0.0')}`,
+      div_('─────────────────────────'),
+      `${dim('commit')}  ${rule('a1b2c3d')} ${dim('· 2026-01-14')}`,
+      `${dim('go')}      ${dim('1.23.4')}`,
+      `${dim('slsa')}    ${pass('level 3')} ${dim('·')} ${pass('cosign verified ✓')}`,
+      `${dim('sbom')}    ${pass('spdx-2.3')}`,
+    ],
+  },
+];
+---
+<section class="ck-section ck-section--alt" id="commands" data-reveal>
+  <div class="ck-inner">
+    <div class="ck-head">
+      <span class="label-caps">Seven commands &middot; v1.0</span>
+      <h2>A small, sharp command surface</h2>
+      <p>No dashboard, no account, no telemetry. Everything runs from your shell — and from CI.</p>
+    </div>
+    <div class="ck-cmd" id="commands-ui">
+      <div class="ck-cmd__tabs" role="tablist" aria-label="Charter commands">
+        {COMMANDS.map((c, i) => (
+          <button
+            class={`ck-cmd__tab${i === 0 ? ' is-active' : ''}`}
+            role="tab"
+            aria-selected={i === 0 ? 'true' : 'false'}
+            data-cmd={i}
+            type="button"
+          >
+            charter {c.cmd}
+          </button>
+        ))}
+      </div>
+      <div class="ck-cmd__panel" id="cmd-panel">
+        {COMMANDS.map((c, i) => (
+          <div class={`ck-cmd__pane${i === 0 ? '' : ' is-hidden'}`} data-pane={i}>
+            <div class="ck-cmd__desc">
+              <h3>{c.sig}</h3>
+              <p>{c.desc}</p>
+            </div>
+            <div class="ck-terminal">
+              <div class="ck-terminal__chrome">
+                <span class="ck-terminal__dot ck-terminal__dot--r"></span>
+                <span class="ck-terminal__dot ck-terminal__dot--y"></span>
+                <span class="ck-terminal__dot ck-terminal__dot--g"></span>
+                <span class="ck-terminal__title">{c.sig}</span>
+              </div>
+              <div class="ck-terminal__body">
+                {c.lines.map(l => <div class="ck-terminal__line" set:html={l || ' '} />)}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ck-cmd__pane.is-hidden { display: none; }
+</style>
+
+<script>
+  const tabs = document.querySelectorAll('.ck-cmd__tab');
+  const panes = document.querySelectorAll('.ck-cmd__pane');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const i = (tab as HTMLElement).dataset.cmd;
+      tabs.forEach(t => { t.classList.remove('is-active'); t.setAttribute('aria-selected', 'false'); });
+      panes.forEach(p => p.classList.add('is-hidden'));
+      tab.classList.add('is-active'); tab.setAttribute('aria-selected', 'true');
+      document.querySelector(`.ck-cmd__pane[data-pane="${i}"]`)?.classList.remove('is-hidden');
+    });
+  });
+</script>

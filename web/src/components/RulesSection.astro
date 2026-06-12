@@ -1,0 +1,61 @@
+---
+const CATEGORIES = [
+  { name: 'Context',      icon: 'file-code',        state: 'pass',    rules: '4 rules', stat: '✓ clean' },
+  { name: 'Secrets',      icon: 'key',              state: 'danger',  rules: '2 rules', stat: '1 blocker', ded: '−20' },
+  { name: 'MCP Safety',   icon: 'plug',             state: 'warning', rules: '3 rules', stat: '1 high',    ded: '−10' },
+  { name: 'Agent Config', icon: 'shield-check',     state: 'pass',    rules: '2 rules', stat: '✓ clean' },
+  { name: 'Environment',  icon: 'package',          state: 'pass',    rules: '1 rule',  stat: '✓ clean' },
+  { name: 'CI',           icon: 'git-pull-request', state: 'pass',    rules: '1 rule',  stat: '✓ clean' },
+  { name: 'Testing',      icon: 'flask',            state: 'pass',    rules: '1 rule',  stat: '✓ clean' },
+  { name: 'Autonomy',     icon: 'flow-arrow',       state: 'warning', rules: '1 rule',  stat: '1 medium', ded: '−4' },
+  { name: 'Governance',   icon: 'scales',           state: 'muted',   rules: '3 rules', stat: 'informational' },
+];
+
+import { Icon } from 'astro-icon/components';
+
+const FINDINGS = [
+  { severity: 'blocker', rule: 'AE-SEC-001', category: 'Secrets',    summary: 'Raw secret pattern in an agent-visible file',          path: 'src/config/auth.ts:42', tag: 'auto-fix' },
+  { severity: 'high',    rule: 'AE-MCP-001', category: 'MCP Safety', summary: 'MCP server is not pinned to an exact, current version', path: '.mcp.json:7',           tag: 'auto-fix' },
+  { severity: 'medium',  rule: 'AE-AUTO-001',category: 'Autonomy',   summary: 'No verify command discoverable via a task runner',      path: 'repo root' },
+];
+---
+<section class="ck-section" id="rules" data-reveal>
+  <div class="ck-head">
+    <span class="label-caps">18 rules &middot; 9 categories</span>
+    <h2>Repos fail readiness for boring, fixable reasons</h2>
+    <p>Missing <code>AGENTS.md</code>, secrets visible to agents, an unpinned MCP server, no discoverable verify command. Charter checks the nine things that decide whether an agent helps or flails — and every finding carries a rule ID and a fix.</p>
+  </div>
+
+  <div class="ck-cats">
+    {CATEGORIES.map(c => (
+      <div class={`c-cc c-cc--${c.state}`}>
+        <div class="c-cc__top">
+          <Icon name={`ph:${c.icon}`} class="c-cc__icon" />
+          <span class="c-cc__name">{c.name}</span>
+        </div>
+        <span class="c-cc__rules">{c.rules}</span>
+        <div class="c-cc__stat">
+          <span class={`c-cc__badge c-cc__badge--${c.state}`}>{c.stat}</span>
+          {c.ded && <span class="c-cc__ded">{c.ded}</span>}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div class="ck-section-head-sm">
+    <span class="label-caps">Findings</span>
+    <span class="ck-section-count">3 of 18 fired</span>
+  </div>
+  <div class="ck-findings">
+    {FINDINGS.map(f => (
+      <div class={`c-finding c-finding--${f.severity}`}>
+        <span class={`c-finding__sev c-finding__sev--${f.severity}`}>{f.severity}</span>
+        <span class="c-finding__rule">{f.rule}</span>
+        <span class="c-finding__cat">{f.category}</span>
+        <span class="c-finding__summary">{f.summary}</span>
+        <span class="c-finding__path">{f.path}</span>
+        {f.tag && <span class="c-finding__tag">{f.tag}</span>}
+      </div>
+    ))}
+  </div>
+</section>

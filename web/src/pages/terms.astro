@@ -1,0 +1,158 @@
+---
+import { Icon } from 'astro-icon/components';
+import Legal from '../layouts/Legal.astro';
+
+const updated = 'June 12, 2026';
+const summary =
+  'The terms for using the Charter website and software. Charter is open source under Apache-2.0, provided as-is, and your code always stays yours.';
+const highlights = [
+  { icon: 'scales', label: 'Apache-2.0 licensed' },
+  { icon: 'warning', label: 'Provided as-is' },
+  { icon: 'lock', label: 'Your code stays yours' },
+  { icon: 'seal-check', label: 'Free forever' },
+];
+const toc = [
+  { id: 'acceptance', label: 'Acceptance' },
+  { id: 'software', label: 'Software & license' },
+  { id: 'acceptable-use', label: 'Acceptable use' },
+  { id: 'ip', label: 'Intellectual property' },
+  { id: 'no-warranty', label: 'No warranty' },
+  { id: 'liability', label: 'Liability' },
+  { id: 'third-parties', label: 'Third parties' },
+  { id: 'indemnification', label: 'Indemnification' },
+  { id: 'changes', label: 'Changes' },
+  { id: 'law', label: 'Governing law' },
+  { id: 'contact', label: 'Contact' },
+];
+---
+
+<Legal
+  title="Terms of Service"
+  description="The terms governing use of the Charter website and the open-source Charter software, licensed under Apache-2.0 and provided as-is."
+  path="/terms"
+  updated={updated}
+  summary={summary}
+  highlights={highlights}
+  toc={toc}
+>
+  <section class="lp-section" id="acceptance">
+    <h2><span class="lp-num">01</span><a href="#acceptance">Acceptance</a></h2>
+    <p>
+      By accessing the website at <code>use-charter.dev</code> (the &ldquo;Site&rdquo;) or using the
+      Charter software (the &ldquo;Software&rdquo;), you agree to these Terms of Service. If you do
+      not agree, do not use the Site or the Software.
+    </p>
+  </section>
+
+  <section class="lp-section" id="software">
+    <h2><span class="lp-num">02</span><a href="#software">Software &amp; license</a></h2>
+    <div class="lp-callout">
+      <Icon name="ph:scales" />
+      <p><strong>In short:</strong> the Software is open source under Apache-2.0. That license governs your rights to use, modify, and distribute it.</p>
+    </div>
+    <p>
+      The Software is licensed under the
+      <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener noreferrer">Apache License, Version 2.0</a>.
+      Your use, reproduction, modification, and distribution of the Software are governed by that
+      license, whose terms control in the event of any conflict with these Terms with respect to the
+      Software itself. The full text is included in the
+      <a href="https://github.com/use-charter/charter/blob/main/LICENSE" rel="noopener noreferrer">project repository</a>.
+    </p>
+  </section>
+
+  <section class="lp-section" id="acceptable-use">
+    <h2><span class="lp-num">03</span><a href="#acceptable-use">Acceptable use</a></h2>
+    <p>When using the Site, you agree not to:</p>
+    <ul>
+      <li>Disrupt, overload, or attempt to gain unauthorized access to the Site or its infrastructure;</li>
+      <li>Use the Site to distribute malware or unlawful content;</li>
+      <li>Misrepresent your affiliation with the Charter project.</li>
+    </ul>
+    <p>Use of the Software is governed by its license rather than this section.</p>
+  </section>
+
+  <section class="lp-section" id="ip">
+    <h2><span class="lp-num">04</span><a href="#ip">Intellectual property</a></h2>
+    <div class="lp-callout">
+      <Icon name="ph:lock" />
+      <p><strong>In short:</strong> the code you scan is entirely yours. Charter reads it locally and claims no rights to it.</p>
+    </div>
+    <p>
+      The Charter name, wordmark, and logo are marks of the Charter project; these Terms grant no
+      right to use them except as permitted by applicable law or the Software&rsquo;s license. You
+      retain all rights to the repositories, code, and content you analyze with the Software — the
+      Software processes them locally and we obtain no rights in them.
+    </p>
+  </section>
+
+  <section class="lp-section" id="no-warranty">
+    <h2><span class="lp-num">05</span><a href="#no-warranty">No warranty</a></h2>
+    <div class="lp-callout">
+      <Icon name="ph:warning" />
+      <p><strong>In short:</strong> a readiness score is guidance, not a guarantee. It does not certify that a repository is secure.</p>
+    </div>
+    <p>
+      THE SITE AND SOFTWARE ARE PROVIDED &ldquo;AS IS&rdquo; AND &ldquo;AS AVAILABLE&rdquo;, WITHOUT
+      WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES
+      OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. The readiness score
+      and findings are informational and do not constitute a security audit, certification, or
+      guarantee. You are responsible for evaluating their suitability for your needs.
+    </p>
+  </section>
+
+  <section class="lp-section" id="liability">
+    <h2><span class="lp-num">06</span><a href="#liability">Limitation of liability</a></h2>
+    <p>
+      TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL THE CHARTER PROJECT OR ITS
+      CONTRIBUTORS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY
+      DAMAGES, OR FOR ANY LOSS OF PROFITS, DATA, OR GOODWILL, ARISING OUT OF OR RELATED TO YOUR USE
+      OF THE SITE OR SOFTWARE, WHETHER IN CONTRACT, TORT, OR OTHERWISE, EVEN IF ADVISED OF THE
+      POSSIBILITY OF SUCH DAMAGES.
+    </p>
+  </section>
+
+  <section class="lp-section" id="third-parties">
+    <h2><span class="lp-num">07</span><a href="#third-parties">Third parties</a></h2>
+    <p>
+      The Site links to third-party services such as GitHub and our documentation host. We are not
+      responsible for the content, policies, or practices of any third-party site, and accessing
+      them is at your own risk under their terms.
+    </p>
+  </section>
+
+  <section class="lp-section" id="indemnification">
+    <h2><span class="lp-num">08</span><a href="#indemnification">Indemnification</a></h2>
+    <p>
+      You agree to indemnify and hold harmless the Charter project and its contributors from any
+      claims, liabilities, damages, and expenses arising out of your misuse of the Site or your
+      violation of these Terms.
+    </p>
+  </section>
+
+  <section class="lp-section" id="changes">
+    <h2><span class="lp-num">09</span><a href="#changes">Changes</a></h2>
+    <p>
+      We may revise these Terms as the project evolves. Material changes are reflected by the
+      &ldquo;Last updated&rdquo; date above. Continued use of the Site or Software after a change
+      constitutes acceptance of the revised Terms.
+    </p>
+  </section>
+
+  <section class="lp-section" id="law">
+    <h2><span class="lp-num">10</span><a href="#law">Governing law</a></h2>
+    <p>
+      These Terms are governed by the laws of the jurisdiction in which the Charter project
+      maintainers are established, without regard to conflict-of-law principles. Nothing here limits
+      any non-waivable statutory rights you may have as a consumer.
+    </p>
+  </section>
+
+  <section class="lp-section" id="contact">
+    <h2><span class="lp-num">11</span><a href="#contact">Contact</a></h2>
+    <p>
+      Questions about these Terms? Reach us at
+      <a href="mailto:legal@use-charter.dev">legal@use-charter.dev</a> or open an issue on our
+      <a href="https://github.com/use-charter/charter" rel="noopener noreferrer">GitHub repository</a>.
+    </p>
+  </section>
+</Legal>

@@ -1,0 +1,38 @@
+---
+const year = new Date().getFullYear();
+---
+<footer class="footer">
+  <div class="footer__inner">
+    <div class="footer__col">
+      <p class="footer__col-label">Product</p>
+      <nav aria-label="Product links">
+        <a href="https://use-charter.dev/docs" class="footer__link">Documentation</a>
+        <a href="https://use-charter.dev/rules" class="footer__link">Rules reference</a>
+      </nav>
+    </div>
+
+    <div class="footer__col">
+      <p class="footer__col-label">Project</p>
+      <nav aria-label="Project links">
+        <a href="https://github.com/use-charter/charter" rel="noopener noreferrer" class="footer__link">GitHub</a>
+        <a href="https://github.com/use-charter/charter/releases" rel="noopener noreferrer" class="footer__link">Releases</a>
+      </nav>
+    </div>
+
+    <div class="footer__col">
+      <p class="footer__col-label">Community</p>
+      <nav aria-label="Community links">
+        <!-- TODO: replace with Discord URL when available -->
+        <span class="footer__link footer__link--pending">Discord</span>
+      </nav>
+    </div>
+
+    <div class="footer__col">
+      <p class="footer__col-label">Legal</p>
+      <nav aria-label="Legal links">
+        <a href="https://github.com/use-charter/charter/blob/main/LICENSE" rel="noopener noreferrer" class="footer__link">Apache-2.0</a>
+        <span class="footer__copy">&copy; {year} Charter</span>
+      </nav>
+    </div>
+  </div>
+</footer>

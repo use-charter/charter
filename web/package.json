@@ -1,0 +1,35 @@
+{
+  "name": "charter-web",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check",
+    "audit": "bun audit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@astrojs/sitemap": "^3.7.3",
+    "@iconify-json/ph": "^1.2.2",
+    "astro": "^6.4.6",
+    "astro-icon": "^1.1.5",
+    "typescript": "^6.0.3"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.8",
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.8"
+  },
+  "overrides": {
+    "yaml": ">=2.8.3"
+  }
+}

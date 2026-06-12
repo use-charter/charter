@@ -1,31 +1,50 @@
+# `layer` (app/library/tool) and `language` are top-level; `project:` holds
+# metadata. Tasks delegate to package.json scripts so the command is defined once.
+layer: application
+language: typescript
+
 project:
   name: web
-  type: node
 
+# Tasks delegate to package.json scripts via `bun run <script>`:
+# package.json owns the command, mise owns the bun version, Moon owns
+# orchestration (caching, inputs/outputs, dep graph). One definition each.
 tasks:
   dev:
-    command: astro
+    command: bun
     args:
+      - run
       - dev
     options:
       interactive: true
   build:
-    command: astro
+    command: bun
     args:
+      - run
       - build
     inputs:
       - src/**
       - public/**
-      - astro.config.mjs
+      - astro.config.mts
       - package.json
     outputs:
       - dist
   check:
-    command: "bun"
+    command: bun
     args:
-      - "run"
-      - "check"
+      - run
+      - check
     inputs:
       - src/**
-      - astro.config.mjs
+      - astro.config.mts
       - package.json
+  # Joins the repo-wide `moon run :security` gate — audits dependencies for
+  # known advisories.
+  security:
+    command: bun
+    args:
+      - run
+      - audit
+    inputs:
+      - package.json
+      - bun.lock
