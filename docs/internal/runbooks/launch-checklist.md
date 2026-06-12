@@ -38,11 +38,11 @@ Definition of done for the gate: every box below is `[x]`, the RC dry-run
 ## 4. Web & docs live
 
 - [ ] Mintlify docs live at `use-charter.dev/docs`, `/cli`, `/rules`, `/changelog`; `/rules/AE-*` `helpUri`s resolve (CF-9, hard launch dependency). `external`
-- [ ] Landing site live on Cloudflare Pages; footer product-updates form delivers via Resend. `external`
+- [x] Landing site built + live on Cloudflare Pages (`charter-landing.pages.dev`); signup form → Resend → Email Routing verified end-to-end. Apex flip still pending (row below). `external`
 - [ ] `go.use-charter.dev` vanity worker deployed (CF-4). `external`
 - [ ] Set repo secrets `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`, then repo variable `DEPLOY_WORKERS=true` to enable `deploy-workers.yml`. `admin`
 - [x] Verify the Resend sending domain — apex `use-charter.dev` verified (2026-06-12, ready to send). `external`
-- [ ] Set Pages `RESEND_API_KEY` (encrypted) + `WAITLIST_TO` (Batch B). `admin`
+- [x] Pages vars set — `RESEND_API_KEY` (dashboard secret) + `WAITLIST_TO` (wrangler `[vars]`). `admin`
 - [ ] Worker `LANDING_ORIGIN` set to the `*.pages.dev` host; apex has a proxied DNS record. `external`
 
 Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topology rationale: ADR-0026.
