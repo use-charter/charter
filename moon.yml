@@ -126,11 +126,12 @@ tasks:
       - "scripts/generate-doc-html.ts"
       - "package.json"
   security:
-    script: "gitleaks git --config .gitleaks.toml . --redact --no-banner && gitleaks dir --config .gitleaks.toml . --redact --no-banner && govulncheck ./... && osv-scanner scan source -r ."
+    script: "gitleaks git --config .gitleaks.toml . --redact --no-banner && gitleaks dir --config .gitleaks.toml . --redact --no-banner && govulncheck ./... && osv-scanner scan source --config osv-scanner.toml -r ."
     inputs:
       - "@globs(goSources)"
       - "@globs(docsSources)"
       - ".gitleaks.toml"
+      - "osv-scanner.toml"
       - "mise.toml"
       - "mise.lock"
   eval:

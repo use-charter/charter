@@ -1,0 +1,32 @@
+---
+// icon--colored: brand colors visible on both backgrounds (no filter)
+// icon--dark-invert: dark/near-black fill → invert to white on dark bg
+// icon--light-invert: white fill → brightness(0) to black on light bg
+const AGENTS = [
+  { name: 'Claude Code', icon: 'claude-ai',     cls: 'icon--colored'      },
+  { name: 'Cursor',      icon: 'cursor',        cls: 'icon--dark-invert'  },
+  { name: 'Copilot',     icon: 'github-copilot',cls: 'icon--dark-invert'  },
+  { name: 'Windsurf',    icon: 'windsurf',      cls: 'icon--dark-invert'  },
+  { name: 'Codex',       icon: 'codex',         cls: 'icon--dark-invert'  },
+  { name: 'Gemini',      icon: 'google-gemini', cls: 'icon--colored'      },
+  { name: 'Grok',        icon: 'grok',          cls: 'icon--dark-invert'  },
+];
+---
+<section class="ck-compat" data-reveal>
+  <span class="label-caps">Cross-vendor — works with the agents your team already runs</span>
+  <div class="ck-compat__row">
+    {AGENTS.map(a => (
+      <div class="ck-compat__item">
+        <img
+          src={`/icons/${a.icon}.svg`}
+          alt={a.name}
+          width="22"
+          height="22"
+          class={`ck-compat__icon ${a.cls}`}
+          loading="lazy"
+        />
+        <span class="ck-compat__name">{a.name}</span>
+      </div>
+    ))}
+  </div>
+</section>

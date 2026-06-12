@@ -1,0 +1,108 @@
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: color-mix(in oklch, var(--bg) 78%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid color-mix(in oklch, var(--accent) 10%, var(--line));
+  box-shadow: 0 1px 0 var(--accent-soft);
+}
+
+.topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 58px;
+}
+
+.wg-container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.topbar__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  text-decoration: none;
+  color: var(--fg);
+  flex-shrink: 0;
+}
+
+.topbar__logo-text {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.topbar__logo:hover { opacity: 0.75; }
+.topbar__logo:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.topbar__links {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.topbar__chip {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 0.875rem;
+  border: 1px solid var(--chip-border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-code);
+  font-size: 0.75rem;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+
+.topbar__chip:hover {
+  background: var(--surface-strong);
+  border-color: color-mix(in oklch, var(--accent) 20%, var(--chip-border));
+  text-decoration: none;
+  opacity: 1;
+}
+
+.topbar__chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.topbar__cta {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 1rem;
+  background: var(--primary-bg);
+  border: 1px solid var(--primary-border);
+  border-radius: 8px;
+  color: var(--primary-fg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.topbar__cta:hover { opacity: 0.88; }
+.topbar__cta:active { transform: scale(0.97); }
+.topbar__cta:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 599px) {
+  .topbar__links { display: none; }
+}

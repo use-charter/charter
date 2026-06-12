@@ -1,0 +1,25 @@
+---
+import Section from './Section.astro';
+
+// Phosphor Light CheckCircle path
+const checkPath = "M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z";
+
+const commitments = [
+  "Never send data anywhere without explicit opt-in.",
+  "Never call an LLM — all findings are deterministic.",
+  "Every finding has a rule ID, evidence, and fix suggestion.",
+  "Every release is signed (cosign) with SLSA Level 3 provenance.",
+];
+---
+<Section id="trust" title="Built on Ten Commitments">
+  <div class="trust__grid reveal">
+    {commitments.map(text => (
+      <div class="trust__item">
+        <svg class="trust__icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" aria-hidden="true">
+          <path fill="currentColor" d={checkPath} />
+        </svg>
+        <p class="trust__text">{text}</p>
+      </div>
+    ))}
+  </div>
+</Section>
