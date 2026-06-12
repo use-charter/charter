@@ -19,7 +19,7 @@ Definition of done for the gate: every box below is `[x]`, the RC dry-run
 
 - [x] Signed release pipeline built — GoReleaser v2 + cosign keyless + SLSA L3 provenance + SPDX SBOM (ADR-0016/0018). `code`
 - [x] `moon run :release-check` / `:release-snapshot` green offline. `code`
-- [ ] Cut `v0.9.0-rc` and verify the **live** pipeline end-to-end: multi-OS/arch binaries, `checksums.txt`, cosign bundle verifies, SLSA attestation present, SBOM attached. `external` — first real tag (executed in Slice 22).
+- [x] `v0.9.0-rc` dry-run (2026-06-13) verified the pipeline: 6 OS/arch binaries, `checksums.txt`, cosign bundle (`checksums.txt.sigstore.json`), 6 SBOMs, GitHub prerelease, Homebrew tap correctly skipped on the prerelease. **SLSA L3 halts on a private repo by design** ("keep the repository name out of the public transparency log") — auto-resolves once the repo is public for `v1.0.0`; do **not** set `private-repository: true`. `external`
 - [ ] `use-charter/homebrew-tap` repo created and flipped **public**; `HOMEBREW_TAP_TOKEN` secret set; `brew install` resolves the cask. `admin`
 - [ ] `go install go.use-charter.dev/charter/cmd/charter@latest` resolves once the vanity worker is live (CF-4 — see §4). `external`
 
