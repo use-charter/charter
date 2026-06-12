@@ -18,8 +18,10 @@ jobs:
     name: Classify changes
     runs-on: ubuntu-latest
     outputs:
-      full_check: ${{ steps.classify.outputs.full_check }}
-      docs_only: ${{ steps.classify.outputs.docs_only }}
+      go: ${{ steps.classify.outputs.go }}
+      web: ${{ steps.classify.outputs.web }}
+      docs: ${{ steps.classify.outputs.docs }}
+      infra: ${{ steps.classify.outputs.infra }}
     steps:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -34,11 +36,12 @@ jobs:
           HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: bash scripts/github-actions/classify-changes.sh
 
-  full-check:
-    name: Run CI task family
+  go:
+    name: Go (test, lint, build, perf)
     needs: changes
-    if: needs.changes.outputs.full_check == 'true'
+    if: needs.changes.outputs.go == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -54,18 +57,43 @@ jobs:
           cache: true
       - name: Install pinned Bun dependencies
         run: bun install --frozen-lockfile
-      - name: Run CI task family
-        run: mise x -- moon run :lint :vet :test :build :docs :eval
+      - name: Run Go task family
+        run: mise x -- moon run root:lint root:vet root:test root:build root:eval
       - name: Run Charter doctor gate
         run: go run ./cmd/charter doctor --path . --threshold 80 --quiet
       - name: Run performance validation
-        run: mise x -- moon run :perf
+        run: mise x -- moon run root:perf
 
-  docs-check:
-    name: Run docs task
+  web:
+    name: Web (astro check, vitest, build)
     needs: changes
-    if: needs.changes.outputs.docs_only == 'true'
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up pinned toolchain
+        uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
+        with:
+          version: 2026.5.15
+          install: true
+          install_args: --locked
+          cache: true
+      - name: Install pinned Bun dependencies
+        working-directory: web
+        run: bun install --frozen-lockfile
+      - name: Run web task family
+        run: mise x -- moon run web:check web:test web:build
+
+  docs:
+    name: Docs (validate, rule-page drift, mirrors)
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -79,38 +107,66 @@ jobs:
           install: true
           install_args: --locked
           cache: true
-      - name: Run docs task
-        run: mise x -- moon run :docs
+      - name: Install pinned Bun dependencies
+        run: bun install --frozen-lockfile
+      - name: Run docs task family
+        run: mise x -- moon run docs:lint root:docs
+
+  infra:
+    name: Infra (workers typecheck)
+    needs: changes
+    if: needs.changes.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up pinned toolchain
+        uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
+        with:
+          version: 2026.5.15
+          install: true
+          install_args: --locked
+          cache: true
+      - name: Install pinned Bun dependencies
+        working-directory: infra
+        run: bun install --frozen-lockfile
+      - name: Run infra task family
+        run: mise x -- moon run infra:check
 
   check:
     name: Report CI status
     needs:
       - changes
-      - full-check
-      - docs-check
+      - go
+      - web
+      - docs
+      - infra
     if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Summarize CI result
         shell: bash
         env:
-          FULL_RESULT: ${{ needs.full-check.result }}
-          DOCS_RESULT: ${{ needs.docs-check.result }}
-          FULL_CHECK: ${{ needs.changes.outputs.full_check }}
-          DOCS_ONLY: ${{ needs.changes.outputs.docs_only }}
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          GO_RESULT: ${{ needs.go.result }}
+          WEB_RESULT: ${{ needs.web.result }}
+          DOCS_RESULT: ${{ needs.docs.result }}
+          INFRA_RESULT: ${{ needs.infra.result }}
         run: |
-          if [[ "$FULL_RESULT" == "failure" || "$DOCS_RESULT" == "failure" ]]; then
+          failed=false
+          for result in "$CHANGES_RESULT" "$GO_RESULT" "$WEB_RESULT" "$DOCS_RESULT" "$INFRA_RESULT"; do
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              failed=true
+            fi
+          done
+
+          if [[ "$failed" == true ]]; then
+            echo "One or more CI lanes failed."
             exit 1
           fi
 
-          if [[ "$FULL_CHECK" == "true" ]]; then
-            echo "Full CI task family executed."
-            exit 0
-          fi
-
-          if [[ "$DOCS_ONLY" == "true" ]]; then
-            echo "Docs-only CI task executed."
-            exit 0
-          fi
-
-          echo "No CI-relevant changes detected."
+          echo "All triggered CI lanes passed (skipped lanes had no relevant changes)."
