@@ -338,7 +338,7 @@
 .ck-foot__cta-sub { font: var(--body-sm); color: var(--color-text-secondary); }
 
 /* Product-updates email form */
-.ck-foot__form { width: 100%; margin-top: var(--space-1); }
+.ck-foot__form { position: relative; width: 100%; margin-top: var(--space-1); }
 .ck-foot__form-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .ck-foot__input {
   flex: 1; min-width: 0; height: 40px; padding: 0 var(--space-3);
@@ -350,37 +350,33 @@
 .ck-foot__input::placeholder { color: var(--color-text-tertiary); }
 .ck-foot__input:focus { outline: none; border-color: var(--color-text-info); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-text-info) 18%, transparent); }
 .ck-foot__input[aria-invalid="true"] { border-color: var(--color-text-danger); }
-.ck-foot__submit { height: 40px; position: relative; }
-.ck-foot__submit-label,
-.ck-foot__submit-check { transition: opacity var(--transition), transform var(--transition); }
-.ck-foot__submit-check {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transform: scale(0.5);
-}
-.ck-foot__submit.is-done { background: rgba(63, 185, 80, 0.16); border-color: #3fb950; }
-.ck-foot__submit.is-done .ck-foot__submit-label { opacity: 0; transform: scale(0.5); }
-.ck-foot__submit.is-done .ck-foot__submit-check { opacity: 1; transform: scale(1); }
+.ck-foot__submit { height: 40px; }
 .ck-foot__err { display: block; min-height: 1.1em; margin-top: 6px; font-family: var(--font-meta); font-size: var(--text-xs); color: var(--color-text-danger); }
 
-/* Toast (emitted by the form island) */
-.toast {
-  position: fixed; bottom: var(--space-5); right: var(--space-5); z-index: 100;
-  max-width: 360px; padding: 12px 16px; border-radius: var(--border-radius-md);
-  font: var(--body-sm); font-weight: 500; box-shadow: var(--shadow-lg);
-  border: 1px solid transparent;
+/* Inline confirmation — on submit, the form row morphs into this message. */
+.ck-foot__form-row { transition: opacity var(--transition), transform var(--transition); }
+.ck-foot__success {
+  position: absolute;
+  inset: 0 auto auto 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  height: 40px;
+  font: var(--body-sm);
+  font-weight: 600;
+  color: #3fb950;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity var(--transition), transform var(--transition);
 }
-.toast--success { background: var(--color-background-success); color: var(--color-text-success); border-color: var(--color-border-success); }
-.toast--error { background: var(--color-background-danger); color: var(--color-text-danger); border-color: var(--color-border-danger); }
-@media (prefers-reduced-motion: no-preference) {
-  .toast { animation: ck-toast-in var(--dur-base) var(--ease-out); }
-  @keyframes ck-toast-in { from { opacity: 0; transform: translateY(8px); } }
+.ck-foot__success svg { flex-shrink: 0; }
+.ck-foot__form.is-sent .ck-foot__form-row { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+.ck-foot__form.is-sent .ck-foot__success { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .ck-foot__form-row, .ck-foot__success { transition: none; }
 }
-@media (max-width: 479px) { .toast { left: var(--space-5); right: var(--space-5); max-width: none; } }
 
 /* Bottom bar */
 .ck-foot__bar {

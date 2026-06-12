@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { initWaitlistForm, showToast, submitWaitlist, validateEmail } from './WaitlistForm';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { initWaitlistForm, submitWaitlist, validateEmail } from './WaitlistForm';
 
 describe('validateEmail', () => {
   it('rejects plain string with no @ or domain', () => {
@@ -106,12 +106,16 @@ describe('initWaitlistForm DOM', () => {
     vi.restoreAllMocks();
     document.body.innerHTML = `
       <form id="waitlist-form" novalidate>
-        <label for="waitlist-email">Email address</label>
-        <input type="email" id="waitlist-email" name="email" />
+        <div class="ck-foot__form-row">
+          <label for="waitlist-email">Email address</label>
+          <input type="email" id="waitlist-email" name="email" />
+          <button type="submit" id="waitlist-submit">Notify me</button>
+        </div>
+        <p id="waitlist-success" class="ck-foot__success" role="status">
+          <span class="ck-foot__success-text"></span>
+        </p>
         <span id="email-error" role="alert" aria-atomic="true"></span>
-        <button type="submit" id="waitlist-submit">Notify me</button>
       </form>
-      <div id="toast-container"></div>
     `;
     initWaitlistForm();
   });
@@ -185,65 +189,47 @@ describe('initWaitlistForm DOM', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('shows a success toast and resets the form on success', async () => {
+  it('reveals the inline confirmation and resets the form on success', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ success: true, message: 'Check your email!' }),
+      json: async () => ({ success: true, message: "Thanks — you're on the list." }),
     }));
 
     const input = document.getElementById('waitlist-email') as HTMLInputElement;
     const submitBtn = document.getElementById('waitlist-submit') as HTMLButtonElement;
     const form = document.getElementById('waitlist-form') as HTMLFormElement;
+    const successText = form.querySelector('.ck-foot__success-text') as HTMLElement;
 
     input.value = 'user@example.com';
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
     await vi.waitFor(() => {
-      const toast = document.getElementById('waitlist-toast');
-      expect(toast?.className).toContain('toast--success');
+      expect(form.classList.contains('is-sent')).toBe(true);
     });
+    expect(successText.textContent).toBe("Thanks — you're on the list.");
     expect(input.value).toBe('');
     expect(submitBtn.disabled).toBe(false);
   });
 
-  it('flashes the done state on the submit button on success', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ success: true, message: 'Check your email!' }),
-    }));
-
-    const input = document.getElementById('waitlist-email') as HTMLInputElement;
-    const submitBtn = document.getElementById('waitlist-submit') as HTMLButtonElement;
-    const form = document.getElementById('waitlist-form') as HTMLFormElement;
-
-    input.value = 'user@example.com';
-    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-
-    await vi.waitFor(() => {
-      expect(submitBtn.classList.contains('is-done')).toBe(true);
-    });
-  });
-
-  it('reverts the submit button done state after the timeout', async () => {
+  it('reverts the inline confirmation after the timeout', async () => {
     vi.useFakeTimers();
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ success: true, message: 'Check your email!' }),
+      json: async () => ({ success: true, message: "Thanks — you're on the list." }),
     }));
 
     const input = document.getElementById('waitlist-email') as HTMLInputElement;
-    const submitBtn = document.getElementById('waitlist-submit') as HTMLButtonElement;
     const form = document.getElementById('waitlist-form') as HTMLFormElement;
 
     input.value = 'user@example.com';
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
     await vi.runAllTimersAsync();
-    expect(submitBtn.classList.contains('is-done')).toBe(false);
+    expect(form.classList.contains('is-sent')).toBe(false);
     vi.useRealTimers();
   });
 
-  it('shows an error toast on a failed submit', async () => {
+  it('shows an inline error on a failed submit', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: false,
       json: async () => ({ error: 'Already subscribed' }),
@@ -251,14 +237,15 @@ describe('initWaitlistForm DOM', () => {
 
     const input = document.getElementById('waitlist-email') as HTMLInputElement;
     const form = document.getElementById('waitlist-form') as HTMLFormElement;
+    const errorSpan = document.getElementById('email-error') as HTMLElement;
 
     input.value = 'user@example.com';
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
     await vi.waitFor(() => {
-      const toast = document.getElementById('waitlist-toast');
-      expect(toast?.className).toContain('toast--error');
+      expect(errorSpan.textContent).toBe('Already subscribed');
     });
+    expect(form.classList.contains('is-sent')).toBe(false);
   });
 });
 
@@ -271,43 +258,5 @@ describe('initWaitlistForm guards', () => {
   it('no-ops when required fields are missing', () => {
     document.body.innerHTML = '<form id="waitlist-form"></form>';
     expect(() => initWaitlistForm()).not.toThrow();
-  });
-});
-
-describe('showToast', () => {
-  beforeEach(() => {
-    document.body.innerHTML = '';
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('appends a toast with status role, type class, and message', () => {
-    showToast('Saved', 'success');
-
-    const toast = document.getElementById('waitlist-toast') as HTMLElement;
-    expect(toast).not.toBeNull();
-    expect(toast.getAttribute('role')).toBe('status');
-    expect(toast.className).toBe('toast toast--success');
-    expect(toast.textContent).toBe('Saved');
-  });
-
-  it('replaces an existing toast instead of stacking', () => {
-    showToast('First', 'success');
-    showToast('Second', 'error');
-
-    const toasts = document.querySelectorAll('#waitlist-toast');
-    expect(toasts.length).toBe(1);
-    expect(toasts[0].textContent).toBe('Second');
-    expect((toasts[0] as HTMLElement).className).toBe('toast toast--error');
-  });
-
-  it('auto-removes the toast after the timeout', () => {
-    vi.useFakeTimers();
-    showToast('Bye', 'success');
-    expect(document.getElementById('waitlist-toast')).not.toBeNull();
-
-    vi.advanceTimersByTime(4000);
-    expect(document.getElementById('waitlist-toast')).toBeNull();
   });
 });
