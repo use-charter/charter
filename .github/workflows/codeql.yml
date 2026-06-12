@@ -56,7 +56,10 @@ jobs:
           languages: go
           build-mode: manual
       - name: Build
-        run: mise x -- go build ./...
+        # Bare `go` resolves to the mise shim on PATH, which CodeQL registers as
+        # its build tracer (CODEQL_ACTION_GO_BINARY). Running via `mise x --`
+        # spawns an untraced subprocess → "no code was built".
+        run: go build ./...
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@c35d1b164463ee62a100735382aaaa525c5d3496 # codeql-bundle-v2.25.6
         with:
