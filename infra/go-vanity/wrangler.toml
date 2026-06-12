@@ -1,0 +1,10 @@
+name = "charter-go-vanity"
+main = "src/index.ts"
+compatibility_date = "2026-06-12"
+workers_dev = false
+
+# Custom Domain auto-creates the go.use-charter.dev hostname + TLS certificate
+# and routes all traffic to this worker — no manual DNS record required.
+[[routes]]
+pattern = "go.use-charter.dev"
+custom_domain = true

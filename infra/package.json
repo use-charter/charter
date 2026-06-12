@@ -1,0 +1,21 @@
+{
+  "name": "charter-infra",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Cloudflare Workers fronting use-charter.dev (edge router) and go.use-charter.dev (Go vanity import).",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "audit": "bun audit",
+    "dev:router": "wrangler dev --config router/wrangler.toml",
+    "dev:go-vanity": "wrangler dev --config go-vanity/wrangler.toml",
+    "deploy:router": "wrangler deploy --config router/wrangler.toml",
+    "deploy:go-vanity": "wrangler deploy --config go-vanity/wrangler.toml",
+    "deploy": "bun run deploy:router && bun run deploy:go-vanity"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20260612.1",
+    "typescript": "6.0.3",
+    "wrangler": "4.100.0"
+  }
+}

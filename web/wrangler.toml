@@ -1,0 +1,10 @@
+# Cloudflare Pages config for the Charter landing site.
+#
+# `pages_build_output_dir` marks this as a Pages project (not a Worker). The
+# build command (`bun run build`) and root directory (`web`) are set in the
+# Pages dashboard / Git integration. Secrets and late-bound vars
+# (RESEND_API_KEY, WAITLIST_TO) are set as encrypted/plain vars in the
+# dashboard — never committed here.
+name = "charter-landing"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-06-12"
