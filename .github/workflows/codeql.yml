@@ -42,13 +42,13 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - name: Set up pinned toolchain
-        uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
+      - name: Set up Go
+        # CodeQL's Go build tracer must follow a real go binary; the mise shim
+        # breaks indirect tracing ("no code built"). setup-go provides a direct
+        # toolchain. cache off — results upload to code scanning (publishing).
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          version: 2026.5.15
-          install: true
-          install_args: --locked
-          # No toolchain cache: results upload to code scanning (publishing).
+          go-version-file: go.mod
           cache: false
       - name: Initialize CodeQL
         uses: github/codeql-action/init@c35d1b164463ee62a100735382aaaa525c5d3496 # codeql-bundle-v2.25.6
