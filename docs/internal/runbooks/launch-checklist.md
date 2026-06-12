@@ -48,7 +48,8 @@ Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topolo
 
 ## 5. Repo & org hardening (public)
 
-- [x] CodeQL workflow (`.github/workflows/codeql.yml`). `code`
+- [x] CodeQL workflow (`.github/workflows/codeql.yml`) — built; gated behind `ENABLE_CODEQL=true`. `code`
+- [ ] Set `ENABLE_CODEQL=true` once the repo is public (code-scanning upload needs Advanced Security, free on public repos). `admin`
 - [x] OSSF Scorecard workflow (`scorecard.yml`). `code`
 - [x] Supply-chain gates: govulncheck + osv-scanner + gitleaks + zizmor (pedantic) + actionlint, all green on `main`. `code`
 - [ ] Branch protection on `main`: require `Report CI status`, `Report workflow security status`, `Vulnerability Scan`, `CodeQL`, Scorecard; require PRs; no force-push. `admin` (Appendix A)
@@ -93,6 +94,11 @@ with the required-checks payload.
 
 **Private vulnerability reporting** — Settings → Code security and analysis →
 Private vulnerability reporting → Enable.
+
+**Enable CodeQL** — after the repo is public (Advanced Security is free on
+public repos): Settings → Secrets and variables → Actions → Variables → add
+`ENABLE_CODEQL=true`. The CodeQL workflow then runs and uploads to the Security
+tab; add `CodeQL` to the required status checks once it is green.
 
 **Discussions** — Settings → General → Features → Discussions → Enable; create a
 "Q&A" category (the issue-template `config.yml` already links to it).
