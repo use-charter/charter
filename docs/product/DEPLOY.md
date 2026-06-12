@@ -35,7 +35,7 @@ Mintlify deploys automatically. The first build takes ~1–2 minutes.
 After the deploy completes, Mintlify assigns a subdomain:
 
 ```
-https://charter.mintlify.dev
+https://charter.mintlify.app
 ```
 
 (The exact subdomain is shown in the dashboard under **Project → Deployments**.)
@@ -50,13 +50,14 @@ Check these URLs on your preview domain:
 
 | URL | Expected |
 |---|---|
-| `/` | Introduction page with four Cards |
-| `/quickstart` | Clean install instructions, no "launch-gated" language |
-| `/installation` | Four install paths (brew, binary, go install, source) |
-| `/rules/AE-CTX-001` | New anatomy: Why this rule, What triggers it, Examples |
-| `/rules/AE-SEC-001` | Score impact section, Related rules cross-links |
-| `/concepts/fix-engine` | Fix engine page renders |
-| `/design-philosophy` | Ten commitments page renders |
+| `/docs/introduction` | Introduction page with four Cards (`/docs` redirects here) |
+| `/docs/quickstart` | Clean install instructions |
+| `/docs/installation` | Four install paths (brew, binary, go install, source) |
+| `/docs/concepts/fix-engine` | Fix engine page renders |
+| `/docs/design-philosophy` | Ten commitments page renders |
+| `/cli/doctor` | CLI command reference renders |
+| `/rules/AE-CTX-001` | Rule anatomy: Why, What triggers, Examples |
+| `/rules/AE-SEC-001` | Score impact + Related rules cross-links |
 | `/changelog` | v1.0 entry |
 
 If images (logo, favicon) don't appear, check **Project Settings → Custom Domain** — the `images/` path is served relative to `docs/product/`.
@@ -80,10 +81,10 @@ Do this after content is approved on the preview URL.
 ```
 use-charter.dev  (Cloudflare Registrar + DNS)
      │
-     ├── /docs/*      ─── Cloudflare Worker ──► charter.mintlify.dev
-     ├── /cli/*       ─── Cloudflare Worker ──► charter.mintlify.dev
-     ├── /rules/*     ─── Cloudflare Worker ──► charter.mintlify.dev
-     ├── /changelog   ─── Cloudflare Worker ──► charter.mintlify.dev
+     ├── /docs/*      ─── Cloudflare Worker ──► charter.mintlify.app
+     ├── /cli/*       ─── Cloudflare Worker ──► charter.mintlify.app
+     ├── /rules/*     ─── Cloudflare Worker ──► charter.mintlify.app
+     ├── /changelog   ─── Cloudflare Worker ──► charter.mintlify.app
      └── /*           ─── Cloudflare Worker ──► LANDING_ORIGIN (Slice 19) or placeholder
 ```
 
@@ -91,36 +92,27 @@ The Worker proxies the Mintlify-served sections — `/docs/*`, `/cli/*`, `/rules
 
 ---
 
-### Step 1: Add custom domain in Mintlify
+### Step 1: No Mintlify custom domain needed
 
-In the Mintlify dashboard → **Project Settings → Custom Domain**:
+Charter serves docs at a **subpath** (`use-charter.dev/docs`), proxied by the
+`charter-router` worker — Mintlify's own subpath-via-Cloudflare-Worker pattern.
+The worker sets `Host: charter.mintlify.app` and `X-Forwarded-Host:
+use-charter.dev`, so Mintlify needs **no custom domain, no `docs` CNAME, and no
+ACME/cf-hostname TXT records**. Mintlify stays on its free `*.mintlify.app`
+subdomain; Cloudflare terminates TLS for the proxied apex.
 
-- Enter `use-charter.dev`
-- Mintlify shows:
-  - CNAME target: `cname.mintlify.builders`
-  - Two TXT verification values — copy both, you need them in the next step
+### Step 2: DNS for the apex
 
----
-
-### Step 2: Add DNS records in Cloudflare
-
-In the [Cloudflare dashboard](https://dash.cloudflare.com) → DNS for `use-charter.dev`, add all five records:
-
-**Verification TXT records** (add these first — Mintlify needs them before it can issue the SSL cert):
+The docs routing needs only the proxied apex record that binds the worker route
+(shared with the landing-site routing — add it once):
 
 | Type | Name | Content | Proxy status |
 |---|---|---|---|
-| TXT | `_acme-challenge.use-charter.dev` | `<value from Mintlify dashboard>` | ⬜ DNS only |
-| TXT | `_cf-custom-hostname.use-charter.dev` | `<value from Mintlify dashboard>` | ⬜ DNS only |
+| AAAA | `use-charter.dev` (`@`) | `100::` | ✅ Proxied (orange cloud) |
 
-**Routing records** (add after TXT records are verified in Mintlify):
-
-| Type | Name | Content | Proxy status |
-|---|---|---|---|
-| A | `use-charter.dev` | `192.0.2.1` | ✅ Proxied (orange cloud) |
-| CNAME | `docs` | `cname.mintlify.builders` | ⬜ DNS only (grey cloud) |
-
-**Why the TXT records:** Mintlify uses Let's Encrypt for TLS (`_acme-challenge`) and Cloudflare for Hostname validation (`_cf-custom-hostname`). Without both TXT records present and verified, Mintlify cannot provision the SSL certificate for your domain. Add these before the CNAME.
+Any proxied apex record works — the worker, not an origin server, answers. The
+worker source, routes, and `MINTLIFY_ORIGIN`/`LANDING_ORIGIN` vars live in
+[`infra/router/`](../../infra/router/); see the worker setup below.
 
 **Why the A record:** Cloudflare Workers only intercept requests when traffic routes through Cloudflare's network. A proxied A record on the root domain enables that. `192.0.2.1` is a non-routable RFC 5737 address — the Worker intercepts before the IP is ever used.
 
@@ -144,7 +136,7 @@ Paste this script:
 
 ```javascript
 // docs-proxy — routes /docs/*, /cli/*, /rules/*, /changelog to Mintlify.
-// Set MINTLIFY_ORIGIN env var to your Mintlify subdomain (e.g. charter.mintlify.dev).
+// Set MINTLIFY_ORIGIN env var to your Mintlify subdomain (e.g. charter.mintlify.app).
 // Set LANDING_ORIGIN env var when the Slice 19 landing site is deployed.
 
 export default {
@@ -166,7 +158,7 @@ export default {
       path.startsWith('/rules') ||
       path.startsWith('/changelog')
     ) {
-      const origin = env.MINTLIFY_ORIGIN || 'charter.mintlify.dev';
+      const origin = env.MINTLIFY_ORIGIN || 'charter.mintlify.app';
       const upstream = new URL(`https://${origin}${path}${url.search}`);
       const proxy = new Request(upstream, request);
       proxy.headers.set('Host', origin);
@@ -205,7 +197,7 @@ In the Worker → **Settings → Variables and Secrets**:
 
 | Variable | Value | Type |
 |---|---|---|
-| `MINTLIFY_ORIGIN` | `charter.mintlify.dev` | Plain text |
+| `MINTLIFY_ORIGIN` | `charter.mintlify.app` | Plain text |
 
 Do **not** add `LANDING_ORIGIN` until the Slice 19 landing site is deployed.
 
