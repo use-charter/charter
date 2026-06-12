@@ -1,0 +1,44 @@
+name: Bug report
+description: Something in Charter behaved incorrectly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. For security vulnerabilities, use a private
+        advisory instead (see SECURITY.md) — do not file them here.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you run, and what did Charter do?
+      placeholder: "charter doctor --path . --threshold 80 → ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: A minimal repo or command sequence that reproduces the issue.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Charter version
+      description: Output of `charter version`.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS / architecture
+      placeholder: "macOS 15 arm64 / Ubuntu 24.04 amd64"
+    validations:
+      required: true
