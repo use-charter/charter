@@ -108,7 +108,7 @@ Trigger `deploy-workers.yml` (Actions tab → **Deploy Workers** → **Run
 workflow**, or push any `infra/**` change). It deploys `charter-router` and
 `charter-go-vanity`. Then set the router's vars: Dashboard → **Workers & Pages**
 → `charter-router` → **Settings** → **Variables and secrets**:
-- `MINTLIFY_ORIGIN` = `charter.mintlify.app` (default; set explicitly)
+- `MINTLIFY_ORIGIN` = `tashfiq.mintlify.app` (default; set explicitly)
 - `LANDING_ORIGIN` = `charter-landing.pages.dev` (from B1)
 
 `charter-go-vanity` needs no vars — its `custom_domain` route auto-provisions

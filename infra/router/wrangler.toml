@@ -11,7 +11,7 @@ pattern = "use-charter.dev/*"
 zone_name = "use-charter.dev"
 
 [vars]
-MINTLIFY_ORIGIN = "charter.mintlify.app"
+MINTLIFY_ORIGIN = "tashfiq.mintlify.app"
 # LANDING_ORIGIN is set in the dashboard once the Pages site is deployed
 # (e.g. charter-landing.pages.dev) — kept out of the file so a placeholder
 # never ships to production by accident.
