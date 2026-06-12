@@ -55,8 +55,8 @@ Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topolo
 - [x] OSSF Scorecard workflow (`scorecard.yml`). `code`
 - [x] Supply-chain gates: govulncheck + osv-scanner + gitleaks + zizmor (pedantic) + actionlint, all green on `main`. `code`
 - [ ] Branch protection on `main`: require `Report CI status`, `Report workflow security status`, `Vulnerability Scan`, `CodeQL`, Scorecard; require PRs; no force-push. `admin` (Appendix A)
-- [ ] Enable **private vulnerability reporting**. `admin` (Appendix A)
-- [ ] Enable **Discussions** (Q&A category). `admin` (Appendix A)
+- [ ] Enable **private vulnerability reporting** — public repos only; enable at go-public. `admin` (Appendix A)
+- [x] **Discussions** enabled (Q&A category live; issue-template link resolves). `admin`
 - [ ] Org: require **2FA** for all members; verify the `use-charter.dev` domain (DNS TXT) (CF-10). `admin` (Appendix A)
 
 ## 6. Legal & project meta
