@@ -57,7 +57,7 @@ Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topolo
 - [ ] Branch protection on `main`: require `Report CI status`, `Report workflow security status`, `Vulnerability Scan`, `CodeQL`, Scorecard; require PRs; no force-push. `admin` (Appendix A)
 - [ ] Enable **private vulnerability reporting** — public repos only; enable at go-public. `admin` (Appendix A)
 - [x] **Discussions** enabled (Q&A category live; issue-template link resolves). `admin`
-- [ ] Org: require **2FA** for all members; verify the `use-charter.dev` domain (DNS TXT) (CF-10). `admin` (Appendix A)
+- [x] Org: 2FA required + `use-charter.dev` domain **verified** (TXT) (CF-10). `admin`
 
 ## 6. Legal & project meta
 
