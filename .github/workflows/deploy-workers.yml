@@ -1,0 +1,67 @@
+name: Deploy Workers
+
+# Deploys the Cloudflare edge workers (infra/) on merge to main. The Pages
+# landing site and the Mintlify docs deploy through their own native Git
+# integrations — only these standalone workers need a deploy step.
+#
+# Required repository secrets:
+#   CLOUDFLARE_API_TOKEN   — token with Workers Scripts + Workers Routes edit
+#   CLOUDFLARE_ACCOUNT_ID  — 9b7d6fadbaeb947d19e41decc1c56881
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "infra/**"
+      - ".github/workflows/deploy-workers.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy edge workers
+    # Explicit enable gate: set repository variable DEPLOY_WORKERS=true once the
+    # CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID secrets exist. Until then this
+    # job is skipped (never a failed deploy on a half-configured account).
+    if: ${{ vars.DEPLOY_WORKERS == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Set up pinned toolchain
+        uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4
+        with:
+          version: 2026.5.15
+          install: true
+          install_args: --locked
+          # No toolchain cache in a publishing workflow (cache-poisoning safety).
+          cache: false
+      - name: Install pinned Bun dependencies
+        working-directory: infra
+        run: bun install --frozen-lockfile
+      - name: Deploy charter-router
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: infra
+          packageManager: bun
+          command: deploy --config router/wrangler.toml
+      - name: Deploy charter-go-vanity
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: infra
+          packageManager: bun
+          command: deploy --config go-vanity/wrangler.toml

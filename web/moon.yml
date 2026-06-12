@@ -38,6 +38,16 @@ tasks:
       - src/**
       - astro.config.mts
       - package.json
+  # Vitest unit tests for the islands (form validation, submit, toast).
+  test:
+    command: bun
+    args:
+      - run
+      - test
+    inputs:
+      - src/**
+      - vitest.config.ts
+      - package.json
   # Joins the repo-wide `moon run :security` gate — audits dependencies for
   # known advisories.
   security:
