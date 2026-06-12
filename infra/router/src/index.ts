@@ -31,9 +31,15 @@ export default {
       return fetch(request);
     }
 
-    // Proxy /docs/* and /rules/* to Mintlify, forwarding the public hostname so
-    // Mintlify recognises use-charter.dev as its custom domain.
-    if (path.startsWith('/docs') || path.startsWith('/rules')) {
+    // Proxy the Mintlify-served sections (docs, CLI reference, rules,
+    // changelog) to Mintlify, forwarding the public hostname so Mintlify
+    // recognises use-charter.dev as its custom domain.
+    if (
+      path.startsWith('/docs') ||
+      path.startsWith('/cli') ||
+      path.startsWith('/rules') ||
+      path.startsWith('/changelog')
+    ) {
       const origin = env.MINTLIFY_ORIGIN || DEFAULT_MINTLIFY_ORIGIN;
       const upstream = new URL(`https://${origin}${path}${url.search}`);
       const proxy = new Request(upstream, request);

@@ -80,12 +80,14 @@ Do this after content is approved on the preview URL.
 ```
 use-charter.dev  (Cloudflare Registrar + DNS)
      │
-     ├── /docs/*  ─── Cloudflare Worker ──► charter.mintlify.dev
-     ├── /rules/* ─── Cloudflare Worker ──► charter.mintlify.dev
-     └── /*       ─── Cloudflare Worker ──► LANDING_ORIGIN (Slice 19) or placeholder
+     ├── /docs/*      ─── Cloudflare Worker ──► charter.mintlify.dev
+     ├── /cli/*       ─── Cloudflare Worker ──► charter.mintlify.dev
+     ├── /rules/*     ─── Cloudflare Worker ──► charter.mintlify.dev
+     ├── /changelog   ─── Cloudflare Worker ──► charter.mintlify.dev
+     └── /*           ─── Cloudflare Worker ──► LANDING_ORIGIN (Slice 19) or placeholder
 ```
 
-The Worker proxies `/docs/*` and `/rules/*` to Mintlify, forwarding the correct `X-Forwarded-Host` header so Mintlify recognises `use-charter.dev` as its public hostname.
+The Worker proxies the Mintlify-served sections — `/docs/*`, `/cli/*`, `/rules/*`, `/changelog` — to Mintlify, forwarding the correct `X-Forwarded-Host` header so Mintlify recognises `use-charter.dev` as its public hostname. Everything else goes to the landing site.
 
 ---
 
@@ -141,7 +143,7 @@ Name: `docs-proxy`
 Paste this script:
 
 ```javascript
-// docs-proxy — routes /docs/* and /rules/* to Mintlify.
+// docs-proxy — routes /docs/*, /cli/*, /rules/*, /changelog to Mintlify.
 // Set MINTLIFY_ORIGIN env var to your Mintlify subdomain (e.g. charter.mintlify.dev).
 // Set LANDING_ORIGIN env var when the Slice 19 landing site is deployed.
 
@@ -157,8 +159,13 @@ export default {
       return fetch(request);
     }
 
-    // Proxy /docs/* and /rules/* to Mintlify
-    if (path.startsWith('/docs') || path.startsWith('/rules')) {
+    // Proxy the Mintlify-served sections to Mintlify
+    if (
+      path.startsWith('/docs') ||
+      path.startsWith('/cli') ||
+      path.startsWith('/rules') ||
+      path.startsWith('/changelog')
+    ) {
       const origin = env.MINTLIFY_ORIGIN || 'charter.mintlify.dev';
       const upstream = new URL(`https://${origin}${path}${url.search}`);
       const proxy = new Request(upstream, request);
