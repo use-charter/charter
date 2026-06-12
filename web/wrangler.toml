@@ -2,9 +2,15 @@
 #
 # `pages_build_output_dir` marks this as a Pages project (not a Worker). The
 # build command (`bun run build`) and root directory (`web`) are set in the
-# Pages dashboard / Git integration. Secrets and late-bound vars
-# (RESEND_API_KEY, WAITLIST_TO) are set as encrypted/plain vars in the
-# dashboard — never committed here.
+# Pages dashboard / Git integration. Because this file declares `[vars]`,
+# Cloudflare manages plain-text runtime vars here — the dashboard then only
+# accepts Secrets. `RESEND_API_KEY` stays a dashboard-managed encrypted secret
+# (never committed); the Function reads both via `context.env`.
 name = "charter-landing"
 pages_build_output_dir = "./dist"
 compatibility_date = "2026-06-12"
+
+# Runtime vars for the /api/waitlist Function (non-sensitive — the destination
+# address; signup notices route to it via Cloudflare Email Routing).
+[vars]
+WAITLIST_TO = "updates@use-charter.dev"
