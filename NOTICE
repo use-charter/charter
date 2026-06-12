@@ -1,0 +1,12 @@
+Charter
+Copyright 2026 The Charter Authors
+
+This product is licensed under the Apache License, Version 2.0 (the "License");
+you may not use this product except in compliance with the License. A copy of
+the License is provided in the LICENSE file and is also available at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Charter is an offline-first CLI that scores a repository's AI-agent readiness.
+It bundles no third-party source in this repository; its Go dependencies are
+declared in go.mod and retain their own upstream licenses and notices.

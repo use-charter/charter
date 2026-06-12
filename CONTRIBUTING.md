@@ -26,6 +26,25 @@
 - New API surfaces: contract-first
 - Non-trivial agent workflows or prompts: eval-driven
 
+## Versioning policy
+
+Charter follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
+The version number governs the **public CLI contract**, not internal code:
+
+- **Public surface (covered by SemVer):** the command set and their flags, exit
+  codes, and the machine-readable output formats (`--format json` DTO and the
+  SARIF schema/`helpUri` scheme). Breaking any of these requires a major bump.
+- **Additive changes** (new rules, new commands/flags, new optional output
+  fields) are minor releases. Bug fixes and non-contract changes are patches.
+- **Not a public API:** everything under `internal/`. The Go module is installable
+  (`go install go.use-charter.dev/charter/...`) but provides **no library
+  stability guarantee** pre-2.0 — import at your own risk.
+- Rule IDs (`AE-*`) and their `helpUri` paths are **stable identifiers**; a
+  retired rule keeps its ID and is marked deprecated rather than reused.
+
+Each release is recorded in [CHANGELOG.md](CHANGELOG.md) (engineering) and the
+product changelog (`docs/product/changelog.mdx`, customer-facing).
+
 ## Developer Certificate of Origin
 
 This repository uses the Developer Certificate of Origin (DCO) instead of a contributor license agreement.
