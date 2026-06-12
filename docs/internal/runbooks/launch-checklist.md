@@ -37,7 +37,8 @@ Definition of done for the gate: every box below is `[x]`, the RC dry-run
 
 ## 4. Web & docs live
 
-- [ ] Mintlify docs live at `use-charter.dev/docs`, `/cli`, `/rules`, `/changelog`; `/rules/AE-*` `helpUri`s resolve (CF-9, hard launch dependency). `external`
+- [x] Mintlify docs built + live on the `*.mintlify.dev` subdomain (`MINTLIFY_ORIGIN`). `external`
+- [ ] Docs served at `use-charter.dev/docs`,`/cli`,`/rules`,`/changelog` + `/rules/AE-*` `helpUri`s resolve — needs the router + apex flip (CF-9, hard launch dependency). `external`
 - [x] Landing site built + live on Cloudflare Pages (`charter-landing.pages.dev`); signup form → Resend → Email Routing verified end-to-end. Apex flip still pending (row below). `external`
 - [ ] `go.use-charter.dev` vanity worker deployed (CF-4). `external`
 - [ ] Set repo secrets `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`, then repo variable `DEPLOY_WORKERS=true` to enable `deploy-workers.yml`. `admin`
