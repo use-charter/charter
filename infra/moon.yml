@@ -1,0 +1,30 @@
+# Cloudflare edge workers (router + go vanity). Tasks delegate to package.json
+# scripts so the command is defined once; deploy stays a manual `bun run` (it
+# needs Cloudflare auth and mutates live infra — never a CI gate).
+layer: application
+language: typescript
+
+project:
+  name: infra
+
+tasks:
+  # Joins the repo-wide `moon run :check` gate.
+  check:
+    command: bun
+    args:
+      - run
+      - typecheck
+    inputs:
+      - router/src/**
+      - go-vanity/src/**
+      - tsconfig.json
+      - package.json
+  # Joins the repo-wide `moon run :security` gate.
+  security:
+    command: bun
+    args:
+      - run
+      - audit
+    inputs:
+      - package.json
+      - bun.lock

@@ -150,8 +150,10 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // Pass through SSL verification and ACME challenge paths
-    if (path.startsWith('/.well-known/')) {
+    // ACME / cert-validation challenges resolve at the edge, not an origin.
+    // Everything else under /.well-known/ (e.g. security.txt) falls through to
+    // the landing-site proxy below.
+    if (path.startsWith('/.well-known/acme-challenge/')) {
       return fetch(request);
     }
 
@@ -208,8 +210,16 @@ In the Worker → **Triggers → Routes → Add route**:
 
 | Route pattern | Zone |
 |---|---|
-| `use-charter.dev/docs*` | use-charter.dev |
-| `use-charter.dev/rules*` | use-charter.dev |
+| `use-charter.dev/*` | use-charter.dev |
+
+The route is a **catch-all** — the worker's path logic (above) decides what
+goes to Mintlify vs. the landing site, so a single route covers `/docs`,
+`/rules`, `/`, and `/api/waitlist`. The apex needs a proxied (orange-cloud) DNS
+record for the route to bind.
+
+> The worker source, routes, and vars are committed as code under
+> [`infra/router/`](../../infra/router/) (`wrangler deploy` instead of pasting
+> into the dashboard). See [`infra/README.md`](../../infra/README.md).
 
 ---
 
@@ -241,13 +251,97 @@ The `/rules/AE-*` paths are **permanent** — SARIF `helpUri`s point at them. Ne
 
 ---
 
-## Handoff to Slice 19
+## Landing page (Cloudflare Pages)
 
-When the landing site deploys:
+The landing site at `use-charter.dev/` is a static Astro build (`output: 'static'`,
+no adapter) deployed on Cloudflare Pages. The Worker's `/*` branch proxies all
+non-`/docs`/`/rules` traffic to it, preserving method and body — so the
+`/api/waitlist` Function and every static asset are served through it.
 
-1. Set `LANDING_ORIGIN` in the Worker env vars (value = the landing site hostname)
-2. The Worker's catch-all branch then proxies to it instead of returning the placeholder
-3. Test: `https://use-charter.dev/` should serve the landing site; `/docs/*` and `/rules/*` still route to Mintlify
+### Step 1 — Create the Pages project
+
+Dashboard → **Workers & Pages → Create → Pages → Connect to Git** → `use-charter/charter`:
+
+| Setting | Value |
+|---|---|
+| Production branch | `main` |
+| Build command | `bun run build` |
+| Build output directory | `dist` |
+| Root directory | `web` |
+
+Cloudflare auto-detects `web/functions/` and serves `functions/api/waitlist.ts`
+at `/api/waitlist` — no `wrangler.toml`, no bindings.
+
+### Step 2 — Product-updates form (Resend)
+
+The footer form POSTs same-origin to `/api/waitlist`; the Function emails the
+signup via the Resend API. On the **Pages project** → Settings → Variables and Secrets:
+
+| Variable | Value | Type |
+|---|---|---|
+| `RESEND_API_KEY` | Resend API key (`re_…`) | Encrypted (secret) |
+| `WAITLIST_TO` | verified address signups are sent to | Plain text |
+
+In Resend, add and verify the sending domain so the Function's
+`from: updates@use-charter.dev` is accepted (add the DKIM/SPF records Resend
+provides to Cloudflare DNS as **DNS-only**). Redeploy after setting variables —
+they apply on the next build.
+
+### Step 3 — Point the Worker at the landing site
+
+Worker → Settings → Variables: set `LANDING_ORIGIN` to the Pages hostname
+(e.g. `charter-landing.pages.dev`). The catch-all then serves the landing site
+for `/` and every landing path — `/fonts/*`, `/og.png`, the PWA icons,
+`/llms.txt`, `/robots.txt`, `/sitemap-*.xml`, `/privacy`, `/terms`,
+`/.well-known/security.txt` — plus the `/api/waitlist` Function.
+
+Security headers (CSP, HSTS, COOP, X-Frame-Options, …) come from
+`web/public/_headers` on the Pages response and pass through the Worker unchanged.
+
+### Step 4 — Verify
+
+```bash
+curl -sI https://use-charter.dev/                                  # 200, text/html, server: cloudflare
+curl -sI https://use-charter.dev/docs                              # 30x → Mintlify
+curl -sI https://use-charter.dev/llms.txt                          # 200, text/plain
+curl -s  https://use-charter.dev/.well-known/security.txt | head -1 # RFC 9116 contact
+curl -sI https://use-charter.dev/ | grep -i strict-transport       # HSTS present
+```
+
+Browser: submit the footer form → the signup email arrives and the success
+toast shows.
+
+### Step 5 — Post-deploy hardening
+
+- Submit `use-charter.dev` to the HSTS preload list at hstspreload.org.
+- Verify headers at securityheaders.com / Mozilla Observatory (target A/A+).
+- Confirm the OG image unfurls on X / Slack / LinkedIn.
+
+---
+
+## Go vanity import (`go.use-charter.dev`)
+
+So `go install go.use-charter.dev/charter/cmd/charter@latest` resolves, the
+`charter-go-vanity` worker serves the `go-import` meta tag for the module path
+and redirects browsers to `pkg.go.dev`. Source + config:
+[`infra/go-vanity/`](../../infra/go-vanity/).
+
+```bash
+cd infra
+bun install
+bun run deploy:go-vanity   # custom_domain route auto-creates go.use-charter.dev + TLS
+```
+
+Verify once live:
+
+```bash
+curl -s "https://go.use-charter.dev/charter?go-get=1" | grep go-import
+#   <meta name="go-import" content="go.use-charter.dev/charter git https://github.com/use-charter/charter">
+go install go.use-charter.dev/charter/cmd/charter@latest
+```
+
+Closes carry-forward **CF-4**. Rationale:
+[`ADR-0026`](../internal/decisions/0026-go-public-deploy-pages-and-vanity-import.md).
 
 ---
 

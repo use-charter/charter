@@ -1,0 +1,17 @@
+name = "charter-router"
+main = "src/index.ts"
+compatibility_date = "2026-06-12"
+workers_dev = false
+
+# Catch-all route for the apex. The worker decides where each path goes
+# (/docs, /rules → Mintlify; everything else → the Pages landing site).
+# Requires a proxied (orange-cloud) DNS record at the apex for the route to bind.
+[[routes]]
+pattern = "use-charter.dev/*"
+zone_name = "use-charter.dev"
+
+[vars]
+MINTLIFY_ORIGIN = "charter.mintlify.dev"
+# LANDING_ORIGIN is set in the dashboard once the Pages site is deployed
+# (e.g. charter-landing.pages.dev) — kept out of the file so a placeholder
+# never ships to production by accident.

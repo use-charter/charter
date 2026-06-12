@@ -5,6 +5,7 @@ projects:
   cloud: "cloud"
   docs: "docs"
   web: "web"
+  infra: "infra"
 
 vcs:
   defaultBranch: "main"
