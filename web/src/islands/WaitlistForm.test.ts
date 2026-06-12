@@ -206,6 +206,43 @@ describe('initWaitlistForm DOM', () => {
     expect(submitBtn.disabled).toBe(false);
   });
 
+  it('flashes the done state on the submit button on success', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, message: 'Check your email!' }),
+    }));
+
+    const input = document.getElementById('waitlist-email') as HTMLInputElement;
+    const submitBtn = document.getElementById('waitlist-submit') as HTMLButtonElement;
+    const form = document.getElementById('waitlist-form') as HTMLFormElement;
+
+    input.value = 'user@example.com';
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    await vi.waitFor(() => {
+      expect(submitBtn.classList.contains('is-done')).toBe(true);
+    });
+  });
+
+  it('reverts the submit button done state after the timeout', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, message: 'Check your email!' }),
+    }));
+
+    const input = document.getElementById('waitlist-email') as HTMLInputElement;
+    const submitBtn = document.getElementById('waitlist-submit') as HTMLButtonElement;
+    const form = document.getElementById('waitlist-form') as HTMLFormElement;
+
+    input.value = 'user@example.com';
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    await vi.runAllTimersAsync();
+    expect(submitBtn.classList.contains('is-done')).toBe(false);
+    vi.useRealTimers();
+  });
+
   it('shows an error toast on a failed submit', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: false,

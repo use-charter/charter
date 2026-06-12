@@ -350,7 +350,21 @@
 .ck-foot__input::placeholder { color: var(--color-text-tertiary); }
 .ck-foot__input:focus { outline: none; border-color: var(--color-text-info); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-text-info) 18%, transparent); }
 .ck-foot__input[aria-invalid="true"] { border-color: var(--color-text-danger); }
-.ck-foot__submit { height: 40px; }
+.ck-foot__submit { height: 40px; position: relative; }
+.ck-foot__submit-label,
+.ck-foot__submit-check { transition: opacity var(--transition), transform var(--transition); }
+.ck-foot__submit-check {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.5);
+}
+.ck-foot__submit.is-done { background: rgba(63, 185, 80, 0.16); border-color: #3fb950; }
+.ck-foot__submit.is-done .ck-foot__submit-label { opacity: 0; transform: scale(0.5); }
+.ck-foot__submit.is-done .ck-foot__submit-check { opacity: 1; transform: scale(1); }
 .ck-foot__err { display: block; min-height: 1.1em; margin-top: 6px; font-family: var(--font-meta); font-size: var(--text-xs); color: var(--color-text-danger); }
 
 /* Toast (emitted by the form island) */

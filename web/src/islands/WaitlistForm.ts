@@ -80,6 +80,9 @@ export function initWaitlistForm(): void {
     if (result.success) {
       showToast(result.message, 'success');
       form.reset();
+      // Flash the success checkmark on the submit button (mirrors CopyButton).
+      submitBtn.classList.add('is-done');
+      setTimeout(() => submitBtn.classList.remove('is-done'), 2000);
     } else {
       showToast(result.error, 'error');
     }
