@@ -39,13 +39,13 @@ Definition of done for the gate: every box below is `[x]`, the RC dry-run
 ## 4. Web & docs live
 
 - [x] Mintlify docs built + live on the `*.mintlify.dev` subdomain (`MINTLIFY_ORIGIN`). `external`
-- [ ] Docs served at `use-charter.dev/docs`,`/cli`,`/rules`,`/changelog` + `/rules/AE-*` `helpUri`s resolve — needs the router + apex flip (CF-9, hard launch dependency). `external`
+- [x] Docs served at `use-charter.dev/docs`,`/cli`,`/rules`,`/changelog` + `/rules/AE-*` `helpUri`s resolve. **Done (2026-06-14):** `charter-router` worker deployed via CF API, apex proxied AAAA `100::` created, route `use-charter.dev/*` bound. Verified live: `/`→landing 200, `/docs`→`/docs/introduction` 200 (Mintlify), `/rules/AE-MCP-001` 200, `/changelog` 200. CF-9 resolved. `external`
 - [x] Landing site built + live on Cloudflare Pages (`charter-landing.pages.dev`); signup form → Resend → Email Routing verified end-to-end. Apex flip still pending (row below). `external`
 - [x] `go.use-charter.dev` vanity worker **deployed + verified** (2026-06-13) — `?go-get=1` returns the `go-import`/`go-source` meta, TLS live (CF-4 resolved). `external`
-- [ ] Set repo secrets `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`, then repo variable `DEPLOY_WORKERS=true` to enable `deploy-workers.yml`. `admin`
+- [ ] Set repo secrets `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`, then repo variable `DEPLOY_WORKERS=true` to enable `deploy-workers.yml`. **Now optional** — the router + go-vanity workers were deployed directly via the CF API (2026-06-14); these secrets are only needed to enable *automated* redeploys from CI. `admin`
 - [x] Verify the Resend sending domain — apex `use-charter.dev` verified (2026-06-12, ready to send). `external`
 - [x] Pages vars set — `RESEND_API_KEY` (dashboard secret) + `WAITLIST_TO` (wrangler `[vars]`). `admin`
-- [ ] Worker `LANDING_ORIGIN` set to the `*.pages.dev` host; apex has a proxied DNS record. `external`
+- [x] Worker `LANDING_ORIGIN` set to the `*.pages.dev` host; apex has a proxied DNS record. **Done (2026-06-14):** `LANDING_ORIGIN=charter-landing.pages.dev` + `MINTLIFY_ORIGIN=tashfiq.mintlify.app` set as plain-text vars on `charter-router`; apex AAAA `100::` proxied. `external`
 
 Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topology rationale: ADR-0026.
 
