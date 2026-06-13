@@ -71,6 +71,27 @@ homebrew_casks:
 
 release:
   prerelease: auto
+  header: |
+    ## Charter {{ .Tag }}
+
+    Charter is an offline-first CLI that scores a repository's AI-agent readiness
+    and shows you how to fix it — deterministic, no LLM calls, no network.
+
+    ### Highlights
+    - **7 commands:** `init`, `doctor` (+ interactive `-i` TUI), `explain`, `report` (HTML/Markdown/JSON), `fix`, `suppress`, `version`
+    - **18 rules** across agent context, secrets, MCP safety, agent config, environment/CI, testing/autonomy, and suppression governance
+    - **SARIF** output for GitHub Code Scanning, plus a **GitHub Action**
+    - **Signed, verifiable releases** — cosign signatures, SLSA provenance, and SBOMs
+
+    ### Install
+    ```sh
+    brew install use-charter/tap/charter
+    go install go.use-charter.dev/charter/cmd/charter@latest
+    ```
+    Docs: https://use-charter.dev/docs · verify: see the attached `checksums.txt.sigstore.json`.
+
+  footer: |
+    **Full commit history:** https://github.com/use-charter/charter/commits/{{ .Tag }}
 
 changelog:
   use: github
@@ -82,13 +103,12 @@ changelog:
     - title: Fixes
       regexp: '^.*?fix(\(.+\))??!?:.+$'
       order: 1
-    - title: Others
-      order: 999
   filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
-      - '^chore:'
+    # Only user-facing changes in the auto-changelog; drop ci/build/chore/docs/
+    # test/refactor/perf/style noise (the "Others" dump).
+    include:
+      - '^feat'
+      - '^fix'
 
 snapshot:
   version_template: "{{ incpatch .Version }}-snapshot"
