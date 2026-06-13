@@ -72,26 +72,48 @@ homebrew_casks:
 release:
   prerelease: auto
   header: |
-    ## Charter {{ .Tag }}
+    ## Charter {{ .Tag }} — AI-agent readiness, scored
 
-    Charter is an offline-first CLI that scores a repository's AI-agent readiness
-    and shows you how to fix it — deterministic, no LLM calls, no network.
+    Charter gives any repository a single, deterministic readiness score for AI
+    coding agents — and shows you exactly what to fix. It runs entirely on your
+    machine: **no LLM calls, no network, no telemetry.**
 
-    ### Highlights
-    - **7 commands:** `init`, `doctor` (+ interactive `-i` TUI), `explain`, `report` (HTML/Markdown/JSON), `fix`, `suppress`, `version`
-    - **18 rules** across agent context, secrets, MCP safety, agent config, environment/CI, testing/autonomy, and suppression governance
-    - **SARIF** output for GitHub Code Scanning, plus a **GitHub Action**
-    - **Signed, verifiable releases** — cosign signatures, SLSA provenance, and SBOMs
+    ### Why it exists
+    Coding agents fail quietly on repos that lack context, leak secrets through
+    agent config, or wire up unpinned MCP servers. Charter catches those failure
+    modes before an agent does, scores them, and returns prioritized, fixable
+    findings — in your terminal, your CI, or a shareable report.
+
+    ### What you get
+    - **`charter doctor`** — score a repo against 18 agent-readiness rules
+      (context, secrets, MCP safety, agent config, CI/env, testing/autonomy,
+      governance), with a per-category scorecard and an interactive `-i` TUI.
+    - **`charter fix`** — diff-first repairs; nothing changes without your say-so.
+    - **`charter report`** — a self-contained HTML report (also Markdown/JSON) you
+      can hand to a teammate or attach to a PR.
+    - **`charter explain` · `init` · `suppress` · `version`** round out the
+      seven-command surface.
+    - **CI-native** — SARIF straight into GitHub Code Scanning, plus the official
+      GitHub Action with a score gate that fails the build below your threshold.
 
     ### Install
     ```sh
     brew install use-charter/tap/charter
     go install go.use-charter.dev/charter/cmd/charter@latest
     ```
-    Docs: https://use-charter.dev/docs · verify: see the attached `checksums.txt.sigstore.json`.
+    Or download a signed binary for your platform below. Docs → https://use-charter.dev/docs
+
+    ### Verify what you run
+    Every release is **cosign-signed with SLSA provenance** and ships an SBOM per
+    artifact. Verify the checksums before you trust the binaries:
+    ```sh
+    cosign verify-blob --bundle checksums.txt.sigstore.json checksums.txt
+    ```
 
   footer: |
-    **Full commit history:** https://github.com/use-charter/charter/commits/{{ .Tag }}
+    ---
+    Apache-2.0 · offline-first · no LLM in the core · built in the open at
+    [use-charter/charter](https://github.com/use-charter/charter/commits/{{ .Tag }}).
 
 changelog:
   # Header-only release notes for v1.0 (first tag = all history). The curated
