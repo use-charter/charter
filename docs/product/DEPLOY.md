@@ -81,14 +81,16 @@ Do this after content is approved on the preview URL.
 ```
 use-charter.dev  (Cloudflare Registrar + DNS)
      │
-     ├── /docs/*      ─── Cloudflare Worker ──► tashfiq.mintlify.app
-     ├── /cli/*       ─── Cloudflare Worker ──► tashfiq.mintlify.app
-     ├── /rules/*     ─── Cloudflare Worker ──► tashfiq.mintlify.app
-     ├── /changelog   ─── Cloudflare Worker ──► tashfiq.mintlify.app
-     └── /*           ─── Cloudflare Worker ──► LANDING_ORIGIN (Slice 19) or placeholder
+     ├── /docs/*           ─── Cloudflare Worker ──► tashfiq.mintlify.app
+     ├── /cli/*            ─── Cloudflare Worker ──► tashfiq.mintlify.app
+     ├── /rules/*          ─── Cloudflare Worker ──► tashfiq.mintlify.app
+     ├── /changelog        ─── Cloudflare Worker ──► tashfiq.mintlify.app
+     ├── /mintlify-assets/* ── Cloudflare Worker ──► tashfiq.mintlify.app  (CSS/JS/favicons)
+     ├── /llms.txt,/llms-full.txt ─ Worker ───────► tashfiq.mintlify.app
+     └── /*                ─── Cloudflare Worker ──► LANDING_ORIGIN or placeholder
 ```
 
-The Worker proxies the Mintlify-served sections — `/docs/*`, `/cli/*`, `/rules/*`, `/changelog` — to Mintlify, forwarding the correct `X-Forwarded-Host` header so Mintlify recognises `use-charter.dev` as its public hostname. Everything else goes to the landing site.
+The Worker proxies the Mintlify-owned paths — the doc sections (`/docs/*`, `/cli/*`, `/rules/*`, `/changelog`), **Mintlify's namespaced static assets (`/mintlify-assets/*`)**, and the root LLM index files (`/llms.txt`, `/llms-full.txt`) — to Mintlify, forwarding the correct `X-Forwarded-Host` header so Mintlify recognises `use-charter.dev` as its public hostname. Everything else goes to the landing site. **Forwarding `/mintlify-assets/*` is required** — Mintlify serves all CSS/JS/fonts under that prefix at the domain root, so without it the docs render unstyled (per Mintlify's official subpath reverse-proxy guidance: mintlify.com/docs/deploy/docs-subpath).
 
 ---
 
@@ -114,15 +116,7 @@ Any proxied apex record works — the worker, not an origin server, answers. The
 worker source, routes, and `MINTLIFY_ORIGIN`/`LANDING_ORIGIN` vars live in
 [`infra/router/`](../../infra/router/); see the worker setup below.
 
-**Why the A record:** Cloudflare Workers only intercept requests when traffic routes through Cloudflare's network. A proxied A record on the root domain enables that. `192.0.2.1` is a non-routable RFC 5737 address — the Worker intercepts before the IP is ever used.
-
-**Why grey cloud on CNAME:** The `docs.use-charter.dev` CNAME points directly to Mintlify. Orange cloud (proxied) makes Cloudflare terminate TLS, breaking Mintlify's certificate provisioning. DNS-only (grey cloud) lets Mintlify handle SSL end-to-end. This CNAME is optional — the Worker route is the primary path.
-
----
-
-### Step 2a: Confirm Mintlify verified the domain
-
-Back in the Mintlify dashboard → **Project Settings → Custom Domain**: wait for the status to show **Verified** or **Active** before proceeding. This usually takes 1–5 minutes after the TXT records propagate.
+**Why a proxied record:** Cloudflare Workers only intercept requests routed through Cloudflare's network, which requires a **proxied** (orange-cloud) DNS record on the hostname. The content is irrelevant — `100::` (AAAA) is a placeholder; the worker answers before any origin IP is used. No `docs` CNAME and **no Mintlify custom domain** are needed: the worker proxies with a `Host: tashfiq.mintlify.app` header, so Mintlify keeps serving on its free `*.mintlify.app` subdomain while Cloudflare terminates TLS for the proxied apex. (As actually deployed: apex `AAAA 100::` proxied + route `use-charter.dev/*` → `charter-router`.)
 
 ---
 
@@ -135,30 +129,39 @@ Name: `docs-proxy`
 Paste this script:
 
 ```javascript
-// docs-proxy — routes /docs/*, /cli/*, /rules/*, /changelog to Mintlify.
-// Set MINTLIFY_ORIGIN env var to your Mintlify subdomain (e.g. tashfiq.mintlify.app).
-// Set LANDING_ORIGIN env var when the Slice 19 landing site is deployed.
+// charter-router — routes Mintlify-owned paths to Mintlify, everything else
+// to the landing site. Set MINTLIFY_ORIGIN (e.g. tashfiq.mintlify.app) and
+// LANDING_ORIGIN (e.g. charter-landing.pages.dev) as plain-text vars.
+// Canonical source: infra/router/src/index.ts.
+
+const DEFAULT_MINTLIFY_ORIGIN = 'tashfiq.mintlify.app';
+
+// Doc sections + Mintlify's namespaced static assets + root LLM index files.
+// /mintlify-assets/* MUST be forwarded — Mintlify serves all CSS/JS/fonts there;
+// omit it and the docs render unstyled.
+function isMintlifyPath(path) {
+  return (
+    path.startsWith('/docs') ||
+    path.startsWith('/cli') ||
+    path.startsWith('/rules') ||
+    path.startsWith('/changelog') ||
+    path.startsWith('/mintlify-assets') ||
+    path === '/llms.txt' ||
+    path === '/llms-full.txt'
+  );
+}
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // ACME / cert-validation challenges resolve at the edge, not an origin.
-    // Everything else under /.well-known/ (e.g. security.txt) falls through to
-    // the landing-site proxy below.
     if (path.startsWith('/.well-known/acme-challenge/')) {
       return fetch(request);
     }
 
-    // Proxy the Mintlify-served sections to Mintlify
-    if (
-      path.startsWith('/docs') ||
-      path.startsWith('/cli') ||
-      path.startsWith('/rules') ||
-      path.startsWith('/changelog')
-    ) {
-      const origin = env.MINTLIFY_ORIGIN || 'tashfiq.mintlify.app';
+    if (isMintlifyPath(path)) {
+      const origin = env.MINTLIFY_ORIGIN || DEFAULT_MINTLIFY_ORIGIN;
       const upstream = new URL(`https://${origin}${path}${url.search}`);
       const proxy = new Request(upstream, request);
       proxy.headers.set('Host', origin);
@@ -168,19 +171,12 @@ export default {
       return fetch(proxy);
     }
 
-    // Proxy everything else to the landing site (Slice 19)
     const landing = env.LANDING_ORIGIN;
     if (landing) {
       const dest = new URL(`https://${landing}${path}${url.search}`);
-      return fetch(dest, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-        redirect: 'follow',
-      });
+      return fetch(new Request(dest, request));
     }
 
-    // Before Slice 19: placeholder
     return new Response(
       'Charter — AI-agent readiness scanner.\nDocs: /docs/  Rules: /rules/',
       { status: 200, headers: { 'Content-Type': 'text/plain' } },
