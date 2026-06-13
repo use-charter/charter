@@ -32,8 +32,8 @@ Definition of done for the gate: every box below is `[x]`, the RC dry-run
 
 ## 3. GitHub Action
 
-- [ ] Seed `use-charter/charter-action` from `action/`; tag `v1` (+ moving major). `admin`
-- [ ] Switch this repo's CI to dogfood `use-charter/charter-action@v1` (replaces the local action path). `code` (after the action repo exists)
+- [x] Seed `use-charter/charter-action` from `action/`; tag `v1` (+ moving major). **Done (2026-06-14):** public mirror repo created (`action.yml` + README + LICENSE + NOTICE), GPG-signed `v1.0.0` + moving `v1` tags pushed. The action only *functions* once `use-charter/charter` is public + `v1.0.0` is released (it downloads + cosign-verifies that release). `admin`
+- [ ] ~~Switch this repo's CI to dogfood `use-charter/charter-action@v1` (replaces the local action path).~~ **Decision (2026-06-14): do NOT replace the gate.** CI dogfoods via `go run ./cmd/charter doctor` which tests the *current PR code*; the action downloads a *released* binary (stale for the monorepo self-test, and unusable pre-`v1.0.0`). Post-launch, add a **separate non-blocking** "action smoke" job that runs `use-charter/charter-action@v1` to prove the published action works end-to-end — keep `go run` as the real gate. `code` (post-v1.0.0)
 - [ ] Verify end-to-end on a sample repo: downloads the signed RC binary, cosign + checksum verify, SARIF uploads to the Security tab, below-threshold gating fails the run. `external` (needs §1 RC binary)
 
 ## 4. Web & docs live
@@ -74,7 +74,7 @@ Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topolo
 
 - [ ] Alerts for launch signals (architecture §Signals): **Signal 1** organic CI adoption, **Signal 3** unprompted mentions (Google Alert + GitHub search for "charter doctor" / "use-charter"), **Signal 4** community self-help. `admin`
 - [x] Demo asset source committed (`docs/internal/demo/charter-demo.tape`, VHS). `code`
-- [ ] Render the demo GIF and embed in README / landing. `external` (needs `vhs` + a built binary)
+- [x] Render the demo GIF and embed in README / landing. **Done (2026-06-14):** `docs/internal/demo/charter-demo.gif` rendered via `vhs` (1200×700, real scan of this repo) and embedded in the README go-to-market header. Re-render at `v1.0.0` if the CLI output changes. `external`
 
 ## 8. MCP catalog (CF-12)
 
