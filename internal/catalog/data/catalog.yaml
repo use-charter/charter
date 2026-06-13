@@ -3,8 +3,8 @@
 # intentionally SILENT (a stale catalog under-reports, never misreports).
 # Curation process: docs/internal/catalog/contribution.md. CVE advisories are
 # added here with real IDs only (T1.6.2). Pre-ship FP gate: docs/internal/catalog/fp-validation.md.
-version: "2026.06.02"
-generated: "2026-06-02"
+version: "2026.06.14"
+generated: "2026-06-14"
 
 # Vendor-operated remote MCP hosts. Baseline allowlist for AE-MCP-002: a remote
 # server pointing at one of these hosts is recognized as a known vendor endpoint
@@ -23,6 +23,7 @@ trustedHosts:
   - gitmcp.io
   - mcp.globalping.dev
   - mcp.docs.astro.build
+  - mcp.svelte.dev
   - knowledge-mcp.global.api.aws
   # Databases & backends
   - mcp.supabase.com

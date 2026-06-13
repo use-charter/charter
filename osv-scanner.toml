@@ -1,10 +1,12 @@
 # Charter OSV-Scanner suppression configuration.
 #
-# GHSA-48c2-rrv3-qjmp: yaml@2.7.1 is pinned by yaml-language-server@1.20.0, which is a
-# transitive dependency of @astrojs/check (used only for `astro check` type-checking in CI).
-# This package is never shipped in built output (web/dist/) and has no runtime exposure.
-# The yaml-language-server maintainers pin this version; we cannot override it without
-# forking. Risk accepted for this dev-only tool dependency.
-[[IgnoredVulns]]
-id = "GHSA-48c2-rrv3-qjmp"
-reason = "yaml@2.7.1 is pinned by yaml-language-server (dev dep of @astrojs/check), never shipped in web/dist/. No runtime exposure. Cannot be upgraded without forking yaml-language-server."
+# No active suppressions. This file is referenced by `osv-scanner --config`
+# (see moon.yml :security) and is kept as the home for any future, justified
+# IgnoredVulns entries.
+#
+# History:
+# - GHSA-48c2-rrv3-qjmp (yaml@2.7.1, transitive via yaml-language-server in
+#   @astrojs/check): removed 2026-06-14. Superseded by the `yaml: ">=2.8.3"`
+#   override in web/package.json, which resolves yaml to a patched 2.9.0 — the
+#   vulnerability is fixed at the source, so the suppression became an unused
+#   ignore. Prefer fixing over suppressing.

@@ -113,6 +113,29 @@ func TestRunDeprecatedPackageFlags(t *testing.T) {
 	}
 }
 
+func TestRunGeminiSettingsUnpinned(t *testing.T) {
+	// Gemini CLI MCP config lives in .gemini/settings.json (mixed config file;
+	// only the mcpServers object is relevant). An unpinned server must fire
+	// AE-MCP-001 — the cross-vendor coverage the README claims for Gemini.
+	ids := runIDs(t, map[string]string{
+		".gemini/settings.json": `{ "theme": "Default", "mcpServers": { "eslint": { "command": "npx", "args": ["@eslint/mcp@latest"] } } }`,
+	})
+	if len(ids) != 1 || ids[0] != "AE-MCP-001" {
+		t.Fatalf("expected [AE-MCP-001] for unpinned gemini server, got %v", ids)
+	}
+}
+
+func TestRunGeminiHTTPUrlUntrusted(t *testing.T) {
+	// Gemini uses "httpUrl" (streamable HTTP) instead of "url"; a non-catalog
+	// host with no auth must still be classified remote → AE-MCP-002 + AE-MCP-003.
+	ids := runIDs(t, map[string]string{
+		".gemini/settings.json": `{ "mcpServers": { "x": { "httpUrl": "https://unknown.example.net/mcp" } } }`,
+	})
+	if len(ids) != 2 || ids[0] != "AE-MCP-002" || ids[1] != "AE-MCP-003" {
+		t.Fatalf("expected [AE-MCP-002 AE-MCP-003] for gemini httpUrl, got %v", ids)
+	}
+}
+
 func TestRunNoConfigNoFindings(t *testing.T) {
 	if ids := runIDs(t, map[string]string{"README.md": "# x\n"}); len(ids) != 0 {
 		t.Fatalf("expected no findings without MCP config, got %v", ids)

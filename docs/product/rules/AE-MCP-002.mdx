@@ -11,14 +11,14 @@ A coding agent should not be pointed at arbitrary remote infrastructure without 
 
 ## What triggers it
 
-Charter scans MCP configuration files for server entries that use a remote `url` or a transport type of `http` or `sse`. For each remote server, Charter extracts the URL host and compares it against two sources:
+Charter scans MCP configuration files for server entries that use a remote `url`, Gemini CLI's `httpUrl` (streamable HTTP), or a transport type of `http` or `sse`. For each remote server, Charter extracts the URL host and compares it against two sources:
 
 1. The built-in catalog of vendor-operated hosts (known, reviewed third-party MCP providers)
 2. The repo's `charter.yaml` `mcp.trustedRemotes` list
 
 Any public host not present in either source fires High.
 
-**Scanned files:** `.mcp.json`, `mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`
+**Scanned files:** `.mcp.json`, `mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`, `.gemini/settings.json`
 
 **Always exempt (never fire):**
 
