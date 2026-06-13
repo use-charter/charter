@@ -1,13 +1,20 @@
 // charter-router — edge router for use-charter.dev.
 //
 // Path logic lives here, not in DNS:
-//   • /docs/*, /rules/*            → proxied to Mintlify (product docs)
-//   • /.well-known/acme-challenge/ → resolved at the edge (cert validation)
-//   • everything else              → proxied to the Cloudflare Pages landing
-//                                     site (LANDING_ORIGIN), preserving method
-//                                     and body so /api/waitlist works through it
+//   • Mintlify-owned paths (see isMintlifyPath) → proxied to Mintlify
+//   • /.well-known/acme-challenge/               → resolved at the edge
+//   • everything else                            → proxied to the Cloudflare
+//                                                   Pages landing site
+//                                                   (LANDING_ORIGIN), preserving
+//                                                   method and body so
+//                                                   /api/waitlist works through it
 //
-// Mirrors the worker documented in docs/product/DEPLOY.md.
+// Mirrors the worker documented in docs/product/DEPLOY.md, following Mintlify's
+// official subpath reverse-proxy guidance
+// (mintlify.com/docs/deploy/docs-subpath, /deploy/reverse-proxy): the doc
+// sections AND Mintlify's namespaced static assets (/mintlify-assets/*) plus the
+// root LLM index files must all reach Mintlify — otherwise the asset requests
+// fall through to the landing site and the docs render unstyled.
 
 export interface Env {
   // Mintlify subdomain serving the product docs (e.g. tashfiq.mintlify.app).
@@ -18,6 +25,22 @@ export interface Env {
 }
 
 const DEFAULT_MINTLIFY_ORIGIN = 'tashfiq.mintlify.app';
+
+// Paths Mintlify owns when its site is proxied under this domain: the doc
+// sections (content), Mintlify's namespaced static assets (CSS/JS/favicons under
+// /mintlify-assets/), and the root-level LLM index files. Everything else is the
+// landing site.
+function isMintlifyPath(path: string): boolean {
+  return (
+    path.startsWith('/docs') ||
+    path.startsWith('/cli') ||
+    path.startsWith('/rules') ||
+    path.startsWith('/changelog') ||
+    path.startsWith('/mintlify-assets') ||
+    path === '/llms.txt' ||
+    path === '/llms-full.txt'
+  );
+}
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -31,15 +54,9 @@ export default {
       return fetch(request);
     }
 
-    // Proxy the Mintlify-served sections (docs, CLI reference, rules,
-    // changelog) to Mintlify, forwarding the public hostname so Mintlify
-    // recognises use-charter.dev as its custom domain.
-    if (
-      path.startsWith('/docs') ||
-      path.startsWith('/cli') ||
-      path.startsWith('/rules') ||
-      path.startsWith('/changelog')
-    ) {
+    // Proxy Mintlify-owned paths to Mintlify, forwarding the public hostname so
+    // Mintlify recognises use-charter.dev as its custom domain.
+    if (isMintlifyPath(path)) {
       const origin = env.MINTLIFY_ORIGIN || DEFAULT_MINTLIFY_ORIGIN;
       const upstream = new URL(`https://${origin}${path}${url.search}`);
       const proxy = new Request(upstream, request);
