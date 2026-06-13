@@ -22,7 +22,7 @@ Definition of done for the gate: every box below is `[x]`, the RC dry-run
 - [x] `v0.9.0-rc` dry-run (2026-06-13) verified the pipeline: 6 OS/arch binaries, `checksums.txt`, cosign bundle (`checksums.txt.sigstore.json`), 6 SBOMs, GitHub prerelease, Homebrew tap correctly skipped on the prerelease. **SLSA L3 halts on a private repo by design** ("keep the repository name out of the public transparency log") — auto-resolves once the repo is public for `v1.0.0`; do **not** set `private-repository: true`. Notes are header-only (`release.header`/`footer` + `changelog.disable: true`). Release **tag is GPG-signed** (`tag.gpgsign=true`, key on GitHub) → GitHub shows **Verified**; cut `v1.0.0` from a clone with `tag.gpgsign` on. `external`
 - [x] `use-charter/homebrew-tap` **public** + README pushed; `HOMEBREW_TAP_TOKEN` secret set on charter. Pre-staged — the cask auto-publishes on `v1.0.0` (`skip_upload: auto` skipped it on `-rc`). `admin`
 - [ ] After `v1.0.0`: confirm `Casks/charter.rb` landed + `brew install use-charter/tap/charter` works (macOS). Verify the tap token isn't expired. `external`
-- [ ] `go install go.use-charter.dev/charter/cmd/charter@latest` resolves once the vanity worker is live (CF-4 — see §4). `external`
+- [x] `go.use-charter.dev` go-import meta live (vanity worker deployed). Full `go install …@latest` works once the repo is public + `v1.0.0` is tagged (clone + proxy.golang.org need public). `external`
 
 ## 2. CLI product surface
 
@@ -41,7 +41,7 @@ Definition of done for the gate: every box below is `[x]`, the RC dry-run
 - [x] Mintlify docs built + live on the `*.mintlify.dev` subdomain (`MINTLIFY_ORIGIN`). `external`
 - [ ] Docs served at `use-charter.dev/docs`,`/cli`,`/rules`,`/changelog` + `/rules/AE-*` `helpUri`s resolve — needs the router + apex flip (CF-9, hard launch dependency). `external`
 - [x] Landing site built + live on Cloudflare Pages (`charter-landing.pages.dev`); signup form → Resend → Email Routing verified end-to-end. Apex flip still pending (row below). `external`
-- [ ] `go.use-charter.dev` vanity worker deployed (CF-4). `external`
+- [x] `go.use-charter.dev` vanity worker **deployed + verified** (2026-06-13) — `?go-get=1` returns the `go-import`/`go-source` meta, TLS live (CF-4 resolved). `external`
 - [ ] Set repo secrets `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`, then repo variable `DEPLOY_WORKERS=true` to enable `deploy-workers.yml`. `admin`
 - [x] Verify the Resend sending domain — apex `use-charter.dev` verified (2026-06-12, ready to send). `external`
 - [x] Pages vars set — `RESEND_API_KEY` (dashboard secret) + `WAITLIST_TO` (wrangler `[vars]`). `admin`
