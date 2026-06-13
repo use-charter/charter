@@ -21,7 +21,7 @@ func mergeTrustedHosts(user []string, cat *catalog.Catalog) []string {
 // this list consistent with AE-SEC-002's MCP targets (future drift-guard candidate).
 func isMCPConfigPath(p string) bool {
 	switch p {
-	case ".mcp.json", "mcp.json", ".cursor/mcp.json", ".vscode/mcp.json":
+	case ".mcp.json", "mcp.json", ".cursor/mcp.json", ".vscode/mcp.json", ".gemini/settings.json":
 		return true
 	}
 	return false

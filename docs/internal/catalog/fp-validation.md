@@ -97,5 +97,5 @@ AE-MCP-003 ("remote server declares no auth metadata") fired on **every** OAuth-
 - [x] Real CVE advisories added for a cataloged package (T1.6.2).
 - [x] CF-13 (AE-MCP-003 OAuth FP) resolved — catalog OAuth hosts exempt.
 - [x] Broaden the run to more repos (run 2, 2026-06-14): **12 more repos, 0% FP, gate PASS**. Surfaced one detection-coverage gap (`.gemini/settings.json` unsupported) — recorded above as a launch-eve recommendation, not a blocker (fail-safe under-report per ADR-0021).
-- [ ] Apply the `.gemini/settings.json` config-path fix (cross-vendor coverage) + consider `mcp.svelte.dev` trustedHost — TDD, then re-run run-2 repo 9 to confirm the two unpinned packages fire.
+- [x] Applied the `.gemini/settings.json` config-path fix + Gemini `httpUrl` transport parsing (TDD, ADR-0011 amendment, 2026-06-14). Re-ran run-2 repo 9 → both unpinned packages (`@angular/cli`, `@eslint/mcp@latest`) now fire AE-MCP-001; repo 10 → `mcp.svelte.dev` added to catalog `trustedHosts` (official Svelte MCP, verified) so it passes. Catalog bumped to `2026.06.14`.
 - [ ] Final founder sign-off at the Slice 17 release gate.

@@ -45,6 +45,25 @@ func TestParseConfigFileServersAlias(t *testing.T) {
 	}
 }
 
+func TestParseConfigFileGeminiHTTPUrl(t *testing.T) {
+	// Gemini CLI declares streamable-HTTP servers with "httpUrl" (not "url").
+	raw := `{ "mcpServers": { "gh": { "httpUrl": "https://api.githubcopilot.com/mcp/", "headers": { "Authorization": "Bearer ${GH}" } } } }`
+	cf, err := parseConfigFile(".gemini/settings.json", []byte(raw))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(cf.Servers) != 1 {
+		t.Fatalf("expected 1 server, got %d", len(cf.Servers))
+	}
+	s := cf.Servers[0]
+	if s.URL != "https://api.githubcopilot.com/mcp/" {
+		t.Fatalf("httpUrl not mapped to URL: %+v", s)
+	}
+	if !s.IsRemote() {
+		t.Fatalf("httpUrl server should be remote: %+v", s)
+	}
+}
+
 func TestParseConfigFileEmpty(t *testing.T) {
 	cases := []struct {
 		name string

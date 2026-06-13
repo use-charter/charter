@@ -36,7 +36,18 @@ type rawServer struct {
 	Env     map[string]string `json:"env"`
 	Type    string            `json:"type"`
 	URL     string            `json:"url"`
+	HTTPURL string            `json:"httpUrl"` // Gemini CLI streamable-HTTP transport
 	Headers map[string]string `json:"headers"`
+}
+
+// remoteURL returns the server's remote endpoint, preferring "url" (SSE / VS
+// Code) and falling back to Gemini CLI's "httpUrl" (streamable HTTP). Empty for
+// stdio servers.
+func (r rawServer) remoteURL() string {
+	if r.URL != "" {
+		return r.URL
+	}
+	return r.HTTPURL
 }
 
 type rawConfig struct {
@@ -71,7 +82,7 @@ func parseConfigFile(path string, data []byte) (ConfigFile, error) {
 			Args:    r.Args,
 			Env:     r.Env,
 			Type:    r.Type,
-			URL:     r.URL,
+			URL:     r.remoteURL(),
 			Headers: r.Headers,
 			Line:    bestEffortLineOfKey(string(data), name),
 		})
