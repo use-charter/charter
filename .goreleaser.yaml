@@ -94,6 +94,10 @@ release:
     **Full commit history:** https://github.com/use-charter/charter/commits/{{ .Tag }}
 
 changelog:
+  # Header-only release notes for v1.0 (first tag = all history). The curated
+  # release.header/footer above are the notes. Flip to false for v1.1+ to get a
+  # delta changelog from the grouped/filtered config below.
+  disable: true
   use: github
   sort: asc
   groups:
