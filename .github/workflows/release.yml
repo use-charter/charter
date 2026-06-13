@@ -47,6 +47,10 @@ jobs:
   provenance:
     name: SLSA provenance
     needs: goreleaser
+    # SLSA provenance requires a public repo — the generator refuses to publish a
+    # private repo's name to the public transparency log. Skip while private;
+    # runs automatically for the public v1.0.0 release.
+    if: ${{ github.event.repository.visibility == 'public' }}
     permissions:
       actions: read
       id-token: write
