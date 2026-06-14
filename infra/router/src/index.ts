@@ -54,6 +54,27 @@ export default {
       return fetch(request);
     }
 
+    // Expose Mintlify's sitemap on this domain with origin→public host rewrite.
+    // Mintlify generates it at the origin root (/sitemap.xml) listing the origin
+    // host, so search engines never see the public docs URLs. Serve it at
+    // /docs/sitemap.xml (declared in the landing robots.txt) with the host
+    // swapped to the request host — every listed path is proxied unchanged, so
+    // only the hostname needs rewriting.
+    if (path === '/docs/sitemap.xml') {
+      const origin = env.MINTLIFY_ORIGIN || DEFAULT_MINTLIFY_ORIGIN;
+      const res = await fetch(`https://${origin}/sitemap.xml`, {
+        headers: { Host: origin },
+      });
+      const body = (await res.text()).split(`https://${origin}`).join(`https://${url.hostname}`);
+      return new Response(body, {
+        status: res.status,
+        headers: {
+          'Content-Type': 'application/xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=3600',
+        },
+      });
+    }
+
     // Proxy Mintlify-owned paths to Mintlify, forwarding the public hostname so
     // Mintlify recognises use-charter.dev as its custom domain.
     if (isMintlifyPath(path)) {

@@ -27,7 +27,7 @@ const AI_AGENTS = [
   'YouBot', // You.com
 ];
 
-const getRobotsTxt = (sitemapURL: URL) => `# https://www.robotstxt.org/robotstxt.html
+const getRobotsTxt = (sitemapURL: URL, docsSitemapURL: URL) => `# https://www.robotstxt.org/robotstxt.html
 
 # Default: every crawler may access the entire site.
 User-agent: *
@@ -36,14 +36,20 @@ Allow: /
 # AI crawlers and assistants are explicitly welcome.
 ${AI_AGENTS.map((ua) => `User-agent: ${ua}\nAllow: /`).join('\n\n')}
 
+# Landing + legal pages (this Astro site) and the Mintlify product docs each
+# publish their own sitemap; list both so crawlers discover every URL.
 Sitemap: ${sitemapURL.href}
+Sitemap: ${docsSitemapURL.href}
 `;
 
 export const GET: APIRoute = ({ site }) => {
   // `site` is guaranteed because astro.config sets it; fall back defensively.
   const base = site ?? new URL('https://use-charter.dev');
   const sitemapURL = new URL('sitemap-index.xml', base);
-  return new Response(getRobotsTxt(sitemapURL), {
+  // Served by charter-router: Mintlify's sitemap with the host rewritten to
+  // this domain (see infra/router/src/index.ts).
+  const docsSitemapURL = new URL('docs/sitemap.xml', base);
+  return new Response(getRobotsTxt(sitemapURL, docsSitemapURL), {
     headers: { 'Content-Type': 'text/plain; charset=utf-8' },
   });
 };
