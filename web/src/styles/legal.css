@@ -124,3 +124,10 @@
 
 /* The colophon (.ck-man*, .ck-sub*) is fully styled by the shared ck.css and
    reused verbatim by the legal footer — no duplicate rules needed here. */
+
+/* ═══ MOBILE — even 16px edge gutters, shallower section padding ═══════ */
+@media (max-width: 640px) {
+  .lg-hero { padding: 40px 16px 22px; }
+  .lg-main { padding: 26px 16px 26px; gap: 18px; }
+  .lg-sec { padding: 24px 18px; scroll-margin-top: 60px; }
+}
