@@ -87,6 +87,29 @@ Scope of the gate is **AE-MCP-001 + AE-MCP-002** (the catalog rules). AE-MCP-003
 - **Candidate trusted-host:** `mcp.svelte.dev` (official Svelte docs MCP) appeared as a legit vendor remote — consider adding to `trustedHosts` after the Gemini path lands so it can be validated end-to-end.
 - No new deprecated/archived packages or CVEs observed; no advisory additions required this run.
 
+## Results — run 3 (2026-06-15, release-gate re-validation, post-Gemini fix)
+
+- Catalog version under test: `2026.06.14` (current, shipped); Charter built from `main` (`585ab6d`).
+- Purpose: the release-gate refresh (§8) — re-validate the **shipped** catalog on a fresh, vendor-diverse pool that exercises Gemini configs end-to-end, confirming the run-2 follow-ups landed (`.gemini/settings.json` path + `httpUrl` transport, `mcp.svelte.dev` trusted host).
+- Method identical to runs 1–2: real committed configs fetched from public GitHub via `gh api`, each scanned in an isolated committed git repo with no `charter.yaml` (catalog baseline / new-user case). No overlap with runs 1–2. **9 evaluated** — one candidate (`confluentinc/mcp-confluent`) dropped because its `.mcp.json` path is a directory, not a config file.
+
+| # | Repo | Config | Finding | Class | Note |
+|---|------|--------|---------|-------|------|
+| 1 | googleworkspace/developer-tools | `.gemini/settings.json` | AE-MCP-002 + AE-MCP-003 `workspace-developer.goog` | TP | **Gemini fix validated in the wild** — an `httpUrl` remote on a Gemini config is now scanned; origin not in catalog → verify prompt (MCP-002); no auth declared → MCP-003. |
+| 2 | borgegb/datasheet | `.cursor/mcp.json` | AE-MCP-001 `@supabase/mcp-server-supabase@latest` | TP | `@latest`. |
+| 3 | mcpdotdirect/evm-mcp-server | `.cursor/mcp.json` | AE-MCP-001 ×2 `@mcpdotdirect/evm-mcp-server` | TP | Unpinned (no version). |
+| 4 | kaduprasad/smart-calorie-counter | `.vscode/mcp.json` | AE-MCP-001 `@modelcontextprotocol/server-github` (archived) | TP | Catalog deprecation flag firing on a real archived package. |
+| 5 | itse4elhaam/dotfiles | `.gemini/settings.json` | — | TN | `mcp.context7.com` via Gemini `httpUrl` → trusted host, correctly silent (Gemini parse **and** trusted-host both working). |
+| 6 | Dragdown-Wiki/dragdown-modules | `.vscode/mcp.json` | — | TN | `mcp.context7.com` trusted; local `node` cmd silent. |
+| 7 | Ferenc0313/SmartHome | `.vscode/mcp.json` | — | TN | Local `dotnet` stdio command — no registry pin. |
+| 8 | Littlesheepxy/flowmail | `.cursor/mcp.json` | — | TN | Local `uv run` server. |
+| 9 | sijintech/stk | `.cursor/mcp.json` | — | TN | Local `cmd.exe` servers. |
+
+- Gate-scope findings (AE-MCP-001 + AE-MCP-002): **5**  ·  False positives: **0**  ·  **FP rate: 0%.** AE-MCP-003: 1 (googleworkspace), legitimate (uncataloged remote, no auth).
+- **Gate: PASS** (≤ 10%).
+- **Run-2 fixes confirmed end-to-end:** `.gemini/settings.json` is now scanned — repo 1 fires on an `httpUrl` remote, repo 5 is correctly silent on a trusted host via `httpUrl`. The run-2 coverage gap is closed in the wild. Trusted-host baseline (`mcp.context7.com` ×2) and local/command exemptions all correct; the deprecation flag fired on a real archived package.
+- **Advisories / versions / behind-stable:** no new deprecated packages, CVEs, or behind-stable data observed that require a catalog change this run. No advisory additions (real-ID-only per ADR-0021 / T1.6.2 — none verified). Seeding `stableVersion`/`knownVersions` beyond `filesystem` remains optional founder data-entry — it drives only the **informational, non-deducting** behind-stable nudge (ADR-0021), so it is not a gate blocker.
+
 ## AE-MCP-003 observation — RESOLVED (CF-13)
 AE-MCP-003 ("remote server declares no auth metadata") fired on **every** OAuth-based vendor remote server configured without a static `Authorization` header (sentry, context7, atlassian, openfort). For modern OAuth 2.1 remote servers, auth is declared via the OAuth flow, not a config header — a systematic FP. **Fixed:** `checkRemoteAuth` now exempts catalog `trustedHosts` (known OAuth vendor servers), so these no longer flag. Non-catalog remotes without auth still flag.
 
@@ -98,4 +121,5 @@ AE-MCP-003 ("remote server declares no auth metadata") fired on **every** OAuth-
 - [x] CF-13 (AE-MCP-003 OAuth FP) resolved — catalog OAuth hosts exempt.
 - [x] Broaden the run to more repos (run 2, 2026-06-14): **12 more repos, 0% FP, gate PASS**. Surfaced one detection-coverage gap (`.gemini/settings.json` unsupported) — recorded above as a launch-eve recommendation, not a blocker (fail-safe under-report per ADR-0021).
 - [x] Applied the `.gemini/settings.json` config-path fix + Gemini `httpUrl` transport parsing (TDD, ADR-0011 amendment, 2026-06-14). Re-ran run-2 repo 9 → both unpinned packages (`@angular/cli`, `@eslint/mcp@latest`) now fire AE-MCP-001; repo 10 → `mcp.svelte.dev` added to catalog `trustedHosts` (official Svelte MCP, verified) so it passes. Catalog bumped to `2026.06.14`.
+- [x] Release-gate re-validation (run 3, 2026-06-15): **9 fresh repos on the shipped `2026.06.14` catalog, 0% FP, gate PASS.** Confirmed the Gemini path + `httpUrl` fix and `mcp.svelte.dev` trusted host end-to-end in the wild. No advisory/version changes required.
 - [ ] Final founder sign-off at the Slice 17 release gate.

@@ -78,7 +78,7 @@ Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topolo
 
 ## 8. MCP catalog (CF-12)
 
-- [ ] Refresh the MCP catalog at the release gate: broaden the FP re-validation run, bring advisories/versions current (real CVE IDs only, ADR-0021), seed behind-stable version data beyond `filesystem`. `external` (founder curation)
+- [x] Refresh the MCP catalog at the release gate. **Done (2026-06-15):** broadened FP re-validation **run 3** — 9 fresh public repos (vendor-diverse, all 4 config types incl. `.gemini/settings.json`) on the shipped `2026.06.14` catalog → **0% FP, gate PASS**; validated the Gemini path + `httpUrl` fix and `mcp.svelte.dev` trusted host end-to-end (`docs/internal/catalog/fp-validation.md` run 3). No new verified advisories/versions to add this pass (real-ID-only, ADR-0021). Seeding behind-stable versions beyond `filesystem` is optional — it drives only the informational, non-deducting nudge, so it's **not a gate blocker**. Final founder sign-off remains. `external` (founder curation)
 
 ## 9. Known deferrals (non-blocking)
 
