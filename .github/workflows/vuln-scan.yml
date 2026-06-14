@@ -14,8 +14,29 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Classify changes
+    runs-on: ubuntu-latest
+    outputs:
+      security: ${{ steps.classify.outputs.security }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: classify
+        name: Classify changed files
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: bash scripts/github-actions/classify-changes.sh
+
   security:
     name: Run security gate
+    needs: changes
+    if: needs.changes.outputs.security == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -31,3 +52,29 @@ jobs:
           cache: true
       - name: Run security gate
         run: mise x -- moon run :security
+
+  scan:
+    name: Report vulnerability scan status
+    needs:
+      - changes
+      - security
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarize security scan result
+        shell: bash
+        env:
+          SHOULD_RUN: ${{ needs.changes.outputs.security }}
+          RUN_RESULT: ${{ needs.security.result }}
+        run: |
+          if [[ "$RUN_RESULT" == "failure" || "$RUN_RESULT" == "cancelled" ]]; then
+            echo "Security gate failed."
+            exit 1
+          fi
+
+          if [[ "$SHOULD_RUN" == "true" ]]; then
+            echo "Security gate executed."
+            exit 0
+          fi
+
+          echo "No code, dependency, toolchain, or infra changes — security scan skipped."

@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/product/images/logo-dark.svg">
-  <img src="docs/product/images/logo-light.svg" alt="Charter" width="220">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/product/images/logo-dark.svg?v=2">
+  <img src="docs/product/images/logo-light.svg?v=2" alt="Charter" width="220">
 </picture>
 
 ### AI-agent readiness, scored.
