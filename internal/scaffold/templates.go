@@ -88,9 +88,16 @@ func buildTestCommands(primary string) []string {
 	}
 }
 
-// CharterYAML builds the minimal gate config selecting a policy profile.
+// SchemaURL is the canonical, published JSON Schema for charter.yaml. Served as
+// a static asset by the landing site (web/public/schema/charter.schema.json).
+const SchemaURL = "https://use-charter.dev/schema/charter.schema.json"
+
+// CharterYAML builds the minimal gate config selecting a policy profile. The
+// leading yaml-language-server header gives editors schema validation and
+// autocomplete against the published Charter schema, and uniquely identifies
+// the file as a Charter config (the bare name `charter.yaml` is generic).
 func CharterYAML(profile string) []byte {
-	return []byte("policy:\n  profile: " + profile + "\n")
+	return []byte("# yaml-language-server: $schema=" + SchemaURL + "\npolicy:\n  profile: " + profile + "\n")
 }
 
 // Gitignore builds an ignore block covering the agent-artifact, hook-state, and

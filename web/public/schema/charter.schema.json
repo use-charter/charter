@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://use-charter.dev/schema/charter.schema.json",
+  "title": "Charter configuration",
+  "description": "Schema for charter.yaml — the per-repo policy and MCP allowlist read by the Charter CLI (use-charter.dev). Add `# yaml-language-server: $schema=https://use-charter.dev/schema/charter.schema.json` at the top of the file for editor validation and autocomplete.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "policy": {
+      "type": "object",
+      "description": "Gate policy. Threshold precedence: --threshold flag > policy.threshold > policy.profile > default (80).",
+      "additionalProperties": false,
+      "properties": {
+        "profile": {
+          "type": "string",
+          "description": "Built-in policy profile setting the passing threshold: strict = 90, standard = 80, relaxed = 60.",
+          "enum": ["strict", "standard", "relaxed"]
+        },
+        "threshold": {
+          "type": "integer",
+          "description": "Explicit passing score (0–100). Overrides policy.profile when set.",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "mcp": {
+      "type": "object",
+      "description": "Model Context Protocol settings.",
+      "additionalProperties": false,
+      "properties": {
+        "trustedRemotes": {
+          "type": "array",
+          "description": "Allowlist of trusted remote MCP server origins (hostnames). Origins here satisfy AE-MCP-002 in addition to the built-in catalog.",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

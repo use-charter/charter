@@ -10,8 +10,9 @@ description: "Configure Charter's policy, MCP allowlist, and behavior via charte
 ## Full example
 
 ```yaml
+# yaml-language-server: $schema=https://use-charter.dev/schema/charter.schema.json
 policy:
-  profile: standard    # standard (80) or strict (90)
+  profile: standard    # standard (80), strict (90), or relaxed (60)
   threshold: 85        # optional: overrides the profile's default threshold
 
 mcp:
@@ -19,6 +20,8 @@ mcp:
     - "api.your-internal-tool.com"
     - "mcp.your-company.com"
 ```
+
+The first line is optional but recommended: it points editors (via the YAML Language Server used by VS Code, Neovim, and others) at Charter's published schema for inline validation and autocomplete. `charter init` adds it for you.
 
 ## Fields
 
@@ -76,7 +79,7 @@ Charter fails fast on invalid configuration:
 ## Schema
 
 <Tip>
-The full JSON Schema is at `schemas/charter-config.schema.json` in the Charter repo. Its intended canonical public URL is `https://use-charter.dev/schemas/charter-config.schema.json` once the domain is live.
+The full JSON Schema is published at **`https://use-charter.dev/schema/charter.schema.json`**. Reference it with the `# yaml-language-server: $schema=…` header shown above for editor validation and autocomplete. Source: `web/public/schema/charter.schema.json`.
 </Tip>
 
 ## See also

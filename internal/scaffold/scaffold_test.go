@@ -246,7 +246,8 @@ func TestClaudeSettingsIsValidMCPFreeJSON(t *testing.T) {
 
 func TestCharterYAML(t *testing.T) {
 	out := string(CharterYAML("strict"))
-	if out != "policy:\n  profile: strict\n" {
+	want := "# yaml-language-server: $schema=" + SchemaURL + "\npolicy:\n  profile: strict\n"
+	if out != want {
 		t.Fatalf("CharterYAML(strict) = %q", out)
 	}
 	if !strings.Contains(out, "profile: strict") {
