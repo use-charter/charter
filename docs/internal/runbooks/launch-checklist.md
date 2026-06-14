@@ -55,7 +55,7 @@ Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topolo
 - [ ] Set `ENABLE_CODEQL=true` once the repo is public (code-scanning upload needs Advanced Security, free on public repos). `admin`
 - [x] OSSF Scorecard workflow (`scorecard.yml`). `code`
 - [x] Supply-chain gates: govulncheck + osv-scanner + gitleaks + zizmor (pedantic) + actionlint, all green on `main`. `code`
-- [ ] Branch protection on `main`: require `Report CI status`, `Report workflow security status`, `Vulnerability Scan`, `CodeQL`, Scorecard; require PRs; no force-push. `admin` (Appendix A)
+- [ ] Branch protection on `main`: require `Report CI status`, `Report workflow security status`, `Report vulnerability scan status`, `CodeQL`, Scorecard; require PRs; no force-push. **Gated: classic protection AND rulesets both need GitHub Pro on a private repo (403) — free once the repo is public, so do this at go-public, not before.** `admin` (Appendix A)
 - [ ] Enable **private vulnerability reporting** — public repos only; enable at go-public. `admin` (Appendix A)
 - [x] **Discussions** enabled (Q&A category live; issue-template link resolves). `admin`
 - [x] Org: 2FA required + `use-charter.dev` domain **verified** (TXT) (CF-10). `admin`
