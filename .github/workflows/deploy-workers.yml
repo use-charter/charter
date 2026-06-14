@@ -4,9 +4,10 @@ name: Deploy Workers
 # landing site and the Mintlify docs deploy through their own native Git
 # integrations — only these standalone workers need a deploy step.
 #
-# Required repository secrets:
-#   CLOUDFLARE_API_TOKEN   — token with Workers Scripts + Workers Routes edit
-#   CLOUDFLARE_ACCOUNT_ID  — <cloudflare-account-id>
+# Required configuration:
+#   secret   CLOUDFLARE_API_TOKEN   — token with Workers Scripts + Workers Routes edit
+#   variable CLOUDFLARE_ACCOUNT_ID  — account id (not sensitive; an identifier)
+#   variable DEPLOY_WORKERS=true    — enables this workflow's deploy job
 
 on:
   push:
@@ -53,7 +54,7 @@ jobs:
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: infra
           packageManager: bun
           command: deploy --config router/wrangler.toml
@@ -61,7 +62,7 @@ jobs:
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: infra
           packageManager: bun
           command: deploy --config go-vanity/wrangler.toml
