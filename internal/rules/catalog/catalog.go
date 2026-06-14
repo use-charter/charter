@@ -54,3 +54,48 @@ func IDs() []string {
 	sort.Strings(ids)
 	return ids
 }
+
+// categoryOrder is the canonical display order for the nine rule categories. It
+// drives the readiness scorecard so the category list is stable and matches the
+// product's mental model (context first, governance last) rather than the
+// alphabetical ID order.
+var categoryOrder = []string{
+	"Context", "Secrets", "MCP Safety", "Agent Config",
+	"Environment", "CI", "Testing", "Autonomy", "Governance",
+}
+
+// Categories returns the rule categories in canonical display order, restricted
+// to categories that actually have at least one catalog rule.
+func Categories() []string {
+	counts := RuleCountByCategory()
+	out := make([]string, 0, len(categoryOrder))
+	for _, c := range categoryOrder {
+		if counts[c] > 0 {
+			out = append(out, c)
+		}
+	}
+	// Append any category present in the catalog but missing from the canonical
+	// order (defensive: a new category should be added to categoryOrder, but it
+	// must never silently vanish from the scorecard).
+	seen := map[string]bool{}
+	for _, c := range out {
+		seen[c] = true
+	}
+	extra := make([]string, 0)
+	for c := range counts {
+		if !seen[c] {
+			extra = append(extra, c)
+		}
+	}
+	sort.Strings(extra)
+	return append(out, extra...)
+}
+
+// RuleCountByCategory returns the number of catalog rules in each category.
+func RuleCountByCategory() map[string]int {
+	counts := make(map[string]int, len(categoryOrder))
+	for _, e := range entries {
+		counts[e.Category]++
+	}
+	return counts
+}

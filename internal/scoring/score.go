@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"go.use-charter.dev/charter/internal/findings"
+	"go.use-charter.dev/charter/internal/rules/catalog"
 )
 
 // CategoryScore is one row of the per-category readiness breakdown: how many
@@ -70,6 +71,81 @@ func ByCategory(all []findings.Finding) []CategoryScore {
 		}
 		return out[i].Category < out[j].Category
 	})
+	return out
+}
+
+// CategoryReadiness is one row of the full readiness scorecard: every catalog
+// category (not only those with findings), with the count of rules that scanned
+// clean out of the category total. Passed/Total drives the per-category mini bar
+// and the "N/M" fraction; the deduction and worst severity colour the row.
+// Informational is true when a category has findings but none of them deduct.
+type CategoryReadiness struct {
+	Category      string
+	Total         int // catalog rules in this category
+	Passed        int // rules with no finding (Total − Failed)
+	Failed        int // distinct rules with at least one finding
+	Findings      int
+	Deduction     int
+	WorstSeverity findings.Severity
+	Informational bool
+}
+
+// Readiness assembles the full per-category scorecard in canonical category
+// order. Unlike ByCategory (which lists only categories that carry a finding),
+// Readiness covers every catalog category so a clean category still reports
+// "N/N rules clean". Passed counts catalog rules with no finding; a rule that
+// fired only an informational finding counts as not-clean but does not deduct.
+func Readiness(all []findings.Finding) []CategoryReadiness {
+	byCat := map[string]CategoryScore{}
+	for _, c := range ByCategory(all) {
+		byCat[c.Category] = c
+	}
+	failed := map[string]map[string]bool{}
+	for _, f := range all {
+		if failed[f.Category] == nil {
+			failed[f.Category] = map[string]bool{}
+		}
+		failed[f.Category][f.RuleID] = true
+	}
+	counts := catalog.RuleCountByCategory()
+
+	// Canonical catalog categories first, then any category seen only in the
+	// findings (defensive: an uncataloged category must still appear, with its
+	// rule total inferred from the distinct rule IDs observed).
+	cats := catalog.Categories()
+	inCatalog := make(map[string]bool, len(cats))
+	for _, c := range cats {
+		inCatalog[c] = true
+	}
+	extra := make([]string, 0)
+	for cat := range failed {
+		if !inCatalog[cat] {
+			extra = append(extra, cat)
+		}
+	}
+	sort.Strings(extra)
+	cats = append(cats, extra...)
+
+	out := make([]CategoryReadiness, 0, len(cats))
+	for _, cat := range cats {
+		failedN := len(failed[cat])
+		total := counts[cat]
+		if total == 0 {
+			total = failedN // uncataloged category: infer total from observed rules
+		}
+		passed := max(0, total-failedN)
+		cs := byCat[cat]
+		out = append(out, CategoryReadiness{
+			Category:      cat,
+			Total:         total,
+			Passed:        passed,
+			Failed:        failedN,
+			Findings:      cs.Findings,
+			Deduction:     cs.Deduction,
+			WorstSeverity: cs.WorstSeverity,
+			Informational: cs.Findings > 0 && cs.Deduction == 0,
+		})
+	}
 	return out
 }
 

@@ -390,6 +390,57 @@ html{scroll-behavior:smooth;}
   .fc-body{display:block!important;}
   .fc,.cc{break-inside:avoid;}
 }
+
+/* ── Offline chip (topbar) — Charter makes zero network calls ─────────────── */
+.offline-chip{display:inline-flex;align-items:center;gap:6px;flex-shrink:0;
+  font-family:var(--font-meta);font-size:11px;letter-spacing:.02em;color:var(--color-text-success);
+  background:var(--color-background-success);border:1px solid var(--color-border-success);
+  border-radius:999px;padding:3px 10px;}
+.offline-chip .dot{width:6px;height:6px;border-radius:999px;background:var(--color-text-success);
+  box-shadow:0 0 8px color-mix(in srgb,var(--color-text-success) 60%,transparent);}
+@media (max-width:680px){.offline-chip{display:none;}}
+
+/* ── Score bar threshold marker (min N) ───────────────────────────────────── */
+.bar-wrap{position:relative;}
+.bar-min{position:absolute;top:0;height:6px;width:2px;transform:translateX(-1px);
+  background:var(--color-text-primary);border-radius:2px;z-index:2;}
+.bar-min-flag{position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);
+  font-family:var(--font-meta);font-size:10px;letter-spacing:.04em;white-space:nowrap;
+  color:var(--color-text-secondary);}
+.bar-min-flag::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:3px solid transparent;border-top-color:var(--color-text-primary);}
+
+/* ── Category mini meter (rules-clean N/M) ────────────────────────────────── */
+.cc-meter{display:flex;align-items:center;gap:9px;margin-bottom:6px;}
+.cc-bar{position:relative;flex:1;height:5px;border-radius:3px;background:var(--color-border-tertiary);overflow:hidden;}
+.cc-bar-fill{display:block;height:100%;border-radius:3px;background:var(--color-text-success);
+  transition:width .5s cubic-bezier(.16,1,.3,1);}
+.cc-bar-fill[data-state="danger"]{background:var(--color-text-danger);}
+.cc-bar-fill[data-state="warning"]{background:var(--color-text-warning);}
+.cc-bar-fill[data-state="muted"]{background:var(--color-text-tertiary);}
+.cc-frac{font-family:var(--font-meta);font-size:11.5px;color:var(--color-text-tertiary);flex-shrink:0;}
+.cc-frac b{color:var(--color-text-primary);font-weight:600;}
+
+/* ── Closing status bar (tmux-style result rollup) ────────────────────────── */
+.statusbar{display:flex;flex-wrap:wrap;align-items:center;gap:0;
+  padding:12px 20px;
+  background:var(--color-background-secondary);border-top:1px solid var(--color-border-tertiary);
+  font-family:var(--font-code);font-size:13px;}
+.statusbar .sb-item{display:inline-flex;align-items:center;color:var(--color-text-tertiary);}
+.statusbar .sb-item + .sb-item{margin-left:14px;padding-left:14px;
+  border-left:1px solid var(--color-border-tertiary);}
+.statusbar .sb-score{font-weight:700;}
+.statusbar .sb-score.zone-success{color:var(--color-text-success);}
+.statusbar .sb-score.zone-warning{color:var(--color-text-warning);}
+.statusbar .sb-score.zone-danger{color:var(--color-text-danger);}
+.statusbar .sb-verdict{font-weight:700;letter-spacing:.06em;}
+.statusbar .sb-verdict.pass{color:var(--color-text-success);}
+.statusbar .sb-verdict.fail{color:var(--color-text-danger);}
+.statusbar .sb-net{margin-left:auto;color:var(--color-text-success);}
+@media (max-width:680px){
+  .statusbar{font-size:12px;padding:10px 14px;}
+  .statusbar .sb-net{margin-left:0;}
+}
 </style>
 </head>
 <body>
@@ -409,6 +460,9 @@ html{scroll-behavior:smooth;}
       <a href="#suppressions">Suppressions</a>
       <a href="#summary">Summary</a>
     </nav>
+    <span class="offline-chip" title="Charter makes zero network calls — every scan is fully offline">
+      <span class="dot" aria-hidden="true"></span>offline · 0 net
+    </span>
     <button type="button" class="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false">
       <span class="icon icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg></span><span class="icon icon-moon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 12.5A8.5 8.5 0 1 1 11.5 3a6.5 6.5 0 0 0 9.5 9.5z"/></svg></span>
     </button>
@@ -441,10 +495,11 @@ html{scroll-behavior:smooth;}
           </div>
         </div>
         <div class="hero-bar">
-          <div>
-            <div class="bar-track" role="progressbar" aria-valuenow="49" aria-valuemin="0" aria-valuemax="100" aria-label="Readiness score 49 of 100">
+          <div class="bar-wrap">
+            <div class="bar-track" role="progressbar" aria-valuenow="49" aria-valuemin="0" aria-valuemax="100" aria-label="Readiness score 49 of 100, passing threshold 80">
               <div class="bar-fill zone-danger" style="width:49%" aria-hidden="true"></div>
             </div>
+            <span class="bar-min" style="left:80%" aria-hidden="true"><span class="bar-min-flag">min 80</span></span>
             <div class="bar-ticks" aria-hidden="true">
               <span>0</span><span>60</span><span>80</span><span>100</span>
             </div>
@@ -471,80 +526,107 @@ html{scroll-behavior:smooth;}
       <h2 id="scorecard-h" class="sec-hdr"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></span>Category scorecard</h2>
       <div class="grid-cards" role="list" aria-label="Readiness by category">
         
-        <article class="cc" data-state="danger" role="listitem" aria-label="Secrets: 1 finding, worst BLOCKER, minus 20 points">
-          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>Secrets</div>
-          <div class="cc-rules">2 rules</div>
-          
-            <div class="cc-stat r">1 BLOCKER</div>
-            <div class="cc-ded r">−20 pts</div>
-          
-        </article>
-        
-        <article class="cc" data-state="warning" role="listitem" aria-label="MCP Safety: 1 finding, worst HIGH, minus 10 points">
-          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 3v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg></span>MCP Safety</div>
-          <div class="cc-rules">3 rules</div>
-          
-            <div class="cc-stat y">1 HIGH</div>
-            <div class="cc-ded y">−10 pts</div>
-          
-        </article>
-        
-        <article class="cc" data-state="warning" role="listitem" aria-label="Environment: 1 finding, worst MEDIUM, minus 4 points">
-          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4"/><path d="M12 11v10"/></svg></span>Environment</div>
-          <div class="cc-rules">1 rule</div>
-          
-            <div class="cc-stat y">1 MEDIUM</div>
-            <div class="cc-ded y">−4 pts</div>
-          
-        </article>
-        
-        <article class="cc" data-state="info" role="listitem" aria-label="Context: 1 finding, worst LOW, minus 1 point">
+        <article class="cc" data-state="info" role="listitem" aria-label="Context: 3 of 4 rules clean, 1 finding, worst LOW, minus 1 point">
           <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8 13h8M8 17h6"/></svg></span>Context</div>
-          <div class="cc-rules">4 rules</div>
+          <div class="cc-meter">
+            <span class="cc-bar" aria-hidden="true"><span class="cc-bar-fill" data-state="info" style="width:75%"></span></span>
+            <span class="cc-frac"><b>3</b>/4</span>
+          </div>
           
             <div class="cc-stat b">1 LOW</div>
             <div class="cc-ded b">−1 pts</div>
           
         </article>
         
-        <article class="cc" data-state="muted" role="listitem" aria-label="Governance: 1 informational, no deduction">
+        <article class="cc" data-state="danger" role="listitem" aria-label="Secrets: 1 of 2 rules clean, 1 finding, worst BLOCKER, minus 20 points">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>Secrets</div>
+          <div class="cc-meter">
+            <span class="cc-bar" aria-hidden="true"><span class="cc-bar-fill" data-state="danger" style="width:50%"></span></span>
+            <span class="cc-frac"><b>1</b>/2</span>
+          </div>
+          
+            <div class="cc-stat r">1 BLOCKER</div>
+            <div class="cc-ded r">−20 pts</div>
+          
+        </article>
+        
+        <article class="cc" data-state="warning" role="listitem" aria-label="MCP Safety: 2 of 3 rules clean, 1 finding, worst HIGH, minus 10 points">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 3v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg></span>MCP Safety</div>
+          <div class="cc-meter">
+            <span class="cc-bar" aria-hidden="true"><span class="cc-bar-fill" data-state="warning" style="width:66%"></span></span>
+            <span class="cc-frac"><b>2</b>/3</span>
+          </div>
+          
+            <div class="cc-stat y">1 HIGH</div>
+            <div class="cc-ded y">−10 pts</div>
+          
+        </article>
+        
+        <article class="cc" data-state="pass" role="listitem" aria-label="Agent Config: all 2 rules clean">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg></span>Agent Config</div>
+          <div class="cc-meter">
+            <span class="cc-bar" aria-hidden="true"><span class="cc-bar-fill" data-state="pass" style="width:100%"></span></span>
+            <span class="cc-frac"><b>2</b>/2</span>
+          </div>
+          
+            <div class="cc-stat g"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>all passed</div>
+          
+        </article>
+        
+        <article class="cc" data-state="warning" role="listitem" aria-label="Environment: 0 of 1 rules clean, 1 finding, worst MEDIUM, minus 4 points">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4"/><path d="M12 11v10"/></svg></span>Environment</div>
+          <div class="cc-meter">
+            <span class="cc-bar" aria-hidden="true"><span class="cc-bar-fill" data-state="warning" style="width:0%"></span></span>
+            <span class="cc-frac"><b>0</b>/1</span>
+          </div>
+          
+            <div class="cc-stat y">1 MEDIUM</div>
+            <div class="cc-ded y">−4 pts</div>
+          
+        </article>
+        
+        <article class="cc" data-state="pass" role="listitem" aria-label="CI: all 1 rule clean">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="8" r="2.2"/><path d="M6 8.2v7.6"/><path d="M18 10.2c0 4-6 2-6 6"/></svg></span>CI</div>
+          <div class="cc-meter">
+            <span class="cc-bar" aria-hidden="true"><span class="cc-bar-fill" data-state="pass" style="width:100%"></span></span>
+            <span class="cc-frac"><b>1</b>/1</span>
+          </div>
+          
+            <div class="cc-stat g"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>all passed</div>
+          
+        </article>
+        
+        <article class="cc" data-state="pass" role="listitem" aria-label="Testing: all 1 rule clean">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 3h6"/><path d="M10 3v7l-5 8a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-8V3"/></svg></span>Testing</div>
+          <div class="cc-meter">
+            <span class="cc-bar" aria-hidden="true"><span class="cc-bar-fill" data-state="pass" style="width:100%"></span></span>
+            <span class="cc-frac"><b>1</b>/1</span>
+          </div>
+          
+            <div class="cc-stat g"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>all passed</div>
+          
+        </article>
+        
+        <article class="cc" data-state="pass" role="listitem" aria-label="Autonomy: all 1 rule clean">
+          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span>Autonomy</div>
+          <div class="cc-meter">
+            <span class="cc-bar" aria-hidden="true"><span class="cc-bar-fill" data-state="pass" style="width:100%"></span></span>
+            <span class="cc-frac"><b>1</b>/1</span>
+          </div>
+          
+            <div class="cc-stat g"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>all passed</div>
+          
+        </article>
+        
+        <article class="cc" data-state="muted" role="listitem" aria-label="Governance: 2 of 3 rules clean, 1 informational, no deduction">
           <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 3v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span>Governance</div>
-          <div class="cc-rules">3 rules</div>
+          <div class="cc-meter">
+            <span class="cc-bar" aria-hidden="true"><span class="cc-bar-fill" data-state="muted" style="width:66%"></span></span>
+            <span class="cc-frac"><b>2</b>/3</span>
+          </div>
           
             <div class="cc-stat d2">1 informational</div>
             <div class="cc-ded d3">0 pts</div>
-          
-        </article>
-        
-        <article class="cc" data-state="pass" role="listitem" aria-label="Agent Config: all 2 rules passed">
-          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg></span>Agent Config</div>
-          <div class="cc-rules">2 rules</div>
-          
-            <div class="cc-stat g"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>all passed</div>
-          
-        </article>
-        
-        <article class="cc" data-state="pass" role="listitem" aria-label="Autonomy: all 1 rule passed">
-          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span>Autonomy</div>
-          <div class="cc-rules">1 rule</div>
-          
-            <div class="cc-stat g"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>all passed</div>
-          
-        </article>
-        
-        <article class="cc" data-state="pass" role="listitem" aria-label="CI: all 1 rule passed">
-          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="8" r="2.2"/><path d="M6 8.2v7.6"/><path d="M18 10.2c0 4-6 2-6 6"/></svg></span>CI</div>
-          <div class="cc-rules">1 rule</div>
-          
-            <div class="cc-stat g"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>all passed</div>
-          
-        </article>
-        
-        <article class="cc" data-state="pass" role="listitem" aria-label="Testing: all 1 rule passed">
-          <div class="cc-name"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 3h6"/><path d="M10 3v7l-5 8a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-8V3"/></svg></span>Testing</div>
-          <div class="cc-rules">1 rule</div>
-          
-            <div class="cc-stat g"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>all passed</div>
           
         </article>
         
@@ -921,6 +1003,14 @@ html{scroll-behavior:smooth;}
     </section>
 
   </main>
+
+  <div class="statusbar" role="status" aria-label="Result: 49 of 100, FAIL, threshold 80, 5 findings, zero network calls.">
+    <span class="sb-item sb-score zone-danger">49/100</span>
+    <span class="sb-item sb-verdict fail">FAIL</span>
+    <span class="sb-item sb-min">min 80</span>
+    <span class="sb-item sb-find">5 findings</span>
+    <span class="sb-item sb-net">0 network calls</span>
+  </div>
 
   <footer>
     <span class="brand"><span class="mark"><svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true" focusable="false"><rect x="3" y="12" width="4" height="40"/><rect x="3" y="12" width="11" height="4"/><rect x="3" y="48" width="11" height="4"/><rect x="57" y="12" width="4" height="40"/><rect x="50" y="12" width="11" height="4"/><rect x="50" y="48" width="11" height="4"/><path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="butt"/></svg></span>charter <span class="meta d3" style="font-weight:400">v1.0.0</span></span>

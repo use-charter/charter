@@ -26,6 +26,9 @@
       {{if .HasSuppressions}}<a href="#suppressions">Suppressions</a>{{end}}
       <a href="#summary">Summary</a>
     </nav>
+    <span class="offline-chip" title="Charter makes zero network calls — every scan is fully offline">
+      <span class="dot" aria-hidden="true"></span>offline · 0 net
+    </span>
     <button type="button" class="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false">
       <span class="icon icon-sun" aria-hidden="true">{{icon "sun"}}</span><span class="icon icon-moon" aria-hidden="true">{{icon "moon"}}</span>
     </button>
@@ -58,10 +61,11 @@
           </div>
         </div>
         <div class="hero-bar">
-          <div>
-            <div class="bar-track" role="progressbar" aria-valuenow="{{.Score.Value}}" aria-valuemin="0" aria-valuemax="100" aria-label="Readiness score {{.Score.Value}} of 100">
+          <div class="bar-wrap">
+            <div class="bar-track" role="progressbar" aria-valuenow="{{.Score.Value}}" aria-valuemin="0" aria-valuemax="100" aria-label="Readiness score {{.Score.Value}} of 100, passing threshold {{.Provenance.Threshold}}">
               <div class="bar-fill zone-{{.Score.Zone}}" style="width:{{.Score.Value}}%" aria-hidden="true"></div>
             </div>
+            <span class="bar-min" style="left:{{.Provenance.Threshold}}%" aria-hidden="true"><span class="bar-min-flag">min {{.Provenance.Threshold}}</span></span>
             <div class="bar-ticks" aria-hidden="true">
               <span>0</span><span>60</span><span>80</span><span>100</span>
             </div>
@@ -90,7 +94,10 @@
         {{range .Categories}}
         <article class="cc" data-state="{{.State}}" role="listitem" aria-label="{{.A11y}}">
           <div class="cc-name"><span class="icon" aria-hidden="true">{{icon .IconKey}}</span>{{.Name}}</div>
-          <div class="cc-rules">{{.RuleCount}} rule{{if ne .RuleCount 1}}s{{end}}</div>
+          <div class="cc-meter">
+            <span class="cc-bar" aria-hidden="true"><span class="cc-bar-fill" data-state="{{.State}}" style="width:{{.BarPct}}%"></span></span>
+            <span class="cc-frac"><b>{{.PassedRules}}</b>/{{.RuleCount}}</span>
+          </div>
           {{if .Passed}}
             <div class="cc-stat g"><span class="icon" aria-hidden="true">{{icon "check"}}</span>all passed</div>
           {{else if .Informational}}
@@ -280,6 +287,14 @@
     </section>
 
   </main>
+
+  <div class="statusbar" role="status" aria-label="{{.StatusBar.A11y}}">
+    <span class="sb-item sb-score zone-{{.StatusBar.Zone}}">{{.StatusBar.Score}}/100</span>
+    <span class="sb-item sb-verdict {{if .StatusBar.Pass}}pass{{else}}fail{{end}}">{{.StatusBar.Verdict}}</span>
+    <span class="sb-item sb-min">min {{.StatusBar.Threshold}}</span>
+    <span class="sb-item sb-find">{{.StatusBar.Findings}} {{plural .StatusBar.Findings "finding"}}</span>
+    <span class="sb-item sb-net">0 network calls</span>
+  </div>
 
   <footer>
     <span class="brand"><span class="mark">{{icon "brandmark"}}</span>charter <span class="meta d3" style="font-weight:400">{{.Footer.Version}}</span></span>

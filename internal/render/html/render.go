@@ -16,7 +16,6 @@ import (
 	"fmt"
 	"html/template"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -108,7 +107,18 @@ type view struct {
 
 	Summary   summaryVM
 	Breakdown breakdownVM
+	StatusBar statusBarVM
 	Footer    footerVM
+}
+
+type statusBarVM struct {
+	Score     int
+	Zone      string
+	Verdict   string
+	Pass      bool
+	Threshold int
+	Findings  int
+	A11y      string
 }
 
 type navVM struct {
@@ -156,6 +166,8 @@ type categoryVM struct {
 	Name          string
 	IconKey       string
 	RuleCount     int
+	PassedRules   int // rules that scanned clean (drives the N/M fraction + mini bar)
+	BarPct        int // PassedRules / RuleCount, 0–100
 	State         string
 	Passed        bool
 	Informational bool
@@ -249,7 +261,7 @@ func buildView(result doctor.Result, m meta) view {
 		}
 	}
 
-	catRuleCount, categoriesChecked := catalogCategories()
+	categoriesChecked := len(catalog.Categories())
 
 	return view{
 		Title:       fmt.Sprintf("Charter report — %s — %d/100 %s", repo, s.Final, statusText),
@@ -270,7 +282,7 @@ func buildView(result doctor.Result, m meta) view {
 		Formula: buildFormula(s),
 		Cap:     buildCap(result),
 
-		Categories: buildCategories(result.Findings, catRuleCount),
+		Categories: buildCategories(result.Findings),
 
 		HasFindings:   len(ordered) > 0,
 		FindingsTotal: len(ordered),
@@ -287,7 +299,17 @@ func buildView(result doctor.Result, m meta) view {
 			Suppressed:     len(result.Suppressed),
 		},
 		Breakdown: buildBreakdown(s),
-		Footer:    footerVM{Version: m.version, Timestamp: timestamp},
+		StatusBar: statusBarVM{
+			Score:     s.Final,
+			Zone:      zone,
+			Verdict:   statusText,
+			Pass:      result.Passed,
+			Threshold: result.Threshold,
+			Findings:  len(result.Findings),
+			A11y: fmt.Sprintf("Result: %d of 100, %s, threshold %d, %d %s, zero network calls.",
+				s.Final, statusText, result.Threshold, len(result.Findings), pluralize(len(result.Findings), "finding")),
+		},
+		Footer: footerVM{Version: m.version, Timestamp: timestamp},
 	}
 }
 
@@ -359,52 +381,46 @@ func buildCap(result doctor.Result) capVM {
 	}
 }
 
-func buildCategories(all []findings.Finding, catRuleCount map[string]int) []categoryVM {
-	out := []categoryVM{}
-	seen := map[string]bool{}
-	for _, c := range scoring.ByCategory(all) {
-		seen[c.Category] = true
-		ruleCount := catRuleCount[c.Category]
-		if ruleCount == 0 {
-			ruleCount = distinctRules(all, c.Category)
+// buildCategories renders the full readiness scorecard in canonical category
+// order (every catalog category, not only those with findings), each carrying a
+// rules-clean N/M fraction + mini-bar percentage from scoring.Readiness so the
+// HTML report and the styled TTY share one honest source.
+func buildCategories(all []findings.Finding) []categoryVM {
+	rows := scoring.Readiness(all)
+	out := make([]categoryVM, 0, len(rows))
+	for _, c := range rows {
+		pct := 100
+		if c.Total > 0 {
+			pct = c.Passed * 100 / c.Total
 		}
 		vm := categoryVM{
 			Name:          c.Category,
 			IconKey:       categoryIcon(c.Category),
-			RuleCount:     ruleCount,
+			RuleCount:     c.Total,
+			PassedRules:   c.Passed,
+			BarPct:        pct,
 			FindingsCount: c.Findings,
 			Deduction:     c.Deduction,
 			WorstSeverity: string(c.WorstSeverity),
 		}
-		if c.Deduction == 0 {
+		switch {
+		case c.Failed == 0:
+			vm.State = "pass"
+			vm.Passed = true
+			vm.A11y = fmt.Sprintf("%s: all %d %s clean", c.Category, c.Total, pluralize(c.Total, "rule"))
+		case c.Informational:
 			vm.Informational = true
 			vm.State = "muted"
-			vm.A11y = fmt.Sprintf("%s: %d informational, no deduction", c.Category, c.Findings)
-		} else {
+			vm.A11y = fmt.Sprintf("%s: %d of %d rules clean, %d informational, no deduction",
+				c.Category, c.Passed, c.Total, c.Findings)
+		default:
 			vm.State = stateForSeverity(c.WorstSeverity)
 			vm.WorstClass = severityClass(c.WorstSeverity)
-			vm.A11y = fmt.Sprintf("%s: %d %s, worst %s, minus %d %s",
-				c.Category, c.Findings, pluralize(c.Findings, "finding"), c.WorstSeverity, c.Deduction, pluralize(c.Deduction, "point"))
+			vm.A11y = fmt.Sprintf("%s: %d of %d rules clean, %d %s, worst %s, minus %d %s",
+				c.Category, c.Passed, c.Total, c.Findings, pluralize(c.Findings, "finding"),
+				c.WorstSeverity, c.Deduction, pluralize(c.Deduction, "point"))
 		}
 		out = append(out, vm)
-	}
-
-	passed := []string{}
-	for cat := range catRuleCount {
-		if !seen[cat] {
-			passed = append(passed, cat)
-		}
-	}
-	sort.Strings(passed)
-	for _, name := range passed {
-		out = append(out, categoryVM{
-			Name:      name,
-			IconKey:   categoryIcon(name),
-			RuleCount: catRuleCount[name],
-			State:     "pass",
-			Passed:    true,
-			A11y:      fmt.Sprintf("%s: all %d %s passed", name, catRuleCount[name], pluralize(catRuleCount[name], "rule")),
-		})
 	}
 	return out
 }
@@ -641,26 +657,6 @@ func searchText(f findings.Finding) string {
 	parts = append(parts, f.Evidence...)
 	parts = append(parts, locationStrings(f)...)
 	return strings.Join(parts, " ")
-}
-
-func distinctRules(all []findings.Finding, category string) int {
-	seen := map[string]bool{}
-	for _, f := range all {
-		if f.Category == category {
-			seen[f.RuleID] = true
-		}
-	}
-	return len(seen)
-}
-
-func catalogCategories() (counts map[string]int, total int) {
-	counts = map[string]int{}
-	for _, id := range catalog.IDs() {
-		if e, ok := catalog.Lookup(id); ok {
-			counts[e.Category]++
-		}
-	}
-	return counts, len(counts)
 }
 
 func categoryIcon(category string) string {
