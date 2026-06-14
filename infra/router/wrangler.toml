@@ -10,8 +10,10 @@ workers_dev = false
 pattern = "use-charter.dev/*"
 zone_name = "use-charter.dev"
 
+# Both origins live here so `wrangler deploy` (declarative) keeps them on every
+# deploy. They are public hostnames, not secrets. Omitting LANDING_ORIGIN from
+# this file previously let a CI deploy wipe the dashboard-set value and drop the
+# router to its placeholder — the whole landing site went down until restored.
 [vars]
 MINTLIFY_ORIGIN = "tashfiq.mintlify.app"
-# LANDING_ORIGIN is set in the dashboard once the Pages site is deployed
-# (e.g. charter-landing.pages.dev) — kept out of the file so a placeholder
-# never ships to production by accident.
+LANDING_ORIGIN = "charter-landing.pages.dev"
