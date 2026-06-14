@@ -27,7 +27,7 @@ interface Series {
   count: number;
 }
 
-async function gh<T>(path: string, token: string): Promise<T> {
+async function gh<T>(path: string, token: string, attempt = 0): Promise<T> {
   const res = await fetch(`${GH}${path}`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -36,6 +36,14 @@ async function gh<T>(path: string, token: string): Promise<T> {
       "User-Agent": "charter-dashboard",
     },
   });
+  // GitHub's search API enforces a strict secondary (burst) rate limit; a run of
+  // back-to-back /search calls can transiently 403/429. Back off and retry.
+  if ((res.status === 403 || res.status === 429) && attempt < 2) {
+    const retryAfter = Number(res.headers.get("retry-after"));
+    const waitMs = Math.min(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 1.5, 5) * 1000;
+    await new Promise((r) => setTimeout(r, waitMs));
+    return gh<T>(path, token, attempt + 1);
+  }
   if (!res.ok) throw new Error(`${path} → ${res.status}`);
   return (await res.json()) as T;
 }
@@ -170,8 +178,11 @@ export async function handleDashboardStats(request: Request, env: DashboardEnv):
   if (hit) return hit;
 
   const stats = await buildStats(env.GITHUB_STATS_TOKEN);
-  const res = json(stats, 200, { "Cache-Control": `public, max-age=${CACHE_TTL}` });
-  await cache.put(cacheKey, res.clone());
+  const hadErrors = Object.keys((stats as { errors?: Record<string, string> }).errors ?? {}).length > 0;
+  // Don't cache partial results — otherwise a transient per-group failure would
+  // stick (and outlive the Refresh button) for the whole TTL.
+  const res = json(stats, 200, { "Cache-Control": hadErrors ? "no-store" : `public, max-age=${CACHE_TTL}` });
+  if (!hadErrors) await cache.put(cacheKey, res.clone());
   return res;
 }
 
