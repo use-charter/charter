@@ -307,26 +307,23 @@ func TestAllClean(t *testing.T) {
 }
 
 // TestUncatalogedCategory covers a finding whose Category is absent from the rule
-// catalog: rule count must fall back to the distinct rule IDs seen in the findings
-// (distinctRules), and the category must still render in the scorecard.
+// catalog: the category must still render in the scorecard, with its rule total
+// inferred from the distinct rule IDs seen in the findings.
 func TestUncatalogedCategory(t *testing.T) {
 	fs := []findings.Finding{
 		{RuleID: "AE-EXP-001", Severity: findings.SeverityHigh, Category: "Experimental", Summary: "Experimental rule A"},
 		{RuleID: "AE-EXP-002", Severity: findings.SeverityMedium, Category: "Experimental", Summary: "Experimental rule B"},
-	}
-	if got := distinctRules(fs, "Experimental"); got != 2 {
-		t.Fatalf("distinctRules(Experimental) = %d, want 2", got)
 	}
 
 	score := scoring.Calculate(fs)
 	res := doctor.Result{Root: "/work/exp-repo", Threshold: 80, Passed: false, Findings: fs, Score: score}
 	out := render(t, res)
 
-	// HIGH (−10) + MEDIUM (−4) = −14; rendered via the ByCategory + distinctRules path.
-	if !strings.Contains(out, "Experimental: 2 findings, worst HIGH, minus 14 points") {
-		t.Error("uncataloged category did not render with the distinctRules fallback")
+	// HIGH (−10) + MEDIUM (−4) = −14; 2 distinct rules, none clean → 0 of 2.
+	if !strings.Contains(out, "Experimental: 0 of 2 rules clean, 2 findings, worst HIGH, minus 14 points") {
+		t.Error("uncataloged category did not render with the inferred rule total")
 	}
-	if !strings.Contains(out, "Experimental") || !strings.Contains(out, "2 rules") {
+	if !strings.Contains(out, "Experimental") || !strings.Contains(out, "2 rule") {
 		t.Error("uncataloged category should appear in the scorecard with its distinct rule count")
 	}
 }

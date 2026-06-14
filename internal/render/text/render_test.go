@@ -149,8 +149,10 @@ func TestRenderStyledTrueColor(t *testing.T) {
 		"OPENAI_API_KEY=...",          // evidence
 		"Remove key",                  // remediation
 		"Secrets", "MCP Safety", "CI", // scorecard categories
-		"readiness by category",              // scorecard heading
-		"49", "/100", "FAIL", "threshold 80", // score hero
+		"readiness by category", // scorecard heading
+		"1/2",                   // per-category rules-clean fraction (Secrets: 1 of 2 rules clean)
+		"49", "/100", "FAIL",    // score hero
+		"min 80", "0 network calls", // status bar (threshold marker label + offline guarantee)
 		"suppressed", "AE-CC-001", "legacy", // suppressions
 		"charter", // brand header
 	} {
@@ -226,8 +228,10 @@ func TestRenderStyledANSI16(t *testing.T) {
 	}
 }
 
-// TestRenderStyledPass covers the passing verdict and the empty
-// findings/scorecard styled branches.
+// TestRenderStyledPass covers the passing verdict and the clean-pass scorecard:
+// the Findings section is omitted (nothing to list), but the readiness scorecard
+// still renders every category as all-clean (reassuring, and matching the
+// styled status bar), and the status bar reports the offline guarantee.
 func TestRenderStyledPass(t *testing.T) {
 	t.Parallel()
 
@@ -238,8 +242,15 @@ func TestRenderStyledPass(t *testing.T) {
 	if !strings.Contains(out, "PASS") || !strings.Contains(out, "100") {
 		t.Errorf("expected passing score hero, got:\n%s", out)
 	}
-	if strings.Contains(out, "Findings") || strings.Contains(out, "readiness by category") {
-		t.Errorf("did not expect findings or scorecard sections for a clean pass, got:\n%s", out)
+	// No finding cards on a clean pass.
+	if strings.Contains(out, "Findings") {
+		t.Errorf("did not expect a Findings section for a clean pass, got:\n%s", out)
+	}
+	// The full readiness scorecard renders, every category clean (e.g. Context 4/4).
+	for _, want := range []string{"readiness by category", "Context", "4/4", "0 network calls"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("clean pass: expected %q in scorecard/status bar, got:\n%s", want, out)
+		}
 	}
 }
 

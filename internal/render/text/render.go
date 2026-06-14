@@ -175,6 +175,7 @@ type glyphs struct {
 	fail     string
 	warn     string
 	bullet   string
+	dot      string
 	barFull  string
 	barEmpty string
 }
@@ -185,8 +186,8 @@ type glyphs struct {
 const brandMark = "[C]"
 
 var (
-	unicodeGlyphs = glyphs{brand: brandMark, divider: "─", bar: "│", pass: "✓", fail: "✗", warn: "⚠", bullet: "•", barFull: "█", barEmpty: "░"}
-	asciiGlyphs   = glyphs{brand: brandMark, divider: "-", bar: "|", pass: "+", fail: "x", warn: "!", bullet: "-", barFull: "#", barEmpty: "-"}
+	unicodeGlyphs = glyphs{brand: brandMark, divider: "─", bar: "│", pass: "✓", fail: "✗", warn: "⚠", bullet: "•", dot: "●", barFull: "█", barEmpty: "░"}
+	asciiGlyphs   = glyphs{brand: brandMark, divider: "-", bar: "|", pass: "+", fail: "x", warn: "!", bullet: "-", dot: "o", barFull: "#", barEmpty: "-"}
 )
 
 // newStyler resolves the presentation context for a styled render: the unicode
@@ -213,6 +214,7 @@ func renderStyled(result doctor.Result, caps terminal.Capabilities, pal terminal
 	r.writeSummary(&b, result)
 	r.writeScorecard(&b, result)
 	r.writeScore(&b, result)
+	r.writeStatusBar(&b, result)
 
 	return b.Bytes()
 }
@@ -342,19 +344,86 @@ func (r styler) writeSummary(b *bytes.Buffer, result doctor.Result) {
 	fmt.Fprintln(b, line)
 }
 
+// catBarWidth is the cell width of a per-category readiness mini bar.
+const catBarWidth = 6
+
+// writeScorecard renders the full readiness scorecard: every catalog category as
+// a status dot + name + mini bar + "rules-clean" N/M fraction, coloured by the
+// category's worst severity (green when clean, neutral when only informational).
 func (r styler) writeScorecard(b *bytes.Buffer, result doctor.Result) {
-	breakdown := scoring.ByCategory(result.Findings)
-	if len(breakdown) == 0 {
+	rows := scoring.Readiness(result.Findings)
+	if len(rows) == 0 {
 		return
 	}
 	fmt.Fprintln(b)
 	fmt.Fprintln(b, r.style(terminal.TextSecondary).Render("readiness by category"))
-	for _, c := range breakdown {
-		textTok, _ := severityTokens(c.WorstSeverity)
-		name := r.style(terminal.TextSecondary).Render(fmt.Sprintf("  %-12s", c.Category))
-		deduction := r.style(textTok).Render(fmt.Sprintf("−%-3d", c.Deduction))
-		detail := r.style(terminal.TextTertiary).Render(fmt.Sprintf("%d finding(s), worst %s", c.Findings, c.WorstSeverity))
-		fmt.Fprintln(b, name+" "+deduction+" "+detail)
+
+	nameW := 0
+	for _, c := range rows {
+		if n := len([]rune(c.Category)); n > nameW {
+			nameW = n
+		}
+	}
+
+	for _, c := range rows {
+		tok := r.categoryToken(c)
+		dot := r.style(tok).Render(r.g.dot)
+		name := r.style(terminal.TextSecondary).Render(fmt.Sprintf("%-*s", nameW, c.Category))
+		bar := r.categoryBar(c.Passed, c.Total, tok)
+		frac := r.style(terminal.TextTertiary).Render(fmt.Sprintf("%d/%d", c.Passed, c.Total))
+
+		line := "  " + dot + "  " + name + "  " + bar + "  " + frac
+		if note := r.categoryNote(c); note != "" {
+			line += "  " + note
+		}
+		fmt.Fprintln(b, line)
+	}
+}
+
+// categoryToken is the palette token that colours a category row: success when
+// every rule is clean, the neutral tertiary token when the only findings are
+// informational, otherwise the worst severity's token.
+func (r styler) categoryToken(c scoring.CategoryReadiness) terminal.Token {
+	switch {
+	case c.Failed == 0:
+		return terminal.TextSuccess
+	case c.Informational:
+		return terminal.TextTertiary
+	default:
+		tok, _ := severityTokens(c.WorstSeverity)
+		return tok
+	}
+}
+
+// categoryBar renders a fixed-width mini bar whose filled portion is the share of
+// the category's rules that scanned clean, coloured by the row's token.
+func (r styler) categoryBar(passed, total int, tok terminal.Token) string {
+	if total <= 0 {
+		total = 1
+	}
+	filled := max(0, min(catBarWidth, (passed*catBarWidth+total/2)/total))
+	bar := ""
+	if filled > 0 {
+		bar += r.style(tok).Render(strings.Repeat(r.g.barFull, filled))
+	}
+	if filled < catBarWidth {
+		bar += r.style(terminal.TextTertiary).Render(strings.Repeat(r.g.barEmpty, catBarWidth-filled))
+	}
+	return bar
+}
+
+// categoryNote is the trailing annotation for a category row: nothing when clean
+// (the full green bar carries the signal), a faint "info" for informational-only
+// categories, otherwise the worst severity with its finding count.
+func (r styler) categoryNote(c scoring.CategoryReadiness) string {
+	switch {
+	case c.Failed == 0:
+		return ""
+	case c.Informational:
+		return r.style(terminal.TextTertiary).Render("info")
+	default:
+		tok, _ := severityTokens(c.WorstSeverity)
+		return r.style(tok).Render(fmt.Sprintf("%d %s", c.Findings, strings.ToLower(string(c.WorstSeverity))))
 	}
 }
 
@@ -381,7 +450,7 @@ func (r styler) writeScore(b *bytes.Buffer, result doctor.Result) {
 	label := r.style(terminal.TextSecondary).Render("Score ")
 	score := r.style(scoreTok).Bold(true).Render(strconv.Itoa(result.Score.Final))
 	maxScore := r.style(terminal.TextTertiary).Render("/100")
-	bar := r.scoreBar(result.Score.Final, scoreTok)
+	bar := r.scoreBar(result.Score.Final, result.Threshold, scoreTok)
 	badge := r.style(scoreTok).Bold(true).Render(verdict)
 	fmt.Fprintln(b, label+score+maxScore+"  "+bar+"  "+badge)
 
@@ -390,21 +459,58 @@ func (r styler) writeScore(b *bytes.Buffer, result doctor.Result) {
 	if result.Score.Final < result.Score.Base {
 		fmt.Fprintln(b, "      "+r.style(terminal.TextDanger).Render(fmt.Sprintf("cap   score capped at %d", result.Score.Final)))
 	}
-	fmt.Fprintln(b, "      "+r.style(terminal.TextTertiary).Render(fmt.Sprintf("threshold %d", result.Threshold)))
 }
 
 // scoreBar renders a fixed-width progress bar whose filled portion is
-// proportional to score/100 and carries the score's severity color.
-func (r styler) scoreBar(score int, tok terminal.Token) string {
+// proportional to score/100 and carries the score's severity color. A threshold
+// marker (a bright vertical tick) is overlaid at the threshold position so the
+// pass/fail line is visible on the bar itself.
+func (r styler) scoreBar(score, threshold int, tok terminal.Token) string {
 	filled := max(0, min(scoreBarWidth, score*scoreBarWidth/100))
-	bar := ""
-	if filled > 0 {
-		bar += r.style(tok).Render(strings.Repeat(r.g.barFull, filled))
+	marker := -1
+	if threshold > 0 && threshold < 100 {
+		marker = max(0, min(scoreBarWidth-1, threshold*scoreBarWidth/100))
 	}
-	if filled < scoreBarWidth {
-		bar += r.style(terminal.TextTertiary).Render(strings.Repeat(r.g.barEmpty, scoreBarWidth-filled))
+	var sb strings.Builder
+	for i := range scoreBarWidth {
+		switch {
+		case i == marker:
+			sb.WriteString(r.style(terminal.TextPrimary).Bold(true).Render(r.g.bar))
+		case i < filled:
+			sb.WriteString(r.style(tok).Render(r.g.barFull))
+		default:
+			sb.WriteString(r.style(terminal.TextTertiary).Render(r.g.barEmpty))
+		}
 	}
-	return bar
+	return sb.String()
+}
+
+// writeStatusBar renders the closing status line — a tmux-style rollup of the
+// verdict, threshold, finding count, and Charter's defining offline guarantee
+// (literally zero network calls). It mirrors the score so the bottom of the
+// output reads as a single at-a-glance result.
+func (r styler) writeStatusBar(b *bytes.Buffer, result doctor.Result) {
+	scoreTok := terminal.TextDanger
+	verdict := "FAIL"
+	if result.Passed {
+		scoreTok = terminal.TextSuccess
+		verdict = "PASS"
+	}
+	dot := r.style(terminal.TextTertiary).Render(" · ")
+
+	scorePart := r.style(scoreTok).Bold(true).Render(fmt.Sprintf("%d/100", result.Score.Final))
+	verdictPart := r.style(scoreTok).Bold(true).Render(verdict)
+	minPart := r.style(terminal.TextTertiary).Render(fmt.Sprintf("min %d", result.Threshold))
+
+	total := len(result.Findings)
+	findingsTok := terminal.TextTertiary
+	if total > 0 {
+		findingsTok, _ = severityTokens(worstSeverity(result.Findings))
+	}
+	findingsPart := r.style(findingsTok).Render(fmt.Sprintf("%d findings", total))
+	offlinePart := r.style(terminal.TextSuccess).Render("0 network calls")
+
+	fmt.Fprintln(b, scorePart+dot+verdictPart+dot+minPart+dot+findingsPart+dot+offlinePart)
 }
 
 // severityIcon mirrors the design (charter-doctor-init-fix.html): only BLOCKER

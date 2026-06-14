@@ -86,11 +86,35 @@ function sevIcon(sev: string): string {
 }
 
 // ─── Score bar (matches render.go scoreBar, width=24) ─────────────────────
-function scoreBar(score: number, color: string): string {
-  const filled = Math.max(0, Math.min(24, Math.round(score * 24 / 100)));
-  const empty = 24 - filled;
-  return `<span style="color:${color}">${"█".repeat(filled)}</span><span style="color:#21262d">${"░".repeat(empty)}</span>`;
+// A bright vertical tick marks the threshold position, mirroring the styled TTY.
+function scoreBar(score: number, color: string, threshold: number): string {
+  const W = 24;
+  const filled = Math.max(0, Math.min(W, Math.round((score * W) / 100)));
+  const marker = threshold > 0 && threshold < 100 ? Math.max(0, Math.min(W - 1, Math.floor((threshold * W) / 100))) : -1;
+  let out = "";
+  for (let i = 0; i < W; i++) {
+    if (i === marker) out += `<span style="color:${T.textPrimary};font-weight:700">│</span>`;
+    else if (i < filled) out += `<span style="color:${color}">█</span>`;
+    else out += `<span style="color:#21262d">░</span>`;
+  }
+  return out;
 }
+
+// ─── Category mini bar (matches render.go categoryBar, width=6) ───────────
+function catBar(passed: number, total: number, color: string): string {
+  const W = 6;
+  const t = total > 0 ? total : 1;
+  const filled = Math.max(0, Math.min(W, Math.round((passed * W) / t)));
+  return `<span style="color:${color}">${"█".repeat(filled)}</span><span style="color:#21262d">${"░".repeat(W - filled)}</span>`;
+}
+
+// Canonical category order + catalog rule counts — mirrors catalog.Categories()
+// and catalog.RuleCountByCategory() so the screenshot scorecard matches the
+// styled TTY's rules-clean N/M without re-running the binary per category.
+const CATEGORY_RULES: ReadonlyArray<readonly [string, number]> = [
+  ["Context", 4], ["Secrets", 2], ["MCP Safety", 3], ["Agent Config", 2],
+  ["Environment", 1], ["CI", 1], ["Testing", 1], ["Autonomy", 1], ["Governance", 3],
+];
 
 function c(color: string, text: string, bold = false): string {
   const fw = bold ? "font-weight:600;" : "";
@@ -165,20 +189,39 @@ function renderDoctor(d: DoctorResult, displayName: string): string {
   if (d.summary.low > 0)     summary += `${dot}${c(SEV.LOW, `${d.summary.low} LOW`)}`;
   lines.push(summary);
 
-  // Scorecard — colored dot indicator per category
-  if (d.categories.length > 0) {
-    lines.push("");
-    lines.push(c(T.textSecondary, "readiness by category"));
-    for (const cat of d.categories) {
-      const hasIssues = cat.findings > 0;
-      const dotColor  = hasIssues ? sevFg(cat.worst_severity) : "#3fb950";
-      const dot       = `<span style="color:${dotColor}">●</span>`;
-      const name      = c(T.textTertiary, `  ${cat.category.padEnd(13)}`);
-      const status    = hasIssues
-        ? `${c(dotColor, `${cat.findings} finding${cat.findings > 1 ? "s" : ""}`, true)}  ${c(T.textTertiary, `worst ${cat.worst_severity}`)}`
-        : c("#3fb950", "passed");
-      lines.push(`  ${dot}${name} ${status}`);
+  // Scorecard — status dot + mini bar + rules-clean N/M for every category
+  lines.push("");
+  lines.push(c(T.textSecondary, "readiness by category"));
+  const catInfo = new Map<string, CategorySummary>();
+  for (const cs of d.categories) catInfo.set(cs.category, cs);
+  const failedRules = new Map<string, Set<string>>();
+  for (const f of d.findings) {
+    if (!failedRules.has(f.category)) failedRules.set(f.category, new Set());
+    failedRules.get(f.category)?.add(f.rule_id);
+  }
+  const nameW = Math.max(...CATEGORY_RULES.map(([n]) => n.length));
+  const PASS_GREEN = "#3fb950";
+  for (const [catName, total] of CATEGORY_RULES) {
+    const failed = failedRules.get(catName)?.size ?? 0;
+    const passed = Math.max(0, total - failed);
+    const cs = catInfo.get(catName);
+    const informational = cs != null && cs.findings > 0 && cs.deduction === 0;
+    let tok = PASS_GREEN;
+    let note = "";
+    if (failed === 0) {
+      tok = PASS_GREEN;
+    } else if (informational) {
+      tok = T.textTertiary;
+      note = c(T.textTertiary, "info");
+    } else {
+      tok = sevFg(cs?.worst_severity ?? "");
+      note = c(tok, `${cs?.findings ?? 0} ${(cs?.worst_severity ?? "").toLowerCase()}`);
     }
+    const dot = `<span style="color:${tok}">●</span>`;
+    const name = c(T.textSecondary, catName.padEnd(nameW));
+    const bar = catBar(passed, total, tok);
+    const frac = c(T.textTertiary, `${passed}/${total}`);
+    lines.push(`  ${dot}  ${name}  ${bar}  ${frac}${note ? `  ${note}` : ""}`);
   }
 
   // Score hero — score number prominent, bar, verdict badge
@@ -187,13 +230,20 @@ function renderDoctor(d: DoctorResult, displayName: string): string {
   const scoreTok = d.passed ? T.textSuccess : T.textDanger;
   const verdict  = d.passed ? "PASS ✓" : "FAIL ✗";
   const scoreNum = `<span style="color:${scoreTok};font-weight:700;font-size:1.05em">${d.score.final}</span>${c(T.textTertiary, "/100")}`;
-  const bar24    = scoreBar(d.score.final, scoreTok);
+  const bar24    = scoreBar(d.score.final, scoreTok, d.threshold);
   const badge2   = `<span style="color:${scoreTok};font-weight:700">${verdict}</span>`;
   lines.push(`${c(T.textSecondary, "Score ")}${scoreNum}  ${bar24}  ${badge2}`);
   if (d.score.final < d.score.base) {
     lines.push(`      ${c(T.textDanger, `cap   score capped at ${d.score.final}`)}`);
   }
-  lines.push(`      ${c(T.textTertiary, `threshold ${d.threshold}`)}`);
+
+  // Status bar — verdict rollup + Charter's offline guarantee
+  const findCount = d.findings.length;
+  const fTok = findCount > 0 ? sevFg(d.findings[0]?.severity ?? "") : T.textTertiary;
+  lines.push(
+    `${c(scoreTok, `${d.score.final}/100`, true)}${dot}${c(scoreTok, d.passed ? "PASS" : "FAIL", true)}` +
+    `${dot}${c(T.textTertiary, `min ${d.threshold}`)}${dot}${c(fTok, `${findCount} findings`)}${dot}${c(T.textSuccess, "0 network calls")}`
+  );
 
   return lines.join("\n");
 }
