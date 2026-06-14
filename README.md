@@ -159,6 +159,16 @@ Charter makes ten commitments, and shows its work on every one:
 `charter doctor` scans a **50,000-file repository in ≤ 2 s** using **≤ 256 MiB** RSS —
 asserted in CI by `moon run :perf`.
 
+## Tech stack
+
+| Layer | Built with |
+|-------|------------|
+| **Core CLI** | ![Go](https://img.shields.io/badge/Go_1.26-00ADD8?style=flat-square&logo=go&logoColor=white) |
+| **Build & tooling** | ![Moonrepo](https://img.shields.io/badge/Moonrepo-6F52F4?style=flat-square&logo=moonrepo&logoColor=white) ![mise](https://img.shields.io/badge/mise-A78BFA?style=flat-square) ![Bun](https://img.shields.io/badge/Bun-1B1817?style=flat-square&logo=bun&logoColor=white) ![hk](https://img.shields.io/badge/hk_hooks-2F6FDB?style=flat-square) |
+| **Web & docs** | ![Astro](https://img.shields.io/badge/Astro-BC52EE?style=flat-square&logo=astro&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white) ![Mintlify](https://img.shields.io/badge/Mintlify-18181B?style=flat-square&logo=mintlify&logoColor=white) |
+| **Infra & CI/CD** | ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-F38020?style=flat-square&logo=cloudflareworkers&logoColor=white) ![Cloudflare Pages](https://img.shields.io/badge/Cloudflare_Pages-F38020?style=flat-square&logo=cloudflarepages&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white) |
+| **Supply chain** | ![SLSA](https://img.shields.io/badge/SLSA_L3-45DD92?style=flat-square) ![cosign](https://img.shields.io/badge/Sigstore_cosign-003A70?style=flat-square) ![SARIF](https://img.shields.io/badge/SARIF_2.1.0-A78BFA?style=flat-square) |
+
 ## Documentation
 
 | | |
