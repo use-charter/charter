@@ -1,137 +1,209 @@
-<h1 align="center">Charter</h1>
+<div align="center">
 
-<p align="center">
-  <strong>AI-agent readiness, scored.</strong><br>
-  Offline-first CLI that grades any repo 0–100 on how safely an AI coding agent can work in it — then tells you exactly what to fix.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/product/images/logo-dark.svg">
+  <img src="docs/product/images/logo-light.svg" alt="Charter" width="320">
+</picture>
+
+### AI-agent readiness, scored.
+
+Charter grades any repository **0–100** on how safely an AI coding agent can work in it —
+then hands you the exact fix for every gap. Offline, deterministic, no LLM in the loop.
+
+[Documentation](https://use-charter.dev/docs) · [Rule catalog](https://use-charter.dev/rules) · [GitHub Action](https://use-charter.dev/docs/ci/github-action) · [Changelog](https://use-charter.dev/changelog)
+
+<p>
+  <a href="https://github.com/use-charter/charter/releases"><img alt="Release" src="https://img.shields.io/github/v/release/use-charter/charter?sort=semver&style=flat-square&color=5aa2f7&labelColor=0b0e14"></a>
+  <a href="https://github.com/use-charter/charter/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/use-charter/charter/ci.yml?branch=main&style=flat-square&labelColor=0b0e14"></a>
+  <a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-5aa2f7?style=flat-square&labelColor=0b0e14"></a>
+  <img alt="Go" src="https://img.shields.io/badge/go-1.26-00ADD8?style=flat-square&logo=go&logoColor=white&labelColor=0b0e14">
+  <img alt="SLSA Level 3" src="https://img.shields.io/badge/SLSA-level%203-45dd92?style=flat-square&labelColor=0b0e14">
+  <img alt="Network" src="https://img.shields.io/badge/network-0%20calls-45dd92?style=flat-square&labelColor=0b0e14">
+  <img alt="Output" src="https://img.shields.io/badge/SARIF-2.1.0-a78bfa?style=flat-square&labelColor=0b0e14">
 </p>
 
-<p align="center">
-  <a href="https://github.com/use-charter/charter/releases"><img alt="Release" src="https://img.shields.io/github/v/release/use-charter/charter?sort=semver"></a>
-  <a href="https://github.com/use-charter/charter/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/use-charter/charter/ci.yml?branch=main"></a>
-  <a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
-  <img alt="Go" src="https://img.shields.io/badge/go-1.26-00ADD8?logo=go&logoColor=white">
-  <img alt="Offline" src="https://img.shields.io/badge/network-zero%20calls-success">
-</p>
+<br>
 
-<p align="center">
-  <img src="./docs/internal/demo/charter-demo.gif" alt="charter doctor scanning a repository" width="800">
-</p>
+<img src="docs/internal/demo/charter-demo.gif" alt="charter doctor scoring a repository: 85/100 PASS, one HIGH finding, per-category readiness bars" width="860">
+
+</div>
+
+---
 
 ## Why Charter
 
-AI coding agents are only as safe and effective as the repo they operate in. Missing context files, unpinned MCP servers, leaked secrets, and absent CI gates quietly degrade every agent that touches your code. Charter makes that readiness **measurable** — one deterministic score, eighteen rules, zero network calls, zero LLM calls. Run it locally, gate it in CI, fix what it flags.
+An AI coding agent is only as safe and effective as the repository it operates in. Missing
+context files, unpinned MCP servers, leaked secrets, and absent CI gates quietly degrade
+every agent that touches your code — and you find out in the diff, not before.
 
-- **Deterministic** — same repo, same score, every time. No model in the loop.
-- **Offline** — never phones home; safe for private and air-gapped codebases.
-- **Actionable** — every finding has a rule ID, a reason, and a fix. `charter fix` repairs many of them diff-first.
-- **Cross-vendor** — Claude Code, Cursor, Copilot, Gemini, Windsurf.
+Charter makes that readiness **measurable**: one deterministic score, **18 rules** across
+**9 categories**, **0 network calls**. Run it locally, gate it in CI, fix what it flags.
+
+|  | |
+|---|---|
+| **Deterministic** | Same repo, same score, every time. No model in the loop, no flaky output. |
+| **Offline** | Never phones home. Safe for private, regulated, and air-gapped codebases. |
+| **Actionable** | Every finding carries a rule ID, a reason, and a fix. `charter fix` repairs many of them diff-first. |
+| **Cross-vendor** | One score for Claude Code, Cursor, Copilot, Gemini, Windsurf, Codex, Zed, and Replit. |
+
+> [!NOTE]
+> Charter is a **static analyzer**, not an agent. It reads your files and prints a number.
+> No code is sent anywhere, nothing is mutated without a diff you approve.
+
+## Quickstart
+
+```bash
+# install (macOS / Linux)
+brew install use-charter/tap/charter
+
+# score the current repo
+charter doctor
+```
+
+That's the whole loop. `charter doctor` scans the tree, evaluates 18 rules, and prints a
+banded score with a per-category breakdown and every finding inline. Exit code is the gate:
+`0` pass · `1` below threshold · `2` error.
+
+> [!TIP]
+> New repo? Run `charter init` first to scaffold the context files agents expect
+> (`AGENTS.md`, `charter.yaml`, `.gitignore`), then `charter doctor` for an honest baseline.
 
 ## Install
 
-```bash
-# Homebrew (macOS / Linux)
-brew install use-charter/tap/charter
+| Method | Command |
+|--------|---------|
+| **Homebrew** | `brew install use-charter/tap/charter` |
+| **Go** | `go install go.use-charter.dev/charter/cmd/charter@latest` |
+| **Binary** | Download your platform archive from [Releases](https://github.com/use-charter/charter/releases), extract, put `charter` on `PATH`. |
+| **Source** | `git clone https://github.com/use-charter/charter && cd charter && go build -o charter ./cmd/charter` |
 
-# Direct binary download
-# Download the archive for your platform from GitHub Releases, extract, and put charter on your PATH.
+Every release is cosign-signed with SLSA Level 3 provenance — verify with `charter version --verify`.
 
-# go install
-go install go.use-charter.dev/charter/cmd/charter@latest
+## Commands
 
-# Build from source
-git clone https://github.com/use-charter/charter
-cd charter && go build -o charter ./cmd/charter
-```
+A small, sharp surface. The same seven commands behave identically in your shell and in CI.
 
-## Quick start
+| Command | What it does |
+|---------|--------------|
+| `charter doctor` | Scan + score the repo 0–100 with a per-category breakdown. |
+| `charter init` | Scaffold missing context files. Never overwrites. |
+| `charter fix` | Diff-first auto-repair for supported rules — nothing written until you approve. |
+| `charter explain <RULE>` | Print a rule's category, summary, severity, and docs URL. |
+| `charter suppress <RULE>` | Record a governed waiver with a reason, owner, and expiry. |
+| `charter report` | Write a self-contained offline HTML report (fonts + data inlined). |
+| `charter version` | Print version, build provenance, and supply-chain verification status. |
 
-```bash
-charter doctor --path .
-```
+## What it checks
 
-Charter scans the repo, evaluates 18 rules, and prints the score with finding details. Exit 0 = pass, exit 1 = below threshold, exit 2 = error.
+18 rules across 9 categories. Severity sets the score weight; every rule carries an `AE-*` ID
+and a fix. Full reference at [use-charter.dev/rules](https://use-charter.dev/rules).
 
-```bash
-charter init        # scaffold missing context files
-charter fix         # diff-first auto-repair for supported rules
-charter report      # self-contained offline HTML report
-charter explain AE-CTX-001  # rule reference
-```
+| Category | Rules | Checks for |
+|----------|-------|-----------|
+| **Context** | `AE-CTX-001/002/004/006` | A meaningful, accurate `AGENTS.md`; agent artifacts git-ignored; restrained emphasis. |
+| **Secrets** | `AE-SEC-001/002` | No raw secrets in agent-visible files or MCP config. |
+| **MCP Safety** | `AE-MCP-001/002/003` | MCP servers pinned, origins trusted, auth declared. |
+| **Agent Config** | `AE-CC-001/002` | No dangerous hook commands; explicit agent edit scope. |
+| **Environment** | `AE-ENV-001` | Reproducible toolchain — lockfile + pinned versions. |
+| **CI** | `AE-CI-002` | Charter and workflow linters run in CI. |
+| **Testing** | `AE-TEST-001` | Automated tests exist so an agent can self-verify. |
+| **Autonomy** | `AE-AUTO-001` | The verification command is discoverable. |
+| **Governance** | `AE-SUPPRESS-001/002/003` | Suppressions have a reason, an approver, and stay within a healthy rate. |
 
-## Score formula
+## Scoring
 
 ```
 score = max(0, 100 − B×20 − H×10 − M×4 − L×1)
-final = min(base, applicable_cap)
+final = min(score, applicable_cap)
 ```
 
-Hard caps: raw secret → `≤ 49`, any blocker → `≤ 59`. Informational findings excluded.
+`B`/`H`/`M`/`L` are Blocker/High/Medium/Low finding counts. Informational findings are
+excluded. Hard caps keep the dangerous cases honest:
 
-## GitHub Action
+- a raw secret in agent-visible content → **≤ 49**
+- any active Blocker → **≤ 59**
+
+The formula is public and stable within a major version. Same inputs, same score — always.
+
+## Gate it in CI
 
 ```yaml
+# .github/workflows/charter.yml
 - uses: use-charter/charter-action@v1
   with:
-    threshold: "80"
+    threshold: "80"   # fail PRs that score below this
+    verify: true      # cosign + sha256 the binary before running
 ```
 
-Downloads the signed `charter` binary, runs `charter doctor --format sarif`, and uploads to GitHub Code Scanning. See [`action/README.md`](./action/README.md).
+The action downloads the signed binary, runs `charter doctor --format sarif`, and uploads to
+**GitHub Code Scanning** — findings land inline on the PR, no new dashboard to learn. See
+[`action/README.md`](./action/README.md).
+
+## The contract
+
+Charter makes ten commitments, and shows its work on every one:
+
+- ✅ No network calls — ever
+- ✅ No LLM calls in the core
+- ✅ No file deletion
+- ✅ No silent mutation — diff-first fixes only
+- ✅ Every finding has a rule ID and fix guidance
+- ✅ Every release is signed (SLSA L3 + cosign)
+- ✅ The score formula is public and stable within a major version
+- ✅ Cross-vendor across every major coding agent
+- ✅ Secrets are never printed
+- ✅ The CLI is free, forever (Apache-2.0)
 
 ## Performance
 
-`charter doctor` scans a 50,000-file repository in ≤ 2 s / ≤ 256 MiB RSS, validated by `moon run :perf`.
-
-## Design principles
-
-Charter makes ten commitments: no network calls, no LLM calls, no file deletion, no silent mutation, every finding has a rule ID and fix guidance, every release is signed (SLSA L3), the score formula is public and stable within a major version, cross-vendor (Claude Code / Cursor / Copilot / Gemini / Windsurf), secrets never printed, CLI free forever.
+`charter doctor` scans a **50,000-file repository in ≤ 2 s** using **≤ 256 MiB** RSS —
+asserted in CI by `moon run :perf`.
 
 ## Documentation
 
-- Customer-facing docs: [`docs/product/`](./docs/product/) — the Mintlify site at `https://use-charter.dev/docs`
-- Rule reference: `https://use-charter.dev/rules/AE-*`
-- Architecture: [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md)
-- Repo contract: [`AGENTS.md`](./AGENTS.md)
+| | |
+|---|---|
+| **Product docs** | [use-charter.dev/docs](https://use-charter.dev/docs) (Mintlify) · source in [`docs/product/`](./docs/product/) |
+| **Rule reference** | [use-charter.dev/rules](https://use-charter.dev/rules) |
+| **Architecture** | [`docs/internal/architecture/charter-architecture-2026.md`](./docs/internal/architecture/charter-architecture-2026.md) |
+| **Repo contract** | [`AGENTS.md`](./AGENTS.md) · [`ARCHITECTURE.md`](./ARCHITECTURE.md) · [`SECURITY.md`](./SECURITY.md) · [`CONTRIBUTING.md`](./CONTRIBUTING.md) · [`TESTING.md`](./TESTING.md) |
 
-## Developer setup
+## Contributing
 
 ```bash
-mise install
-./scripts/install-hooks.sh
-moon run :check
+mise install               # toolchain (Go, Bun, Moon, hk)
+./scripts/install-hooks.sh # pre-commit / pre-push hooks
+moon run :check            # full quality gate
 ```
 
-Task family:
+| Task | Runs |
+|------|------|
+| `moon run :check` | full quality gate |
+| `moon run :test` | `go test -race ./...` |
+| `moon run :lint` | gofumpt + golangci-lint + tsc |
+| `moon run :build` | `go build` |
+| `moon run :docs` | docs validation |
+| `moon run :security` | gitleaks + govulncheck + osv-scanner |
+| `moon run :perf` | 50k-file performance assertion |
 
-```
-moon run :check     # full quality gate
-moon run :test      # go test -race ./...
-moon run :lint      # gofumpt + golangci-lint + tsc
-moon run :build     # go build
-moon run :docs      # docs validation
-moon run :security  # gitleaks + govulncheck + osv-scanner
-moon run :perf      # 50k-file performance assertion (not in :check)
-```
+Conventional Commits, SemVer, DCO sign-off on every commit. Irreversible decisions are
+recorded as ADRs in [`docs/internal/decisions/`](./docs/internal/decisions/). See
+[`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
-## Core conventions
+## Star history
 
-- Single Go module `go.use-charter.dev/charter`. No `go.work`.
-- Conventional Commits. SemVer. DCO sign-off on every commit.
-- Repo-owned scripts in TypeScript via Bun. No plain JS helpers.
-- Bootstrap keeps tracked MCP config absent until a pinned, reviewed integration exists.
-- ADRs in [`docs/internal/decisions/`](./docs/internal/decisions/) for irreversible constraints.
-
-## Repo map
-
-- [`AGENTS.md`](./AGENTS.md) — agent instructions and hard constraints
-- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — module layout and seam rules
-- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — workflow, commits, PRs, ADR/RFC triggers
-- [`SECURITY.md`](./SECURITY.md) — secrets, MCP, supply-chain posture
-- [`TESTING.md`](./TESTING.md) — fixtures, evals, verification commands
-- [`CONTEXT_MAP.md`](./CONTEXT_MAP.md) — context loading guide
-- [`PERMISSIONS.md`](./PERMISSIONS.md) — off-limits paths and escalation policy
+<a href="https://star-history.com/#use-charter/charter&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=use-charter/charter&type=Date&theme=dark">
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=use-charter/charter&type=Date" width="600">
+  </picture>
+</a>
 
 ## License
 
-Apache License 2.0. See [`LICENSE`](./LICENSE).
+[Apache License 2.0](./LICENSE). DCO-first contributions.
 
-DCO-first contributions. CLA deferred unless governance needs require it.
+<div align="center">
+<br>
+<sub>Built for the agent era · <a href="https://use-charter.dev">use-charter.dev</a></sub>
+</div>
