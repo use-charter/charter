@@ -75,6 +75,15 @@ Docs: https://developers.cloudflare.com/pages/get-started/git-integration/
    - **Root directory (advanced):** `web`
 4. **Save and Deploy.** First build runs; note the assigned hostname
    `charter-landing.pages.dev` — you need it in B4.
+5. **Scope build watch paths.** Settings → Builds → **Build watch paths** →
+   Include paths: `web/*` (the site lives under `web/`). Without this the
+   project's `path_includes` defaults to `*` and Cloudflare rebuilds on every
+   push — including README/docs-only commits. Equivalent API call:
+
+   ```
+   PATCH /accounts/{account_id}/pages/projects/charter-landing
+   { "source": { "type": "github", "config": { "path_includes": ["web/*"] } } }
+   ```
 
 ### B2 — Pages environment variables + secret
 
