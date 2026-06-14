@@ -1,9 +1,9 @@
 <!--
   Charter wordmark — [C] mark + logotype
-  116×36 viewBox (cropped to artwork) · bracket centre at y=18 · dy=0.35em aligns cap-height to y=18
+  116×20 viewBox (cropped tight to artwork on both axes) · bracket centre at y=18
   Dark variant: #FFFFFF
 -->
-<svg viewBox="0 0 116 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Charter">
+<svg viewBox="0 8 116 20" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Charter">
   <title>Charter</title>
   <g transform="translate(0,4) scale(0.4375)">
     <rect x="3"  y="12" width="4"  height="40" fill="#FFFFFF"/>
