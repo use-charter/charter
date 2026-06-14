@@ -17,3 +17,9 @@ zone_name = "use-charter.dev"
 [vars]
 MINTLIFY_ORIGIN = "tashfiq.mintlify.app"
 LANDING_ORIGIN = "charter-landing.pages.dev"
+
+# Secret (NOT a var — set via `wrangler secret put` or the dashboard, persists
+# across deploys): GITHUB_STATS_TOKEN powers /dashboard/api/stats. Fine-grained
+# PAT for use-charter/charter with Contents:read, Issues:read, Metadata:read,
+# Administration:read (the last grants the traffic API). Absent → the dashboard
+# renders a "not configured" state instead of failing.

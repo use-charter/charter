@@ -11,6 +11,9 @@ export default defineConfig({
       changefreq: 'weekly',
       priority: 1.0,
       lastmod: new Date(),
+      // The founder dashboard is Cloudflare-Access-gated and unlisted — keep it
+      // out of the public sitemap.
+      filter: (page) => !page.includes('/dashboard'),
     }),
   ],
   build: {

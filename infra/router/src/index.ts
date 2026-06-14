@@ -16,7 +16,9 @@
 // root LLM index files must all reach Mintlify — otherwise the asset requests
 // fall through to the landing site and the docs render unstyled.
 
-export interface Env {
+import { handleDashboardStats, type DashboardEnv } from './dashboard';
+
+export interface Env extends DashboardEnv {
   // Mintlify subdomain serving the product docs (e.g. tashfiq.mintlify.app).
   MINTLIFY_ORIGIN?: string;
   // Pages hostname for the landing site (e.g. charter-landing.pages.dev).
@@ -52,6 +54,12 @@ export default {
     // the landing-site proxy below.
     if (path.startsWith('/.well-known/acme-challenge/')) {
       return fetch(request);
+    }
+
+    // Founder dashboard stats API. Gated by Cloudflare Access on /dashboard*;
+    // the handler also requires an Access assertion header (defense-in-depth).
+    if (path === '/dashboard/api/stats') {
+      return handleDashboardStats(request, env);
     }
 
     // Expose Mintlify's sitemap on this domain with origin→public host rewrite.
