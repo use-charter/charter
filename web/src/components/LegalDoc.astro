@@ -7,6 +7,7 @@ interface Props {
   page: LegalPage;
 }
 const { page } = Astro.props;
+const year = new Date().getFullYear();
 
 const REPO = 'https://github.com/use-charter/charter';
 const DOCS = 'https://use-charter.dev/docs';
@@ -177,7 +178,6 @@ const FOOT_COLS = [
       <div class="ck-man__title">
         <span>CHARTER(1)</span>
         <span>General Commands Manual</span>
-        <span>CHARTER(1)</span>
       </div>
       <div class="ck-man__grid">
         <div>
@@ -203,7 +203,7 @@ const FOOT_COLS = [
         </div>
         {FOOT_COLS.map((col) => (
           <div>
-            <h5>{col.h}</h5>
+            <h3>{col.h}</h3>
             <ul>{col.links.map((l) => <li><a href={l[1]}>{l[0]}</a></li>)}</ul>
           </div>
         ))}
@@ -228,10 +228,20 @@ const FOOT_COLS = [
       </div>
     </div>
     <div class="ck-man__exit">
-      <span class="ck-man__badges">
-        <span>apache-2.0</span><span>slsa l3</span><span>sarif 2.1.0</span><span>v1.0.0</span><span class="ok">0 network calls</span>
+      <span class="ck-man__exit-l">
+        <span class="ck-man__copy">&copy; {year} · Charter</span>
+        <span class="sep" aria-hidden="true">|</span>
+        <span>Apache 2.0</span>
       </span>
-      <span class="ok">exit 0</span>
+      <span class="ck-man__exit-r">
+        <span>v1.0.0</span>
+        <span class="sep" aria-hidden="true">|</span>
+        <span class="ck-man__built">Built with
+          <a href="https://astro.build/" rel="noopener noreferrer" target="_blank" aria-label="Astro">
+            <img src="/icons/astro-wordmark.svg" alt="Astro" width="53" height="14" loading="lazy" />
+          </a>
+        </span>
+      </span>
     </div>
   </footer>
 </div>

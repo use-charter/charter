@@ -268,6 +268,7 @@ const year = new Date().getFullYear();
       </div>
     </header>
 
+    <main class="ck-main">
     <!-- HERO — boot bento -->
     <section class="ck-hero" data-boot>
       <div class="ck-hero__stage">
@@ -550,7 +551,7 @@ const year = new Date().getFullYear();
           <div class="pane ck-flag ck-flag--hero">
             <div>
               <span class="ck-flag__icon"><Icon name="ph:wifi-slash" /></span>
-              <h4>Nothing ever leaves your machine.</h4>
+              <h3>Nothing ever leaves your machine.</h3>
               <p>No network, no LLM calls, no telemetry. Charter reads your files locally and prints a number. That's the entire deal.</p>
             </div>
             <span class="f">--offline · 0 network calls · always</span>
@@ -559,7 +560,7 @@ const year = new Date().getFullYear();
             <div class={`pane pane--hover ck-flag ck-flag--${x.area}`}>
               <span class="ck-flag__icon"><Icon name={x.icon} /></span>
               <span class="f">{x.f}</span>
-              <h4>{x.t}</h4>
+              <h3>{x.t}</h3>
               <p>{x.p}</p>
             </div>
           ))}
@@ -572,6 +573,7 @@ const year = new Date().getFullYear();
         </div>
       </div>
     </section>
+    </main>
 
     <!-- COLOPHON — terminal man page over a cursor-lit wordmark -->
     <footer class="ck-man">
@@ -583,7 +585,6 @@ const year = new Date().getFullYear();
         <div class="ck-man__title">
           <span>CHARTER(1)</span>
           <span>General Commands Manual</span>
-          <span>CHARTER(1)</span>
         </div>
         <div class="ck-man__grid">
           <div>
@@ -609,7 +610,7 @@ const year = new Date().getFullYear();
           </div>
           {FOOT_COLS.map((col) => (
             <div>
-              <h5>{col.h}</h5>
+              <h4>{col.h}</h4>
               <ul>{col.links.map((l) => <li><a href={l[1]}>{l[0]}</a></li>)}</ul>
             </div>
           ))}
@@ -641,10 +642,20 @@ const year = new Date().getFullYear();
         </div>
       </div>
       <div class="ck-man__exit">
-        <span class="ck-man__badges">
-          <span>apache-2.0</span><span>slsa l3</span><span>sarif 2.1.0</span><span>v1.0.0</span><span class="ok">0 network calls</span>
+        <span class="ck-man__exit-l">
+          <span class="ck-man__copy">&copy; {year} · Charter</span>
+          <span class="sep" aria-hidden="true">|</span>
+          <span>Apache 2.0</span>
         </span>
-        <span class="ok">&copy; {year} · exit 0</span>
+        <span class="ck-man__exit-r">
+          <span>v1.0.0</span>
+          <span class="sep" aria-hidden="true">|</span>
+          <span class="ck-man__built">Built with
+            <a href="https://astro.build/" rel="noopener noreferrer" target="_blank" aria-label="Astro">
+              <img src="/icons/astro-wordmark.svg" alt="Astro" width="53" height="14" loading="lazy" />
+            </a>
+          </span>
+        </span>
       </div>
     </footer>
   </div>
