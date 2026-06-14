@@ -1,0 +1,81 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import ThemeSwitch from '../../components/ThemeSwitch.astro';
+import '../../styles/blog.css';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+const [featured, ...rest] = posts;
+
+const fmtDate = (d: Date): string => d.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' });
+const readTime = (body: string | undefined): number => Math.max(1, Math.round((body ?? '').split(/\s+/).filter(Boolean).length / 200));
+---
+
+<Base title="Blog · Charter" description="Notes on AI-agent readiness, deterministic scoring, supply-chain safety, and building Charter." path="/blog" htmlClass="bl-html" bodyClass="bl-body">
+  <header class="bl-bar">
+    <a class="bl-bar__brand" href="/">
+      <svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
+        <rect x="3" y="12" width="4" height="40"/><rect x="3" y="12" width="11" height="4"/><rect x="3" y="48" width="11" height="4"/>
+        <rect x="57" y="12" width="4" height="40"/><rect x="50" y="12" width="11" height="4"/><rect x="50" y="48" width="11" height="4"/>
+        <path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5" fill="none" stroke="currentColor" stroke-width="6"/>
+      </svg>
+      <span>charter</span>
+    </a>
+    <nav class="bl-bar__nav">
+      <a href="/blog/rss.xml" class="bl-bar__rss" aria-label="RSS feed">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+      </a>
+      <a href="/" class="bl-bar__home">← home</a>
+      <ThemeSwitch />
+    </nav>
+  </header>
+
+  <main class="bl">
+    <div class="bl__masthead">
+      <span class="bl__eyebrow">The Charter blog</span>
+      <h1>Notes from the agent era</h1>
+      <p>Readiness, deterministic scoring, supply-chain safety — and what we learn shipping Charter.</p>
+    </div>
+
+    {featured && (
+      <a class="bl-feat" href={`/blog/${featured.id}`}>
+        <div class="bl-feat__body">
+          <div class="bl-feat__tags">{featured.data.tags.map((t) => <span class="bl-tag">{t}</span>)}</div>
+          <h2>{featured.data.title}</h2>
+          <p>{featured.data.description}</p>
+          <div class="bl-meta">
+            <span>{featured.data.author}</span><span class="bl-meta__dot">·</span>
+            <time datetime={featured.data.date.toISOString()}>{fmtDate(featured.data.date)}</time><span class="bl-meta__dot">·</span>
+            <span>{readTime(featured.body)} min read</span>
+          </div>
+        </div>
+        <span class="bl-feat__cta">Read the post<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
+    )}
+
+    {rest.length > 0 && (
+      <div class="bl-grid">
+        {rest.map((p) => (
+          <a class="bl-card" href={`/blog/${p.id}`}>
+            <div class="bl-card__tags">{p.data.tags.map((t) => <span class="bl-tag">{t}</span>)}</div>
+            <h3>{p.data.title}</h3>
+            <p>{p.data.description}</p>
+            <div class="bl-meta">
+              <time datetime={p.data.date.toISOString()}>{fmtDate(p.data.date)}</time><span class="bl-meta__dot">·</span>
+              <span>{readTime(p.body)} min</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    )}
+
+    {posts.length === 0 && <p class="bl__empty">No posts yet — first one's coming.</p>}
+  </main>
+
+  <footer class="bl-foot">
+    <span>&copy; {new Date().getFullYear()} · Charter</span>
+    <a href="/blog/rss.xml">RSS</a>
+  </footer>
+</Base>

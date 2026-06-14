@@ -15,8 +15,9 @@ interface Props {
   path?: string;
   bodyClass?: string;
   htmlClass?: string;
+  ogType?: string;
 }
-const { title = TITLE, description = DESCRIPTION, path = '/', bodyClass = '', htmlClass = '' } = Astro.props;
+const { title = TITLE, description = DESCRIPTION, path = '/', bodyClass = '', htmlClass = '', ogType = 'website' } = Astro.props;
 const canonical = `${SITE}${path}`;
 
 // schema.org graph — read by search engines (rich results) and AI answer
@@ -90,7 +91,7 @@ const STRUCTURED_DATA = {
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 
   <!-- Open Graph -->
-  <meta property="og:type" content="website" />
+  <meta property="og:type" content={ogType} />
   <meta property="og:site_name" content="Charter" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:title" content={title} />
@@ -118,6 +119,8 @@ const STRUCTURED_DATA = {
   <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
   <link rel="manifest" href="/manifest.json" />
   <script type="application/ld+json" set:html={JSON.stringify(STRUCTURED_DATA)} is:inline></script>
+  <!-- Per-page head extras (e.g. blog post Article schema + article:published_time) -->
+  <slot name="head" />
 </head>
 <body class={bodyClass}>
   <div class="ck-page">

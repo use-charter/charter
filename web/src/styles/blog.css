@@ -1,0 +1,137 @@
+/* ─────────────────────────────────────────────────────────────
+   Charter blog — editorial longform on the semantic token system.
+   Pristine reading (≈68ch, 18–19px, 1.78 leading), sticky TOC,
+   reading-progress bar, restrained micro-motion. Auto dark/light.
+   ───────────────────────────────────────────────────────────── */
+
+.bl-body { background: var(--color-background-primary); margin: 0; color: var(--color-text-primary); }
+.bl-body .ck-grain { display: none; }
+
+.bl {
+  --accent: var(--charter-blue);
+  --measure: 68ch;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 64px) clamp(18px, 4vw, 32px) 80px;
+  font-family: var(--font-site);
+}
+
+/* ── reading progress ────────────────────────────────────────── */
+.bl-progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: var(--charter-blue); transform: scaleX(0); transform-origin: 0 50%; z-index: 60; will-change: transform; }
+
+/* ── top bar ─────────────────────────────────────────────────── */
+.bl-bar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px clamp(18px, 4vw, 32px);
+  background: color-mix(in srgb, var(--color-background-primary) 86%, transparent);
+  backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-border-secondary);
+}
+.bl-bar__brand { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: var(--color-text-primary); font-weight: 800; font-size: 17px; letter-spacing: -0.01em; }
+.bl-bar__brand svg { width: 19px; height: 19px; color: var(--accent); }
+.bl-bar__nav { display: flex; align-items: center; gap: 14px; }
+.bl-bar__home { font-family: var(--font-meta); font-size: 13px; color: var(--color-text-secondary); text-decoration: none; }
+.bl-bar__home:hover { color: var(--accent); }
+.bl-bar__rss { display: grid; place-items: center; color: var(--color-text-tertiary); }
+.bl-bar__rss svg { width: 17px; height: 17px; }
+.bl-bar__rss:hover { color: var(--accent); }
+
+/* ── index masthead ──────────────────────────────────────────── */
+.bl__masthead { max-width: var(--measure); margin: 0 0 clamp(32px, 5vw, 56px); }
+.bl__eyebrow { font-family: var(--font-meta); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.bl__masthead h1 { font-size: clamp(38px, 6vw, 64px); font-weight: 900; letter-spacing: -0.04em; line-height: 1.02; margin: 12px 0 0; text-wrap: balance; }
+.bl__masthead p { font-size: clamp(17px, 1rem + 0.4vw, 20px); line-height: 1.5; color: var(--color-text-secondary); margin: 16px 0 0; max-width: 54ch; }
+
+/* ── tags + meta ─────────────────────────────────────────────── */
+.bl-tag { font-family: var(--font-meta); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-text-secondary); border: 1px solid var(--color-border-secondary); border-radius: 999px; padding: 3px 10px; }
+.bl-meta { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-family: var(--font-meta); font-size: 13px; color: var(--color-text-tertiary); }
+.bl-meta__dot { opacity: 0.5; }
+
+/* ── featured ────────────────────────────────────────────────── */
+.bl-feat {
+  display: flex; flex-direction: column; gap: 18px;
+  border: 1px solid var(--color-border-secondary); border-radius: 18px;
+  padding: clamp(24px, 4vw, 40px); text-decoration: none; color: inherit;
+  background: var(--color-background-secondary);
+  transition: transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out), border-color 220ms;
+  margin-bottom: 40px;
+}
+.bl-feat:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--color-border-primary); }
+.bl-feat__tags, .bl-card__tags, .bl-hero__tags, .bl-tags { display: flex; gap: 7px; flex-wrap: wrap; }
+.bl-feat h2 { font-size: clamp(26px, 3.6vw, 40px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.08; margin: 0; text-wrap: balance; }
+.bl-feat p { font-size: clamp(16px, 1rem + 0.2vw, 18px); line-height: 1.6; color: var(--color-text-secondary); margin: 0; max-width: 64ch; }
+.bl-feat__cta { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; font-size: 14px; color: var(--accent); }
+.bl-feat__cta svg { width: 16px; height: 16px; transition: transform 200ms var(--ease-out); }
+.bl-feat:hover .bl-feat__cta svg { transform: translateX(4px); }
+
+/* ── grid cards ──────────────────────────────────────────────── */
+.bl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+.bl-card {
+  display: flex; flex-direction: column; gap: 12px;
+  border: 1px solid var(--color-border-secondary); border-radius: 14px; padding: 22px;
+  text-decoration: none; color: inherit; background: var(--color-background-primary);
+  transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out), border-color 200ms;
+}
+.bl-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--color-border-primary); }
+.bl-card h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin: 0; }
+.bl-card p { font-size: 14.5px; line-height: 1.55; color: var(--color-text-secondary); margin: 0; flex: 1; }
+.bl__empty { color: var(--color-text-tertiary); }
+
+@media (prefers-reduced-motion: reduce) { .bl-feat, .bl-card, .bl-feat__cta svg { transition: none; } .bl-feat:hover, .bl-card:hover { transform: none; } }
+
+/* ── post ────────────────────────────────────────────────────── */
+.bl-post { max-width: 1100px; margin: 0 auto; padding: clamp(36px, 6vw, 72px) clamp(18px, 4vw, 32px) 80px; }
+.bl-hero { max-width: 760px; margin: 0 auto clamp(36px, 5vw, 56px); }
+.bl-hero h1 { font-size: clamp(32px, 5.4vw, 56px); font-weight: 900; letter-spacing: -0.04em; line-height: 1.04; margin: 16px 0 0; text-wrap: balance; }
+.bl-hero__dek { font-size: clamp(18px, 1rem + 0.5vw, 22px); line-height: 1.5; color: var(--color-text-secondary); margin: 18px 0 0; }
+.bl-meta--hero { margin-top: 22px; font-size: 14px; }
+
+/* layout: sticky TOC + reading column, centered */
+.bl-layout { display: grid; grid-template-columns: 240px minmax(0, 720px); gap: 64px; justify-content: center; align-items: start; }
+.bl-side { position: sticky; top: 84px; }
+.bl-toc { font-family: var(--font-meta); }
+.bl-toc summary { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-tertiary); cursor: pointer; margin-bottom: 12px; list-style: none; }
+.bl-toc summary::-webkit-details-marker { display: none; }
+.bl-toc nav { display: flex; flex-direction: column; gap: 2px; border-left: 1px solid var(--color-border-secondary); }
+.bl-toc__lnk { font-size: 13px; line-height: 1.4; color: var(--color-text-tertiary); text-decoration: none; padding: 5px 0 5px 14px; margin-left: -1px; border-left: 2px solid transparent; transition: color 140ms, border-color 140ms; }
+.bl-toc__lnk--3 { padding-left: 26px; font-size: 12.5px; }
+.bl-toc__lnk:hover { color: var(--color-text-secondary); }
+.bl-toc__lnk.is-active { color: var(--accent); border-left-color: var(--accent); }
+
+/* ── prose (pristine reading) ────────────────────────────────── */
+.bl-prose { font-size: clamp(17px, 1rem + 0.35vw, 19px); line-height: 1.78; color: var(--color-text-primary); }
+.bl-prose > * + * { margin-top: 1.4em; }
+.bl-prose h2 { font-size: clamp(24px, 3vw, 30px); font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; margin-top: 2em; scroll-margin-top: 84px; }
+.bl-prose h3 { font-size: clamp(19px, 2.2vw, 22px); font-weight: 700; letter-spacing: -0.01em; margin-top: 1.6em; scroll-margin-top: 84px; }
+.bl-prose p, .bl-prose ul, .bl-prose ol { color: var(--color-text-secondary); }
+.bl-prose strong { color: var(--color-text-primary); font-weight: 700; }
+.bl-prose a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; transition: text-decoration-thickness 140ms; }
+.bl-prose a:hover { text-decoration-thickness: 2px; }
+.bl-prose ul, .bl-prose ol { padding-left: 1.4em; }
+.bl-prose li + li { margin-top: 0.5em; }
+.bl-prose li { padding-left: 0.3em; }
+.bl-prose code { font-family: var(--font-code); font-size: 0.88em; background: var(--color-background-tertiary); padding: 2px 6px; border-radius: 5px; color: var(--color-text-primary); }
+.bl-prose pre { background: var(--color-background-tertiary); border: 1px solid var(--color-border-secondary); border-radius: 12px; padding: 18px 20px; overflow-x: auto; font-size: 14px; line-height: 1.7; }
+.bl-prose pre code { background: none; padding: 0; font-size: inherit; }
+.bl-prose blockquote { margin-left: 0; padding: 4px 0 4px 22px; border-left: 3px solid var(--accent); font-size: 1.1em; line-height: 1.5; color: var(--color-text-primary); }
+.bl-prose img { max-width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--color-border-secondary); }
+.bl-prose hr { border: 0; border-top: 1px solid var(--color-border-secondary); margin: 2.4em 0; }
+
+/* post footer */
+.bl-post__foot { margin-top: 3em; padding-top: 24px; border-top: 1px solid var(--color-border-secondary); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.bl-post__back { font-family: var(--font-meta); font-size: 13px; color: var(--color-text-secondary); text-decoration: none; }
+.bl-post__back:hover { color: var(--accent); }
+
+/* ── footer ──────────────────────────────────────────────────── */
+.bl-foot { max-width: 1100px; margin: 0 auto; padding: 24px clamp(18px, 4vw, 32px) 48px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-family: var(--font-meta); font-size: 12.5px; color: var(--color-text-tertiary); border-top: 1px solid var(--color-border-secondary); }
+.bl-foot a { color: var(--color-text-secondary); text-decoration: none; }
+.bl-foot a:hover { color: var(--accent); }
+
+/* ── responsive ──────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .bl-layout { grid-template-columns: 1fr; gap: 28px; max-width: 720px; }
+  .bl-side { position: static; }
+  .bl-toc { border: 1px solid var(--color-border-secondary); border-radius: 12px; padding: 14px 16px; }
+  .bl-toc summary { margin-bottom: 0; }
+  .bl-toc[open] summary { margin-bottom: 12px; }
+}
