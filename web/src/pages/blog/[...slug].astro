@@ -30,6 +30,16 @@ const schema = {
   mainEntityOfPage: { '@type': 'WebPage', '@id': url },
   keywords: post.data.tags.join(', '),
 };
+
+const breadcrumbs = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE },
+    { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE}/blog` },
+    { '@type': 'ListItem', position: 3, name: post.data.title, item: url },
+  ],
+};
 ---
 
 <Base title={`${post.data.title} · Charter`} description={post.data.description} path={`/blog/${post.id}`} ogType="article" htmlClass="bl-html" bodyClass="bl-body">
@@ -38,7 +48,9 @@ const schema = {
     {post.data.updated && <meta property="article:modified_time" content={post.data.updated.toISOString()} />}
     <meta property="article:author" content={post.data.author} />
     {post.data.tags.map((t) => <meta property="article:tag" content={t} />)}
+    <link rel="alternate" type="application/rss+xml" title="Charter Blog" href="/blog/rss.xml" />
     <script type="application/ld+json" is:inline set:html={JSON.stringify(schema)} />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(breadcrumbs)} />
   </Fragment>
 
   <div class="bl-progress" data-progress aria-hidden="true"></div>

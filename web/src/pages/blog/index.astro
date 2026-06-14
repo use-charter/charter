@@ -11,9 +11,34 @@ const [featured, ...rest] = posts;
 
 const fmtDate = (d: Date): string => d.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' });
 const readTime = (body: string | undefined): number => Math.max(1, Math.round((body ?? '').split(/\s+/).filter(Boolean).length / 200));
+
+const SITE = 'https://use-charter.dev';
+const blogSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  '@id': `${SITE}/blog`,
+  name: 'Charter Blog',
+  description: 'Notes on AI-agent readiness, deterministic scoring, supply-chain safety, and building Charter.',
+  url: `${SITE}/blog`,
+  inLanguage: 'en',
+  publisher: { '@type': 'Organization', name: 'Charter', url: SITE, logo: `${SITE}/icon-512.png` },
+  blogPost: posts.map((p) => ({
+    '@type': 'BlogPosting',
+    headline: p.data.title,
+    description: p.data.description,
+    url: `${SITE}/blog/${p.id}`,
+    datePublished: p.data.date.toISOString(),
+    author: { '@type': 'Organization', name: p.data.author },
+  })),
+};
 ---
 
 <Base title="Blog · Charter" description="Notes on AI-agent readiness, deterministic scoring, supply-chain safety, and building Charter." path="/blog" htmlClass="bl-html" bodyClass="bl-body">
+  <Fragment slot="head">
+    <link rel="alternate" type="application/rss+xml" title="Charter Blog" href="/blog/rss.xml" />
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(blogSchema)} />
+  </Fragment>
+
   <header class="bl-bar">
     <a class="bl-bar__brand" href="/">
       <svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
