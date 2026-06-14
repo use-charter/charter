@@ -1,0 +1,50 @@
+---
+/**
+ * Three-state theme switcher — a segmented pill with system · light · dark.
+ * Markup only; the sliding highlight, accent-on-active, and dim-inactive
+ * styling live in the shared ck styles, and the behavior is wired once by
+ * initThemeSwitch() in islands/theme.ts (called by both navs' islands).
+ *
+ * Accessible: role=radiogroup with three role=radio segments and
+ * aria-checked. The active segment is set on the client from the stored
+ * mode; a server default of `system` keeps it sensible without JS.
+ */
+const SEGS = [
+  {
+    mode: 'system',
+    label: 'Follow system theme',
+    // monitor / display
+    path: '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  },
+  {
+    mode: 'light',
+    label: 'Light theme',
+    // sun
+    path: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  },
+  {
+    mode: 'dark',
+    label: 'Dark theme',
+    // moon
+    path: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  },
+] as const;
+---
+
+<div class="ck-themer" data-theme-switch role="radiogroup" aria-label="Theme">
+  <span class="ck-themer__thumb" aria-hidden="true"></span>
+  {SEGS.map((s) => (
+    <button
+      type="button"
+      class={`ck-themer__seg${s.mode === 'system' ? ' is-active' : ''}`}
+      data-theme-seg={s.mode}
+      role="radio"
+      aria-checked={s.mode === 'system' ? 'true' : 'false'}
+      aria-label={s.label}
+      title={s.label}
+      tabindex={s.mode === 'system' ? 0 : -1}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={s.path} />
+    </button>
+  ))}
+</div>

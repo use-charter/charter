@@ -13,8 +13,10 @@ interface Props {
   title?: string;
   description?: string;
   path?: string;
+  bodyClass?: string;
+  htmlClass?: string;
 }
-const { title = TITLE, description = DESCRIPTION, path = '/' } = Astro.props;
+const { title = TITLE, description = DESCRIPTION, path = '/', bodyClass = '', htmlClass = '' } = Astro.props;
 const canonical = `${SITE}${path}`;
 
 // schema.org graph — read by search engines (rich results) and AI answer
@@ -60,12 +62,25 @@ const STRUCTURED_DATA = {
 };
 ---
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" data-theme-mode="system" class={htmlClass}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script is:inline>
-    try { document.documentElement.setAttribute('data-theme', localStorage.getItem('charter-theme') || 'dark'); } catch(e) {}
+    // Resolve the chosen theme mode pre-paint to avoid a flash. Default is
+    // `system` → follow the OS; `light`/`dark` force the theme. The chosen
+    // mode is mirrored on data-theme-mode so the switcher can restore its
+    // active segment on load; data-theme always holds the resolved value.
+    try {
+      var mode = localStorage.getItem('charter-theme');
+      if (mode !== 'light' && mode !== 'dark' && mode !== 'system') mode = 'system';
+      var resolved = mode === 'system'
+        ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : mode;
+      var root = document.documentElement;
+      root.setAttribute('data-theme', resolved);
+      root.setAttribute('data-theme-mode', mode);
+    } catch(e) {}
     try { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) { document.documentElement.classList.add('reveals-armed'); } } catch(e) {}
   </script>
   <title>{title}</title>
@@ -104,7 +119,7 @@ const STRUCTURED_DATA = {
   <link rel="manifest" href="/manifest.json" />
   <script type="application/ld+json" set:html={JSON.stringify(STRUCTURED_DATA)} is:inline></script>
 </head>
-<body>
+<body class={bodyClass}>
   <div class="ck-page">
     <slot />
   </div>
@@ -159,33 +174,6 @@ const STRUCTURED_DATA = {
         detach();
       }, 5000);
     }
-  </script>
-
-  <script is:inline>
-    // Nav densifies once the page is scrolled past the hero edge
-    (function () {
-      var nav = document.querySelector('.ck-nav');
-      if (nav) {
-        var onScroll = function () { nav.classList.toggle('is-scrolled', window.scrollY > 12); };
-        onScroll();
-        window.addEventListener('scroll', onScroll, { passive: true });
-      }
-
-      // Cursor spotlight — cards track the pointer via --mx / --my
-      var SPOT = '.c-cc, .ck-pillar, .c-finding, .ck-pr, .ck-life__card, .ck-compat__item, .ck-cmd__tab';
-      if (window.matchMedia && !window.matchMedia('(hover: none)').matches) {
-        document.querySelectorAll(SPOT).forEach(function (el) {
-          // Cache the rect on enter so pointermove never forces a reflow
-          var rect = null;
-          el.addEventListener('pointerenter', function () { rect = el.getBoundingClientRect(); });
-          el.addEventListener('pointermove', function (e) {
-            if (!rect) rect = el.getBoundingClientRect();
-            el.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
-            el.style.setProperty('--my', (e.clientY - rect.top) + 'px');
-          });
-        });
-      }
-    })();
   </script>
 </body>
 </html>

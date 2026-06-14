@@ -1,52 +1,49 @@
 ---
 import { Icon } from 'astro-icon/components';
-import Nav from '../components/Nav.astro';
-import FooterSection from '../components/FooterSection.astro';
 import Base from '../layouts/Base.astro';
+import '../styles/marketing.css';
+
+const REPO = 'https://github.com/use-charter/charter';
+const DOCS = 'https://use-charter.dev/docs';
 ---
 <Base
   title="Page not found"
   description="That page isn't in the repository — it was never committed, or it moved. Head back to something real."
   path="/404"
+  htmlClass="ck-html"
+  bodyClass="ck-body"
 >
-  <Nav />
-
-  <main class="ck-404">
-    <div class="ck-404__inner">
-      <span class="label-caps ck-404__eyebrow">Error 404</span>
-      <h1 class="ck-404__title">This page left <span class="accent-blue">no trace.</span></h1>
-      <p class="ck-404__lede">
-        Even an offline tool can&rsquo;t scan a route that was never committed. Let&rsquo;s get you back to something that exists.
-      </p>
-
-      <div class="ck-terminal ck-404__term" role="img" aria-label="charter explain AE-404: page not found">
-        <div class="ck-terminal__chrome">
-          <span class="ck-terminal__dot ck-terminal__dot--r"></span>
-          <span class="ck-terminal__dot ck-terminal__dot--y"></span>
-          <span class="ck-terminal__dot ck-terminal__dot--g"></span>
-          <span class="ck-terminal__title">~/charter &mdash; 404</span>
-        </div>
-        <div class="ck-terminal__body">
-          <div class="ck-terminal__line"><span class="ck-ss"><span class="ck-ss__seg ck-ss__dir">charter</span><span class="ck-ss__seg ck-ss__git">main</span><span class="ck-ss__seg ck-ss__node">v24.16.0</span></span></div>
-          <div class="ck-terminal__line"><span class="ck-ss__char">&#10095;</span> <span class="t-cmd">charter</span> <span class="t-sub">explain</span> <span class="t-rule">AE-404</span></div>
-          <div class="ck-terminal__line">&nbsp;</div>
-          <div class="ck-terminal__line"><span class="t-brand">[C] charter</span> <span class="t-dim">v1.0.0</span></div>
-          <div class="ck-terminal__line"><span class="t-div">────────────────────────────────────────</span></div>
-          <div class="ck-terminal__line"><span class="t-fail">&#10007; AE-404</span> <span class="t-dim">Page Not Found</span></div>
-          <div class="ck-terminal__line"><span class="t-dim">&nbsp;&nbsp;this route isn&rsquo;t in the repository — never</span></div>
-          <div class="ck-terminal__line"><span class="t-dim">&nbsp;&nbsp;committed, or it moved.</span></div>
-          <div class="ck-terminal__line"><span class="t-pass">&nbsp;&nbsp;fix</span> <span class="t-dim">head back to a page that exists ↓</span></div>
-          <div class="ck-terminal__line"><span class="t-div">────────────────────────────────────────</span></div>
-          <div class="ck-terminal__line">Score <span class="t-fail">—</span><span class="t-dim">/100  ░░░░░░░░░░░░░░░░░░░░  </span><span class="t-fail">NOT FOUND</span></div>
+  <div class="ck" id="top">
+    <header class="ck-bar">
+      <div class="ck-bar__in">
+        <a href="/" class="ck-bar__brand">
+          <svg class="ck-bar__mark" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
+            <rect x="3" y="12" width="4" height="40"/><rect x="3" y="12" width="11" height="4"/><rect x="3" y="48" width="11" height="4"/>
+            <rect x="57" y="12" width="4" height="40"/><rect x="50" y="12" width="11" height="4"/><rect x="50" y="48" width="11" height="4"/>
+            <path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5" fill="none" stroke="currentColor" stroke-width="6"/>
+          </svg><span class="ck-bar__word">charter</span>
+        </a>
+        <span class="ck-bar__spacer"></span>
+        <div class="ck-bar__right">
+          <a href={REPO} class="ck-bar__gh" rel="noopener noreferrer" target="_blank" aria-label="GitHub">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.8.5 12.3c0 5.2 3.4 9.6 8 11.2.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.4-1.3-5.4-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17 4.6 18 4.9 18 4.9c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.4 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.6 8-6 8-11.2C23.5 5.8 18.3.5 12 .5z"/></svg>
+          </a>
         </div>
       </div>
+    </header>
 
-      <div class="ck-404__actions">
-        <a href="/" class="ck-btn ck-btn--primary ck-btn--lg"><Icon name="ph:house" />Back home</a>
-        <a href="https://use-charter.dev/docs" rel="noopener noreferrer" target="_blank" class="ck-btn ck-btn--ghost ck-btn--lg">Read the docs<Icon name="ph:arrow-up-right" /></a>
+    <main class="ck-nf">
+      <div class="ck-nf__in">
+        <div class="ck-nf__code">404</div>
+        <h1 class="ck-nf__title">This page left <span class="glow">no trace.</span></h1>
+        <p class="ck-nf__lede">
+          Even an offline tool can&rsquo;t scan a route that was never committed. Let&rsquo;s get you back to something that exists.
+        </p>
+        <div class="ck-nf__actions">
+          <a href="/" class="ck-bar__cta"><Icon name="ph:house" /> Back home</a>
+          <a href={DOCS} class="ck-nf__ghost" rel="noopener noreferrer" target="_blank">Read the docs <Icon name="ph:arrow-up-right" /></a>
+        </div>
       </div>
-    </div>
-  </main>
-
-  <FooterSection />
+    </main>
+  </div>
 </Base>
