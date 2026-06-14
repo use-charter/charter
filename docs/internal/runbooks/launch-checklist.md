@@ -76,6 +76,8 @@ Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topolo
 - [x] Demo asset source committed (`docs/internal/demo/charter-demo.tape`, VHS). `code`
 - [x] Render the demo GIF and embed in README / landing. **Done (2026-06-14):** `docs/internal/demo/charter-demo.gif` rendered via `vhs` (1200×700, real scan of this repo) and embedded in the README go-to-market header. Re-render at `v1.0.0` if the CLI output changes. `external`
 
+- [x] Founder mission-control dashboard. **Done (2026-06-15):** `/dashboard` (shadcn-clean Astro page, no React, excluded from sitemap) reads `/dashboard/api/stats` on `charter-router` (GitHub API → growth & traffic, releases & downloads, action/schema adoption, community). Gated by a Cloudflare Access self-hosted app (`use-charter.dev/dashboard`, AUD `<access-aud>`, one-time-PIN allow `<maintainer-email>`) — verified 302→login on the page and the API. Live data needs the `GITHUB_STATS_TOKEN` worker secret (fine-grained PAT: Contents/Issues/Metadata/Administration read). `external`
+
 ## 8. MCP catalog (CF-12)
 
 - [x] Refresh the MCP catalog at the release gate. **Done (2026-06-15):** broadened FP re-validation **run 3** — 9 fresh public repos (vendor-diverse, all 4 config types incl. `.gemini/settings.json`) on the shipped `2026.06.14` catalog → **0% FP, gate PASS**; validated the Gemini path + `httpUrl` fix and `mcp.svelte.dev` trusted host end-to-end (`docs/internal/catalog/fp-validation.md` run 3). No new verified advisories/versions to add this pass (real-ID-only, ADR-0021). Seeding behind-stable versions beyond `filesystem` is optional — it drives only the informational, non-deducting nudge, so it's **not a gate blocker**. Final founder sign-off remains. `external` (founder curation)
