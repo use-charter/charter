@@ -1,0 +1,116 @@
+---
+import Base from '../../layouts/Base.astro';
+import LegalDoc from '../../components/LegalDoc.astro';
+import type { LegalPage } from '../../lib/legal-content';
+import '../../styles/marketing.css';
+import '../../styles/legal.css';
+
+const LICENSE_BODY = `Apache License
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+
+<span class="cmt"># TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION</span>
+
+1. Definitions.
+   "License" shall mean the terms and conditions for use, reproduction,
+   and distribution as defined by Sections 1 through 9 of this document.
+
+2. Grant of Copyright License. Subject to the terms of this License,
+   each Contributor hereby grants to You a perpetual, worldwide,
+   non-exclusive, no-charge, royalty-free, irrevocable copyright license …`;
+
+const page: LegalPage = {
+  file: 'LICENSE',
+  cmd: 'charter version --license',
+  title: 'License',
+  updated: 'Apache-2.0',
+  read: 'TL;DR below',
+  words: 'full text on GitHub',
+  lede: 'Charter is free and open source under the <code>Apache License 2.0</code>. Use it commercially, modify it, ship it inside your own tools — just keep the notices.',
+  chips: [
+    { icon: 'check', t: 'Commercial use' },
+    { icon: 'git-fork', t: 'Modify & fork' },
+    { icon: 'shield-check', t: 'Patent grant' },
+    { icon: 'scales', t: 'Apache-2.0' },
+  ],
+  sections: [
+    {
+      id: 'overview',
+      title: 'Overview',
+      blocks: [
+        { t: 'tldr', tone: 'green', icon: 'scales', html: 'Apache-2.0 is permissive. You can do almost anything — including using Charter commercially — as long as you keep the license and notices intact.' },
+        { t: 'p', html: 'The Apache License 2.0 is a permissive open-source license. It grants broad rights to use, modify, and redistribute the Software, includes an explicit patent grant, and asks little in return beyond preserving attribution. The summary below is a plain-English guide, not a substitute for the <a href="#full">full text</a>.' },
+      ],
+    },
+    {
+      id: 'matrix',
+      title: 'What you can and can’t do',
+      blocks: [
+        {
+          t: 'perms',
+          permissions: ['Commercial use', 'Modification', 'Distribution', 'Patent use', 'Private use'],
+          conditions: ['Keep license & copyright notice', 'State significant changes', 'Include NOTICE file'],
+          limitations: ['No trademark rights', 'No liability', 'No warranty'],
+        },
+      ],
+    },
+    {
+      id: 'grant',
+      title: 'Grant of copyright & patent',
+      blocks: [
+        { t: 'p', html: 'Subject to the license terms, each contributor grants you a worldwide, royalty-free copyright license to reproduce, prepare derivative works of, publicly display, and distribute the Software. Each contributor also grants a <b>patent license</b> covering their contributions — and that grant terminates if you initiate patent litigation alleging the Software infringes.' },
+      ],
+    },
+    {
+      id: 'redistribution',
+      title: 'Redistribution & NOTICE',
+      blocks: [
+        { t: 'p', html: 'If you redistribute Charter, in source or binary form, you must:' },
+        {
+          t: 'list',
+          items: [
+            'give recipients a copy of the Apache-2.0 license;',
+            'keep all copyright, patent, trademark, and attribution notices;',
+            'include the contents of any <code>NOTICE</code> file in your distribution;',
+            'mark any files you changed as modified.',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'trademarks',
+      title: 'Trademarks',
+      blocks: [
+        { t: 'p', html: 'The license does <b>not</b> grant permission to use the Charter trade names, trademarks, service marks, or product names, except as required to describe the origin of the Software. The Charter name, wordmark, and logo remain marks of the project.' },
+      ],
+    },
+    {
+      id: 'disclaimer',
+      title: 'Disclaimer',
+      blocks: [
+        { t: 'tldr', tone: 'amber', icon: 'warning', html: 'the Software is provided “as is”, without warranties. A readiness score is informational, not a certification.' },
+        { t: 'p', legalese: true, html: 'UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING, THE SOFTWARE IS PROVIDED ON AN “AS IS” BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED. SEE THE LICENSE FOR THE SPECIFIC LANGUAGE GOVERNING PERMISSIONS AND LIMITATIONS.' },
+      ],
+    },
+    {
+      id: 'full',
+      title: 'Full text',
+      blocks: [
+        { t: 'code', title: 'LICENSE — Apache License 2.0', body: LICENSE_BODY },
+        { t: 'p', html: 'The complete, authoritative license text ships in the <a href="https://github.com/use-charter/charter/blob/main/LICENSE" rel="noopener noreferrer" target="_blank">project repository</a> and at <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener noreferrer" target="_blank">apache.org/licenses/LICENSE-2.0</a>.' },
+      ],
+    },
+    {
+      id: 'contact',
+      title: 'Contact',
+      blocks: [
+        { t: 'p', html: 'Questions about licensing or commercial use? Reach us at <a href="mailto:legal@use-charter.dev">legal@use-charter.dev</a> or open an issue on our <a href="https://github.com/use-charter/charter" rel="noopener noreferrer" target="_blank">GitHub repository</a>.' },
+      ],
+    },
+  ],
+};
+---
+
+<Base title="Charter — License" path="/legal/license" htmlClass="ck-html" bodyClass="ck-body">
+  <LegalDoc page={page} />
+</Base>

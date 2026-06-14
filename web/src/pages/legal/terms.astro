@@ -1,0 +1,118 @@
+---
+import Base from '../../layouts/Base.astro';
+import LegalDoc from '../../components/LegalDoc.astro';
+import type { LegalPage } from '../../lib/legal-content';
+import '../../styles/marketing.css';
+import '../../styles/legal.css';
+
+const page: LegalPage = {
+  file: 'TERMS.md',
+  cmd: 'charter explain --terms',
+  title: 'Terms of Service',
+  updated: 'June 12, 2026',
+  read: '~4 min',
+  words: '870 words',
+  lede: 'The terms for using the Charter website and software. Charter is open source under Apache-2.0, provided as-is, and your code always stays yours.',
+  chips: [
+    { icon: 'scales', t: 'Apache-2.0 licensed' },
+    { icon: 'warning', t: 'Provided as-is' },
+    { icon: 'lock-simple', t: 'Your code stays yours' },
+    { icon: 'seal-check', t: 'Free forever' },
+  ],
+  sections: [
+    {
+      id: 'acceptance',
+      title: 'Acceptance',
+      blocks: [
+        { t: 'p', html: 'By accessing the website at <code>use-charter.dev</code> (the “Site”) or using the Charter software (the “Software”), you agree to these Terms of Service. If you do not agree, do not use the Site or the Software.' },
+      ],
+    },
+    {
+      id: 'license',
+      title: 'Software & license',
+      blocks: [
+        { t: 'tldr', tone: 'blue', icon: 'scales', html: 'the Software is open source under Apache-2.0. That license governs your rights to use, modify, and distribute it.' },
+        { t: 'p', html: 'The Software is licensed under the <a href="/legal/license">Apache License, Version 2.0</a>. Your use, reproduction, modification, and distribution of the Software are governed by that license, whose terms control in the event of any conflict with these Terms with respect to the Software itself.' },
+      ],
+    },
+    {
+      id: 'acceptable',
+      title: 'Acceptable use',
+      blocks: [
+        { t: 'p', html: 'When using the Site, you agree not to:' },
+        {
+          t: 'list',
+          items: [
+            'disrupt, overload, or attempt to gain unauthorized access to the Site or its infrastructure;',
+            'use the Site to distribute malware or unlawful content;',
+            'misrepresent your affiliation with the Charter project.',
+          ],
+        },
+        { t: 'p', html: 'Use of the Software is governed by its license rather than this section.' },
+      ],
+    },
+    {
+      id: 'ip',
+      title: 'Intellectual property',
+      blocks: [
+        { t: 'tldr', tone: 'blue', icon: 'lock-simple', html: 'the code you scan is entirely yours. Charter reads it locally and claims no rights to it.' },
+        { t: 'p', html: 'The Charter name, wordmark, and logo are marks of the Charter project; these Terms grant no right to use them except as permitted by law or the Software’s license. You retain all rights to the repositories, code, and content you analyze with the Software — it processes them locally and we obtain no rights in them.' },
+      ],
+    },
+    {
+      id: 'warranty',
+      title: 'No warranty',
+      blocks: [
+        { t: 'tldr', tone: 'amber', icon: 'warning', html: 'a readiness score is guidance, not a guarantee. It does not certify that a repository is secure.' },
+        { t: 'p', legalese: true, html: 'THE SITE AND SOFTWARE ARE PROVIDED “AS IS” AND “AS AVAILABLE”, WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. The readiness score and findings are informational and do not constitute a security audit, certification, or guarantee. You are responsible for evaluating their suitability for your needs.' },
+      ],
+    },
+    {
+      id: 'liability',
+      title: 'Limitation of liability',
+      blocks: [
+        { t: 'p', legalese: true, html: 'TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL THE CHARTER PROJECT OR ITS CONTRIBUTORS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES, OR FOR ANY LOSS OF PROFITS, DATA, OR GOODWILL, ARISING OUT OF OR RELATED TO YOUR USE OF THE SITE OR SOFTWARE, WHETHER IN CONTRACT, TORT, OR OTHERWISE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.' },
+      ],
+    },
+    {
+      id: 'thirdparties',
+      title: 'Third parties',
+      blocks: [
+        { t: 'p', html: 'The Site links to third-party services such as GitHub and our documentation host. We are not responsible for the content, policies, or practices of any third-party site, and accessing them is at your own risk under their terms.' },
+      ],
+    },
+    {
+      id: 'indemnification',
+      title: 'Indemnification',
+      blocks: [
+        { t: 'p', html: 'You agree to indemnify and hold harmless the Charter project and its contributors from any claims, liabilities, damages, and expenses arising out of your misuse of the Site or your violation of these Terms.' },
+      ],
+    },
+    {
+      id: 'changes',
+      title: 'Changes',
+      blocks: [
+        { t: 'p', html: 'We may revise these Terms as the project evolves. Material changes are reflected by the “last updated” date above. Continued use of the Site or Software after a change constitutes acceptance of the revised Terms.' },
+      ],
+    },
+    {
+      id: 'governing',
+      title: 'Governing law',
+      blocks: [
+        { t: 'p', html: 'These Terms are governed by the laws of the jurisdiction in which the Charter project maintainers are established, without regard to conflict-of-law principles. Nothing here limits any non-waivable statutory rights you may have as a consumer.' },
+      ],
+    },
+    {
+      id: 'contact',
+      title: 'Contact',
+      blocks: [
+        { t: 'p', html: 'Questions about these Terms? Reach us at <a href="mailto:legal@use-charter.dev">legal@use-charter.dev</a> or open an issue on our <a href="https://github.com/use-charter/charter" rel="noopener noreferrer" target="_blank">GitHub repository</a>.' },
+      ],
+    },
+  ],
+};
+---
+
+<Base title="Charter — Terms of Service" path="/legal/terms" htmlClass="ck-html" bodyClass="ck-body">
+  <LegalDoc page={page} />
+</Base>

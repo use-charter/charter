@@ -1,25 +1,655 @@
 ---
+import { Icon } from 'astro-icon/components';
 import Base from '../layouts/Base.astro';
-import Nav from '../components/Nav.astro';
-import Hero from '../components/Hero.astro';
-import CompatSection from '../components/CompatSection.astro';
-import RulesSection from '../components/RulesSection.astro';
-import CommandsSection from '../components/CommandsSection.astro';
-import LifecycleSection from '../components/LifecycleSection.astro';
-import CIGateSection from '../components/CIGateSection.astro';
-import TrustSection from '../components/TrustSection.astro';
-import FooterSection from '../components/FooterSection.astro';
+import ThemeSwitch from '../components/ThemeSwitch.astro';
+import '../styles/marketing.css';
+
+const REPO = 'https://github.com/use-charter/charter';
+const DOCS = 'https://use-charter.dev/docs';
+const INSTALL = 'brew install use-charter/tap/charter';
+
+// Top-bar section links — the scroll-active highlighter keys off data-win.
+const WINDOWS = [
+  { id: 'rules', label: 'Rules' },
+  { id: 'commands', label: 'Commands' },
+  { id: 'lifecycle', label: 'Lifecycle' },
+  { id: 'gate', label: 'CI gate' },
+  { id: 'trust', label: 'Trust' },
+];
+
+const BOOT_CMD = 'charter doctor --strict';
+
+// Cross-vendor coding agents. Logos render from local SVGs in /icons —
+// theme-aware monochrome by default, full color on hover (see marketing.css).
+// `mono: true` marks single-colour wordmarks/glyphs that must invert with the
+// theme (light glyph on dark, dark glyph on light). The rest are full-colour
+// logos shown muted-monochrome by default and revealed in colour on hover.
+const AGENTS = [
+  { name: 'Claude Code', icon: '/icons/claude-ai.svg' },
+  { name: 'Cursor', icon: '/icons/cursor.svg', mono: true },
+  { name: 'Copilot', icon: '/icons/github-copilot.svg', mono: true },
+  { name: 'Windsurf', icon: '/icons/windsurf.svg', mono: true },
+  { name: 'Codex', icon: '/icons/codex.svg' },
+  { name: 'Gemini', icon: '/icons/gemini.svg' },
+  { name: 'Replit', icon: '/icons/replit.svg' },
+  { name: 'Zed', icon: '/icons/zed.svg', mono: true },
+];
+
+// Readiness breakdown — mirrors the catalog: 18 rules across 9 categories.
+// Demo repo scores 82 (PASS): 1 High + 2 Medium findings, no active Blocker
+// or secret (either would cap the score at <=59 / <=49).
+const READINESS = [
+  { lbl: 'Context', pass: 3, total: 4, state: 'warning' },
+  { lbl: 'Secrets', pass: 2, total: 2, state: 'pass' },
+  { lbl: 'MCP Safety', pass: 2, total: 3, state: 'warning' },
+  { lbl: 'Agent Config', pass: 2, total: 2, state: 'pass' },
+  { lbl: 'Environment', pass: 1, total: 1, state: 'pass' },
+  { lbl: 'CI', pass: 1, total: 1, state: 'pass' },
+  { lbl: 'Testing', pass: 1, total: 1, state: 'pass' },
+  { lbl: 'Autonomy', pass: 0, total: 1, state: 'warning' },
+  { lbl: 'Governance', pass: 3, total: 3, state: 'pass' },
+];
+
+const METRICS = [
+  { v: '18', k: 'rules checked' },
+  { v: '9', k: 'categories' },
+  { v: '3', k: 'findings · 2 fixable' },
+  { v: '1.84s', k: 'cold scan' },
+  { v: '0', k: 'network calls', ok: true },
+];
+
+// 01 — interactive rule catalog. The real v1 catalog: 18 rules, 9 categories.
+const RCATS = [
+  { key: 'context', name: 'Context', icon: 'ph:file-text', pass: 3, total: 4, state: 'warning', rules: [
+    { sev: 'BLOCKER', st: 'pass', id: 'AE-CTX-001', name: 'AgentContextFilePresent', checks: 'An AGENTS.md (or equivalent) context file is present and meaningful for agents.' },
+    { sev: 'MEDIUM', st: 'pass', id: 'AE-CTX-002', name: 'AgentContextConsistent', checks: 'Agent context matches the actual repository state — no stale paths or commands.' },
+    { sev: 'MEDIUM', st: 'finding', id: 'AE-CTX-004', name: 'AgentArtifactsGitignored', checks: 'Local agent session artifacts are git-ignored.', loc: '.gitignore', fix: 'auto' },
+    { sev: 'INFO', st: 'pass', id: 'AE-CTX-006', name: 'InstructionEmphasisRestrained', checks: 'Agent instructions avoid over-emphasis that degrades adherence.' },
+  ] },
+  { key: 'secrets', name: 'Secrets', icon: 'ph:key', pass: 2, total: 2, state: 'pass', rules: [
+    { sev: 'BLOCKER', st: 'pass', id: 'AE-SEC-001', name: 'NoRawSecretsInContext', checks: 'No raw secret patterns in agent-visible files.' },
+    { sev: 'BLOCKER', st: 'pass', id: 'AE-SEC-002', name: 'NoSecretsInMCPConfig', checks: 'No secret-like values in MCP server configuration.' },
+  ] },
+  { key: 'mcp', name: 'MCP Safety', icon: 'ph:shield-check', pass: 2, total: 3, state: 'warning', rules: [
+    { sev: 'HIGH', st: 'finding', id: 'AE-MCP-001', name: 'MCPServerPinned', checks: 'Every MCP server is pinned to an exact, non-deprecated version.', loc: '.mcp.json:7', fix: 'auto' },
+    { sev: 'HIGH', st: 'pass', id: 'AE-MCP-002', name: 'MCPRemoteTrusted', checks: 'Remote MCP origins resolve from the catalog or a trusted allowlist.' },
+    { sev: 'HIGH', st: 'pass', id: 'AE-MCP-003', name: 'MCPRemoteAuthDeclared', checks: 'Remote MCP servers declare authorization metadata.' },
+  ] },
+  { key: 'config', name: 'Agent Config', icon: 'ph:robot', pass: 2, total: 2, state: 'pass', rules: [
+    { sev: 'BLOCKER', st: 'pass', id: 'AE-CC-001', name: 'NoDangerousHookCommands', checks: 'Agent hook configs contain no dangerous shell commands.' },
+    { sev: 'HIGH', st: 'pass', id: 'AE-CC-002', name: 'ExplicitAgentEditScope', checks: 'Agent context declares explicit off-limits paths.' },
+  ] },
+  { key: 'env', name: 'Environment', icon: 'ph:wrench', pass: 1, total: 1, state: 'pass', rules: [
+    { sev: 'MEDIUM', st: 'pass', id: 'AE-ENV-001', name: 'ReproducibleToolchain', checks: 'A reproducible toolchain declaration (lockfile + pinned versions) is present.' },
+  ] },
+  { key: 'ci', name: 'CI', icon: 'ph:git-pull-request', pass: 1, total: 1, state: 'pass', rules: [
+    { sev: 'LOW', st: 'pass', id: 'AE-CI-002', name: 'CharterInCI', checks: 'CI runs charter doctor and workflow linters cleanly.' },
+  ] },
+  { key: 'testing', name: 'Testing', icon: 'ph:flask', pass: 1, total: 1, state: 'pass', rules: [
+    { sev: 'HIGH', st: 'pass', id: 'AE-TEST-001', name: 'AutomatedTestsPresent', checks: 'Automated tests exist for each active language so an agent can self-verify.' },
+  ] },
+  { key: 'autonomy', name: 'Autonomy', icon: 'ph:compass', pass: 0, total: 1, state: 'warning', rules: [
+    { sev: 'MEDIUM', st: 'finding', id: 'AE-AUTO-001', name: 'VerificationCommandDiscoverable', checks: 'The test command is discoverable via a task runner or conventional toolchain.', loc: 'package.json', fix: 'manual' },
+  ] },
+  { key: 'gov', name: 'Governance', icon: 'ph:scales', pass: 3, total: 3, state: 'pass', rules: [
+    { sev: 'MEDIUM', st: 'pass', id: 'AE-SUPPRESS-001', name: 'SuppressionHasReason', checks: 'Every suppression includes a reason.' },
+    { sev: 'HIGH', st: 'pass', id: 'AE-SUPPRESS-002', name: 'PermanentSuppressionApproved', checks: 'Permanent suppressions name an approver.' },
+    { sev: 'INFO', st: 'pass', id: 'AE-SUPPRESS-003', name: 'SuppressionRate', checks: 'Suppression rate stays within a healthy range.' },
+  ] },
+];
+const SEV_CLS: Record<string, string> = { BLOCKER: 'sev-blocker', HIGH: 'sev-high', MEDIUM: 'sev-medium', LOW: 'sev-low', INFO: 'sev-info' };
+const RULES_ACTIVE = 2; // MCP Safety active by default
+
+// 02 — command surface; each panel pre-rendered, the island toggles active.
+const CMDS = [
+  { cmd: 'doctor', d: 'scan + score', branch: 'main', dirty: false,
+    desc: 'Scan the repo and print a 0–100 readiness score with a per-category breakdown. Exit 0 pass, 1 below threshold, 2 error.',
+    lines: [
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter doctor' }],
+      [{ t: 'Checked 18 rules · 9 categories · 3 findings', c: 'tk-faint' }],
+      [{ t: '⚠ ', c: 'tk-amber' }, { t: 'HIGH    ', c: 'tk-amber' }, { t: 'AE-MCP-001', c: 'tk-blue' }, { t: '  MCP Safety', c: 'tk-faint' }],
+      [{ t: '⚠ ', c: 'tk-amber' }, { t: 'MEDIUM  ', c: 'tk-amber' }, { t: 'AE-AUTO-001', c: 'tk-blue' }, { t: '  Autonomy', c: 'tk-faint' }],
+      [{ t: 'Score ' }, { t: '82', c: 'tk-green' }, { t: '/100  ████████████████░░░░  ', c: 'tk-faint' }, { t: 'PASS ✓', c: 'tk-green' }],
+    ] },
+  { cmd: 'init', d: 'scaffold', branch: 'main', dirty: true,
+    desc: 'Scaffold the context files an agent needs, so the next scan starts from a clean baseline. Never overwrites.',
+    lines: [
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter init' }],
+      [{ t: 'scaffolding missing context…', c: 'tk-faint' }],
+      [{ t: '+ AGENTS.md', c: 'tk-green' }],
+      [{ t: '+ charter.yaml', c: 'tk-green' }],
+      [{ t: '+ .gitignore  ', c: 'tk-green' }, { t: '(agent artifacts)', c: 'tk-faint' }],
+    ] },
+  { cmd: 'fix', d: 'diff-first', branch: 'fix/mcp-pin', dirty: true, diff: true,
+    desc: 'Diff-first auto-repair for supported rules. Nothing is written until you approve the diff.',
+    lines: [
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter fix ' }, { t: 'AE-MCP-001', c: 'tk-blue' }],
+      [{ t: 'proposed patch · .mcp.json', c: 'tk-faint' }],
+    ] },
+  { cmd: 'suppress', d: 'waivers', branch: 'main', dirty: false,
+    desc: 'Record a governed waiver — with a reason, an owner, and an expiry — instead of silently ignoring a rule.',
+    lines: [
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter suppress ' }, { t: 'AE-MCP-002', c: 'tk-blue' }, { t: ' --reason ', c: 'tk-blue' }, { t: '"vendored" ', c: 'tk-amber' }, { t: '--expires ', c: 'tk-blue' }, { t: '90d', c: 'tk-amber' }],
+      [{ t: 'waiver written · charter.yaml', c: 'tk-faint' }],
+      [{ t: '✓ ', c: 'tk-green' }, { t: 'AE-MCP-002 waived by ' }, { t: '@dana', c: 'tk-amber' }, { t: ' · expires 90d', c: 'tk-faint' }],
+    ] },
+  { cmd: 'explain', d: 'rule detail', branch: 'main', dirty: false,
+    desc: 'Print the catalog metadata for any rule: id, name, category, summary, and docs URL.',
+    lines: [
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter explain ' }, { t: 'AE-SEC-001', c: 'tk-blue' }],
+      [{ t: 'AE-SEC-001', c: 'tk-blue' }, { t: '  NoRawSecretsInContext', c: 'tk-faint' }],
+      [{ t: 'category  ', c: 'tk-faint' }, { t: 'Secrets' }],
+      [{ t: 'severity  ', c: 'tk-faint' }, { t: 'BLOCKER', c: 'tk-red' }],
+      [{ t: '→ use-charter.dev/rules/AE-SEC-001', c: 'tk-faint' }],
+    ] },
+  { cmd: 'report', d: 'offline html', branch: 'main', dirty: false,
+    desc: 'Write a self-contained, offline single-file HTML report — fonts and data inlined, opens from a file URL.',
+    lines: [
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter report ' }, { t: '--open', c: 'tk-blue' }],
+      [{ t: 'writing charter-report.html…', c: 'tk-faint' }],
+      [{ t: '✓ ', c: 'tk-green' }, { t: 'self-contained ' }, { t: '· 0 network · SARIF + HTML', c: 'tk-faint' }],
+    ] },
+  { cmd: 'version', d: 'provenance', branch: 'main', dirty: false,
+    desc: 'Print the version, build provenance, and supply-chain verification status. Useful in CI logs.',
+    lines: [
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter version' }],
+      [{ t: '[C] charter ', c: 'tk-green' }, { t: 'v1.0.0', c: 'tk-green' }],
+      [{ t: 'commit  ', c: 'tk-faint' }, { t: 'a1b2c3d', c: 'tk-blue' }, { t: ' · 2026-01-14', c: 'tk-faint' }],
+      [{ t: 'slsa    ', c: 'tk-faint' }, { t: 'level 3', c: 'tk-green' }, { t: ' · cosign verified ✓', c: 'tk-faint' }],
+    ] },
+];
+const DIFF = [
+  { g: '5', k: 'ctx', tx: '  "servers": {' },
+  { g: '6', k: 'ctx', tx: '    "git": {' },
+  { g: '7', k: 'del', tx: '-     "package": "mcp-server-git"' },
+  { g: '7', k: 'add', tx: '+     "package": "mcp-server-git@2026.1.14"' },
+  { g: '8', k: 'ctx', tx: '    }' },
+];
+
+// 03 — lifecycle stepper
+const STEPS = [
+  { icon: 'ph:folder-simple-plus', cmd: 'charter init', title: 'Scaffold', desc: 'Generate AGENTS.md, charter.yaml and .gitignore — the context every agent expects to find.', pct: 20, zone: 'red', meta: 'baseline ready' },
+  { icon: 'ph:gauge', cmd: 'charter doctor', title: 'Score', desc: 'A static scan across nine categories returns your first honest number — usually 40–60.', pct: 52, zone: 'amber', meta: '52 / 100 · first scan' },
+  { icon: 'ph:magic-wand', cmd: 'charter fix', title: 'Repair', desc: 'Approve diff-first fixes for the safe rules. Secrets and destructive commands are never auto-touched.', pct: 84, zone: 'green', meta: '84 / 100 · +32 points' },
+  { icon: 'ph:shield-check', cmd: 'charter-action@v1', title: 'Gate', desc: 'CI re-scores every pull request and blocks merges below threshold. From here the score only ratchets up.', pct: 84, zone: 'green', meta: 'ship-ready · gate ≥ 80', gate: true },
+];
+
+// 04 — CI gate
+const GATE_STEPS = [
+  { n: '1', t: 'charter.yml', s: 'commit once' },
+  { n: '2', t: 'scan + score', s: 'on every PR' },
+  { n: '3', t: 'SARIF 2.1.0', s: 'code scanning' },
+];
+const WORKFLOW_LINES = [
+  [{ t: '# .github/workflows/charter.yml', c: 'tk-comment' }],
+  [{ t: 'name', c: 'tk-key' }, { t: ': Charter' }],
+  [{ t: 'on', c: 'tk-key' }, { t: ':' }],
+  [{ t: '  pull_request', c: 'tk-key' }, { t: ':' }],
+  [{ t: 'permissions', c: 'tk-key' }, { t: ':' }],
+  [{ t: '  contents', c: 'tk-key' }, { t: ': read' }],
+  [{ t: '  security-events', c: 'tk-key' }, { t: ': write' }],
+  [{ t: 'jobs', c: 'tk-key' }, { t: ':' }],
+  [{ t: '  charter', c: 'tk-key' }, { t: ':' }],
+  [{ t: '    runs-on', c: 'tk-key' }, { t: ': ubuntu-latest' }],
+  [{ t: '    steps', c: 'tk-key' }, { t: ':' }],
+  [{ t: '      - uses', c: 'tk-key' }, { t: ': actions/checkout@v6' }],
+  [{ t: '      - uses', c: 'tk-key' }, { t: ': use-charter/charter-action@v1' }],
+  [{ t: '        with', c: 'tk-key' }, { t: ':' }],
+  [{ t: '          threshold', c: 'tk-key' }, { t: ': ' }, { t: '"80"', c: 'tk-str' }, { t: '   # fail PRs below this', c: 'tk-comment' }],
+  [{ t: '          verify', c: 'tk-key' }, { t: ': ' }, { t: 'true', c: 'tk-bool' }, { t: '      # cosign + sha256', c: 'tk-comment' }],
+];
+const WORKFLOW_TEXT = `# .github/workflows/charter.yml
+name: Charter
+on:
+  pull_request:
+permissions:
+  contents: read
+  security-events: write
+jobs:
+  charter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: use-charter/charter-action@v1
+        with:
+          threshold: "80"   # fail PRs below this
+          verify: true      # cosign + sha256`;
+
+// 05 — trust bento
+const FLAGS = [
+  { area: 'a', icon: 'ph:scales', f: '--license apache-2.0', t: 'Free, forever', p: 'Open source and permissively licensed. Vendor it, fork it, ship it inside your own tooling — no seat count, no expiry.' },
+  { area: 'b', icon: 'ph:shield-check', f: '--slsa 3', t: 'Supply-chain signed', p: 'Every release ships SLSA Level 3 provenance, cosign-signed. Verify the exact binary you install.' },
+  { area: 'c', icon: 'ph:brackets-curly', f: '--format sarif', t: 'Standards in, standards out', p: 'SARIF 2.1.0 drops straight into GitHub Code Scanning and the tools you already run.' },
+];
+const RECEIPT = [
+  { k: 'binary  ', v: 'charter v1.0.0', c: 'v' },
+  { k: 'cosign  ', v: 'verified ✓', c: 'ok' },
+  { k: 'sha256  ', v: 'a1b2c3d…e9f', c: 'v' },
+  { k: 'slsa    ', v: 'level 3', c: 'b' },
+  { k: 'sbom    ', v: 'attached ✓', c: 'ok' },
+  { k: 'network ', v: '0 calls', c: 'ok' },
+];
+
+// colophon man-page columns
+const FOOT_COLS = [
+  { h: 'Developers', links: [['Quickstart', `${DOCS}/quickstart`], ['CLI reference', `${DOCS}/cli/overview`], ['Rules overview', `${DOCS}/rules/overview`], ['GitHub Action', `${DOCS}/ci/github-action`]] },
+  { h: 'Resources', links: [['Documentation', DOCS], ['Changelog', 'https://use-charter.dev/changelog'], ['Source', REPO], ['llms.txt', '/llms.txt']] },
+  { h: 'Legal', links: [['Privacy', '/legal/privacy'], ['Terms', '/legal/terms'], ['License', '/legal/license']] },
+];
+const year = new Date().getFullYear();
 ---
-<Base>
-  <Nav />
-  <main>
-    <Hero />
-    <CompatSection />
-    <RulesSection />
-    <CommandsSection />
-    <LifecycleSection />
-    <CIGateSection />
-    <TrustSection />
-  </main>
-  <FooterSection />
+
+<Base title="Charter — AI-agent readiness, scored." path="/" htmlClass="ck-html" bodyClass="ck-body">
+  <div class="ck" id="top">
+    <!-- top bar (nav) -->
+    <header class="ck-bar">
+      <div class="ck-bar__in">
+        <a href="#top" class="ck-bar__brand">
+          <svg class="ck-bar__mark" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
+            <rect x="3" y="12" width="4" height="40"/><rect x="3" y="12" width="11" height="4"/><rect x="3" y="48" width="11" height="4"/>
+            <rect x="57" y="12" width="4" height="40"/><rect x="50" y="12" width="11" height="4"/><rect x="50" y="48" width="11" height="4"/>
+            <path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5" fill="none" stroke="currentColor" stroke-width="6"/>
+          </svg><span class="ck-bar__word">charter</span>
+        </a>
+        <nav class="ck-bar__win" aria-label="Sections">
+          {WINDOWS.map((w) => (
+            <a href={`#${w.id}`} data-win={w.id}>{w.label}</a>
+          ))}
+          <a href={DOCS} class="ck-bar__ext" rel="noopener" target="_blank">
+            Docs<Icon name="ph:arrow-up-right" />
+          </a>
+        </nav>
+        <div class="ck-bar__right">
+          <ThemeSwitch />
+          <a href={REPO} class="ck-bar__gh" rel="noopener noreferrer" target="_blank" aria-label="GitHub">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.8.5 12.3c0 5.2 3.4 9.6 8 11.2.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.4-1.3-5.4-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17 4.6 18 4.9 18 4.9c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.4 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.6 8-6 8-11.2C23.5 5.8 18.3.5 12 .5z"/></svg>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- HERO — boot bento -->
+    <section class="ck-hero" data-boot>
+      <div class="ck-hero__stage">
+        <div class="ck-hero__grid">
+          <!-- left: text -->
+          <div class="ck-hero__col">
+            <div class="ck-hero__rule"><b>charter</b> ── readiness for AI-agent codebases</div>
+            <h1 class="ck-hh1">AI-agent readiness, <span class="glow">scored.</span></h1>
+            <p class="ck-hsub">
+              AI agents are only as good as the repo they work in — missing context, exposed secrets, and unpinned tools quietly wreck their output. Charter grades yours in under two seconds: a <code>0–100</code> readiness score across nine categories, every gap paired with a concrete fix. No cloud, no account, no telemetry — it runs <b>fully offline</b>, and the same check holds the line in CI.
+            </p>
+            <div class="ck-hcta" id="install">
+              <span class="ck-cmdline" data-copy={INSTALL}>
+                <span class="pfx">❯</span>
+                <code>{INSTALL}</code>
+                <button type="button" data-copy-btn>copy</button>
+              </span>
+              <button class="ck-ghost" type="button" data-boot-rerun>
+                <Icon name="ph:arrow-clockwise" /> re-run
+              </button>
+            </div>
+            <div class="ck-hcta__note" style="margin-top:12px">free &amp; open source · apache-2.0 · slsa l3</div>
+          </div>
+
+          <!-- right: the session -->
+          <div class="pane pane--active ck-sess">
+            <div class="ck-sess__bar">
+              <span class="ck-sess__dots"><i></i><i></i><i></i></span>
+              <span class="ck-sess__name"><b>charter</b>@acme-api: <span class="tk-blue">doctor</span></span>
+              <span class="ck-sess__clock"><span class="ping"></span>offline · 0 net</span>
+            </div>
+            <div class="ck-sess__body">
+              <div class="ck-rep__cmd">
+                <span class="ch">❯ </span><span data-boot-cmd>{BOOT_CMD}</span><span class="ck-caret" data-boot-caret></span>
+              </div>
+              <div class="ck-rep__scan" data-boot-scan>
+                <span class="tk-faint">✓ 8 paths · 18 rules · 9 categories · 1.84s · 3 findings</span>
+              </div>
+              <div class="ck-gauge">
+                <span class="ck-gauge__num" data-boot-num>82</span>
+                <span class="ck-gauge__side">
+                  <span class="ck-gauge__verdict">PASS ✓</span>
+                  <span class="ck-gauge__den"><b>82</b>/100 readiness</span>
+                  <span class="ck-gauge__den">exit 0 · strict</span>
+                </span>
+              </div>
+              <div class="ck-meter">
+                <span class="ck-meter__fill" data-boot-meter style="width:82%"></span>
+                <span class="ck-meter__tick" style="left:80%"></span>
+              </div>
+              <div class="ck-rep__cats">
+                {READINESS.map((r) => (
+                  <div class={`ck-rdx__row ${r.state}`}>
+                    <span class="ck-rdx__dot"></span>
+                    <span class="ck-rdx__lbl">{r.lbl}</span>
+                    <span class="ck-rdx__track"><span class="ck-rdx__fill" data-rdx-fill={Math.round((r.pass / r.total) * 100)} style={`width:${Math.round((r.pass / r.total) * 100)}%`}></span></span>
+                    <span class="ck-rdx__pts"><b>{r.pass}</b>/{r.total}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div class="ck-sess__status">
+              <span class="seg seg--pass">● <span data-boot-status-num>82</span>/100 · PASS</span>
+              <span class="seg">min <b>80</b></span>
+              <span class="seg">3 findings</span>
+              <span class="seg seg--net spacer">0 network calls</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- agents strip -->
+        <div class="pane ck-agents">
+          <div class="ck-agents__h"><span class="fl">--agents</span> <span class="tk-faint"># one score, every coding agent you run</span></div>
+          <div class="ck-agents__grid">
+            {AGENTS.map((a) => (
+              <div class="ck-agent" title={a.name}>
+                <span class={`ck-agent__logo${a.mono ? ' is-mono' : ''}`}>
+                  <img src={a.icon} alt={a.name} width="18" height="18" loading="lazy" />
+                </span>
+                <span class="ck-agent__nm">{a.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- metrics strip -->
+        <div class="ck-hero__metrics">
+          {METRICS.map((m) => (
+            <div class="ck-metric">
+              <span class={`v${m.ok ? ' ok' : ''}`}>{m.v}</span>
+              <span class="k">{m.k}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 01 RULES — interactive catalog -->
+    <section class="ck-sec" id="rules" data-reveal>
+      <div class="ck-prompt"><span class="no">01</span><span class="ch">❯</span><span class="cmd">charter explain<span class="fl"> --catalog</span></span><span class="tm">18 rules · 9 categories</span></div>
+      <div class="ck-out">
+        <div class="ck-out__lede">
+          <h2>Nine categories. One honest score.</h2>
+          <p>Agents trip on the same handful of things — missing context, secrets in plain sight, an unpinned MCP server, no way to verify their own work. This is the real v1 catalog: every rule carries an <code>ID</code>, a severity that sets its score weight, and the exact thing it checks.</p>
+        </div>
+        <div class="ck-cat2">
+          <div class="pane ck-cat2__rail" role="tablist" aria-label="Rule categories">
+            {RCATS.map((x, i) => (
+              <button type="button" class={`ck-cat2__btn${i === RULES_ACTIVE ? ' on' : ''} st-${x.state}`} data-rule-tab={i} role="tab" aria-selected={i === RULES_ACTIVE ? 'true' : 'false'}>
+                <Icon name={x.icon} />
+                <span class="nm">{x.name}</span>
+                <span class="pts"><b>{x.pass}</b>/{x.total}</span>
+              </button>
+            ))}
+          </div>
+          {RCATS.map((c, i) => {
+            const findings = c.rules.filter((r) => r.st === 'finding').length;
+            return (
+              <div class="pane pane--active ck-cat2__panel" data-rule-panel={i} hidden={i !== RULES_ACTIVE}>
+                <div class="ck-cat2__head">
+                  <span class="cmd"><span class="ch">❯ </span>charter explain <span class="fl">--category {c.key}</span></span>
+                  <span class={`sc st-${c.state}`}>{findings === 0 ? 'clean' : `${findings} ${findings > 1 ? 'findings' : 'finding'}`}<span class="den"> · {c.total} {c.total > 1 ? 'rules' : 'rule'}</span></span>
+                </div>
+                <div class="ck-cat2__rules">
+                  {c.rules.map((r) => (
+                    <div class={`ck-rule${r.st === 'finding' ? ' is-finding' : ''}`}>
+                      <span class={`ck-rule__sev ${SEV_CLS[r.sev]}`}>{r.sev}</span>
+                      <div class="ck-rule__main">
+                        <div class="ck-rule__hd"><span class="ck-rule__id">{r.id}</span><span class="ck-rule__nm">{r.name}</span></div>
+                        <div class="ck-rule__checks">{r.checks}{r.loc && <span class="loc"> · {r.loc}</span>}</div>
+                      </div>
+                      {r.st === 'finding'
+                        ? <span class={`ck-rule__fix${r.fix === 'manual' ? ' manual' : ''}`}>{r.fix === 'auto' ? 'auto-fix' : 'manual'}</span>
+                        : <span class="ck-rule__ok"><Icon name="ph:check" /></span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 COMMANDS -->
+    <section class="ck-sec" id="commands" data-reveal>
+      <div class="ck-prompt"><span class="no">02</span><span class="ch">❯</span><span class="cmd">charter<span class="fl"> --help</span></span><span class="tm">7 commands · v1.0.0</span></div>
+      <div class="ck-out">
+        <div class="ck-out__lede">
+          <h2>A small, sharp command surface</h2>
+          <p>No dashboard. No account. No telemetry. Seven commands that behave identically in your shell and in CI. Click any one to watch it run.</p>
+        </div>
+        <div class="ck-cmds">
+          <div class="pane ck-cmds__list" role="tablist" aria-label="Commands">
+            {CMDS.map((x, i) => (
+              <button type="button" class={`ck-cmds__item${i === 0 ? ' is-active' : ''}`} data-cmd-tab={i} role="tab" aria-selected={i === 0 ? 'true' : 'false'}>
+                <span class="pf">❯</span> charter {x.cmd}<span class="d">{x.d}</span>
+              </button>
+            ))}
+          </div>
+          <div class="pane pane--active ck-cmds__main">
+            {CMDS.map((c, i) => (
+              <div data-cmd-panel={i} hidden={i !== 0}>
+                <div class="ck-term">
+                  <div class="ck-term__bar">
+                    <span class="ck-term__dots"><i></i><i></i><i></i></span>
+                    <span class="ck-term__title">charter {c.cmd} — ~/acme-api</span>
+                  </div>
+                  <div class="ck-term__body">
+                    <span class="ln">
+                      <span class="ck-ss">
+                        <span class="ck-ss__seg ck-ss__dir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h3l2.2 2.4H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>acme-api</span>
+                        <span class="ck-ss__seg ck-ss__git"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>{c.branch}{c.dirty && <span class="ck-ss__dirty"> !</span>}</span>
+                      </span>
+                    </span>
+                    {c.lines.map((segs) => (
+                      <span class="ln">{segs.map((s) => (s.c ? <span class={s.c}>{s.t}</span> : <span>{s.t}</span>))}</span>
+                    ))}
+                    {c.diff && (
+                      <div class="ck-diff">
+                        {DIFF.map((d) => (
+                          <div class={`dl ${d.k}`}><span class="g">{d.g}</span><span class="tx">{d.tx}</span></div>
+                        ))}
+                      </div>
+                    )}
+                    {c.diff && <span class="ln"><span class="tk-faint">apply? </span><span class="tk-green">[y/N]</span> <span class="ck-caret" style="vertical-align:middle"></span></span>}
+                  </div>
+                </div>
+                <p class="ck-cmds__desc">{c.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 LIFECYCLE -->
+    <section class="ck-sec" id="lifecycle" data-reveal>
+      <div class="ck-prompt"><span class="no">03</span><span class="ch">❯</span><span class="cmd">charter history<span class="fl"> --score</span></span><span class="tm">init → doctor → fix → gate</span></div>
+      <div class="ck-out">
+        <div class="ck-out__lede">
+          <h2>The score only ratchets up</h2>
+          <p>Readiness isn't a one-time cleanup. Charter walks a repo from an honest baseline to ship-ready, then turns the score into a wall every pull request has to clear.</p>
+        </div>
+        <div class="ck-step on" data-step>
+          {STEPS.map((s) => (
+            <div class={`ck-step__item on${s.gate ? ' gate' : ''}`} data-pct={s.pct}>
+              <div class="ck-step__top">
+                <span class="ck-step__node"><Icon name={s.icon} /></span>
+                <span class="ck-step__rail"></span>
+              </div>
+              <div class="ck-step__title">{s.title}</div>
+              <div class="ck-step__cmd">❯ {s.cmd}</div>
+              <div class="ck-step__desc">{s.desc}</div>
+              <div class="ck-step__bar">
+                <span class="ck-step__track"><span class={`ck-step__fill is-${s.zone}`} data-step-fill style={`width:${s.pct}%`}></span></span>
+                <span class="ck-step__pct" data-step-pct>{s.pct}%</span>
+              </div>
+              <div class="ck-step__meta">{s.meta}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 CI GATE -->
+    <section class="ck-sec" id="gate" data-reveal>
+      <div class="ck-prompt"><span class="no">04</span><span class="ch">❯</span><span class="cmd">cat<span class="fl"> .github/workflows/charter.yml</span></span><span class="tm">SARIF 2.1.0 → code scanning</span></div>
+      <div class="ck-out">
+        <div class="ck-out__lede">
+          <h2>Make the score a merge requirement</h2>
+          <p>Add one workflow and Charter re-scores every pull request, failing the check when the score drops below your threshold. Findings post as <code>SARIF 2.1.0</code>, so they land inline in GitHub Code Scanning — no new dashboard to learn.</p>
+        </div>
+        <div class="ck-gate">
+          <div class="ck-gate__flow">
+            {GATE_STEPS.map((g, i) => (
+              <>
+                <div class="ck-gate__step"><span class="n">{g.n}</span><span class="tx"><b>{g.t}</b><span>{g.s}</span></span></div>
+                {i < GATE_STEPS.length - 1 && <div class="ck-gate__arrow"><Icon name="ph:caret-right" /></div>}
+              </>
+            ))}
+          </div>
+          <div class="ck-yaml" data-copy={WORKFLOW_TEXT}>
+            <div class="ck-yaml__head"><span>.github/workflows/charter.yml</span><button type="button" data-copy-btn>copy</button></div>
+            <div class="ck-yaml__code">
+              {WORKFLOW_LINES.map((segs) => (
+                <div class="ln">{segs.map((s) => (s.c ? <span class={s.c}>{s.t}</span> : <span>{s.t}</span>))}</div>
+              ))}
+            </div>
+          </div>
+          <div class="pane pane--active ck-pr">
+            <span class="pane__tag">PR #412</span>
+            <div class="ck-pr__head"><Icon name="ph:git-pull-request" />Wire the agent task runner<span class="num">#412</span></div>
+            <div class="ck-pr__check"><Icon name="ph:check" />build<span class="meta">2m 04s</span></div>
+            <div class="ck-pr__check"><Icon name="ph:check" />test<span class="meta">1m 31s</span></div>
+            <div class="ck-pr__check"><Icon name="ph:check" />lint<span class="meta">0m 42s</span></div>
+            <div class="ck-pr__check ck-pr__check--charter">
+              <Icon name="ph:gauge" />charter / readiness
+              <span class="meta">82 / 100 · min 80</span>
+              <span class="pass">PASS ✓</span>
+            </div>
+            <div class="ck-pr__foot">
+              <span class="ok">✓ All checks have passed</span>
+              <button class="ck-pr__merge" type="button">Merge pull request</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 TRUST -->
+    <section class="ck-sec ck-sec--last" id="trust" data-reveal>
+      <div class="ck-prompt"><span class="no">05</span><span class="ch">❯</span><span class="cmd">charter version<span class="fl"> --verify</span></span><span class="tm">the contract</span></div>
+      <div class="ck-out">
+        <div class="ck-out__lede">
+          <h2>No cloud. No account. No catch.</h2>
+          <p>Charter runs entirely on your machine and shows its work. The whole contract is a handful of flags you can verify yourself — right down to the signature on the binary.</p>
+        </div>
+        <div class="ck-trust">
+          <div class="pane ck-flag ck-flag--hero">
+            <div>
+              <span class="ck-flag__icon"><Icon name="ph:wifi-slash" /></span>
+              <h4>Nothing ever leaves your machine.</h4>
+              <p>No network, no LLM calls, no telemetry. Charter reads your files locally and prints a number. That's the entire deal.</p>
+            </div>
+            <span class="f">--offline · 0 network calls · always</span>
+          </div>
+          {FLAGS.map((x) => (
+            <div class={`pane pane--hover ck-flag ck-flag--${x.area}`}>
+              <span class="ck-flag__icon"><Icon name={x.icon} /></span>
+              <span class="f">{x.f}</span>
+              <h4>{x.t}</h4>
+              <p>{x.p}</p>
+            </div>
+          ))}
+          <div class="pane ck-receipt">
+            <span class="ck-receipt__h">❯ charter version --verify</span>
+            {RECEIPT.map((r) => (
+              <div><span class="k">{r.k}</span><span class={r.c}>{r.v}</span></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLOPHON — terminal man page over a cursor-lit wordmark -->
+    <footer class="ck-man">
+      <div class="ck-man__mark" data-wordmark aria-hidden="true">
+        <span class="base">charter</span>
+        <span class="glow">charter</span>
+      </div>
+      <div class="ck-man__in">
+        <div class="ck-man__title">
+          <span>CHARTER(1)</span>
+          <span>General Commands Manual</span>
+          <span>CHARTER(1)</span>
+        </div>
+        <div class="ck-man__grid">
+          <div>
+            <a href="#top" class="ck-man__brand-logo">
+              <svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
+                <rect x="3" y="12" width="4" height="40"/><rect x="3" y="12" width="11" height="4"/><rect x="3" y="48" width="11" height="4"/>
+                <rect x="57" y="12" width="4" height="40"/><rect x="50" y="12" width="11" height="4"/><rect x="50" y="48" width="11" height="4"/>
+                <path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5" fill="none" stroke="currentColor" stroke-width="6"/>
+              </svg> charter
+            </a>
+            <p class="ck-man__tagline">AI-agent readiness, scored. Offline, deterministic, and yours to keep.</p>
+            <div class="ck-man__chips" role="list">
+              <span class="ck-man__chip" role="listitem"><Icon name="ph:wifi-slash" />offline-first</span>
+              <span class="ck-man__chip" role="listitem"><Icon name="ph:user-circle" />no account</span>
+              <span class="ck-man__chip" role="listitem"><Icon name="ph:eye-slash" />no telemetry</span>
+            </div>
+            <div class="ck-man__social">
+              <a href={REPO} rel="noopener noreferrer" target="_blank" aria-label="GitHub">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.8.5 12.3c0 5.2 3.4 9.6 8 11.2.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.4-1.3-5.4-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17 4.6 18 4.9 18 4.9c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.4 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.6 8-6 8-11.2C23.5 5.8 18.3.5 12 .5z"/></svg>
+              </a>
+              <a href={DOCS} rel="noopener noreferrer" target="_blank" aria-label="Documentation"><Icon name="ph:book-open" /></a>
+            </div>
+          </div>
+          {FOOT_COLS.map((col) => (
+            <div>
+              <h5>{col.h}</h5>
+              <ul>{col.links.map((l) => <li><a href={l[1]}>{l[0]}</a></li>)}</ul>
+            </div>
+          ))}
+
+          <!-- subscribe pane — wired to the real waitlist via WaitlistForm IDs -->
+          <div class="ck-sub">
+            <div class="ck-sub__bar">
+              <span class="ck-sub__dots"><i></i><i></i><i></i></span>
+              <span class="ck-sub__ttl">charter subscribe</span>
+            </div>
+            <form class="ck-sub__body" id="waitlist-form" novalidate>
+              <div class="ck-sub__cmd"><span class="ch">❯ </span>charter subscribe <span class="fl">--updates</span></div>
+              <div class="ck-sub__note">New rules and releases, straight to your inbox. No noise.</div>
+              <div class="ck-sub__row">
+                <label class="ck-sub__field">
+                  <span class="pfx">@</span>
+                  <input class="ck-sub__input" id="waitlist-email" name="email" type="email" required
+                    placeholder="you@example.com" aria-label="Email address" aria-describedby="email-error"
+                    spellcheck="false" autocomplete="email" />
+                </label>
+                <button class="ck-sub__btn" id="waitlist-submit" type="submit">notify me</button>
+              </div>
+              <p class="ck-sub__ok" role="status" aria-live="polite" aria-atomic="true">
+                <Icon name="ph:check" /><span class="ck-foot__success-text"></span>
+              </p>
+              <span class="ck-sub__err" id="email-error" role="alert" aria-atomic="true"></span>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="ck-man__exit">
+        <span class="ck-man__badges">
+          <span>apache-2.0</span><span>slsa l3</span><span>sarif 2.1.0</span><span>v1.0.0</span><span class="ok">0 network calls</span>
+        </span>
+        <span class="ok">&copy; {year} · exit 0</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    import '../islands/landing';
+  </script>
 </Base>

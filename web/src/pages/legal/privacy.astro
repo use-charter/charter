@@ -1,0 +1,139 @@
+---
+import Base from '../../layouts/Base.astro';
+import LegalDoc from '../../components/LegalDoc.astro';
+import type { LegalPage } from '../../lib/legal-content';
+import '../../styles/marketing.css';
+import '../../styles/legal.css';
+
+const page: LegalPage = {
+  file: 'PRIVACY.md',
+  cmd: 'charter explain --privacy',
+  title: 'Privacy Policy',
+  updated: 'June 12, 2026',
+  read: '~4 min',
+  words: '910 words',
+  lede: 'What the Charter website collects, and why. The CLI itself is offline by design — it makes <code>0 network calls</code> and sends us nothing.',
+  chips: [
+    { icon: 'wifi-slash', t: 'CLI sends no telemetry' },
+    { icon: 'cookie', t: 'No tracking cookies' },
+    { icon: 'prohibit', t: 'Data is never sold' },
+    { icon: 'shield-check', t: 'Offline by design' },
+  ],
+  sections: [
+    {
+      id: 'scope',
+      title: 'Scope',
+      blocks: [
+        { t: 'p', html: 'This Privacy Policy covers the website at <code>use-charter.dev</code> (the “Site”), operated by the Charter project (“we”, “us”). It explains what information is processed when you visit the Site and how it is handled. It does <b>not</b> apply to the Charter command-line tool — that is covered in the next section.' },
+      ],
+    },
+    {
+      id: 'cli',
+      title: 'The Charter CLI',
+      blocks: [
+        { t: 'tldr', tone: 'green', icon: 'terminal-window', html: 'the CLI is fully offline. It never phones home, so we never receive your code, your findings, or your scores.' },
+        { t: 'p', html: 'The command-line tool runs entirely on your machine. By design it makes <b>no network requests</b>, performs <b>no LLM calls</b>, and emits <b>no telemetry or analytics</b>. Your repositories, scan results, and scores never leave your environment and are never transmitted to us or any third party. We have no technical ability to observe how you use the CLI.' },
+      ],
+    },
+    {
+      id: 'collects',
+      title: 'What the site collects',
+      blocks: [
+        { t: 'p', html: 'When you visit the Site, a small amount of technical information is processed to serve and secure the pages:' },
+        {
+          t: 'list',
+          items: [
+            '<b>Server &amp; CDN logs.</b> Our hosting provider records standard request metadata — IP address, user agent, requested URL, and timestamp — to deliver content, prevent abuse, and maintain security.',
+            '<b>No account data.</b> The Site has no login, no user accounts, and no forms that collect personal information.',
+            '<b>No advertising or cross-site trackers.</b> We do not embed ad networks or third-party tracking pixels.',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'use',
+      title: 'How we use it',
+      blocks: [
+        { t: 'p', html: 'Technical information is used only to:' },
+        {
+          t: 'list',
+          items: [
+            'deliver and render the Site;',
+            'protect against abuse, fraud, and security threats;',
+            'understand aggregate traffic patterns to improve the Site.',
+          ],
+        },
+        { t: 'p', html: 'We do not sell, rent, or trade your information, and we never use it for advertising.' },
+      ],
+    },
+    {
+      id: 'cookies',
+      title: 'Cookies',
+      blocks: [
+        { t: 'tldr', tone: 'blue', icon: 'cookie', html: 'the Site stores one local preference — your light/dark theme. No tracking cookies.' },
+        { t: 'p', html: 'Your theme choice is saved in your browser’s <code>localStorage</code> so the page renders the way you left it. That value stays on your device and is never sent to a server. We do not set advertising or cross-site tracking cookies.' },
+      ],
+    },
+    {
+      id: 'third',
+      title: 'Third parties',
+      blocks: [
+        { t: 'p', html: 'The Site relies on a small number of service providers:' },
+        {
+          t: 'list',
+          items: [
+            '<b>Hosting &amp; CDN.</b> The Site is served by a static hosting and content-delivery provider that processes request logs as described above.',
+            '<b>Source &amp; documentation.</b> Links to our code, license, and docs point to GitHub and our documentation host; their own privacy policies apply once you follow them.',
+          ],
+        },
+      ],
+    },
+    {
+      id: 'retention',
+      title: 'Retention',
+      blocks: [
+        { t: 'p', html: 'Technical logs are retained only as long as needed for security and operations, then deleted or anonymized in line with our hosting provider’s standard practices. Because the Site keeps no personal accounts, there is no profile data to retain.' },
+      ],
+    },
+    {
+      id: 'rights',
+      title: 'Your rights',
+      blocks: [
+        { t: 'p', html: 'Depending on where you live (for example under the GDPR or CCPA), you may have the right to access, correct, delete, or restrict the processing of personal data relating to you. Because the Site holds no user accounts or marketing profiles, the data we have about any individual visitor is minimal. To exercise a right, contact us using the details below.' },
+      ],
+    },
+    {
+      id: 'children',
+      title: 'Children’s privacy',
+      blocks: [
+        { t: 'p', html: 'The Site is a developer tool and is not directed to children under 13 (or the equivalent age in your jurisdiction). We do not knowingly collect personal information from children.' },
+      ],
+    },
+    {
+      id: 'transfers',
+      title: 'International transfers',
+      blocks: [
+        { t: 'p', html: 'Our hosting and CDN operate globally, so technical request data may be processed in countries other than your own. Providers are selected for their adherence to recognized data-protection safeguards.' },
+      ],
+    },
+    {
+      id: 'changes',
+      title: 'Changes',
+      blocks: [
+        { t: 'p', html: 'We may update this policy as the Site evolves. Material changes are reflected by the “last updated” date above. Continued use of the Site after an update constitutes acceptance of the revised policy.' },
+      ],
+    },
+    {
+      id: 'contact',
+      title: 'Contact',
+      blocks: [
+        { t: 'p', html: 'Questions about this policy or your data? Reach us at <a href="mailto:privacy@use-charter.dev">privacy@use-charter.dev</a> or open an issue on our <a href="https://github.com/use-charter/charter" rel="noopener noreferrer" target="_blank">GitHub repository</a>.' },
+      ],
+    },
+  ],
+};
+---
+
+<Base title="Charter — Privacy Policy" path="/legal/privacy" htmlClass="ck-html" bodyClass="ck-body">
+  <LegalDoc page={page} />
+</Base>
