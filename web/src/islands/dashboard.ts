@@ -249,7 +249,9 @@ function render(s: Stats): void {
       : '<li class="muted">none yet</li>';
   }
   const sig = $<HTMLAnchorElement>('[data-signals]');
-  if (sig && s.repo) sig.href = `https://github.com/${s.repo}/issues?q=is%3Aissue+label%3Alaunch-signals`;
+  // Title search (not label:) so the link never errors before the launch-signals
+  // workflow has created its tracking issue + label.
+  if (sig && s.repo) sig.href = `https://github.com/${s.repo}/issues?q=${encodeURIComponent('is:issue in:title Launch signals')}`;
 
   // Community
   const open = s.community?.openIssues ?? 0;
