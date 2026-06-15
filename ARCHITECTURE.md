@@ -20,12 +20,13 @@
 - `internal/`: non-public implementation details
   - `agentcontext`: canonical agent-visible context file registry (drift guard for context and secret rules)
   - `config`: `charter.yaml` loader (MCP trusted-remote allowlist; policy profile/threshold resolution)
+  - `catalog`: embedded founder-curated MCP server catalog (versions, advisories, trusted hosts) backing the AE-MCP-* rules
   - `doctor`: scan orchestration pipeline (resolves the effective threshold)
   - `explain`: rule-explanation surface reused by the CLI, TUI, and HTML report
   - `findings`: finding model with Location support (path:line)
   - `fix`: diff-first repair engine behind `charter fix` — a pure registry + `Plan` (RuleID→fixer for `AE-CTX-001` AGENTS.md, `AE-CTX-004` .gitignore, `AE-CI-002` Charter CI workflow) + unified-diff builder, with a backup-then-write applier (backs up any existing target to `.charter/backups/<ts>/` before writing; never deletes/truncates, never overwrites a Create target, never fixes secret/dangerous rules); reuses `internal/scaffold` for file contents
   - `repository`: repo resolution and file inventory
-  - `rules/`: rule implementations (context, environment, ci, secrets, mcp, agentconfig, governance) and `catalog` (static rule metadata for SARIF/explain)
+  - `rules/`: rule implementations (context, environment, ci, secrets, mcp, agentconfig, operability, governance) and `catalog` (static rule metadata for SARIF/explain)
   - `scaffold`: pure offline detection (language/CI/agents) + agent-context templates + a create/skip file plan behind `charter init` (create-missing-only, never overwrites or deletes; imported by `cmd/charter/init.go`)
   - `scoring`: score calculation and caps (skips informational findings)
   - `render/`: output formatters (styled/plain text, JSON, Markdown, SARIF 2.1.0, self-contained HTML)

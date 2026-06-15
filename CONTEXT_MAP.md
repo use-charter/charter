@@ -1,5 +1,8 @@
 # Context Map
 
+Where the docs live and what to read for a given task. Start with `AGENTS.md`,
+then load only what the task at hand calls for — not everything at once.
+
 ## Start Here
 
 - `AGENTS.md`: repo contract and working loop
