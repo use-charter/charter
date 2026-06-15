@@ -45,8 +45,8 @@ Destructive means any action that deletes user work, rewrites history, reverts t
 
 ## MCP Policy
 
-- No `.mcp.json` during bootstrap
-- Future MCP tools must be pinned, local-first where possible, and least-privilege
+- No tracked `.mcp.json` until a pinned, reviewed, least-privilege integration exists
+- MCP tools must be pinned, local-first where possible, and least-privilege
 - Tool, prompt, and resource layers should remain distinct
 - Write-capable MCP operations require explicit approval semantics
 

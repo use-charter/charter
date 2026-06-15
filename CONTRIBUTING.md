@@ -5,7 +5,7 @@
 1. Read `AGENTS.md`.
 2. Load only the context files needed for the task.
 3. Check local manifests and latest official docs before code.
-4. **Grounding & grill gate (required before executing any plan, slice, or multi-step change):** ground the plan against the latest official docs, industry standards, and current best practices; then critically self-assess it — challenge each design decision, self-answer with evidence (explore the codebase or fetch docs rather than guessing), and surface genuine forks; harden the plan with the findings. Only start coding once the plan is verifiably top-tier. Capture confirmed/changed/deferred decisions in the ADR, design spec, and plan.
+4. **Grounding & grill gate (required before executing any plan or multi-step change):** ground the plan against the latest official docs, industry standards, and current best practices; then critically self-assess it — challenge each design decision, self-answer with evidence (explore the codebase or fetch docs rather than guessing), and surface genuine forks; harden the plan with the findings. Only start coding once the plan is verifiably top-tier. Capture confirmed/changed/deferred decisions in the ADR, design spec, and plan.
 5. Make the smallest viable change.
 6. Run explicit verification commands.
 7. Update ADRs, RFCs, specs, docs, and evals when behavior changes.

@@ -1,10 +1,10 @@
 # Architecture
 
-## Bootstrap Contract
+## Module Contract
 
 - Single root Go module: `go.use-charter.dev/charter`
 - No `go.work`
-- No extra modules during bootstrap
+- No additional Go modules
 - Charter core performs no LLM calls
 - Scanner remains deterministic and offline-first
 - Fixes are diff-first and never silently mutate files
@@ -59,11 +59,11 @@ The expected CLI tree follows the product authority in `docs/internal/architectu
 - `charter suppress`
 - `charter version`
 
-Phase 0 should set package boundaries so each command can own a vertical slice without later module churn. Cobra is the intended command framework. Koanf is the intended config-loading stack once real runtime config lands.
+Package boundaries are drawn so each command owns a vertical slice without forcing module churn elsewhere. Cobra (via Fang) is the command framework; configuration is loaded through the `internal/config` package.
 
-## Slice Rule
+## Vertical-Slice Rule
 
-Vertical slice means a user-facing capability should keep its parser, domain model, verification logic, and remediation logic close together instead of spreading shared behavior into generic utility packages. Shared code is allowed only when at least two slices need the same stable abstraction.
+A user-facing capability keeps its parser, domain model, verification logic, and remediation logic close together instead of spreading shared behavior into generic utility packages. Shared code is introduced only when at least two slices need the same stable abstraction.
 
 Boundary rules:
 

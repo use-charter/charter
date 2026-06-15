@@ -3,7 +3,7 @@
 ## Defaults
 
 - No secrets in any agent-visible file
-- No `.mcp.json` during bootstrap
+- No tracked `.mcp.json` until a pinned, reviewed integration exists
 - No remote MCP configuration until a real pinned integration exists
 - Third-party actions must be pinned before activation
 - Write-capable integrations stay behind explicit review and approval
@@ -27,8 +27,8 @@
 
 ## MCP Policy
 
-- Bootstrap keeps tracked MCP config absent by design
-- Future MCP config must be local-first where possible, pinned, and least-privilege
+- Tracked MCP config stays absent until a pinned, reviewed integration exists
+- MCP config must be local-first where possible, pinned, and least-privilege
 - Tool, prompt, and resource layers should remain distinct
 - Remote MCP endpoints require explicit security review before adoption
 

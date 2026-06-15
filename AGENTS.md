@@ -1,11 +1,11 @@
 # AGENTS.md
 
-Last reviewed: 2026-06-09
+Last reviewed: 2026-06-15
 
 ## Current State
 
 - Offline-first Go CLI scoring repos for AI-agent readiness (deterministic).
-- Phase: Slice 18 shipped — public Mintlify docs in `docs/product/` (15–17 shipped).
+- Public Mintlify docs in `docs/product/`; marketing site, founder dashboard, and blog in `web/` (Astro).
 - Stack: Go 1.26.3, Moonrepo, mise, hk, GHA, Bun.
 - License: Apache-2.0 OSS core; DCO-first
 - Product truth: `docs/internal/architecture/charter-architecture-2026.md`
@@ -28,7 +28,7 @@ Last reviewed: 2026-06-09
 ## Hard Constraints
 
 - Before changing tools/SDKs/CI/APIs/MCP/schemas/frameworks: inspect local manifests/lockfiles, then fetch latest docs.
-- Bootstrap keeps tracked MCP config absent until a pinned, reviewed integration exists.
+- Tracked MCP config stays absent until a pinned, reviewed integration exists.
 - No LLM calls in Charter core.
 - No silent mutation. Diff-first fixes only.
 - Fail fast. No speculative refactors.
