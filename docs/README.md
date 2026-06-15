@@ -46,7 +46,7 @@ through `docs.json` redirects.
 | `how-to/` | Task guides — adopt in a repo, CI, pre-commit, suppressing, using `fix` safely. |
 | `config/` | `charter.yaml` and policy-profile reference. |
 | `cli/` | Per-command reference. |
-| `rules/` | One page per `AE-*` rule. Bootstrapped by `scripts/generate-rule-pages.ts`, then hand-maintained. |
+| `rules/` | One page per `AE-*` rule. Bootstrapped by `scripts/docs/generate-rule-pages.ts`, then hand-maintained. |
 
 Local preview: `npx mintlify dev` from `docs/product/`. Validate with
 `moon run :docs` (mirrors, rule-page coverage, and `docs.json` resolution).

@@ -4,7 +4,7 @@ tasks:
   validate:
     command: "bun"
     args:
-      - "../scripts/validate-action.ts"
+      - "../scripts/ci/validate-action.ts"
     inputs:
       - "action.yml"
-      - "/scripts/validate-action.ts"
+      - "/scripts/ci/validate-action.ts"

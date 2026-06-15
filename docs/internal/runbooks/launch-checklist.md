@@ -72,7 +72,7 @@ Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topolo
 
 ## 7. Launch monitoring & assets
 
-- [x] Alerts for launch signals (architecture §Signals): **Signal 1** organic CI adoption, **Signal 3** unprompted mentions, **Signal 4** community self-help. **Done (2026-06-15):** Google Alerts configured by the founder (non-GitHub mentions — blogs, HN); plus `launch-signals.yml` — a weekly cron workflow (`scripts/github-actions/launch-signals.ts`) that searches GitHub for action adoption, schema references, and "charter doctor" mentions and posts new hits into a `launch-signals` tracking issue. GitHub search indexes public repos only, so it produces signal once the repo is public. `admin`
+- [x] Alerts for launch signals (architecture §Signals): **Signal 1** organic CI adoption, **Signal 3** unprompted mentions, **Signal 4** community self-help. **Done (2026-06-15):** Google Alerts configured by the founder (non-GitHub mentions — blogs, HN); plus `launch-signals.yml` — a weekly cron workflow (`scripts/ci/launch-signals.ts`) that searches GitHub for action adoption, schema references, and "charter doctor" mentions and posts new hits into a `launch-signals` tracking issue. GitHub search indexes public repos only, so it produces signal once the repo is public. `admin`
 - [x] Demo asset source committed (`docs/internal/demo/charter-demo.tape`, VHS). `code`
 - [x] Render the demo GIF and embed in README / landing. **Done (2026-06-14):** `docs/internal/demo/charter-demo.gif` rendered via `vhs` (1200×700, real scan of this repo) and embedded in the README go-to-market header. Re-render at `v1.0.0` if the CLI output changes. `external`
 

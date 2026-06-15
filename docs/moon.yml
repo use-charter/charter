@@ -4,7 +4,7 @@ tasks:
   lint:
     command: "bun"
     args:
-      - "../scripts/scan-doc-todos.ts"
+      - "../scripts/docs/scan-doc-todos.ts"
       - "."
     inputs:
       - "**/*.md"

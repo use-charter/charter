@@ -8,7 +8,7 @@ import {
   runCharter,
   runStep,
   writeSection,
-} from './lib/full-test.ts';
+} from '../lib/full-test.ts';
 
 const tempRoot = process.argv[2] ? join(process.argv[2]) : defaultTempRoot;
 

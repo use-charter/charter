@@ -1,6 +1,6 @@
 import { mkdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { exitWithStatus, resolveRepoRoot } from './lib/process.ts';
+import { exitWithStatus, resolveRepoRoot } from '../lib/process.ts';
 
 process.chdir(resolveRepoRoot());
 

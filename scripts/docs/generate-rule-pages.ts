@@ -13,7 +13,7 @@ type RuleSpec = {
   fields: Map<string, string>;
 };
 
-const repoRoot = resolve(import.meta.dirname, '..');
+const repoRoot = resolve(import.meta.dirname, '..', '..');
 const specsDir = join(repoRoot, 'docs', 'internal', 'specs');
 const outputDir = join(repoRoot, 'docs', 'product', 'rules');
 const catalogPath = join(repoRoot, 'internal', 'rules', 'catalog', 'catalog.go');

@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { repoRoot, runStep, writeSection } from './lib/full-test.ts';
+import { repoRoot, runStep, writeSection } from '../lib/full-test.ts';
 
 console.log('== Charter visual terminal tour ==');
 console.log('This script is for human visual inspection of the styled CLI/TUI surfaces.');

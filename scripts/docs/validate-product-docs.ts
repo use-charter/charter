@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
-import { resolveRepoRoot } from './lib/process.ts';
+import { resolveRepoRoot } from '../lib/process.ts';
 
 type NavigationNode = string | { pages?: NavigationNode[]; groups?: NavigationNode[]; tabs?: NavigationNode[]; anchors?: NavigationNode[] };
 

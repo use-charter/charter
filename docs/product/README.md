@@ -32,7 +32,7 @@ Run from `docs/product/`. Requires Node.
 
 ## Rule pages
 
-Rule pages (`rules/AE-*.mdx`) are **bootstrapped** by `scripts/generate-rule-pages.ts` and then **hand-maintained**. Do not run the generator against existing rule pages without intent — it overwrites.
+Rule pages (`rules/AE-*.mdx`) are **bootstrapped** by `scripts/docs/generate-rule-pages.ts` and then **hand-maintained**. Do not run the generator against existing rule pages without intent — it overwrites.
 
 To add a new rule page (when a new AE-* rule is added to the engine):
 
@@ -40,13 +40,13 @@ To add a new rule page (when a new AE-* rule is added to the engine):
 # 1. Add the rule spec to the rule spec in docs/internal/specs/
 # 2. Add the rule to internal/rules/catalog/catalog.go
 # 3. Generate the initial page:
-bun scripts/generate-rule-pages.ts
+bun scripts/docs/generate-rule-pages.ts
 # 4. Edit docs/product/rules/AE-XXX-NNN.mdx — replace generated prose with
 #    customer-facing content (Why, What triggers it, Examples, How to fix)
 # 5. Add the rule ID to the correct group in docs.json
 ```
 
-The generator check (`bun scripts/generate-rule-pages.ts --check`) validates that all catalog IDs have a rule page with the correct title and CLI section. It does **not** enforce content equality.
+The generator check (`bun scripts/docs/generate-rule-pages.ts --check`) validates that all catalog IDs have a rule page with the correct title and CLI section. It does **not** enforce content equality.
 
 ## Navigation
 

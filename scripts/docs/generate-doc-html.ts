@@ -9,7 +9,7 @@
 // `bun scripts/generate-doc-html.ts`.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { marked } from 'marked';
-import { resolveRepoRoot } from './lib/process.ts';
+import { resolveRepoRoot } from '../lib/process.ts';
 
 interface DocPair {
   md: string;

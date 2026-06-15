@@ -20,7 +20,7 @@ tasks:
   check:
     command: "bun"
     args:
-      - "scripts/noop.ts"
+      - "scripts/dev/noop.ts"
     deps:
       - "lint"
       - "vet"
@@ -36,25 +36,25 @@ tasks:
   test:
     command: "bun"
     args:
-      - "scripts/go-test.ts"
+      - "scripts/go/go-test.ts"
     inputs:
       - "@globs(goSources)"
   perf:
     command: "bun"
     args:
-      - "scripts/go-perf.ts"
+      - "scripts/go/go-perf.ts"
     options:
       cache: false
   full-test:
     command: "bun"
     args:
-      - "scripts/full-test.ts"
+      - "scripts/dev/full-test.ts"
     options:
       cache: false
   visual-tour:
     command: "bun"
     args:
-      - "scripts/visual-tour.ts"
+      - "scripts/dev/visual-tour.ts"
     options:
       cache: false
       interactive: true
@@ -72,13 +72,13 @@ tasks:
   build:
     command: "bun"
     args:
-      - "scripts/go-build.ts"
+      - "scripts/go/go-build.ts"
     inputs:
       - "@globs(goSources)"
   docs:
     command: "bun"
     args:
-      - "scripts/scan-doc-todos.ts"
+      - "scripts/docs/scan-doc-todos.ts"
       - ".github"
       - "."
       - "docs/internal/decisions"
@@ -97,33 +97,33 @@ tasks:
   docs-product-rules:
     command: "bun"
     args:
-      - "scripts/generate-rule-pages.ts"
+      - "scripts/docs/generate-rule-pages.ts"
       - "--check"
     inputs:
       - "docs/internal/specs/AE-*.md"
       - "internal/rules/catalog/catalog.go"
-      - "scripts/generate-rule-pages.ts"
+      - "scripts/docs/generate-rule-pages.ts"
   docs-product:
     command: "bun"
     args:
-      - "scripts/validate-product-docs.ts"
+      - "scripts/docs/validate-product-docs.ts"
     deps:
       - "docs-product-rules"
     inputs:
       - "docs/product/**/*.mdx"
       - "docs/product/docs.json"
-      - "scripts/validate-product-docs.ts"
+      - "scripts/docs/validate-product-docs.ts"
   docs-html:
     command: "bun"
     args:
-      - "scripts/generate-doc-html.ts"
+      - "scripts/docs/generate-doc-html.ts"
       - "--check"
     inputs:
       - "docs/internal/architecture/charter-architecture-2026.md"
       - "docs/internal/architecture/charter-architecture-2026.html"
       - "docs/internal/audit/charter-v1-audit-checklist.md"
       - "docs/internal/audit/charter-v1-audit-checklist.html"
-      - "scripts/generate-doc-html.ts"
+      - "scripts/docs/generate-doc-html.ts"
       - "package.json"
   security:
     script: "gitleaks git --config .gitleaks.toml . --redact --no-banner && gitleaks dir --config .gitleaks.toml . --redact --no-banner && govulncheck ./... && osv-scanner scan source --config osv-scanner.toml -r ."
@@ -137,7 +137,7 @@ tasks:
   eval:
     command: "bun"
     args:
-      - "scripts/check-file-exists.ts"
+      - "scripts/dev/check-file-exists.ts"
       - "evals/README.md"
   actionlint:
     command: "actionlint"

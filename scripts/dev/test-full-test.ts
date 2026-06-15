@@ -1,7 +1,7 @@
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { cleanDirectory, newFixtureGitRepo, repoRoot, runCharter, runStep } from './lib/full-test.ts';
+import { cleanDirectory, newFixtureGitRepo, repoRoot, runCharter, runStep } from '../lib/full-test.ts';
 
 const assertTrue = (condition: boolean, message: string): void => {
   if (!condition) {

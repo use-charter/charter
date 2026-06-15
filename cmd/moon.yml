@@ -4,12 +4,12 @@ tasks:
   build:
     command: "bun"
     args:
-      - "../scripts/go-build.ts"
+      - "../scripts/go/go-build.ts"
     inputs:
       - "charter/**/*.go"
   test:
     command: "bun"
     args:
-      - "../scripts/go-test.ts"
+      - "../scripts/go/go-test.ts"
     inputs:
       - "charter/**/*.go"

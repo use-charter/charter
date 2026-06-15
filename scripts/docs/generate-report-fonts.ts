@@ -15,7 +15,7 @@
 // offline build/lint (it needs the network); the base64 artifact is what is verified.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { resolveRepoRoot } from './lib/process.ts';
+import { resolveRepoRoot } from '../lib/process.ts';
 
 // A modern desktop Chrome UA so the CSS2 API serves woff2 (the most compact format)
 // and the `latin` subset blocks we want.

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { resolveRepoRoot } from './lib/process.ts';
+import { resolveRepoRoot } from '../lib/process.ts';
 
 const ACTION_PATH = 'action/action.yml';
 

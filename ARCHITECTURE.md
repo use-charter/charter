@@ -44,7 +44,7 @@
 - `evals/`: acceptance fixtures for prompt, workflow, and future agent behavior
 - `.goreleaser.yaml`: GoReleaser v2 release build (multi-platform binaries, cosign keyless bundle signing, syft SPDX-2.3 SBOMs, Homebrew cask)
 - `.github/workflows/release.yml`: tag-triggered release workflow (GoReleaser + SLSA Build L3 provenance via slsa-github-generator)
-- `action/`: composite GitHub Action (source of truth; seeded to `use-charter/charter-action@v1` at launch) — downloads the signed binary, verifies it (cosign keyless + sha256), runs `charter doctor --format sarif`, and uploads via `github/codeql-action/upload-sarif@v4`. Because zizmor/actionlint do not scan `action.yml`, `scripts/validate-action.ts` (Bun TS) asserts the composite structure + SHA-pinned `uses:` and runs in `:check` (`action:validate`).
+- `action/`: composite GitHub Action (source of truth; seeded to `use-charter/charter-action@v1` at launch) — downloads the signed binary, verifies it (cosign keyless + sha256), runs `charter doctor --format sarif`, and uploads via `github/codeql-action/upload-sarif@v4`. Because zizmor/actionlint do not scan `action.yml`, `scripts/ci/validate-action.ts` (Bun TS) asserts the composite structure + SHA-pinned `uses:` and runs in `:check` (`action:validate`).
 
 Release rails are mise-pinned (GoReleaser, cosign, syft) and Moon-driven via the `release`, `release-snapshot`, and `release-check` tasks (`release-check` runs in `:check`).
 

@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { exitWithStatus, readStdoutText, resolveRepoRoot, runTextCommand } from './lib/process.ts';
+import { exitWithStatus, readStdoutText, resolveRepoRoot, runTextCommand } from '../lib/process.ts';
 
 process.chdir(resolveRepoRoot());
 

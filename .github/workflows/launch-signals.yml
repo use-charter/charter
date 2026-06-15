@@ -39,4 +39,4 @@ jobs:
       - name: Scan launch signals
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: mise x -- bun scripts/github-actions/launch-signals.ts
+        run: mise x -- bun scripts/ci/launch-signals.ts

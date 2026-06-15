@@ -19,7 +19,7 @@ const { HOME: rawHome = "/tmp", PATH: rawPath = "" } = process.env;
 const HOME: string = rawHome;
 const PATH_ENV = `/opt/homebrew/bin:/usr/bin:/bin:${rawPath}`;
 
-const repoRoot = resolve(import.meta.dirname, "..");
+const repoRoot = resolve(import.meta.dirname, "..", "..");
 const screenshotsDir = join(repoRoot, "docs", "product", "images", "screenshots");
 const charter = join(repoRoot, "dist", "charter");
 const tmpDir = "/tmp/charter-ss";

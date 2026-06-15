@@ -68,7 +68,7 @@ If images (logo, favicon) don't appear, check **Project Settings → Custom Doma
 
 - All content changes: edit `.mdx` files and push to `main` — Mintlify redeploys in ~30s
 - Navigation changes: edit `docs.json` and push
-- Rule pages: edit `docs/internal/specs/AE-*.md` and run `bun scripts/generate-rule-pages.ts`, then push
+- Rule pages: edit `docs/internal/specs/AE-*.md` and run `bun scripts/docs/generate-rule-pages.ts`, then push
 
 ---
 
