@@ -1,6 +1,6 @@
-# Evals
+# evals/
 
-Use this directory for prompt, workflow, and future agent evaluation artifacts.
+Prompt, workflow, and agent-behavior evaluation artifacts.
 
 Principles:
 
@@ -8,14 +8,8 @@ Principles:
 - capture edge cases and regressions as they appear
 - link evals to RFCs, specs, and test fixtures
 
-Add or update an eval when a non-trivial agent-facing workflow, prompt contract, or machine-judged behavior changes.
+Add or update an eval when a non-trivial agent-facing workflow, prompt contract,
+or machine-judged behavior changes. If deterministic Go tests fully cover the
+behavior, note that instead of adding a redundant eval.
 
-First-slice expectation:
-
-- if the first rule slice changes agent-facing output, add an eval artifact or a documented reason why deterministic Go tests are enough
-- if no eval is needed, the slice should still cite the proof model and CLI quality principles explicitly
-
-References:
-
-- `docs/internal/superpowers/checklists/2026-05-28-first-slice-proof-model.md`
-- `docs/internal/superpowers/checklists/2026-05-28-cli-quality-principles.md`
+Run them through `moon run :eval`.

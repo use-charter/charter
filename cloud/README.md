@@ -1,15 +1,13 @@
-# cloud
+# cloud/
 
-Workspace contract for future cloud control-plane work.
+Reserved for a future hosted control plane — a managed layer that would sit on
+top of the open-source CLI. **Nothing is built here yet**; the directory holds
+only its Moon workspace config so the build graph stays stable.
 
-Why this directory exists now:
+Charter is, and will remain, a fully offline CLI. Anything added here would be
+**additive and optional**, and would land behind:
 
-- preserve long-range topology from the Charter architecture
-- reserve a stable workspace ID for later hosted control-plane tasks
+- an ADR for its trust boundaries and data ownership, and
+- an RFC before any network service, persistence, or hosted governance flow.
 
-Activation requirements:
-
-- linked ADR for trust boundaries and ownership
-- linked RFC before introducing network services, persistence, or hosted governance flows
-- first implementation files should be `README.md`, `moon.yml`, service entrypoint, and operational runbooks
-- security checks and permissions review must happen before activation
+Until then there is nothing to run or configure in this directory.

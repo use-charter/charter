@@ -22,8 +22,8 @@ public domains. The landing site itself is a **Cloudflare Pages** project
 
 - `wrangler` is pinned in `package.json`. Install once: `bun install` (run in `infra/`).
 - Authenticate: `wrangler login`, or set `CLOUDFLARE_API_TOKEN` (+ `CLOUDFLARE_ACCOUNT_ID`)
-  for CI. Account: `<maintainer-email>` (`<cloudflare-account-id>`).
-  Zone `use-charter.dev` = `<cloudflare-zone-id>`.
+  for CI. The account ID and the `use-charter.dev` zone ID live in the Cloudflare
+  dashboard and in CI secrets/vars — they are not committed here.
 
 ## Commands
 

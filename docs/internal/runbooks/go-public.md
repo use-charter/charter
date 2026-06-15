@@ -6,7 +6,7 @@ values. Sourced from current docs (links per section, verified 2026-06-12).
 
 **Fixed facts for this project**
 - Repo: `use-charter/charter` (org `use-charter`)
-- Cloudflare account: `<maintainer-email>` — id `<cloudflare-account-id>`
+- Cloudflare account: id `<cloudflare-account-id>` (log in as the project account owner)
 - Zone: `use-charter.dev` — id `<cloudflare-zone-id>`
 - Pages project name: `charter-landing` (matches `web/wrangler.toml`)
 

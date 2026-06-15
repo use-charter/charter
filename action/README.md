@@ -12,7 +12,7 @@ permissions:
   contents: read
   security-events: write   # required for SARIF upload
 steps:
-  - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
   - uses: use-charter/charter-action@v1
     with:
       version: v1.0.0
