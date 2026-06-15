@@ -20,8 +20,10 @@
     "@astrojs/check": "^0.9.9",
     "@astrojs/sitemap": "^3.7.3",
     "@iconify-json/ph": "^1.2.2",
+    "@resvg/resvg-js": "^2.6.2",
     "astro": "^6.4.6",
     "astro-icon": "^1.1.5",
+    "satori": "^0.26.0",
     "typescript": "^6.0.3"
   },
   "devDependencies": {
