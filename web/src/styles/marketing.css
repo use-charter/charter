@@ -244,6 +244,35 @@ html.ck-html { scroll-behavior: smooth; }
 .ck-hero__rule::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--ck-line), transparent); }
 .ck-hero__rule b { color: var(--ck-blue); font-weight: 700; }
 
+/* Hero load-in — a staggered fade/rise on first paint. The doctor panel keeps
+   its own boot/typing sequence (data-boot); this only choreographs the left
+   column and the strips entering. Compositor-only (opacity + transform), so no
+   layout shift. Disabled entirely under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .ck-hero__rule,
+  .ck-hh1,
+  .ck-hsub,
+  .ck-hcta,
+  .ck-hcta__note,
+  .ck-sess,
+  .ck-agents,
+  .ck-hero__metrics {
+    animation: ckHeroRise 720ms var(--ease-spring) both;
+  }
+  .ck-hero__rule    { animation-delay: 40ms; }
+  .ck-hh1           { animation-delay: 110ms; }
+  .ck-hsub          { animation-delay: 200ms; }
+  .ck-hcta          { animation-delay: 290ms; }
+  .ck-hcta__note    { animation-delay: 360ms; }
+  .ck-sess          { animation-delay: 220ms; }
+  .ck-agents        { animation-delay: 440ms; }
+  .ck-hero__metrics { animation-delay: 520ms; }
+}
+@keyframes ckHeroRise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
 .ck-hero__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: stretch; width: 100%; }
 @media (max-width: 880px) { .ck-hero__grid { grid-template-columns: 1fr; gap: 22px; } }
 .ck-hero__col { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
