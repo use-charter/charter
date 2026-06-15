@@ -2,7 +2,11 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import ThemeSwitch from '../../components/ThemeSwitch.astro';
+import '../../styles/marketing.css';
+import '../../styles/legal.css';
 import '../../styles/blog.css';
+
+const REPO = 'https://github.com/use-charter/charter';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime(),
@@ -39,22 +43,29 @@ const blogSchema = {
     <script type="application/ld+json" is:inline set:html={JSON.stringify(blogSchema)} />
   </Fragment>
 
-  <header class="bl-bar">
-    <a class="bl-bar__brand" href="/">
-      <svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
-        <rect x="3" y="12" width="4" height="40"/><rect x="3" y="12" width="11" height="4"/><rect x="3" y="48" width="11" height="4"/>
-        <rect x="57" y="12" width="4" height="40"/><rect x="50" y="12" width="11" height="4"/><rect x="50" y="48" width="11" height="4"/>
-        <path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5" fill="none" stroke="currentColor" stroke-width="6"/>
-      </svg>
-      <span>charter</span>
-    </a>
-    <nav class="bl-bar__nav">
-      <a href="/blog/rss.xml" class="bl-bar__rss" aria-label="RSS feed">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+  <header class="ck-bar ck-bar--legal">
+    <div class="ck-bar__in">
+      <a href="/" class="ck-bar__brand">
+        <svg class="ck-bar__mark" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
+          <rect x="3" y="12" width="4" height="40"/><rect x="3" y="12" width="11" height="4"/><rect x="3" y="48" width="11" height="4"/>
+          <rect x="57" y="12" width="4" height="40"/><rect x="50" y="12" width="11" height="4"/><rect x="50" y="48" width="11" height="4"/>
+          <path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5" fill="none" stroke="currentColor" stroke-width="6"/>
+        </svg><span class="ck-bar__word">charter</span>
       </a>
-      <a href="/" class="bl-bar__home">← home</a>
-      <ThemeSwitch />
-    </nav>
+      <a href="/" class="ck-bar__back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> back to home
+      </a>
+      <span class="ck-bar__spacer"></span>
+      <div class="ck-bar__right">
+        <a href="/blog/rss.xml" class="ck-bar__gh" aria-label="RSS feed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+        </a>
+        <ThemeSwitch />
+        <a href={REPO} class="ck-bar__gh" rel="noopener noreferrer" target="_blank" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.8.5 12.3c0 5.2 3.4 9.6 8 11.2.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.4-1.3-5.4-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17 4.6 18 4.9 18 4.9c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.4 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.6 8-6 8-11.2C23.5 5.8 18.3.5 12 .5z"/></svg>
+        </a>
+      </div>
+    </div>
   </header>
 
   <main class="bl">
@@ -103,4 +114,9 @@ const blogSchema = {
     <span>&copy; {new Date().getFullYear()} · Charter</span>
     <a href="/blog/rss.xml">RSS</a>
   </footer>
+
+  <script>
+    import { initThemeSwitch } from '../../islands/theme';
+    initThemeSwitch();
+  </script>
 </Base>

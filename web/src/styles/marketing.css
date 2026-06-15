@@ -8,7 +8,13 @@
    default — motion is additive. Scoped under `.ck`.
    ═══════════════════════════════════════════════════════════════ */
 
-.ck {
+/* Terminal-session design tokens. The --ck-* namespace is unique to the
+   marketing / legal / blog-nav surfaces, so the token DECLARATIONS live at
+   :root — that lets the shared nav (.ck-bar, .ck-themer) render correctly on
+   pages that are NOT wrapped in `.ck` (the blog), without dragging in `.ck`'s
+   fullscreen CRT overlay or background. Visual props (--accent, --ease-out,
+   CRT, background) stay scoped to `.ck` so other surfaces are untouched. */
+:root {
   --ck-bg: #06080c;
   --ck-bg-raise: #0b0e14;
   --ck-bg-panel: #0d1219;
@@ -29,7 +35,10 @@
   --ck-red: #ec6464;
   --ck-violet: #a78bfa;
   --ck-w: 1200px;
-
+  --font-head: var(--font-site);
+  --ease-spring: cubic-bezier(.16, 1, .3, 1);
+}
+.ck {
   --accent: var(--ck-blue);
   --font-head: var(--font-site);
   --font-body: var(--font-site);
@@ -54,7 +63,7 @@ body.ck-body { background: #06080c; margin: 0; }
    Tokens live on `.ck` (not :root), so light overrides are scoped to
    `:root[data-theme="light"] .ck` to win the cascade. data-theme is
    set on <html> by Base.astro pre-paint from localStorage. ───────── */
-:root[data-theme="light"] .ck {
+:root[data-theme="light"] {
   --ck-bg: #f6f7f9;
   --ck-bg-raise: #ffffff;
   --ck-bg-panel: #ffffff;
@@ -73,6 +82,8 @@ body.ck-body { background: #06080c; margin: 0; }
   --ck-green-deep: #0e6e41;
   --ck-amber: #a9750f;
   --ck-red: #cf3b3b;
+}
+:root[data-theme="light"] .ck {
   --crt-line: rgba(15, 22, 32, .022);
   --crt-vig: rgba(15, 22, 32, .06);
   background-image:
