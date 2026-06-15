@@ -15,6 +15,7 @@ cov*.out
 cov*.html
 
 # Tool caches and local state
+.astro/
 .moon/cache/
 .moon/docker/
 .worktrees/
