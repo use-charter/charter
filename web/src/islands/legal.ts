@@ -3,11 +3,10 @@
    enhancement — the page is fully readable and navigable without it. */
 
 import { initThemeSwitch } from './theme';
+import { initFooterGlow } from './footer';
 
 const SPY_RATIO = 0.36;
 const JUMP_OFFSET = 58;
-const GLYPH_TOP = 0.12;
-const GLYPH_BOTTOM = 0.62;
 
 function initRail(): void {
   const bar = document.querySelector<HTMLElement>('.lg-rail__bar i');
@@ -62,68 +61,9 @@ function initRail(): void {
   window.addEventListener('resize', onScroll);
 }
 
-function initColophonGlow(): void {
-  const mark = document.querySelector<HTMLElement>('.ck-man__mark');
-  if (!mark || window.matchMedia('(hover: none)').matches) return;
-
-  // Only light the wordmark when the pointer is over its visible glyph band
-  // and NOT over the footer content (links, subscribe pane, social icons) or
-  // any interactive element.
-  const QUIET = 'a, button, input, label, [role="radiogroup"], h5, p, li';
-
-  let queued = false;
-  let lx = 0;
-  let ly = 0;
-  let target: EventTarget | null = null;
-  const onMove = (e: PointerEvent): void => {
-    lx = e.clientX;
-    ly = e.clientY;
-    target = e.target;
-    if (queued) return;
-    queued = true;
-    requestAnimationFrame(() => {
-      queued = false;
-      const r = mark.getBoundingClientRect();
-      const inBand =
-        lx >= r.left &&
-        lx <= r.right &&
-        ly >= r.top + r.height * GLYPH_TOP &&
-        ly <= r.top + r.height * GLYPH_BOTTOM;
-      const node = target instanceof Element ? target : null;
-      const overQuiet = node != null && node.closest(QUIET) != null;
-      const inside = inBand && !overQuiet;
-      mark.classList.toggle('is-lit', inside);
-      if (inside) {
-        mark.style.setProperty('--mx', `${lx - r.left}px`);
-        mark.style.setProperty('--my', `${ly - r.top}px`);
-      }
-    });
-  };
-  document.addEventListener('pointermove', onMove);
-}
-
-function initSubscribe(): void {
-  const form = document.querySelector<HTMLFormElement>('.ck-sub form');
-  if (!form) return;
-  const input = form.querySelector<HTMLInputElement>('.ck-sub__input');
-  const ok = form.querySelector<HTMLElement>('.ck-sub__ok');
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const value = input?.value.trim() ?? '';
-    const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
-    if (ok) {
-      ok.textContent = valid
-        ? '✓ queued — we’ll ping you when new rules and releases land'
-        : '✗ that doesn’t look like an email';
-    }
-    if (valid && input) input.value = '';
-  });
-}
-
 function init(): void {
   initRail();
-  initColophonGlow();
-  initSubscribe();
+  initFooterGlow();
   initThemeSwitch();
 }
 

@@ -2,9 +2,11 @@
 // Progress reflects how far through the article body the reader is; the TOC
 // highlights the section currently in view.
 import { initThemeSwitch } from './theme';
+import { initFooterGlow } from './footer';
 
-// Wire the shared three-state theme switcher in the nav bar.
+// Wire the shared three-state theme switcher in the nav bar and the footer glow.
 initThemeSwitch();
+initFooterGlow();
 
 const progress = document.querySelector<HTMLElement>('[data-progress]');
 const post = document.querySelector<HTMLElement>('[data-post]');

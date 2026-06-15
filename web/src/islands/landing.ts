@@ -14,13 +14,11 @@
  */
 import { initWaitlistForm } from './WaitlistForm';
 import { initThemeSwitch } from './theme';
+import { initFooterGlow } from './footer';
 
 const prefersReducedMotion = (): boolean =>
   typeof window.matchMedia === 'function' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-const hasHover = (): boolean =>
-  typeof window.matchMedia !== 'function' || !window.matchMedia('(hover: none)').matches;
 
 const BOOT_CMD = 'charter doctor --strict';
 const SCAN_FEED = ['AGENTS.md', 'charter.yaml', '.mcp.json', '.gitignore', 'package.json', '.github/workflows/', 'tests/', 'go.mod'];
@@ -317,50 +315,6 @@ function initLifecycle(): void {
   window.setTimeout(() => { if (!done) { done = true; light(items.length); } }, 4500);
 }
 
-/**
- * Cursor-lit wordmark in the colophon — a glow layer masked to a soft circle.
- * The glow only lights when the pointer is actually over the wordmark's
- * visible glyph band AND not hovering any footer content (links, columns,
- * subscribe pane, social icons) or other interactive elements.
- */
-function initWordmark(): void {
-  const mark = document.querySelector<HTMLElement>('[data-wordmark]');
-  if (!mark || !hasHover()) return;
-  // The wordmark sits behind the footer content. Light it whenever the pointer
-  // is within its visible glyph band — including over the content layer's empty
-  // padding — but never while hovering actual footer text, links, or controls.
-  const QUIET = 'a, button, input, label, [role="radiogroup"], h5, p, li';
-  // The glyphs occupy a centered band of the giant wordmark, not its full box.
-  const GLYPH_TOP = 0.12;
-  const GLYPH_BOTTOM = 0.62;
-  let queued = false;
-  let lx = 0;
-  let ly = 0;
-  let target: EventTarget | null = null;
-  document.addEventListener('pointermove', (e: PointerEvent) => {
-    lx = e.clientX;
-    ly = e.clientY;
-    target = e.target;
-    if (queued) return;
-    queued = true;
-    window.requestAnimationFrame(() => {
-      queued = false;
-      const r = mark.getBoundingClientRect();
-      const inBand =
-        lx >= r.left && lx <= r.right &&
-        ly >= r.top + r.height * GLYPH_TOP && ly <= r.top + r.height * GLYPH_BOTTOM;
-      const node = target instanceof Element ? target : null;
-      const overQuiet = node != null && node.closest(QUIET) != null;
-      const inside = inBand && !overQuiet;
-      mark.classList.toggle('is-lit', inside);
-      if (inside) {
-        mark.style.setProperty('--mx', lx - r.left + 'px');
-        mark.style.setProperty('--my', ly - r.top + 'px');
-      }
-    });
-  });
-}
-
 function init(): void {
   initCopyButtons();
   initThemeSwitch();
@@ -369,7 +323,7 @@ function init(): void {
   initTabGroup('data-rule-tab', 'data-rule-panel');
   initTabGroup('data-cmd-tab', 'data-cmd-panel', replayCommandFade);
   initLifecycle();
-  initWordmark();
+  initFooterGlow();
   initWaitlistForm();
 }
 

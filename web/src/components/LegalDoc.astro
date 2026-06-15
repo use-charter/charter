@@ -1,16 +1,13 @@
 ---
 import { Icon } from 'astro-icon/components';
 import SiteNav from './SiteNav.astro';
+import SiteFooter from './SiteFooter.astro';
 import type { LegalPage } from '../lib/legal-content';
 
 interface Props {
   page: LegalPage;
 }
 const { page } = Astro.props;
-const year = new Date().getFullYear();
-
-const REPO = 'https://github.com/use-charter/charter';
-const DOCS = 'https://use-charter.dev/docs';
 
 // Split a trailing `--flag` out of the command so it can be tinted apart
 // from the verb, mirroring the prompt styling on the rest of the site.
@@ -19,36 +16,6 @@ const cmdHead = page.cmd.replace(/--\S+/, '');
 const cmdFlag = flagMatch ? flagMatch[0] : '';
 
 const padNo = (i: number): string => String(i + 1).padStart(2, '0');
-
-const FOOT_COLS = [
-  {
-    h: 'Developers',
-    links: [
-      ['Quickstart', `${DOCS}/quickstart`],
-      ['CLI reference', `${DOCS}/cli/overview`],
-      ['Rules overview', `${DOCS}/rules/overview`],
-      ['GitHub Action', `${DOCS}/ci/github-action`],
-    ],
-  },
-  {
-    h: 'Resources',
-    links: [
-      ['Documentation', DOCS],
-      ['Blog', '/blog'],
-      ['Changelog', 'https://use-charter.dev/changelog'],
-      ['Source', REPO],
-      ['llms.txt', '/llms.txt'],
-    ],
-  },
-  {
-    h: 'Legal',
-    links: [
-      ['Privacy', '/legal/privacy'],
-      ['Terms', '/legal/terms'],
-      ['License', '/legal/license'],
-    ],
-  },
-] as const;
 ---
 
 <div class="ck">
@@ -152,81 +119,7 @@ const FOOT_COLS = [
     </div>
   </main>
 
-  <footer class="ck-man">
-    <div class="ck-man__mark" aria-hidden="true">
-      <span class="base">charter</span>
-      <span class="glow">charter</span>
-    </div>
-    <div class="ck-man__in">
-      <div class="ck-man__title">
-        <span>CHARTER(1)</span>
-        <span>General Commands Manual</span>
-      </div>
-      <div class="ck-man__grid">
-        <div>
-          <a href="/" class="ck-man__brand-logo">
-            <svg width="20" height="20" viewBox="0 0 64 64" fill="currentColor" aria-hidden="true">
-              <rect x="3" y="12" width="4" height="40" /><rect x="3" y="12" width="11" height="4" /><rect x="3" y="48" width="11" height="4" />
-              <rect x="57" y="12" width="4" height="40" /><rect x="50" y="12" width="11" height="4" /><rect x="50" y="48" width="11" height="4" />
-              <path d="M41.53,26.5 A11,11 0 1 0 41.53,37.5" fill="none" stroke="currentColor" stroke-width="6" />
-            </svg> charter
-          </a>
-          <p class="ck-man__tagline">AI-agent readiness, scored. Offline, deterministic, and yours to keep.</p>
-          <div class="ck-man__chips" role="list">
-            <span class="ck-man__chip" role="listitem"><Icon name="ph:wifi-slash" />offline-first</span>
-            <span class="ck-man__chip" role="listitem"><Icon name="ph:user-circle" />no account</span>
-            <span class="ck-man__chip" role="listitem"><Icon name="ph:eye-slash" />no telemetry</span>
-          </div>
-          <div class="ck-man__social">
-            <a href={REPO} rel="noopener noreferrer" target="_blank" aria-label="GitHub">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.8.5 12.3c0 5.2 3.4 9.6 8 11.2.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.4-1.3-5.4-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17 4.6 18 4.9 18 4.9c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.4 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.6 8-6 8-11.2C23.5 5.8 18.3.5 12 .5z" /></svg>
-            </a>
-            <a href={DOCS} rel="noopener noreferrer" target="_blank" aria-label="Documentation"><Icon name="ph:book-open" /></a>
-          </div>
-        </div>
-        {FOOT_COLS.map((col) => (
-          <div>
-            <h3>{col.h}</h3>
-            <ul>{col.links.map((l) => <li><a href={l[1]}>{l[0]}</a></li>)}</ul>
-          </div>
-        ))}
-        <div class="ck-sub">
-          <div class="ck-sub__bar">
-            <span class="ck-sub__dots"><i></i><i></i><i></i></span>
-            <span class="ck-sub__ttl">charter subscribe</span>
-          </div>
-          <form class="ck-sub__body" novalidate>
-            <div class="ck-sub__cmd"><span class="ch">❯ </span>charter subscribe <span class="fl">--updates</span></div>
-            <div class="ck-sub__note">New rules and releases, straight to your inbox. No noise.</div>
-            <div class="ck-sub__row">
-              <label class="ck-sub__field">
-                <span class="pfx">@</span>
-                <input class="ck-sub__input" type="email" placeholder="you@example.com" aria-label="Email address" spellcheck="false" autocomplete="email" />
-              </label>
-              <button class="ck-sub__btn" type="submit">notify me</button>
-            </div>
-            <div class="ck-sub__ok" aria-live="polite"></div>
-          </form>
-        </div>
-      </div>
-    </div>
-    <div class="ck-man__exit">
-      <span class="ck-man__exit-l">
-        <span class="ck-man__copy">&copy; {year} · Charter</span>
-        <span class="sep" aria-hidden="true">|</span>
-        <span>Apache 2.0</span>
-      </span>
-      <span class="ck-man__exit-r">
-        <span>v1.0.0</span>
-        <span class="sep" aria-hidden="true">|</span>
-        <span class="ck-man__built">Built with
-          <a href="https://astro.build/" rel="noopener noreferrer" target="_blank" aria-label="Astro">
-            <img src="/icons/astro-wordmark.svg" alt="Astro" width="53" height="14" loading="lazy" />
-          </a>
-        </span>
-      </span>
-    </div>
-  </footer>
+  <SiteFooter />
 </div>
 
 <script>

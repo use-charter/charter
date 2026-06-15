@@ -574,6 +574,8 @@ html.ck-html { scroll-behavior: smooth; }
 .ck-man__in { position: relative; z-index: 1; max-width: var(--ck-w); margin: 0 auto; padding: 52px 24px 150px; font-family: var(--font-code); color: var(--ck-dim); }
 .ck-man__title { display: flex; justify-content: space-between; color: var(--ck-faint); font-size: 12px; letter-spacing: .08em; margin-bottom: 30px; font-family: var(--font-meta); }
 .ck-man__grid { display: grid; grid-template-columns: 1.4fr .72fr .72fr .72fr 1.2fr; gap: 26px; }
+/* No subscribe pane (legal, blog, future pages): drop the 5th column. */
+@media (min-width: 941px) { .ck-man__grid--nosub { grid-template-columns: 1.4fr .72fr .72fr .72fr; } }
 @media (max-width: 940px) { .ck-man__grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .ck-man__grid { grid-template-columns: 1fr; gap: 26px; } }
 

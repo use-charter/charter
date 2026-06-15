@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import SiteNav from '../../components/SiteNav.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
 import '../../styles/marketing.css';
 import '../../styles/legal.css';
 import '../../styles/blog.css';
@@ -95,10 +96,7 @@ const breadcrumbs = {
     </div>
   </article>
 
-  <footer class="bl-foot">
-    <span>&copy; {new Date().getFullYear()} · Charter</span>
-    <a href="/blog/rss.xml">RSS</a>
-  </footer>
+  <SiteFooter />
 
   <script>
     import '../../islands/blog';
