@@ -12,7 +12,9 @@ set -euo pipefail
 #   scripts/*                         → go + docs (run by both lanes' tasks)
 #   internal/rules/catalog/*, specs   → go + docs (catalog drives rule docs)
 #   toolchain/config (mise, moon, …)  → all lanes
-# Pure prose — root markdown, engineering docs under docs/internal/**, demo
+#   agent-context (AGENTS.md, CLAUDE.md, …) → go (scanned by the doctor gate)
+# Other prose — non-context root markdown, engineering docs under
+# docs/internal/**, demo
 # assets, LICENSE — triggers NO lane and NO security scan: it gates no build,
 # no published doc, and contains no code or dependencies. The security scan
 # (gitleaks + govulncheck + osv-scanner) runs whenever code, dependencies,
@@ -90,6 +92,12 @@ for file in "${changed_files[@]}"; do
       infra=true; security=true
       ;;
     cmd/*|internal/*|*.go|go.mod|go.sum)
+      go=true; security=true
+      ;;
+    # Agent-context files are scanned by `charter doctor` (AE-CTX-*/AE-SEC-*),
+    # so editing them must re-run the Go lane's self-scan gate — otherwise an
+    # over-budget or secret-bearing context file slips past CI.
+    AGENTS.md|CLAUDE.md|GEMINI.md|.github/copilot-instructions.md|.cursor/rules/*)
       go=true; security=true
       ;;
     # Pure prose / non-published docs / assets — no lane, no security scan.
