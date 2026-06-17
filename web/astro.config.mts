@@ -1,6 +1,23 @@
+import { readFileSync, readdirSync } from 'node:fs';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig } from 'astro/config';
 import icon from 'astro-icon';
+
+// Per-page sitemap lastmod from real content dates, not a uniform build
+// timestamp: Google only trusts <lastmod> when it looks accurate and ignores it
+// when every URL shares one date that bumps on each deploy. Blog posts carry
+// `updated ?? date` in frontmatter; other pages omit lastmod (better none than a
+// fabricated value).
+const blogDir = new URL('./src/content/blog/', import.meta.url);
+const blogLastmod = new Map<string, string>();
+for (const file of readdirSync(blogDir)) {
+  if (!file.endsWith('.md') || file.startsWith('_')) continue;
+  const frontmatter = readFileSync(new URL(file, blogDir), 'utf8').split('---')[1] ?? '';
+  const pick = (key: string): string | undefined =>
+    frontmatter.match(new RegExp(`^${key}:\\s*(.+)$`, 'm'))?.[1]?.trim().replace(/['"]/g, '');
+  const stamp = pick('updated') || pick('date');
+  if (stamp) blogLastmod.set(file.replace(/\.md$/, ''), new Date(stamp).toISOString());
+}
 
 export default defineConfig({
   output: 'static',
@@ -8,12 +25,20 @@ export default defineConfig({
   integrations: [
     icon(),
     sitemap({
-      changefreq: 'weekly',
-      priority: 1.0,
-      lastmod: new Date(),
       // The founder dashboard is Cloudflare-Access-gated and unlisted — keep it
       // out of the public sitemap.
       filter: (page) => !page.includes('/dashboard'),
+      // Drop priority/changefreq (Google ignores both). Set lastmod only where
+      // it can be substantiated (blog frontmatter); omit it everywhere else.
+      serialize(item) {
+        delete item.changefreq;
+        delete item.priority;
+        const slug = item.url.match(/\/blog\/([^/]+)\/?$/)?.[1];
+        const lastmod = slug ? blogLastmod.get(slug) : undefined;
+        if (lastmod) item.lastmod = lastmod;
+        else delete item.lastmod;
+        return item;
+      },
     }),
   ],
   markdown: {
