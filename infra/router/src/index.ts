@@ -83,6 +83,13 @@ export default {
       });
     }
 
+    // Convenience 301: people and tools guess /sitemap.xml, but Astro's sitemap
+    // integration emits an index at /sitemap-index.xml. Redirect the guess so it
+    // resolves instead of 404ing. (The real sitemap is declared in robots.txt.)
+    if (path === '/sitemap.xml') {
+      return Response.redirect(new URL('/sitemap-index.xml', url).href, 301);
+    }
+
     // Proxy Mintlify-owned paths to Mintlify, forwarding the public hostname so
     // Mintlify recognises use-charter.dev as its custom domain.
     if (isMintlifyPath(path)) {
