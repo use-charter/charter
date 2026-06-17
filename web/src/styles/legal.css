@@ -22,7 +22,7 @@
 .ck-bar__spacer { margin-left: auto; }
 
 /* ── hero ────────────────────────────────────────────────────── */
-.lg-hero { max-width: 1040px; margin: 0 auto; padding: 52px 24px 26px; }
+.lg-hero { max-width: var(--ck-w); margin: 0 auto; padding: 52px 24px 26px; }
 .lg-hero__kicker { font-family: var(--font-meta); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--ck-blue); display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
 .lg-hero__kicker::before { content: ''; width: 22px; height: 2px; background: var(--ck-blue); border-radius: 2px; }
 .lg-cmd { font-family: var(--font-code); font-size: 14px; color: var(--ck-dim); margin-bottom: 16px; }
@@ -45,7 +45,7 @@
 @media (max-width: 420px) { .lg-chips { grid-template-columns: 1fr; } }
 
 /* ── layout: rail + doc ──────────────────────────────────────── */
-.lg-main { max-width: 1040px; margin: 0 auto; padding: 34px 24px 30px; display: grid; grid-template-columns: 216px 1fr; gap: 40px; align-items: start; }
+.lg-main { max-width: var(--ck-w); margin: 0 auto; padding: 34px 24px 30px; display: grid; grid-template-columns: 240px 1fr; gap: 56px; align-items: start; }
 @media (max-width: 880px) { .lg-main { grid-template-columns: 1fr; gap: 22px; } }
 
 .lg-rail { position: sticky; top: 66px; align-self: start; }

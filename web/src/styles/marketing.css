@@ -596,12 +596,12 @@ html.ck-html { scroll-behavior: smooth; }
 
 /* ═══ COLOPHON — terminal man page over a cursor-lit wordmark ═══ */
 .ck-man { border-top: 1px solid var(--ck-line-soft); margin-top: 96px; position: relative; overflow: clip; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--ck-blue) 3%, transparent)); }
-/* Sized to the footer's content width (not the viewport): the mark box caps at
-   --ck-w and the glyphs scale in cqw, so "charter" fills the footer column
-   identically on a 13" or a 27" — never overgrown on wide screens. */
-.ck-man__mark { position: absolute; left: 50%; bottom: -5%; transform: translateX(-50%); width: min(92vw, var(--ck-w)); container-type: inline-size; font-family: var(--font-head); font-weight: 900; line-height: 1; letter-spacing: -.05em; white-space: nowrap; text-align: center; pointer-events: none; user-select: none; }
-.ck-man__mark .base { font-size: 26.5cqw; color: transparent; -webkit-text-stroke: 1px var(--ck-line); -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 80%); mask-image: linear-gradient(to bottom, #000 0%, transparent 80%); }
-.ck-man__mark .glow { position: absolute; inset: 0; font-size: 26.5cqw; color: var(--ck-blue); opacity: 0; -webkit-text-stroke: 1px var(--ck-blue); transition: opacity 200ms var(--ease-out); -webkit-mask-image: radial-gradient(180px 180px at var(--mx, 50%) var(--my, 40%), #000 0%, transparent 70%); mask-image: radial-gradient(180px 180px at var(--mx, 50%) var(--my, 40%), #000 0%, transparent 70%); }
+/* The mark box mirrors .ck-man__in's box model exactly (same max-width, margin,
+   and padding) so the wordmark shares the content's left/right edges on every
+   page and width; the glyphs scale in cqw to fill that box. Identical on 13"/27". */
+.ck-man__mark { position: absolute; left: 0; right: 0; bottom: -5%; max-width: var(--ck-w); margin: 0 auto; padding: 0 24px; box-sizing: border-box; container-type: inline-size; font-family: var(--font-head); font-weight: 900; line-height: 1; letter-spacing: -.05em; white-space: nowrap; text-align: center; pointer-events: none; user-select: none; }
+.ck-man__mark .base { font-size: 27.5cqw; color: transparent; -webkit-text-stroke: 1px var(--ck-line); -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 80%); mask-image: linear-gradient(to bottom, #000 0%, transparent 80%); }
+.ck-man__mark .glow { position: absolute; inset: 0; font-size: 27.5cqw; color: var(--ck-blue); opacity: 0; -webkit-text-stroke: 1px var(--ck-blue); transition: opacity 200ms var(--ease-out); -webkit-mask-image: radial-gradient(180px 180px at var(--mx, 50%) var(--my, 40%), #000 0%, transparent 70%); mask-image: radial-gradient(180px 180px at var(--mx, 50%) var(--my, 40%), #000 0%, transparent 70%); }
 .ck-man__mark.is-lit .glow { opacity: .55; }
 .ck-man__in { position: relative; z-index: 1; max-width: var(--ck-w); margin: 0 auto; padding: 52px 24px 150px; font-family: var(--font-code); color: var(--ck-dim); }
 .ck-man__title { display: flex; justify-content: space-between; color: var(--ck-faint); font-size: 12px; letter-spacing: .08em; margin-bottom: 30px; font-family: var(--font-meta); }
@@ -691,6 +691,7 @@ html.ck-html { scroll-behavior: smooth; }
   .ck-prompt .tm { display: none; }
   .ck-cat2, .ck-cmds, .ck-step, .ck-gate, .ck-trust { margin-top: 22px; }
   .ck-man__in { padding: 44px 16px 40px; }
+  .ck-man__mark { padding: 0 16px; }
   .ck-man__exit { padding: 18px 16px; }
   /* man-page header crams on phones — drop the subtitle, keep CHARTER(1) */
   .ck-man__title span:nth-child(2) { display: none; }
