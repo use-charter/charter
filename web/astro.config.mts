@@ -16,6 +16,12 @@ export default defineConfig({
       filter: (page) => !page.includes('/dashboard'),
     }),
   ],
+  markdown: {
+    // No Shiki: it injects an inline dark theme on code blocks that ignores our
+    // theme tokens (dark block on a light page, unreadable). Fenced code renders
+    // as plain <pre><code>, styled theme-aware by .lg-doc__body pre.
+    syntaxHighlight: false,
+  },
   build: {
     // Inline all CSS into the HTML <style> so there is no render-blocking
     // stylesheet request — critical on high-latency mobile (Slow 4G). The

@@ -122,6 +122,50 @@
 .lg-codepane__more { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-top: 1px solid var(--ck-line-soft); font-family: var(--font-code); font-size: 12.5px; color: var(--ck-faint); }
 .lg-codepane__more a { color: var(--ck-blue); text-decoration: none; }
 
+/* ── blog post, rendered as a legal-style doc ────────────────────
+   The /blog/* posts reuse the .lg-* doc framing. Their body is rendered
+   Markdown (not structured sections), so H2s are numbered with a CSS counter
+   to mirror the legal .lg-sec__no badges, and inline chips replace the legal
+   4-column feature grid. */
+.lg-chips--inline { display: flex; flex-wrap: wrap; gap: 8px; }
+.lg-chips--inline .lg-chip { padding: 7px 12px; font-size: 12px; }
+.lg-chips--inline .lg-chip svg { color: var(--ck-blue); }
+
+.lg-doc__body { counter-reset: docsec; padding: clamp(26px, 4vw, 44px); font-family: var(--font-body); font-size: 16px; line-height: 1.75; color: var(--ck-dim); }
+.lg-doc__body > * + * { margin-top: 1.3em; }
+.lg-doc__body > p:first-of-type { font-size: 1.06em; color: var(--ck-ink); }
+.lg-doc__body h2 {
+  counter-increment: docsec; display: flex; align-items: baseline; gap: 14px;
+  font-family: var(--font-head); font-weight: 700; font-size: clamp(22px, 3vw, 28px); letter-spacing: -.02em;
+  color: var(--ck-ink); margin-top: 2em; padding-top: 1.3em; border-top: 1px solid var(--ck-line-soft); scroll-margin-top: 80px;
+}
+.lg-doc__body h2::before {
+  content: counter(docsec, decimal-leading-zero); align-self: center; flex: none;
+  font-family: var(--font-meta); font-size: 12px; font-weight: 700; color: var(--ck-blue);
+  background: color-mix(in srgb, var(--ck-blue) 12%, transparent); border-radius: 6px; padding: 3px 8px;
+}
+.lg-doc__body h3 { font-family: var(--font-head); font-weight: 700; font-size: 19px; letter-spacing: -.01em; color: var(--ck-ink); margin-top: 1.7em; scroll-margin-top: 80px; }
+.lg-doc__body strong, .lg-doc__body b { color: var(--ck-ink); font-weight: 600; }
+.lg-doc__body a { color: var(--ck-blue); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--ck-blue) 35%, transparent); transition: color 140ms, border-color 140ms; }
+.lg-doc__body a:hover { color: var(--ck-blue-bright); border-bottom-color: var(--ck-blue); text-decoration: none; }
+.lg-doc__body code { font-family: var(--font-code); font-size: 13.5px; color: var(--ck-ink); background: var(--ck-line-soft); padding: 1px 6px; border-radius: 4px; }
+.lg-doc__body pre { background: var(--ck-bg-inset); border: 1px solid var(--ck-line-soft); border-radius: 10px; padding: 16px 18px; overflow-x: auto; font-size: 13px; line-height: 1.7; }
+.lg-doc__body pre code { background: none; padding: 0; color: var(--ck-dim); }
+.lg-doc__body ul { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.lg-doc__body ul li { position: relative; padding-left: 24px; }
+.lg-doc__body ul li::before { content: '▸'; position: absolute; left: 4px; top: 0; color: var(--ck-blue); font-size: 12px; }
+.lg-doc__body ol { list-style: none; padding: 0; counter-reset: li; display: flex; flex-direction: column; gap: 9px; }
+.lg-doc__body ol li { position: relative; padding-left: 28px; counter-increment: li; }
+.lg-doc__body ol li::before { content: counter(li); position: absolute; left: 2px; top: 0; color: var(--ck-blue); font-family: var(--font-meta); font-size: 12px; font-weight: 700; }
+.lg-doc__body blockquote { margin: 0; padding: 13px 17px; border-left: 3px solid var(--ck-blue); background: color-mix(in srgb, var(--ck-blue) 7%, transparent); border-radius: 0 9px 9px 0; color: var(--ck-ink); }
+.lg-doc__body blockquote p { color: var(--ck-ink); }
+.lg-doc__body hr { border: 0; border-top: 1px solid var(--ck-line-soft); margin: 1.9em 0; }
+.lg-doc__body img { max-width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--ck-line-soft); }
+
+.bl-doc__foot { margin-top: 2.6em; padding-top: 22px; border-top: 1px solid var(--ck-line-soft); display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.bl-doc__back { font-family: var(--font-code); font-size: 13px; color: var(--ck-dim); text-decoration: none; transition: color 140ms; }
+.bl-doc__back:hover { color: var(--ck-ink); }
+
 /* The colophon (.ck-man*, .ck-sub*) is fully styled by the shared ck.css and
    reused verbatim by the legal footer — no duplicate rules needed here. */
 

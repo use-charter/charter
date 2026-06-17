@@ -1,7 +1,7 @@
 ---
 title: "The score only ratchets up"
 description: "Readiness isn't a one-time cleanup. Here's how Charter turns a repo from an honest baseline into a wall every pull request has to clear — and why the hard caps matter more than the formula."
-date: 2026-06-12
+date: 2026-06-18
 author: "Charter"
 tags: ["engineering", "philosophy"]
 ---

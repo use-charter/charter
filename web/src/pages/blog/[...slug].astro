@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
+import { Icon } from 'astro-icon/components';
 import Base from '../../layouts/Base.astro';
 import SiteNav from '../../components/SiteNav.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
@@ -14,12 +15,15 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
-const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+// H2s are the numbered sections (rail + doc badges); H3s stay inline in the prose.
+const sections = headings.filter((h) => h.depth === 2);
 
 const SITE = 'https://use-charter.dev';
 const url = `${SITE}/blog/${post.id}`;
 const fmtDate = (d: Date): string => d.toLocaleDateString('en', { year: 'numeric', month: 'long', day: 'numeric' });
-const readTime = Math.max(1, Math.round((post.body ?? '').split(/\s+/).filter(Boolean).length / 200));
+const words = (post.body ?? '').split(/\s+/).filter(Boolean).length;
+const readTime = Math.max(1, Math.round(words / 200));
+const padNo = (i: number): string => String(i + 1).padStart(2, '0');
 
 const schema = {
   '@context': 'https://schema.org',
@@ -45,7 +49,7 @@ const breadcrumbs = {
 };
 ---
 
-<Base title={`${post.data.title} · Charter`} description={post.data.description} path={`/blog/${post.id}`} ogType="article" ogImage={`/og/${post.id}.png`} htmlClass="bl-html" bodyClass="bl-body">
+<Base title={`${post.data.title} · Charter`} description={post.data.description} path={`/blog/${post.id}`} ogType="article" ogImage={`/og/${post.id}.png`} htmlClass="ck-html" bodyClass="ck-body">
   <Fragment slot="head">
     <meta property="article:published_time" content={post.data.date.toISOString()} />
     {post.data.updated && <meta property="article:modified_time" content={post.data.updated.toISOString()} />}
@@ -56,49 +60,62 @@ const breadcrumbs = {
     <script type="application/ld+json" is:inline set:html={JSON.stringify(breadcrumbs)} />
   </Fragment>
 
-  <div class="bl-progress" data-progress aria-hidden="true"></div>
+  <div class="ck">
+    <SiteNav backHref="/blog" backLabel="all posts" />
 
-  <SiteNav backHref="/blog" backLabel="all posts" />
+    <main>
+      <section class="lg-hero">
+        <div class="lg-hero__kicker">the charter blog</div>
+        <div class="lg-cmd">
+          <span class="ch">❯ </span>charter read <span class="fl">{post.id}</span> <span class="out"># opening {post.id}.md</span>
+        </div>
+        <h1 class="lg-hero__title">{post.data.title}</h1>
+        <div class="lg-meta">
+          <span class="item"><span class="ping"></span>{fmtDate(post.data.date)}</span>
+          <span class="sep">·</span><span class="item">{readTime} min read</span>
+          <span class="sep">·</span><span class="item">{words.toLocaleString()} words</span>
+          <span class="sep">·</span><span class="item">{post.data.author}</span>
+        </div>
+        <p class="lg-hero__lede">{post.data.description}</p>
+        <div class="lg-chips lg-chips--inline">
+          {post.data.tags.map((t) => <div class="lg-chip"><Icon name="ph:hash" />{t}</div>)}
+        </div>
+      </section>
 
-  <article class="bl-post" data-post>
-    <header class="bl-hero">
-      <div class="bl-hero__tags">{post.data.tags.map((t) => <span class="bl-tag">{t}</span>)}</div>
-      <h1>{post.data.title}</h1>
-      <p class="bl-hero__dek">{post.data.description}</p>
-      <div class="bl-meta bl-meta--hero">
-        <span>{post.data.author}</span><span class="bl-meta__dot">·</span>
-        <time datetime={post.data.date.toISOString()}>{fmtDate(post.data.date)}</time><span class="bl-meta__dot">·</span>
-        <span>{readTime} min read</span>
-      </div>
-    </header>
-
-    <div class="bl-layout">
-      {toc.length > 1 && (
-        <aside class="bl-side">
-          <details class="bl-toc" open>
-            <summary>On this page</summary>
-            <nav>
-              {toc.map((h) => (
-                <a href={`#${h.slug}`} class={`bl-toc__lnk bl-toc__lnk--${h.depth}`} data-toc={h.slug}>{h.text}</a>
-              ))}
-            </nav>
-          </details>
+      <div class="lg-main">
+        <aside class="lg-rail">
+          <div class="lg-rail__h">on this page</div>
+          <div class="lg-rail__bar"><i style="width:0%"></i></div>
+          <nav class="lg-rail__nav" aria-label="On this page">
+            {sections.map((h, i) => (
+              <a href={`#${h.slug}`} class={i === 0 ? 'is-active' : ''}>
+                <span class="n">{padNo(i)}</span>{h.text}
+              </a>
+            ))}
+          </nav>
         </aside>
-      )}
 
-      <div class="bl-prose">
-        <Content />
-        <footer class="bl-post__foot">
-          <div class="bl-tags">{post.data.tags.map((t) => <span class="bl-tag">{t}</span>)}</div>
-          <a class="bl-post__back" href="/blog">← all posts</a>
-        </footer>
+        <div class="lg-doc">
+          <div class="lg-doc__bar">
+            <span class="lg-doc__dots"><i></i><i></i><i></i></span>
+            <span class="lg-doc__file"><b>{post.id}.md</b> — charter</span>
+            <span class="lg-doc__meta">{sections.length} {sections.length === 1 ? 'section' : 'sections'}</span>
+          </div>
+          <div class="lg-doc__body bl-doc">
+            <Content />
+            <footer class="bl-doc__foot">
+              <div class="lg-chips lg-chips--inline">{post.data.tags.map((t) => <div class="lg-chip"><Icon name="ph:hash" />{t}</div>)}</div>
+              <a class="bl-doc__back" href="/blog">← all posts</a>
+            </footer>
+          </div>
+        </div>
       </div>
-    </div>
-  </article>
+    </main>
 
-  <SiteFooter />
+    <SiteFooter />
+  </div>
 
   <script>
-    import '../../islands/blog';
+    import '../../islands/legal';
   </script>
 </Base>

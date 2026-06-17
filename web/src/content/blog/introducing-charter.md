@@ -1,7 +1,7 @@
 ---
 title: "Introducing Charter: AI-agent readiness, scored"
 description: "AI coding agents are only as good as the repo they work in. Charter grades any repository 0–100 on how safely an agent can operate in it — offline, deterministic, and with a concrete fix for every gap."
-date: 2026-06-15
+date: 2026-06-18
 author: "Charter"
 tags: ["launch", "ai-agents"]
 ---
