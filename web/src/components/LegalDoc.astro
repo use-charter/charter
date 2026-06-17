@@ -1,7 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
-import SiteNav from './SiteNav.astro';
-import SiteFooter from './SiteFooter.astro';
+import DocPage from './DocPage.astro';
 import type { LegalPage } from '../lib/legal-content';
 
 interface Props {
@@ -12,116 +11,79 @@ const { page } = Astro.props;
 // Split a trailing `--flag` out of the command so it can be tinted apart
 // from the verb, mirroring the prompt styling on the rest of the site.
 const flagMatch = page.cmd.match(/--\S+/);
-const cmdHead = page.cmd.replace(/--\S+/, '');
-const cmdFlag = flagMatch ? flagMatch[0] : '';
+const cmdText = page.cmd.replace(/--\S+/, '').trim();
+const cmdFlag = flagMatch ? flagMatch[0] : undefined;
+
+const chips = page.chips.map((c) => ({ icon: `ph:${c.icon}`, t: c.t }));
+const meta = [`Last updated ${page.updated}`, page.read, page.words];
+const sections = page.sections.map((s) => ({ id: s.id, title: s.title }));
 
 const padNo = (i: number): string => String(i + 1).padStart(2, '0');
 ---
 
-<div class="ck">
-  <SiteNav />
-
-  <main>
-    <section class="lg-hero">
-      <div class="lg-hero__kicker">legal</div>
-      <div class="lg-cmd">
-        <span class="ch">❯ </span>{cmdHead}<span class="fl">{cmdFlag}</span> <span class="out"># opening {page.file}</span>
+<DocPage
+  kicker="legal"
+  command={{ text: cmdText, flag: cmdFlag, comment: `opening ${page.file}` }}
+  title={page.title}
+  meta={meta}
+  lede={page.lede}
+  chips={chips}
+  sections={sections}
+  fileName={page.file}
+>
+  {page.sections.map((s, i) => (
+    <section class="lg-sec" id={s.id}>
+      <div class="lg-sec__h">
+        <span class="lg-sec__no">{padNo(i)}</span>
+        <h2>{s.title}</h2>
       </div>
-      <h1 class="lg-hero__title">{page.title}</h1>
-      <div class="lg-meta">
-        <span class="item"><span class="ping"></span>Last updated {page.updated}</span>
-        <span class="sep">·</span><span class="item">{page.read}</span>
-        <span class="sep">·</span><span class="item">{page.words}</span>
-      </div>
-      <p class="lg-hero__lede" set:html={page.lede} />
-      <div class="lg-chips">
-        {page.chips.map((c) => (
-          <div class="lg-chip"><Icon name={`ph:${c.icon}`} />{c.t}</div>
-        ))}
+      <div class="lg-sec__body">
+        {s.blocks.map((b) => {
+          if (b.t === 'p') return <p class={b.legalese ? 'legalese' : ''} set:html={b.html} />;
+          if (b.t === 'list')
+            return (
+              <ul class="lg-list">
+                {b.items.map((it) => <li set:html={it} />)}
+              </ul>
+            );
+          if (b.t === 'tldr')
+            return (
+              <div class={`lg-tldr ${b.tone}`}>
+                <Icon name={`ph:${b.icon}`} />
+                <span><span class="lbl">in short: </span><span set:html={b.html} /></span>
+              </div>
+            );
+          if (b.t === 'perms')
+            return (
+              <div class="lg-perms">
+                <div class="lg-perm lg-perm--allow">
+                  <div class="lg-perm__h"><Icon name="ph:check-circle" />permissions</div>
+                  <ul>{b.permissions.map((x) => <li><span class="g">✓</span>{x}</li>)}</ul>
+                </div>
+                <div class="lg-perm lg-perm--cond">
+                  <div class="lg-perm__h"><Icon name="ph:info" />conditions</div>
+                  <ul>{b.conditions.map((x) => <li><span class="g">›</span>{x}</li>)}</ul>
+                </div>
+                <div class="lg-perm lg-perm--deny">
+                  <div class="lg-perm__h"><Icon name="ph:prohibit" />limitations</div>
+                  <ul>{b.limitations.map((x) => <li><span class="g">✕</span>{x}</li>)}</ul>
+                </div>
+              </div>
+            );
+          if (b.t === 'code')
+            return (
+              <div class="lg-codepane">
+                <div class="lg-codepane__bar"><Icon name="ph:scroll" /> {b.title}</div>
+                <div class="lg-codepane__body" set:html={b.body} />
+                <div class="lg-codepane__more">
+                  <span>2.1 KB · plain text</span>
+                  <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener noreferrer" target="_blank">view full license ↗</a>
+                </div>
+              </div>
+            );
+          return null;
+        })}
       </div>
     </section>
-
-    <div class="lg-main">
-      <aside class="lg-rail">
-        <div class="lg-rail__h">on this page</div>
-        <div class="lg-rail__bar"><i style="width:0%"></i></div>
-        <nav class="lg-rail__nav" aria-label="On this page">
-          {page.sections.map((s, i) => (
-            <a href={`#${s.id}`} class={i === 0 ? 'is-active' : ''}>
-              <span class="n">{padNo(i)}</span>{s.title}
-            </a>
-          ))}
-        </nav>
-      </aside>
-
-      <div class="lg-doc">
-        <div class="lg-doc__bar">
-          <span class="lg-doc__dots"><i></i><i></i><i></i></span>
-          <span class="lg-doc__file"><b>{page.file}</b> — charter</span>
-          <span class="lg-doc__meta">{page.sections.length} sections</span>
-        </div>
-        {page.sections.map((s, i) => (
-          <section class="lg-sec" id={s.id}>
-            <div class="lg-sec__h">
-              <span class="lg-sec__no">{padNo(i)}</span>
-              <h2>{s.title}</h2>
-            </div>
-            <div class="lg-sec__body">
-              {s.blocks.map((b) => {
-                if (b.t === 'p') return <p class={b.legalese ? 'legalese' : ''} set:html={b.html} />;
-                if (b.t === 'list')
-                  return (
-                    <ul class="lg-list">
-                      {b.items.map((it) => <li set:html={it} />)}
-                    </ul>
-                  );
-                if (b.t === 'tldr')
-                  return (
-                    <div class={`lg-tldr ${b.tone}`}>
-                      <Icon name={`ph:${b.icon}`} />
-                      <span><span class="lbl">in short: </span><span set:html={b.html} /></span>
-                    </div>
-                  );
-                if (b.t === 'perms')
-                  return (
-                    <div class="lg-perms">
-                      <div class="lg-perm lg-perm--allow">
-                        <div class="lg-perm__h"><Icon name="ph:check-circle" />permissions</div>
-                        <ul>{b.permissions.map((x) => <li><span class="g">✓</span>{x}</li>)}</ul>
-                      </div>
-                      <div class="lg-perm lg-perm--cond">
-                        <div class="lg-perm__h"><Icon name="ph:info" />conditions</div>
-                        <ul>{b.conditions.map((x) => <li><span class="g">›</span>{x}</li>)}</ul>
-                      </div>
-                      <div class="lg-perm lg-perm--deny">
-                        <div class="lg-perm__h"><Icon name="ph:prohibit" />limitations</div>
-                        <ul>{b.limitations.map((x) => <li><span class="g">✕</span>{x}</li>)}</ul>
-                      </div>
-                    </div>
-                  );
-                if (b.t === 'code')
-                  return (
-                    <div class="lg-codepane">
-                      <div class="lg-codepane__bar"><Icon name="ph:scroll" /> {b.title}</div>
-                      <div class="lg-codepane__body" set:html={b.body} />
-                      <div class="lg-codepane__more">
-                        <span>2.1 KB · plain text</span>
-                        <a href="https://www.apache.org/licenses/LICENSE-2.0" rel="noopener noreferrer" target="_blank">view full license ↗</a>
-                      </div>
-                    </div>
-                  );
-                return null;
-              })}
-            </div>
-          </section>
-        ))}
-      </div>
-    </div>
-  </main>
-
-  <SiteFooter />
-</div>
-
-<script>
-  import '../islands/legal';
-</script>
+  ))}
+</DocPage>

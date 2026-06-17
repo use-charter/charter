@@ -1,9 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
-import { Icon } from 'astro-icon/components';
 import Base from '../../layouts/Base.astro';
-import SiteNav from '../../components/SiteNav.astro';
-import SiteFooter from '../../components/SiteFooter.astro';
+import DocPage from '../../components/DocPage.astro';
 import '../../styles/marketing.css';
 import '../../styles/legal.css';
 import '../../styles/blog.css';
@@ -23,7 +21,6 @@ const url = `${SITE}/blog/${post.id}`;
 const fmtDate = (d: Date): string => d.toLocaleDateString('en', { year: 'numeric', month: 'long', day: 'numeric' });
 const words = (post.body ?? '').split(/\s+/).filter(Boolean).length;
 const readTime = Math.max(1, Math.round(words / 200));
-const padNo = (i: number): string => String(i + 1).padStart(2, '0');
 
 const schema = {
   '@context': 'https://schema.org',
@@ -60,62 +57,25 @@ const breadcrumbs = {
     <script type="application/ld+json" is:inline set:html={JSON.stringify(breadcrumbs)} />
   </Fragment>
 
-  <div class="ck">
-    <SiteNav backHref="/blog" backLabel="all posts" />
-
-    <main>
-      <section class="lg-hero">
-        <div class="lg-hero__kicker">the charter blog</div>
-        <div class="lg-cmd">
-          <span class="ch">❯ </span>charter read <span class="fl">{post.id}</span> <span class="out"># opening {post.id}.md</span>
-        </div>
-        <h1 class="lg-hero__title">{post.data.title}</h1>
-        <div class="lg-meta">
-          <span class="item"><span class="ping"></span>{fmtDate(post.data.date)}</span>
-          <span class="sep">·</span><span class="item">{readTime} min read</span>
-          <span class="sep">·</span><span class="item">{words.toLocaleString()} words</span>
-          <span class="sep">·</span><span class="item">{post.data.author}</span>
-        </div>
-        <p class="lg-hero__lede">{post.data.description}</p>
-        <div class="lg-chips lg-chips--inline">
-          {post.data.tags.map((t) => <div class="lg-chip"><Icon name="ph:hash" />{t}</div>)}
-        </div>
-      </section>
-
-      <div class="lg-main">
-        <aside class="lg-rail">
-          <div class="lg-rail__h">on this page</div>
-          <div class="lg-rail__bar"><i style="width:0%"></i></div>
-          <nav class="lg-rail__nav" aria-label="On this page">
-            {sections.map((h, i) => (
-              <a href={`#${h.slug}`} class={i === 0 ? 'is-active' : ''}>
-                <span class="n">{padNo(i)}</span>{h.text}
-              </a>
-            ))}
-          </nav>
-        </aside>
-
-        <div class="lg-doc">
-          <div class="lg-doc__bar">
-            <span class="lg-doc__dots"><i></i><i></i><i></i></span>
-            <span class="lg-doc__file"><b>{post.id}.md</b> — charter</span>
-            <span class="lg-doc__meta">{sections.length} {sections.length === 1 ? 'section' : 'sections'}</span>
-          </div>
-          <div class="lg-doc__body bl-doc">
-            <Content />
-            <footer class="bl-doc__foot">
-              <div class="lg-chips lg-chips--inline">{post.data.tags.map((t) => <div class="lg-chip"><Icon name="ph:hash" />{t}</div>)}</div>
-              <a class="bl-doc__back" href="/blog">← all posts</a>
-            </footer>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <SiteFooter />
-  </div>
-
-  <script>
-    import '../../islands/legal';
-  </script>
+  <DocPage
+    backHref="/blog"
+    backLabel="all posts"
+    kicker="the charter blog"
+    command={{ text: 'charter read', flag: post.id, comment: `opening ${post.id}.md` }}
+    title={post.data.title}
+    meta={[fmtDate(post.data.date), `${readTime} min read`, `${words.toLocaleString()} words`, post.data.author]}
+    lede={post.data.description}
+    chips={post.data.tags.map((t) => ({ icon: 'ph:hash', t }))}
+    chipsInline
+    sections={sections.map((h) => ({ id: h.slug, title: h.text }))}
+    fileName={`${post.id}.md`}
+  >
+    <div class="lg-doc__body bl-doc">
+      <Content />
+      <footer class="bl-doc__foot">
+        <div class="lg-chips lg-chips--inline">{post.data.tags.map((t) => <div class="lg-chip">#{t}</div>)}</div>
+        <a class="bl-doc__back" href="/blog">← all posts</a>
+      </footer>
+    </div>
+  </DocPage>
 </Base>

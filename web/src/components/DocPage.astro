@@ -1,0 +1,110 @@
+---
+/**
+ * Shared "doc-pager" sub-page scaffold — the terminal/man-page layout used by
+ * the legal pages and the blog posts (and any future sub-page). Owns the .ck
+ * surface, nav, hero (kicker · command · title · meta · lede · chips), the
+ * numbered scroll-spy TOC rail + progress bar, and the doc-window frame. The
+ * page supplies the doc BODY via the default <slot/>; the wiring (rail +
+ * footer glow + theme switch) is shared via islands/legal.
+ *
+ * Wrap this in <Base> on the page so per-page SEO/OG/head still lives there.
+ */
+import { Icon } from 'astro-icon/components';
+import SiteNav from './SiteNav.astro';
+import SiteFooter from './SiteFooter.astro';
+
+interface DocSection { id: string; title: string }
+interface DocChip { icon: string; t: string }
+interface DocCommand { text: string; flag?: string; comment?: string }
+
+interface Props {
+  backHref?: string;
+  backLabel?: string;
+  kicker: string;
+  command?: DocCommand;
+  title: string;
+  meta?: string[]; // a live ping renders on the first item
+  lede?: string; // rendered as HTML (legal ledes carry inline markup)
+  chips?: DocChip[];
+  chipsInline?: boolean; // inline pills (blog tags) vs the 4-col feature grid (legal)
+  sections: DocSection[]; // drives the rail + section count
+  fileName: string; // shown in the doc titlebar
+}
+
+const {
+  backHref = '/',
+  backLabel = 'back to home',
+  kicker,
+  command,
+  title,
+  meta = [],
+  lede,
+  chips = [],
+  chipsInline = false,
+  sections,
+  fileName,
+} = Astro.props;
+
+const padNo = (i: number): string => String(i + 1).padStart(2, '0');
+---
+
+<div class="ck">
+  <SiteNav backHref={backHref} backLabel={backLabel} />
+
+  <main>
+    <section class="lg-hero">
+      <div class="lg-hero__kicker">{kicker}</div>
+      {command && (
+        <div class="lg-cmd">
+          <span class="ch">❯ </span>{command.text}{command.flag && <Fragment> <span class="fl">{command.flag}</span></Fragment>}{command.comment && <Fragment> <span class="out"># {command.comment}</span></Fragment>}
+        </div>
+      )}
+      <h1 class="lg-hero__title">{title}</h1>
+      {meta.length > 0 && (
+        <div class="lg-meta">
+          <span class="item"><span class="ping"></span>{meta[0]}</span>
+          {meta.slice(1).map((m) => (
+            <Fragment><span class="sep">·</span><span class="item">{m}</span></Fragment>
+          ))}
+        </div>
+      )}
+      {lede && <p class="lg-hero__lede" set:html={lede} />}
+      {chips.length > 0 && (
+        <div class={`lg-chips${chipsInline ? ' lg-chips--inline' : ''}`}>
+          {chips.map((c) => (
+            <div class="lg-chip"><Icon name={c.icon} />{c.t}</div>
+          ))}
+        </div>
+      )}
+    </section>
+
+    <div class="lg-main">
+      <aside class="lg-rail">
+        <div class="lg-rail__h">on this page</div>
+        <div class="lg-rail__bar"><i style="width:0%"></i></div>
+        <nav class="lg-rail__nav" aria-label="On this page">
+          {sections.map((s, i) => (
+            <a href={`#${s.id}`} class={i === 0 ? 'is-active' : ''}>
+              <span class="n">{padNo(i)}</span>{s.title}
+            </a>
+          ))}
+        </nav>
+      </aside>
+
+      <div class="lg-doc">
+        <div class="lg-doc__bar">
+          <span class="lg-doc__dots"><i></i><i></i><i></i></span>
+          <span class="lg-doc__file"><b>{fileName}</b> — charter</span>
+          <span class="lg-doc__meta">{sections.length} {sections.length === 1 ? 'section' : 'sections'}</span>
+        </div>
+        <slot />
+      </div>
+    </div>
+  </main>
+
+  <SiteFooter />
+</div>
+
+<script>
+  import '../islands/legal';
+</script>
