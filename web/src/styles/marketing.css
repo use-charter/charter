@@ -346,6 +346,11 @@ html.ck-html { scroll-behavior: smooth; }
 .ck-cmdline code { color: var(--ck-ink); }
 .ck-cmdline button { font-family: var(--font-meta); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ck-dim); background: var(--ck-line-soft); border: 0; border-radius: 5px; padding: 7px 12px; cursor: pointer; transition: color 120ms, background 120ms; }
 .ck-cmdline button:hover { color: var(--ck-ink); background: var(--ck-line); }
+/* shell syntax highlight — binary green, subcommand ink, path faint, package highlighted */
+.ck-cmdline .c-bin { color: var(--ck-green); }
+.ck-cmdline .c-sub { color: var(--ck-ink); }
+.ck-cmdline .c-arg { color: var(--ck-faint); }
+.ck-cmdline .c-pkg { color: var(--ck-blue); }
 .ck-ghost { font-family: var(--font-code); font-size: 13.5px; color: var(--ck-dim); background: none; border: 1px solid var(--ck-line); border-radius: 8px; padding: 11px 16px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: color 140ms var(--ease-out), border-color 140ms var(--ease-out), background 140ms var(--ease-out); }
 .ck-ghost svg { width: 14px; height: 14px; }
 .ck-ghost:hover { color: var(--ck-ink); border-color: var(--ck-dim); background: var(--ck-bg-inset); }
@@ -454,6 +459,11 @@ html.ck-html { scroll-behavior: smooth; }
 .ck-cmds__item .pf { color: var(--ck-faintest); }
 .ck-cmds__item.is-active .pf { color: var(--ck-blue); }
 .ck-cmds__item .d { color: var(--ck-faint); font-size: 11.5px; margin-left: auto; white-space: nowrap; font-family: var(--font-meta); }
+/* command coloring — binary green, subcommand follows the row state */
+.ck-cmds__item .cmd { color: var(--ck-dim); transition: color 140ms var(--ease-out); }
+.ck-cmds__item .cmd .bin { color: var(--ck-green); }
+.ck-cmds__item:hover .cmd { color: var(--ck-ink); }
+.ck-cmds__item.is-active .cmd { color: var(--ck-blue); }
 .ck-cmds__main { display: flex; flex-direction: column; min-width: 0; }
 .ck-cmds__panel[hidden] { display: none; }
 .ck-term { background: var(--ck-bg-panel); overflow: hidden; display: flex; flex-direction: column; flex: 1; }

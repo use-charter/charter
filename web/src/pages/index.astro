@@ -106,7 +106,7 @@ const CMDS = [
   { cmd: 'doctor', d: 'scan + score', branch: 'main', dirty: false,
     desc: 'Scan the repo and print a 0–100 readiness score with a per-category breakdown. Exit 0 pass, 1 below threshold, 2 error.',
     lines: [
-      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter doctor' }],
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter ', c: 'tk-green' }, { t: 'doctor' }],
       [{ t: 'Checked 18 rules · 9 categories · 3 findings', c: 'tk-faint' }],
       [{ t: '⚠ ', c: 'tk-amber' }, { t: 'HIGH    ', c: 'tk-amber' }, { t: 'AE-MCP-001', c: 'tk-blue' }, { t: '  MCP Safety', c: 'tk-faint' }],
       [{ t: '⚠ ', c: 'tk-amber' }, { t: 'MEDIUM  ', c: 'tk-amber' }, { t: 'AE-AUTO-001', c: 'tk-blue' }, { t: '  Autonomy', c: 'tk-faint' }],
@@ -115,7 +115,7 @@ const CMDS = [
   { cmd: 'init', d: 'scaffold', branch: 'main', dirty: true,
     desc: 'Scaffold the context files an agent needs, so the next scan starts from a clean baseline. Never overwrites.',
     lines: [
-      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter init' }],
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter ', c: 'tk-green' }, { t: 'init' }],
       [{ t: 'scaffolding missing context…', c: 'tk-faint' }],
       [{ t: '+ AGENTS.md', c: 'tk-green' }],
       [{ t: '+ charter.yaml', c: 'tk-green' }],
@@ -124,20 +124,20 @@ const CMDS = [
   { cmd: 'fix', d: 'diff-first', branch: 'fix/mcp-pin', dirty: true, diff: true,
     desc: 'Diff-first auto-repair for supported rules. Nothing is written until you approve the diff.',
     lines: [
-      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter fix ' }, { t: 'AE-MCP-001', c: 'tk-blue' }],
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter ', c: 'tk-green' }, { t: 'fix ' }, { t: 'AE-MCP-001', c: 'tk-blue' }],
       [{ t: 'proposed patch · .mcp.json', c: 'tk-faint' }],
     ] },
   { cmd: 'suppress', d: 'waivers', branch: 'main', dirty: false,
     desc: 'Record a governed waiver — with a reason, an owner, and an expiry — instead of silently ignoring a rule.',
     lines: [
-      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter suppress ' }, { t: 'AE-MCP-002', c: 'tk-blue' }, { t: ' --reason ', c: 'tk-blue' }, { t: '"vendored" ', c: 'tk-amber' }, { t: '--expires ', c: 'tk-blue' }, { t: '90d', c: 'tk-amber' }],
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter ', c: 'tk-green' }, { t: 'suppress ' }, { t: 'AE-MCP-002', c: 'tk-blue' }, { t: ' --reason ', c: 'tk-blue' }, { t: '"vendored" ', c: 'tk-amber' }, { t: '--expires ', c: 'tk-blue' }, { t: '90d', c: 'tk-amber' }],
       [{ t: 'waiver written · charter.yaml', c: 'tk-faint' }],
       [{ t: '✓ ', c: 'tk-green' }, { t: 'AE-MCP-002 waived by ' }, { t: '@dana', c: 'tk-amber' }, { t: ' · expires 90d', c: 'tk-faint' }],
     ] },
   { cmd: 'explain', d: 'rule detail', branch: 'main', dirty: false,
     desc: 'Print the catalog metadata for any rule: id, name, category, summary, and docs URL.',
     lines: [
-      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter explain ' }, { t: 'AE-SEC-001', c: 'tk-blue' }],
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter ', c: 'tk-green' }, { t: 'explain ' }, { t: 'AE-SEC-001', c: 'tk-blue' }],
       [{ t: 'AE-SEC-001', c: 'tk-blue' }, { t: '  NoRawSecretsInContext', c: 'tk-faint' }],
       [{ t: 'category  ', c: 'tk-faint' }, { t: 'Secrets' }],
       [{ t: 'severity  ', c: 'tk-faint' }, { t: 'BLOCKER', c: 'tk-red' }],
@@ -146,14 +146,14 @@ const CMDS = [
   { cmd: 'report', d: 'offline html', branch: 'main', dirty: false,
     desc: 'Write a self-contained, offline single-file HTML report — fonts and data inlined, opens from a file URL.',
     lines: [
-      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter report ' }, { t: '--open', c: 'tk-blue' }],
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter ', c: 'tk-green' }, { t: 'report ' }, { t: '--open', c: 'tk-blue' }],
       [{ t: 'writing charter-report.html…', c: 'tk-faint' }],
       [{ t: '✓ ', c: 'tk-green' }, { t: 'self-contained ' }, { t: '· 0 network · SARIF + HTML', c: 'tk-faint' }],
     ] },
   { cmd: 'version', d: 'provenance', branch: 'main', dirty: false,
     desc: 'Print the version, build provenance, and supply-chain verification status. Useful in CI logs.',
     lines: [
-      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter version' }],
+      [{ t: '❯ ', c: 'tk-green' }, { t: 'charter ', c: 'tk-green' }, { t: 'version' }],
       [{ t: '[C] charter ', c: 'tk-green' }, { t: 'v1.0.0', c: 'tk-green' }],
       [{ t: 'commit  ', c: 'tk-faint' }, { t: 'a1b2c3d', c: 'tk-blue' }, { t: ' · 2026-01-14', c: 'tk-faint' }],
       [{ t: 'slsa    ', c: 'tk-faint' }, { t: 'level 3', c: 'tk-green' }, { t: ' · cosign verified ✓', c: 'tk-faint' }],
@@ -277,7 +277,7 @@ const RECEIPT = [
             <div class="ck-hcta" id="install">
               <span class="ck-cmdline" data-copy={INSTALL}>
                 <span class="pfx">❯</span>
-                <code>{INSTALL}</code>
+                <code><span class="c-bin">brew</span> <span class="c-sub">install</span> <span class="c-arg">use-charter/tap/</span><span class="c-pkg">charter</span></code>
                 <button type="button" data-copy-btn>copy</button>
               </span>
               <button class="ck-ghost" type="button" data-boot-rerun>
@@ -419,7 +419,7 @@ const RECEIPT = [
           <div class="pane ck-cmds__list" role="tablist" aria-label="Commands">
             {CMDS.map((x, i) => (
               <button type="button" class={`ck-cmds__item${i === 0 ? ' is-active' : ''}`} data-cmd-tab={i} role="tab" aria-selected={i === 0 ? 'true' : 'false'}>
-                <span class="pf">❯</span> charter {x.cmd}<span class="d">{x.d}</span>
+                <span class="pf">❯</span><span class="cmd"><span class="bin">charter</span> {x.cmd}</span><span class="d">{x.d}</span>
               </button>
             ))}
           </div>
