@@ -670,7 +670,7 @@ html.ck-html { scroll-behavior: smooth; }
    backgrounds — invert on the dark (default) surface so the letters read
    light, and hue-rotate keeps the icon's red→magenta gradient roughly intact.
    Light theme keeps the original dark letters. */
-.ck-man__built img { height: 15px; width: auto; display: block; filter: invert(1) hue-rotate(180deg); }
+.ck-man__built img { height: 15px; width: auto; display: block; position: relative; top: 1px; filter: invert(1) hue-rotate(180deg); }
 :root[data-theme="light"] .ck-man__built img { filter: none; }
 
 /* ═══ MOBILE — fit every pane to the viewport, keep the edges breathing ═
