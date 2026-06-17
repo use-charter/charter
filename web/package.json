@@ -21,15 +21,15 @@
     "@astrojs/sitemap": "^3.7.3",
     "@iconify-json/ph": "^1.2.2",
     "@resvg/resvg-js": "^2.6.2",
-    "astro": "^6.4.6",
+    "astro": "^6.4.8",
     "astro-icon": "^1.1.5",
     "satori": "^0.26.0",
     "typescript": "^6.0.3"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.9",
     "jsdom": "^29.1.1",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.9"
   },
   "overrides": {
     "yaml": ">=2.8.3",
