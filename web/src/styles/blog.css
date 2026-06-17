@@ -183,13 +183,15 @@
 .bl-prose h3 { font-size: clamp(19px, 2.2vw, 22px); font-weight: 700; letter-spacing: -0.01em; margin-top: 1.7em; scroll-margin-top: 88px; }
 .bl-prose p, .bl-prose ul, .bl-prose ol { color: var(--color-text-secondary); }
 .bl-prose strong { color: var(--color-text-primary); font-weight: 700; }
-.bl-prose a {
+/* Content links only — :not(.bl-post__back) so the footer back-link (which lives
+   inside .bl-prose) doesn't inherit this background underline as a strikethrough. */
+.bl-prose a:not(.bl-post__back) {
   color: var(--accent-ink); text-decoration: none;
   background-image: linear-gradient(var(--accent), var(--accent));
   background-size: 100% 1px; background-position: 0 1.15em; background-repeat: no-repeat;
   transition: background-size 180ms var(--ease-out), background-position 180ms var(--ease-out);
 }
-.bl-prose a:hover { background-size: 100% 2px; }
+.bl-prose a:not(.bl-post__back):hover { background-size: 100% 2px; }
 .bl-prose ul, .bl-prose ol { padding-left: 1.4em; }
 .bl-prose ul { list-style: none; padding-left: 1.5em; }
 .bl-prose ul li { position: relative; }
@@ -214,8 +216,11 @@
 
 /* post footer */
 .bl-post__foot { margin-top: 3.2em; padding-top: 26px; border-top: 1px solid var(--color-border-secondary); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.bl-post__back { font-family: var(--font-meta); font-size: 13px; color: var(--color-text-secondary); text-decoration: none; transition: color 140ms; }
-.bl-post__back:hover { color: var(--accent); }
+/* The post footer sits inside .bl-prose, so the prose-link background underline
+   leaks onto this small link as a strikethrough — cancel it; this link uses a
+   plain color-shift hover instead. */
+.bl-post__back { font-family: var(--font-meta); font-size: 13px; color: var(--color-text-secondary); text-decoration: none; background: none; transition: color 140ms; }
+.bl-post__back:hover { color: var(--accent); background: none; }
 
 /* ── footer ──────────────────────────────────────────────────── */
 .bl-foot { max-width: 1120px; margin: 0 auto; padding: 24px clamp(18px, 4vw, 32px) 48px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-family: var(--font-meta); font-size: 12.5px; color: var(--color-text-tertiary); border-top: 1px solid var(--color-border-secondary); }
