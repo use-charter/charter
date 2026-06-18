@@ -54,6 +54,16 @@ class TimerBag {
   }
 }
 
+/**
+ * Fire-and-forget analytics beacon for a copy host that opts in via a
+ * `data-copy-event` attribute. Same-origin; never blocks or alters the copy UX.
+ */
+export function sendCopyEvent(host: HTMLElement): void {
+  const type = host.dataset.copyEvent;
+  if (!type || typeof navigator.sendBeacon !== 'function') return;
+  navigator.sendBeacon('/api/event', new Blob([JSON.stringify({ type })], { type: 'text/plain' }));
+}
+
 /** Copy-to-clipboard buttons: any element with [data-copy] holding a [data-copy-btn]. */
 function initCopyButtons(): void {
   document.querySelectorAll<HTMLElement>('[data-copy]').forEach((host) => {
@@ -63,6 +73,7 @@ function initCopyButtons(): void {
     btn.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(text);
+        sendCopyEvent(host);
         const prev = btn.textContent;
         btn.textContent = 'copied';
         window.setTimeout(() => { btn.textContent = prev; }, 1300);
