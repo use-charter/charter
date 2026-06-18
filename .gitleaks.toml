@@ -3,16 +3,17 @@ title = "Charter Gitleaks configuration"
 [extend]
 useDefault = true
 
-# Repo-verified: these are historical false positives from earlier Slice 3 test-only
-# commits on this branch. Keep the scope to exact commit+path pairs.
+# Charter's own secret-detector unit tests carry intentional fake tokens as
+# fixtures (e.g. OPENAI_API_KEY=, SLACK_BOT_TOKEN=, GITHUB_TOKEN= with
+# want:true assertions). Allowlist them by path so the scan stays clean across
+# the full git history — commit-pinned entries break on any history rewrite and
+# only cover the commits that happened to exist when they were written.
 [[allowlists]]
-description = "Slice 3 test-token history in detect_test.go"
-condition = "AND"
-commits = [
-  '''13009b7afaaf8083c8eb1275a313a58e71dab8bc''',
-  '''db3a6f7bafa6c2c522e0d09eb8d5d3c28b59e479''',
+description = "Secret-detector test fixtures (intentional fake tokens)"
+paths = [
+  '''^internal/secrets/.*_test\.go$''',
+  '''^internal/rules/secrets/.*_test\.go$''',
 ]
-paths = ['''^internal/secrets/detect_test\.go$''']
 
 # Gitignored build-tool caches and local state. These are never committed (the
 # `gitleaks git` history scan already covers the committed tree) and are fully
