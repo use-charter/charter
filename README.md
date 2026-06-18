@@ -70,14 +70,68 @@ banded score with a per-category breakdown and every finding inline. Exit code i
 
 ## Install
 
-| Method | Command |
-|--------|---------|
-| **Homebrew** | `brew install use-charter/tap/charter` |
-| **Go** | `go install go.use-charter.dev/charter/cmd/charter@latest` |
-| **Binary** | Download your platform archive from [Releases](https://github.com/use-charter/charter/releases), extract, put `charter` on `PATH`. |
-| **Source** | `git clone https://github.com/use-charter/charter && cd charter && go build -o charter ./cmd/charter` |
+Signed binaries ship for **macOS, Linux, and Windows** on both `amd64` and `arm64`. Pick your
+platform below, or use Go on any of them.
 
-Every release is cosign-signed with SLSA Level 3 provenance — verify with `charter version --verify`.
+### macOS
+
+```bash
+brew install use-charter/tap/charter
+```
+
+Works on Apple Silicon and Intel. Upgrade later with `brew upgrade charter`.
+
+### Linux
+
+```bash
+# Homebrew (Linuxbrew)
+brew install use-charter/tap/charter
+```
+
+No Homebrew? Grab the archive for your architecture from the [latest release](https://github.com/use-charter/charter/releases/latest)
+— `charter_<version>_linux_amd64.tar.gz` (or `_arm64`) — then:
+
+```bash
+tar -xzf charter_*_linux_*.tar.gz
+sudo install charter /usr/local/bin/charter
+```
+
+### Windows
+
+Download `charter_<version>_windows_amd64.zip` (or `_arm64`) from the
+[latest release](https://github.com/use-charter/charter/releases/latest), unzip it, and add
+`charter.exe` to your `PATH`:
+
+```powershell
+# from the folder where you unzipped charter.exe
+$dest = "$env:LOCALAPPDATA\Programs\charter"
+New-Item -ItemType Directory -Force $dest | Out-Null
+Move-Item charter.exe $dest -Force
+[Environment]::SetEnvironmentVariable("Path", "$env:Path;$dest", "User")   # reopen the terminal
+```
+
+### Any platform — Go
+
+```bash
+go install go.use-charter.dev/charter/cmd/charter@latest   # requires Go 1.26+
+```
+
+### From source
+
+```bash
+git clone https://github.com/use-charter/charter && cd charter
+go build -o charter ./cmd/charter
+```
+
+### Verify the download
+
+Every release is **cosign-signed with SLSA Level 3 provenance** and ships `checksums.txt`, a
+Sigstore bundle (`checksums.txt.sigstore.json`), and a per-archive SBOM. Confirm what you
+installed at any time:
+
+```bash
+charter version --verify   # prints version, build provenance, and cosign verification status
+```
 
 ## Commands
 
