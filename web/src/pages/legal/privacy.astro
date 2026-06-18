@@ -9,9 +9,9 @@ const page: LegalPage = {
   file: 'PRIVACY.md',
   cmd: 'charter explain --privacy',
   title: 'Privacy Policy',
-  updated: 'June 12, 2026',
-  read: '~4 min',
-  words: '910 words',
+  updated: 'June 19, 2026',
+  read: '~5 min',
+  words: '1,060 words',
   lede: 'What the Charter website collects, and why. The CLI itself is offline by design — it makes <code>0 network calls</code> and sends us nothing.',
   chips: [
     { icon: 'wifi-slash', t: 'CLI sends no telemetry' },
@@ -48,6 +48,16 @@ const page: LegalPage = {
             '<b>No advertising or cross-site trackers.</b> We do not embed ad networks or third-party tracking pixels.',
           ],
         },
+      ],
+    },
+    {
+      id: 'analytics',
+      title: 'Website analytics',
+      blocks: [
+        { t: 'tldr', tone: 'blue', icon: 'chart-bar', html: 'first-party and cookieless. We count visits in aggregate using a daily-rotating, irreversible visitor hash that is deleted within ~48 hours — no profiles, no cross-site tracking, no third-party analytics.' },
+        { t: 'p', html: 'To understand how the Site is used we keep our own privacy-first analytics. There is <b>no third-party analytics service</b>, <b>no cookie</b>, and <b>no browser storage</b> involved. We store only aggregate daily counts — pageviews, approximate unique visitors, which pages and documentation are viewed, install-command copies, and visitor country.' },
+        { t: 'p', html: 'Unique visitors are estimated without identifying anyone. For each day we derive a one-way hash from a visitor’s IP address and browser user-agent combined with a random salt that <b>rotates and is deleted every 24–48 hours</b>. Once the salt is gone the hash cannot be reversed or linked to any later day, so the same person is counted independently each day and cannot be tracked over time. We never store your raw IP address, your user-agent, or the individual pages you viewed.' },
+        { t: 'p', html: 'Automated bots and browser prefetch requests are excluded. This processing rests on our legitimate interest (Art. 6(1)(f) GDPR) in understanding and improving the Site; because no personal data is retained and no device storage is used, it sets no consent-gated cookie. The resulting dashboard is private to the project maintainer.' },
       ],
     },
     {
