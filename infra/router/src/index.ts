@@ -16,7 +16,7 @@
 // root LLM index files must all reach Mintlify — otherwise the asset requests
 // fall through to the landing site and the docs render unstyled.
 
-import { record } from './analytics';
+import { handleEvent, record } from './analytics';
 import { handleDashboardStats, type DashboardEnv } from './dashboard';
 
 export interface Env extends DashboardEnv {
@@ -67,6 +67,12 @@ export default {
     // the handler also requires an Access assertion header (defense-in-depth).
     if (path === '/dashboard/api/stats') {
       return handleDashboardStats(request, env);
+    }
+
+    // Client analytics beacon (install-copy and similar). Same-origin only,
+    // type allow-listed, always answers 204.
+    if (path === '/api/event') {
+      return handleEvent(request, env);
     }
 
     // Expose Mintlify's sitemap on this domain with origin→public host rewrite.

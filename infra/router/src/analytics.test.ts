@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizePath, qualifies, utcDay, visitorHash, type QualifyParts } from './analytics';
+import { normalizePath, originAllowed, parseEventType, qualifies, utcDay, visitorHash, type QualifyParts } from './analytics';
 
 describe('normalizePath', () => {
   it('keeps root and known top-level pages', () => {
@@ -93,5 +93,30 @@ describe('visitorHash', () => {
 describe('utcDay', () => {
   it('formats a UTC calendar day', () => {
     expect(utcDay(new Date('2031-03-04T23:59:00Z'))).toBe('2031-03-04');
+  });
+});
+
+const evt = (headers: Record<string, string>) => new Request('https://example/api/event', { method: 'POST', headers });
+
+describe('originAllowed', () => {
+  it('accepts requests originating from the site', () => {
+    expect(originAllowed(evt({ Origin: 'https://use-charter.dev' }))).toBe(true);
+    expect(originAllowed(evt({ Referer: 'https://use-charter.dev/blog/x' }))).toBe(true);
+  });
+  it('rejects foreign or missing origins', () => {
+    expect(originAllowed(evt({ Origin: 'https://evil.example' }))).toBe(false);
+    expect(originAllowed(evt({}))).toBe(false);
+  });
+});
+
+describe('parseEventType', () => {
+  it('returns an allow-listed type', () => {
+    expect(parseEventType('{"type":"install_copied"}')).toBe('install_copied');
+  });
+  it('rejects unknown types, non-strings, malformed, and oversized bodies', () => {
+    expect(parseEventType('{"type":"hack"}')).toBeNull();
+    expect(parseEventType('{"type":123}')).toBeNull();
+    expect(parseEventType('not json')).toBeNull();
+    expect(parseEventType(`{"type":"install_copied","pad":"${'x'.repeat(1100)}"}`)).toBeNull();
   });
 });
