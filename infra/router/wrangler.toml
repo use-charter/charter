@@ -17,6 +17,23 @@ zone_name = "use-charter.dev"
 [vars]
 MINTLIFY_ORIGIN = "tashfiq.mintlify.app"
 LANDING_ORIGIN = "charter-landing.pages.dev"
+# Analytics kill-switch (ADR-0027): "true" collects; any other value disables
+# all counting and the event endpoint with no redeploy.
+ANALYTICS_ENABLED = "true"
+
+# First-party website analytics store (ADR-0027). IDs are non-secret and set
+# after the one-time `wrangler d1 create charter_analytics` /
+# `wrangler kv namespace create ANALYTICS_SALT`. The D1 DB holds aggregate,
+# UTC-day-keyed counts; the KV namespace holds ONLY the rotating daily salt.
+[[d1_databases]]
+binding = "ANALYTICS_DB"
+database_name = "charter_analytics"
+database_id = "9f25aa31-2865-4f27-b721-ce312a40ca1a"
+migrations_dir = "migrations"
+
+[[kv_namespaces]]
+binding = "ANALYTICS_SALT"
+id = "d98f3b85774e448e957d85615f5840b4"
 
 # Secret (NOT a var — set via `wrangler secret put` or the dashboard, persists
 # across deploys): GITHUB_STATS_TOKEN powers /dashboard/api/stats. Fine-grained

@@ -24,6 +24,12 @@ export interface Env extends DashboardEnv {
   // Pages hostname for the landing site (e.g. charter-landing.pages.dev).
   // Until it is set, the worker returns a plain-text placeholder.
   LANDING_ORIGIN?: string;
+  // First-party website analytics (ADR-0027). D1 holds aggregate UTC-day counts;
+  // KV holds only the rotating daily salt. ANALYTICS_ENABLED is the kill-switch
+  // ("true" collects; any other value disables collection + the event endpoint).
+  ANALYTICS_DB: D1Database;
+  ANALYTICS_SALT: KVNamespace;
+  ANALYTICS_ENABLED?: string;
 }
 
 const DEFAULT_MINTLIFY_ORIGIN = 'tashfiq.mintlify.app';
