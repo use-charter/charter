@@ -17,6 +17,7 @@
 // fall through to the landing site and the docs render unstyled.
 
 import { handleEvent, record } from './analytics';
+import { handleAnalytics } from './analytics-read';
 import { handleDashboardStats, type DashboardEnv } from './dashboard';
 
 export interface Env extends DashboardEnv {
@@ -73,6 +74,11 @@ export default {
     // type allow-listed, always answers 204.
     if (path === '/api/event') {
       return handleEvent(request, env);
+    }
+
+    // Founder analytics read API. Access-gated like the stats endpoint.
+    if (path === '/dashboard/api/analytics') {
+      return handleAnalytics(request, env);
     }
 
     // Expose Mintlify's sitemap on this domain with origin→public host rewrite.
