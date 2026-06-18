@@ -6,6 +6,7 @@
   "description": "Cloudflare Workers fronting use-charter.dev (edge router) and go.use-charter.dev (Go vanity import).",
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "audit": "bun audit",
     "dev:router": "wrangler dev --config router/wrangler.toml",
     "dev:go-vanity": "wrangler dev --config go-vanity/wrangler.toml",
@@ -14,11 +15,15 @@
     "deploy": "bun run deploy:router && bun run deploy:go-vanity"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "4.20260612.1",
+    "@cloudflare/workers-types": "4.20260617.1",
     "typescript": "6.0.3",
-    "wrangler": "4.100.0"
+    "vitest": "4.1.9",
+    "wrangler": "4.102.0"
   },
   "overrides": {
     "esbuild": ">=0.28.1"
+  },
+  "dependencies": {
+    "isbot": "5.1.43"
   }
 }

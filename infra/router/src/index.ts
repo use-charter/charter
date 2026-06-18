@@ -16,6 +16,7 @@
 // root LLM index files must all reach Mintlify — otherwise the asset requests
 // fall through to the landing site and the docs render unstyled.
 
+import { record } from './analytics';
 import { handleDashboardStats, type DashboardEnv } from './dashboard';
 
 export interface Env extends DashboardEnv {
@@ -51,7 +52,7 @@ function isMintlifyPath(path: string): boolean {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -106,7 +107,11 @@ export default {
       proxy.headers.set('X-Forwarded-Host', url.hostname);
       proxy.headers.set('X-Forwarded-Proto', 'https');
       proxy.headers.set('CF-Connecting-IP', request.headers.get('CF-Connecting-IP') || '');
-      return fetch(proxy);
+      // Record analytics for proxied documentation HTML pages; non-HTML assets
+      // are filtered out by `qualifies`.
+      const response = await fetch(proxy);
+      record(request, response, env, ctx);
+      return response;
     }
 
     // Proxy everything else to the landing site (Cloudflare Pages). Re-basing
@@ -115,7 +120,10 @@ export default {
     const landing = env.LANDING_ORIGIN;
     if (landing) {
       const dest = new URL(`https://${landing}${path}${url.search}`);
-      return fetch(new Request(dest, request));
+      // Record analytics for landing-site HTML pages.
+      const response = await fetch(new Request(dest, request));
+      record(request, response, env, ctx);
+      return response;
     }
 
     // Before LANDING_ORIGIN is set: placeholder.

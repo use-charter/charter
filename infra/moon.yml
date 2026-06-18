@@ -19,6 +19,19 @@ tasks:
       - go-vanity/src/**
       - tsconfig.json
       - package.json
+  # Joins the repo-wide `moon run :test` gate. Unit-tests the workers' pure,
+  # edge-independent logic (path normalization, request qualification, visitor
+  # hashing); binding-level behaviour is verified by the live smoke test.
+  test:
+    command: bun
+    args:
+      - run
+      - test
+    inputs:
+      - router/src/**
+      - go-vanity/src/**
+      - vitest.config.ts
+      - package.json
   # Joins the repo-wide `moon run :security` gate.
   security:
     command: bun

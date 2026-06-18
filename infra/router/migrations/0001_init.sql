@@ -1,4 +1,4 @@
--- Founder dashboard analytics — initial schema (ADR-0027, spec 2026-06-19).
+-- Founder dashboard analytics — initial schema (ADR-0027).
 -- Aggregate, UTC-day-keyed tables. WITHOUT ROWID so the primary key IS the
 -- storage (no separate rowid index) — halves rows-written per upsert, which
 -- matters against the D1 Free 100k-writes/day budget. No raw IP/UA/query string
