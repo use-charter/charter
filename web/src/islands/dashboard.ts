@@ -19,6 +19,18 @@ interface Stats {
   errors?: Record<string, string>;
   error?: string;
 }
+interface Analytics {
+  generatedAt?: string;
+  rangeDays?: number;
+  pageviewsByDay?: Series[];
+  uniquesByDay?: Series[];
+  topPages?: { path: string; hits: number }[];
+  blogViews?: number;
+  docsViews?: number;
+  events?: { install_copied?: number };
+  topCountries?: { country: string; hits: number }[];
+  error?: string;
+}
 
 const NS = 'http://www.w3.org/2000/svg';
 const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document): T | null => r.querySelector<T>(s);
@@ -88,7 +100,7 @@ function deltaPill(sel: string, series: Series[]): void {
   const pct = a === 0 ? (b > 0 ? 100 : 0) : Math.round(((b - a) / a) * 100);
   const dir = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
   el.className = `delta delta--${dir}`;
-  el.textContent = `${pct > 0 ? '▲' : pct < 0 ? '▼' : '→'} ${Math.abs(pct)}% vs prior 7d`;
+  el.textContent = `${pct > 0 ? '▲' : pct < 0 ? '▼' : '→'} ${Math.abs(pct)}% vs prior ${half}d`;
 }
 
 function path(d: string, cls: string): SVGPathElement {
@@ -98,26 +110,25 @@ function path(d: string, cls: string): SVGPathElement {
   return p;
 }
 
-// Hero chart: views area (gradient) + clones dashed line + horizontal gridlines.
-function drawTraffic(views: Series[], clones: Series[]): void {
-  const svg = $<SVGSVGElement>('[data-chart="traffic"]');
+// Dual-series chart: primary area (gradient) + line, secondary dashed line,
+// horizontal gridlines, and four evenly-spaced day labels on the x-axis.
+function drawLineChart(svgSel: string, axisSel: string, gradId: string, primary: Series[], secondary: Series[]): void {
+  const svg = $<SVGSVGElement>(svgSel);
   if (!svg) return;
   svg.innerHTML = '';
   const W = 600;
   const H = 200;
   const padX = 2;
   const padY = 14;
-  if (views.length < 2) return;
-  const max = Math.max(...views.map((p) => p.count), ...clones.map((p) => p.count), 1);
+  if (primary.length < 2) return;
+  const max = Math.max(...primary.map((p) => p.count), ...secondary.map((p) => p.count), 1);
   const xy = (arr: Series[]): readonly [number, number][] =>
     arr.map((p, i) => [padX + (i * (W - padX * 2)) / (arr.length - 1), H - padY - (p.count / max) * (H - padY * 2)] as const);
 
-  // gradient def
   const defs = document.createElementNS(NS, 'defs');
-  defs.innerHTML = `<linearGradient id="mcViewGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--charter-blue)" stop-opacity="0.22"/><stop offset="100%" stop-color="var(--charter-blue)" stop-opacity="0"/></linearGradient>`;
+  defs.innerHTML = `<linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--charter-blue)" stop-opacity="0.22"/><stop offset="100%" stop-color="var(--charter-blue)" stop-opacity="0"/></linearGradient>`;
   svg.append(defs);
 
-  // gridlines (4)
   for (let g = 0; g <= 3; g++) {
     const y = padY + (g * (H - padY * 2)) / 3;
     const ln = document.createElementNS(NS, 'line');
@@ -129,12 +140,13 @@ function drawTraffic(views: Series[], clones: Series[]): void {
     svg.append(ln);
   }
 
-  const v = xy(views);
-  const c = xy(clones);
+  const v = xy(primary);
+  const c = xy(secondary);
   const line = (pts: readonly [number, number][]): string => pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
   const vLine = line(v);
-  const area = `${vLine} L${v[v.length - 1]![0].toFixed(1)},${H} L${v[0]![0].toFixed(1)},${H} Z`;
-  svg.append(path(area, 'chart__area'));
+  const area = path(`${vLine} L${v[v.length - 1]![0].toFixed(1)},${H} L${v[0]![0].toFixed(1)},${H} Z`, 'chart__area');
+  area.setAttribute('fill', `url(#${gradId})`);
+  svg.append(area);
   if (c.length >= 2) svg.append(path(line(c), 'chart__clones'));
   const vp = path(vLine, 'chart__views');
   svg.append(vp);
@@ -148,18 +160,22 @@ function drawTraffic(views: Series[], clones: Series[]): void {
     vp.style.strokeDashoffset = '0';
   }
 
-  // x-axis: 4 evenly-spaced day labels (M/D)
-  const ax = $('[data-xaxis]');
+  const ax = $(axisSel);
   if (ax) {
-    const idxs = [0, Math.floor(views.length / 3), Math.floor((2 * views.length) / 3), views.length - 1];
+    const idxs = [0, Math.floor(primary.length / 3), Math.floor((2 * primary.length) / 3), primary.length - 1];
     ax.innerHTML = [...new Set(idxs)]
       .map((i) => {
-        const d = views[i]?.day ?? '';
+        const d = primary[i]?.day ?? '';
         const md = d ? `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}` : '';
         return `<span>${md}</span>`;
       })
       .join('');
   }
+}
+
+// Repo views (area) + clones (dashed) over the GitHub 14-day window.
+function drawTraffic(views: Series[], clones: Series[]): void {
+  drawLineChart('[data-chart="traffic"]', '[data-xaxis]', 'mcViewGrad', views, clones);
 }
 
 // Community donut: open vs closed issues, two arcs on a 120-box ring.
@@ -263,6 +279,77 @@ function render(s: Stats): void {
   drawDonut(open, closed);
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string);
+}
+
+// Fill a sparse day series into a contiguous trailing window (missing days = 0)
+// so the trend line has no misleading gaps.
+function densify(series: Series[], days: number): Series[] {
+  const map = new Map(series.map((s) => [s.day, s.count]));
+  const out: Series[] = [];
+  const today = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setUTCDate(today.getUTCDate() - i);
+    out.push({ day: d.toISOString().slice(0, 10), count: map.get(d.toISOString().slice(0, 10)) ?? 0 });
+  }
+  return out;
+}
+
+interface BarRow {
+  label: string;
+  value: number;
+  code?: boolean;
+}
+// Ranked horizontal-bar list (top pages, top countries) with an animated fill.
+function renderBars(sel: string, rows: BarRow[]): void {
+  const el = $(sel);
+  if (!el) return;
+  if (rows.length === 0) {
+    el.innerHTML = '<li class="muted">no visits yet</li>';
+    return;
+  }
+  const max = Math.max(...rows.map((r) => r.value), 1);
+  const width = (v: number): number => Math.max(3, Math.round((v / max) * 100));
+  el.innerHTML = rows
+    .map(
+      (r) =>
+        `<li class="bar"><span class="${r.code ? 'bar__code' : 'bar__label'}">${escapeHtml(r.label)}</span><span class="bar__track"><i style="width:${reduceMotion ? width(r.value) : 0}%"></i></span><b class="bar__val">${fmt(r.value)}</b></li>`,
+    )
+    .join('');
+  if (!reduceMotion) {
+    requestAnimationFrame(() => {
+      el.querySelectorAll<HTMLElement>('.bar__track i').forEach((bar, i) => {
+        bar.style.width = `${width(rows[i]!.value)}%`;
+      });
+    });
+  }
+}
+
+function renderAnalytics(a: Analytics): void {
+  if (a.error) return; // leave the section in its zero-state
+  const pv = a.pageviewsByDay ?? [];
+  const uq = a.uniquesByDay ?? [];
+  const pvTotal = pv.reduce((s, p) => s + p.count, 0);
+  const uqTotal = uq.reduce((s, p) => s + p.count, 0);
+  const days = a.rangeDays ?? 30;
+
+  countUp($('[data-akpi="pageviews"] [data-av]'), pvTotal);
+  countUp($('[data-akpi="uniques"] [data-av]'), uqTotal);
+  countUp($('[data-akpi="copies"] [data-av]'), a.events?.install_copied ?? 0);
+
+  countUp($('[data-av-hero="pageviews"]'), pvTotal);
+  countUp($('[data-av-hero="uniques"]'), uqTotal);
+  countUp($('[data-av-hero="blog"]'), a.blogViews ?? 0);
+  countUp($('[data-av-hero="docs"]'), a.docsViews ?? 0);
+  deltaPill('[data-adelta]', pv);
+  drawLineChart('[data-chart="pageviews"]', '[data-axaxis]', 'mcPvGrad', densify(pv, days), densify(uq, days));
+
+  renderBars('[data-top-pages]', (a.topPages ?? []).map((p) => ({ label: p.path, value: p.hits })));
+  renderBars('[data-top-countries]', (a.topCountries ?? []).map((c) => ({ label: c.country, value: c.hits, code: true })));
+}
+
 async function load(): Promise<void> {
   const root = $('[data-dash]');
   root?.classList.add('is-loading');
@@ -289,14 +376,29 @@ async function load(): Promise<void> {
   }
 }
 
+async function loadAnalytics(): Promise<void> {
+  try {
+    const res = await fetch('/dashboard/api/analytics', { headers: { Accept: 'application/json' } });
+    const ct = res.headers.get('content-type') ?? '';
+    // Non-JSON (403, or local `astro preview` without the router) → leave the
+    // section in its zero-state rather than banner; the stats loader already
+    // explains the router requirement.
+    if (!res.ok || !ct.includes('json')) return;
+    renderAnalytics((await res.json()) as Analytics);
+  } catch {
+    /* leave zero-states */
+  }
+}
+
 function init(): void {
   initThemeSwitch();
   const btn = $<HTMLButtonElement>('[data-refresh]');
   btn?.addEventListener('click', () => {
     btn.classList.add('is-spin');
-    void load().finally(() => setTimeout(() => btn.classList.remove('is-spin'), 600));
+    void Promise.all([load(), loadAnalytics()]).finally(() => setTimeout(() => btn.classList.remove('is-spin'), 600));
   });
   void load();
+  void loadAnalytics();
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

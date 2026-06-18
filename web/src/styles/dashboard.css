@@ -136,6 +136,30 @@
 .sw--closed { background: var(--up); }
 .sw--pr { background: var(--color-text-tertiary); }
 
+/* ── website analytics ──────────────────────────────────────── */
+.mc__sec { display: flex; align-items: center; gap: 14px; margin: 34px 2px 16px; }
+.mc__sec-l { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+.mc__sec-rule { flex: 1; height: 1px; background: var(--tile-bd); }
+.mc__sec-meta { font-family: var(--font-meta); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-tertiary); white-space: nowrap; }
+.mc__kpis--3 { grid-template-columns: repeat(3, 1fr); }
+.kpi__hint { margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: var(--color-background-tertiary); color: var(--color-text-tertiary); font-size: 9px; letter-spacing: 0.03em; vertical-align: middle; }
+
+/* reach */
+.reach { display: flex; gap: 28px; }
+.reach__stat span { display: block; font-size: 30px; font-weight: 800; letter-spacing: -0.035em; line-height: 1; font-variant-numeric: tabular-nums; }
+.reach__stat small { font-family: var(--font-meta); font-size: 11px; color: var(--color-text-tertiary); }
+.reach__note { margin: auto 0 0; font-family: var(--font-meta); font-size: 11px; line-height: 1.5; color: var(--color-text-tertiary); }
+
+/* ranked bar lists — top pages, top countries */
+.bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
+.bar { display: flex; align-items: center; gap: 12px; }
+.bar__label { flex: 0 0 40%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-code); font-size: 12.5px; color: var(--color-text-secondary); }
+.bar__code { flex: none; width: 2.6em; font-family: var(--font-code); font-size: 12.5px; font-weight: 700; color: var(--color-text-secondary); }
+.bar__track { flex: 1; height: 7px; border-radius: 4px; background: var(--color-background-tertiary); overflow: hidden; }
+.bar__track i { display: block; height: 100%; border-radius: 4px; background: var(--accent); transition: width 760ms var(--ease-out); }
+.bar__val { flex: none; min-width: 3ch; text-align: right; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .bar__track i { transition: none; } }
+
 /* footer */
 .mc__foot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 26px; font-family: var(--font-meta); font-size: 12px; color: var(--color-text-tertiary); }
 .mc__foot a { color: var(--color-text-secondary); text-decoration: none; }
@@ -150,6 +174,8 @@
 }
 @media (max-width: 620px) {
   .mc__kpis { grid-template-columns: 1fr 1fr; }
+  .mc__kpis--3 { grid-template-columns: 1fr 1fr; }
   .comm__row { flex-direction: column; align-items: flex-start; }
   .comm__legend { width: 100%; }
+  .reach { gap: 22px; }
 }

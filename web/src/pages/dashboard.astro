@@ -13,6 +13,13 @@ const KPIS = [
   { key: 'watchers', label: 'Watchers', d: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' },
   { key: 'openIssues', label: 'Open issues', d: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5v6m0 4h.01' },
 ];
+
+// Website analytics KPIs (first-party, server-side; 30-day UTC window).
+const AKPIS = [
+  { key: 'pageviews', label: 'Pageviews', hint: '', d: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
+  { key: 'uniques', label: 'Unique visitors', hint: 'approx', d: 'M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M11 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM21 21v-2a4 4 0 0 0-3-3.87' },
+  { key: 'copies', label: 'Install copies', hint: '', d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3' },
+];
 ---
 
 <Base title="Charter · Mission Control" path="/dashboard" htmlClass="mc-html" bodyClass="mc-body">
@@ -108,6 +115,63 @@ const KPIS = [
             <div><dt><i class="sw sw--pr"></i>Open PRs</dt><dd data-c="openPRs">—</dd></div>
           </dl>
         </div>
+      </article>
+    </div>
+
+    <!-- Website analytics — first-party, server-side, privacy-first -->
+    <div class="mc__sec">
+      <span class="mc__sec-l">Website</span>
+      <span class="mc__sec-rule"></span>
+      <span class="mc__sec-meta">last 30 days · UTC</span>
+    </div>
+
+    <section class="mc__kpis mc__kpis--3" aria-label="Website metrics">
+      {AKPIS.map((k) => (
+        <article class="kpi" data-akpi={k.key}>
+          <span class="kpi__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d={k.d}/></svg></span>
+          <span class="kpi__value" data-av>—</span>
+          <span class="kpi__label">{k.label}{k.hint && <span class="kpi__hint">{k.hint}</span>}</span>
+        </article>
+      ))}
+    </section>
+
+    <div class="mc__bento">
+      <!-- hero: pageviews + unique visitors trend -->
+      <article class="tile tile--hero">
+        <div class="tile__head">
+          <h2>Pageviews</h2>
+          <div class="tile__legend"><span class="lg lg--views">Pageviews</span><span class="lg lg--clones">Unique</span></div>
+        </div>
+        <div class="hero__metric">
+          <span class="hero__num" data-av-hero="pageviews">—</span>
+          <span class="hero__unit">pageviews · 30d</span>
+          <span class="delta" data-adelta></span>
+          <span class="hero__aux"><span data-av-hero="uniques">—</span> unique</span>
+        </div>
+        <div class="hero__chart"><svg viewBox="0 0 600 200" preserveAspectRatio="none" data-chart="pageviews" role="img" aria-label="Pageviews and unique visitors over 30 days"></svg></div>
+        <div class="hero__xaxis" data-axaxis></div>
+      </article>
+
+      <!-- reach: blog + docs -->
+      <article class="tile tile--rel">
+        <div class="tile__head"><h2>Reach</h2></div>
+        <div class="reach">
+          <div class="reach__stat"><span data-av-hero="blog">—</span><small>blog views</small></div>
+          <div class="reach__stat"><span data-av-hero="docs">—</span><small>docs reach</small></div>
+        </div>
+        <p class="reach__note">Server-side, cookieless. Bots and prefetch excluded.</p>
+      </article>
+
+      <!-- top pages -->
+      <article class="tile tile--adopt">
+        <div class="tile__head"><h2>Top pages</h2></div>
+        <ul class="bars" data-top-pages><li class="muted">no visits yet</li></ul>
+      </article>
+
+      <!-- top countries -->
+      <article class="tile tile--comm">
+        <div class="tile__head"><h2>Top countries</h2></div>
+        <ul class="bars" data-top-countries><li class="muted">no visits yet</li></ul>
       </article>
     </div>
 
