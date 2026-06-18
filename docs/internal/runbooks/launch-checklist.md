@@ -76,7 +76,7 @@ Full deploy runbook: [`docs/product/DEPLOY.md`](../../product/DEPLOY.md). Topolo
 - [x] Demo asset source committed (`docs/internal/demo/charter-demo.tape`, VHS). `code`
 - [x] Render the demo GIF and embed in README / landing. **Done (2026-06-14):** `docs/internal/demo/charter-demo.gif` rendered via `vhs` (1200×700, real scan of this repo) and embedded in the README go-to-market header. Re-render at `v1.0.0` if the CLI output changes. `external`
 
-- [x] Founder mission-control dashboard. **Done (2026-06-15):** `/dashboard` (shadcn-clean Astro page, no React, excluded from sitemap) reads `/dashboard/api/stats` on `charter-router` (GitHub API → growth & traffic, releases & downloads, action/schema adoption, community). Gated by a Cloudflare Access self-hosted app (`use-charter.dev/dashboard`, AUD `<access-aud>`, one-time-PIN allow `<maintainer-email>`) — verified 302→login on the page and the API. Live data needs the `GITHUB_STATS_TOKEN` worker secret (fine-grained PAT: Contents/Issues/Metadata/Administration read). `external`
+- [x] Founder mission-control dashboard. **Done (2026-06-15):** `/dashboard` (shadcn-clean Astro page, no React, excluded from sitemap) reads `/dashboard/api/stats` on `charter-router` (GitHub API → growth & traffic, releases & downloads, action/schema adoption, community). Gated by a Cloudflare Access self-hosted app (`use-charter.dev/dashboard`, one-time-PIN allow restricted to the maintainer's email; the app AUD and allowed identity live in the Cloudflare Access dashboard, not here) — verified 302→login on the page and the API. Live data needs the `GITHUB_STATS_TOKEN` worker secret (fine-grained PAT: Contents/Issues/Metadata/Administration read). `external`
 
 ## 8. MCP catalog (CF-12)
 
