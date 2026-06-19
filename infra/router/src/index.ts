@@ -57,24 +57,15 @@ export default {
 
     // Force HTTPS at the edge: redirect any plaintext request to its https
     // equivalent before doing any work. ACME http-01 challenges are excepted so
-    // certificate validation can still answer over http. The HSTS header set
-    // below makes compliant browsers skip this redirect after the first visit.
+    // certificate validation can still answer over http. HSTS is configured at
+    // the Cloudflare edge (SSL/TLS → Edge Certificates), which overrides any
+    // header a worker could set, so it is not duplicated here.
     if (url.protocol === 'http:' && !url.pathname.startsWith('/.well-known/acme-challenge/')) {
       url.protocol = 'https:';
       return Response.redirect(url.href, 301);
     }
 
-    // Run the router, then stamp the site-wide HSTS policy onto whatever it
-    // returns (proxied, redirect, or synthesized). Two-year max-age with
-    // includeSubDomains and preload — eligible for hstspreload.org submission.
-    const response = await route(request, env, ctx, url);
-    const headers = new Headers(response.headers);
-    headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
-    });
+    return route(request, env, ctx, url);
   },
 } satisfies ExportedHandler<Env>;
 
