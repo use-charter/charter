@@ -33,6 +33,18 @@ paths = [
   '''^coverage/''',
 ]
 
+# IndexNow ownership key for use-charter.dev. IndexNow keys are PUBLIC by design:
+# the identical value is hosted openly at the site root (web/public/<key>.txt) so
+# search engines can verify ownership before accepting URL submissions. It is not
+# a secret. Allowlist the literal value (regex, not path) so the generic-api-key
+# rule stops flagging it in the submit script and the deploy workflow, without
+# masking any genuine leak those files might carry later.
+[[allowlists]]
+description = "IndexNow public ownership key (not a secret)"
+regexes = [
+  '''c89d949c2d8cba4afbb3a7104a80e5f8''',
+]
+
 # Gitignored local environment files (e.g. web/.env.local holding a Resend key
 # for `wrangler pages dev`). `.env*` is gitignored — `.env.example` excepted —
 # so these never enter the committed tree; the `gitleaks git` history scan
