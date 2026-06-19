@@ -128,6 +128,28 @@ describe("initThemeSwitch", () => {
 		expect(() => initThemeSwitch()).not.toThrow();
 	});
 
+	it("works without matchMedia at all (resolves system to light)", () => {
+		vi.stubGlobal("matchMedia", undefined);
+		Object.defineProperty(window, "matchMedia", {
+			value: undefined,
+			configurable: true,
+		});
+		mountPill();
+		expect(() => initThemeSwitch()).not.toThrow();
+		expect(document.documentElement.dataset.theme).toBe("light");
+	});
+
+	it("skips the live OS listener when matchMedia has no addEventListener", () => {
+		const mql = { matches: false, media: "" };
+		vi.stubGlobal(
+			"matchMedia",
+			vi.fn(() => mql),
+		);
+		window.matchMedia = globalThis.matchMedia;
+		mountPill();
+		expect(() => initThemeSwitch()).not.toThrow();
+	});
+
 	it("falls back to system when localStorage is unreadable", () => {
 		stubMatchMedia(false);
 		const getItem = vi.spyOn(localStorage, "getItem").mockImplementation(() => {

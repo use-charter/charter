@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { __setPosts } from "../../../test/astro-content.stub";
-import { GET } from "./rss.xml";
+import { __setPosts } from "../test/astro-content.stub";
+import { GET } from "./pages/blog/rss.xml";
 
 // Two published posts (out of date order) and one draft.
 __setPosts([

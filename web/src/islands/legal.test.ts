@@ -106,4 +106,54 @@ describe("legal island", () => {
 		document.body.innerHTML = '<nav class="lg-rail__nav"></nav>';
 		await expect(import("./legal")).resolves.toBeDefined();
 	});
+
+	it("ignores href-less nav links and runs without a progress bar element", async () => {
+		// No `.lg-rail__bar i`, one href-less link plus one valid anchored link.
+		document.body.innerHTML = `
+			<nav class="lg-rail__nav"><a>no href</a><a href="#a">A</a></nav>
+			<section id="a">A</section>`;
+		const a = document.getElementById("a") as HTMLElement;
+		a.getBoundingClientRect = () => ({ top: -10 }) as DOMRect;
+		await import("./legal");
+		window.dispatchEvent(new Event("scroll")); // exercises the missing-bar branch
+		expect(
+			document.querySelector('a[href="#a"]')?.classList.contains("is-active"),
+		).toBe(true);
+	});
+
+	it("ignores a bare '#' nav link with no target id", async () => {
+		document.body.innerHTML = `
+			<div class="lg-rail__bar"><i></i></div>
+			<nav class="lg-rail__nav"><a href="#">top</a><a href="#a">A</a></nav>
+			<section id="a">A</section>`;
+		await import("./legal");
+		const top = document.querySelector('a[href="#"]') as HTMLAnchorElement;
+		const ev = new MouseEvent("click", { bubbles: true, cancelable: true });
+		top.dispatchEvent(ev);
+		expect(ev.defaultPrevented).toBe(false); // empty id → no jump
+	});
+
+	it("uses an instant jump when reduced motion is preferred", async () => {
+		vi.stubGlobal(
+			"matchMedia",
+			vi.fn((q: string) => ({
+				matches: q.includes("reduced-motion"),
+				media: q,
+				addEventListener: () => {},
+				removeEventListener: () => {},
+			})),
+		);
+		window.matchMedia = globalThis.matchMedia;
+		document.body.innerHTML = `
+			<div class="lg-rail__bar"><i></i></div>
+			<nav class="lg-rail__nav"><a href="#a">A</a></nav>
+			<section id="a">A</section>`;
+		await import("./legal");
+		(document.querySelector('a[href="#a"]') as HTMLAnchorElement).dispatchEvent(
+			new MouseEvent("click", { bubbles: true, cancelable: true }),
+		);
+		expect(window.scrollTo).toHaveBeenCalledWith(
+			expect.objectContaining({ behavior: "auto" }),
+		);
+	});
 });

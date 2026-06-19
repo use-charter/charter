@@ -260,14 +260,17 @@ describe("record (fire-and-forget pageview collection)", () => {
 	it("reuses the memoised salt across two collections in the same isolate", async () => {
 		const { record } = await freshModule();
 		const { env, batches } = stubEnv();
-		const waits: Promise<unknown>[] = [];
-		const fire = () =>
+		// Await each collection fully before the next, so the second reads the salt
+		// memo the first one set (concurrent fires would both miss it and race).
+		const fireAndWait = async () => {
+			const waits: Promise<unknown>[] = [];
 			record(page(), htmlOk(), env, {
 				waitUntil: (p: Promise<unknown>) => waits.push(p),
 			} as unknown as ExecutionContext);
-		fire();
-		fire(); // second collection hits the in-memory salt memo
-		await Promise.all(waits);
+			await Promise.all(waits);
+		};
+		await fireAndWait();
+		await fireAndWait(); // second collection hits the in-memory salt memo
 		expect(batches).toHaveLength(2);
 	});
 
@@ -275,7 +278,8 @@ describe("record (fire-and-forget pageview collection)", () => {
 		const { record } = await freshModule();
 		const { env, batches } = stubEnv();
 		const waits: Promise<unknown>[] = [];
-		record(page(), new Response("x", { status: 200 }), env, {
+		// `Response(null)` carries no content-type header, exercising the `?? ''` fallback.
+		record(page(), new Response(null, { status: 200 }), env, {
 			waitUntil: (p: Promise<unknown>) => waits.push(p),
 		} as unknown as ExecutionContext);
 		await Promise.all(waits);
@@ -295,6 +299,21 @@ describe("record (fire-and-forget pageview collection)", () => {
 		} as unknown as ExecutionContext);
 		await Promise.all(waits);
 		expect(batches).toHaveLength(0);
+	});
+
+	it("swallows a collection failure so it never surfaces on the response path", async () => {
+		const { record } = await freshModule();
+		const { env } = stubEnv();
+		// Force the D1 write to reject, exercising the fire-and-forget .catch.
+		(env.ANALYTICS_DB as unknown as { batch: () => Promise<unknown> }).batch =
+			async () => {
+				throw new Error("d1 unavailable");
+			};
+		const waits: Promise<unknown>[] = [];
+		record(page(), htmlOk(), env, {
+			waitUntil: (p: Promise<unknown>) => waits.push(p),
+		} as unknown as ExecutionContext);
+		await expect(Promise.all(waits)).resolves.toBeDefined(); // error swallowed, not rethrown
 	});
 });
 
@@ -348,5 +367,27 @@ describe("handleEvent (client beacon ingestion)", () => {
 		const { env, runs } = stubEnv();
 		await handleEvent(beacon('{"type":"nope"}'), env);
 		expect(runs).toHaveLength(0);
+	});
+});
+
+describe("daily salt rotation", () => {
+	it("re-mints the salt when the UTC day rolls over", async () => {
+		vi.useFakeTimers();
+		vi.setSystemTime(new Date("2026-06-20T12:00:00Z"));
+		const { record } = await freshModule();
+		const { env, kv } = stubEnv();
+		const fire = () => {
+			const waits: Promise<unknown>[] = [];
+			record(page(), htmlOk(), env, {
+				waitUntil: (p: Promise<unknown>) => waits.push(p),
+			} as unknown as ExecutionContext);
+			return Promise.all(waits);
+		};
+		await fire();
+		expect(kv.get("salt:2026-06-20")).toBeTruthy();
+		vi.setSystemTime(new Date("2026-06-21T12:00:00Z")); // next UTC day
+		await fire();
+		expect(kv.get("salt:2026-06-21")).toBeTruthy(); // memo invalidated → fresh salt
+		vi.useRealTimers();
 	});
 });

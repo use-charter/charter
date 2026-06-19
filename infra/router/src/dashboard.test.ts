@@ -230,4 +230,81 @@ describe("handleDashboardStats", () => {
 		expect(body.growth.stars).toBe(100);
 		expect(body.errors.growth).toBeUndefined();
 	});
+
+	it("retries with the default backoff when no Retry-After header is present", async () => {
+		stubCaches();
+		vi.stubGlobal("setTimeout", ((fn: () => void) => {
+			fn();
+			return 0;
+		}) as unknown as typeof setTimeout);
+		let hits = 0;
+		vi.stubGlobal(
+			"fetch",
+			ghResponder({
+				"/repos/use-charter/charter": () => {
+					hits += 1;
+					return hits === 1
+						? jsonRes({ message: "rate limited" }, 429) // no retry-after → default 1.5s backoff
+						: jsonRes({
+								stargazers_count: 7,
+								forks_count: 0,
+								subscribers_count: 0,
+								open_issues_count: 0,
+							});
+				},
+			}),
+		);
+		const body = (await (
+			await handleDashboardStats(req(ACCESS), env())
+		).json()) as Record<string, any>;
+		expect(hits).toBe(2);
+		expect(body.growth.stars).toBe(7);
+	});
+
+	it("records a non-Error rejection by its string form", async () => {
+		stubCaches();
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => {
+				throw "string failure"; // a non-Error rejection
+			}),
+		);
+		const body = (await (
+			await handleDashboardStats(req(ACCESS), env())
+		).json()) as Record<string, any>;
+		expect(Object.values(body.errors)).toContain("string failure");
+	});
+
+	it("zeroes the failing half of traffic while keeping the other", async () => {
+		stubCaches();
+		vi.stubGlobal(
+			"fetch",
+			ghResponder({
+				"/traffic/clones": () => jsonRes({ message: "down" }, 500),
+			}),
+		);
+		const body = (await (
+			await handleDashboardStats(req(ACCESS), env())
+		).json()) as Record<string, any>;
+		expect(body.traffic).toMatchObject({ views14d: 120, clones14d: 0 });
+		expect(body.traffic.clonesSeries).toEqual([]); // failed half → empty series
+	});
+
+	it("tolerates a release missing its optional fields", async () => {
+		stubCaches();
+		vi.stubGlobal(
+			"fetch",
+			ghResponder({ "/releases": () => jsonRes([{ assets: [] }]) }),
+		);
+		const body = (await (
+			await handleDashboardStats(req(ACCESS), env())
+		).json()) as Record<string, any>;
+		expect(body.releases).toMatchObject({
+			latestTag: null,
+			publishedAt: null,
+			url: null,
+			totalDownloads: 0,
+			assets: [],
+		});
+	});
 });

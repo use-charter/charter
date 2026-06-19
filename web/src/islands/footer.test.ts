@@ -103,4 +103,22 @@ describe("initFooterGlow", () => {
 		document.body.innerHTML = "";
 		expect(() => initFooterGlow()).not.toThrow();
 	});
+
+	it("coalesces rapid pointer moves into a single animation frame", () => {
+		stubHoverCapable(false);
+		// Holder object (not a bare `let`) so TS keeps the union type at the call site.
+		const pending: { frame: FrameRequestCallback | null } = { frame: null };
+		vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+			pending.frame = cb; // capture instead of running — simulates a not-yet-flushed frame
+			return 1;
+		});
+		initFooterGlow();
+		pointerMove(100, 150); // queues a frame
+		pointerMove(120, 150); // second move while queued → early return, no new frame
+		const mark = document.querySelector("[data-wordmark]") as HTMLElement;
+		expect(mark.classList.contains("is-lit")).toBe(false); // frame not yet run
+		pending.frame?.(0); // flush: uses the latest coordinates
+		expect(mark.classList.contains("is-lit")).toBe(true);
+		expect(mark.style.getPropertyValue("--mx")).toBe("120px");
+	});
 });

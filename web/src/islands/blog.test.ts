@@ -138,4 +138,48 @@ describe("blog island", () => {
 		const bar = document.querySelector("[data-progress]") as HTMLElement;
 		expect(bar.style.transform).toBe("");
 	});
+
+	it("picks the topmost of several intersecting headings and ignores repeat activations", async () => {
+		document.body.innerHTML = article();
+		await import("./blog");
+		const h1 = document.getElementById("s1") as HTMLElement;
+		const h2 = document.getElementById("s2") as HTMLElement;
+		h1.getBoundingClientRect = () => ({ top: 10 }) as DOMRect;
+		h2.getBoundingClientRect = () => ({ top: 400 }) as DOMRect;
+		// Two intersecting at once → the sort comparator runs and the topmost wins.
+		ioCallback?.([
+			{ isIntersecting: true, target: h2 },
+			{ isIntersecting: true, target: h1 },
+		]);
+		expect(
+			document
+				.querySelector('[data-toc="s1"]')
+				?.classList.contains("is-active"),
+		).toBe(true);
+		// Re-reporting the same active heading is a no-op (id === active early return).
+		ioCallback?.([{ isIntersecting: true, target: h1 }]);
+		expect(
+			document
+				.querySelector('[data-toc="s1"]')
+				?.classList.contains("is-active"),
+		).toBe(true);
+	});
+
+	it("ignores headings with no matching TOC link and id-less observer targets", async () => {
+		document.body.innerHTML = `
+			<div data-progress></div>
+			<article data-post>
+				<nav><a data-toc="s1"></a></nav>
+				<div class="bl-prose"><h2 id="s1">A</h2><h2 id="unlinked">B</h2></div>
+			</article>`;
+		await import("./blog");
+		// An intersecting target with no id must not throw or set an active link.
+		const idless = document.createElement("h2");
+		ioCallback?.([{ isIntersecting: true, target: idless }]);
+		expect(
+			document
+				.querySelector('[data-toc="s1"]')
+				?.classList.contains("is-active"),
+		).toBe(false);
+	});
 });
