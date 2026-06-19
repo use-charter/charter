@@ -25,6 +25,9 @@ type Result struct {
 	Findings   []findings.Finding
 	Suppressed []suppress.Suppressed
 	Score      scoring.Result
+	// PathsScanned is the number of repository paths Charter inventoried for this
+	// run — a deterministic measure of scan breadth surfaced in the text summary.
+	PathsScanned int
 }
 
 func Run(path string, threshold int, thresholdSet bool) (Result, error) {
@@ -87,11 +90,12 @@ func Run(path string, threshold int, thresholdSet bool) (Result, error) {
 	}
 
 	return Result{
-		Root:       root,
-		Threshold:  effective,
-		Passed:     score.Final >= effective,
-		Findings:   active,
-		Suppressed: suppressed,
-		Score:      score,
+		Root:         root,
+		Threshold:    effective,
+		Passed:       score.Final >= effective,
+		Findings:     active,
+		Suppressed:   suppressed,
+		Score:        score,
+		PathsScanned: len(inv.Paths),
 	}, nil
 }

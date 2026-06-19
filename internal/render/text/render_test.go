@@ -59,7 +59,8 @@ func sampleResult() doctor.Result {
 			{Finding: findings.Finding{RuleID: "AE-CC-001"}, Source: suppress.SourceExternal, Reason: "legacy"},
 			{Finding: findings.Finding{RuleID: "AE-CC-002"}, Source: suppress.SourceInSource},
 		},
-		Score: scoring.Result{Final: 49},
+		Score:        scoring.Result{Final: 49},
+		PathsScanned: 8,
 	}
 }
 
@@ -302,7 +303,7 @@ func TestRenderStyledSummaryLine(t *testing.T) {
 	out := string(Render(sampleResult(), caps, paletteFor(caps)))
 
 	for _, want := range []string{
-		"Checked ", " rules", // rules-checked prefix (count is catalog-driven)
+		"Checked 8 paths", " rules", " categories", // scan breadth (paths from result, rule/category counts catalog-driven)
 		"4 findings",                               // total findings
 		"1 BLOCKER", "1 HIGH", "1 MEDIUM", "1 LOW", // per-severity buckets
 	} {

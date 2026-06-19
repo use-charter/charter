@@ -314,14 +314,18 @@ func (r styler) writeSuppressed(b *bytes.Buffer, result doctor.Result) {
 	}
 }
 
-// writeSummary renders the findings rollup line, e.g.
-// "Checked 18 rules · 3 findings · 1 BLOCKER · 1 HIGH · 1 MEDIUM",
-// omitting zero severity buckets. A clean run reads "… · 0 findings ✓".
+// writeSummary renders the scan rollup line, e.g.
+// "Checked 8 paths · 18 rules · 9 categories · 3 findings · 1 BLOCKER · 1 HIGH",
+// omitting zero severity buckets. A clean run reads "… · 0 findings ✓". The
+// paths/rules/categories breadth mirrors the scan summary on use-charter.dev.
 func (r styler) writeSummary(b *bytes.Buffer, result doctor.Result) {
 	dot := r.style(terminal.TextTertiary).Render(" · ")
 	total := len(result.Findings)
 
-	checked := r.style(terminal.TextSecondary).Render(fmt.Sprintf("Checked %d rules", len(catalog.IDs())))
+	checked := r.style(terminal.TextSecondary).Render(fmt.Sprintf(
+		"Checked %d paths · %d rules · %d categories",
+		result.PathsScanned, len(catalog.IDs()), len(catalog.Categories()),
+	))
 
 	countTok := terminal.TextSuccess
 	countText := fmt.Sprintf("%d findings", total)
