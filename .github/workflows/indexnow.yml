@@ -1,0 +1,73 @@
+name: Submit to IndexNow
+
+# Pings IndexNow (Bing, Yandex, Seznam, Naver, Yep) with the site's canonical
+# URLs whenever the landing site changes, so they recrawl promptly. The Pages
+# site deploys through its own native Git integration; this job waits for the
+# new deploy to be live (the ownership key file resolves) before submitting,
+# then runs web/scripts/indexnow.mts. Google is unaffected — Search Console and
+# the sitemap cover it.
+#
+# Required configuration:
+#   variable INDEXNOW_ENABLED=true   — enables this workflow (set once the domain
+#                                      is live). No secrets: IndexNow proves
+#                                      ownership via the hosted key file alone.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "web/**"
+      - ".github/workflows/indexnow.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  SITE: https://use-charter.dev
+  KEY: c89d949c2d8cba4afbb3a7104a80e5f8
+
+jobs:
+  submit:
+    name: Submit canonical URLs
+    # Explicit enable gate: set repository variable INDEXNOW_ENABLED=true once the
+    # domain is live. Until then this job is skipped (never a failed run against a
+    # not-yet-deployed host). Mirrors the DEPLOY_WORKERS gate in deploy-workers.yml.
+    if: ${{ vars.INDEXNOW_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - name: Set up pinned toolchain
+        uses: jdx/mise-action@dba19683ed58901619b14f395a24841710cb4925 # v4.1.0
+        with:
+          version: 2026.5.15
+          install: true
+          install_args: --locked
+          # No toolchain cache in a publishing workflow (cache-poisoning safety).
+          cache: false
+      - name: Wait for the new deploy to be live
+        # The Pages git integration builds asynchronously, so the push that
+        # triggered this run may not be live yet. Poll the ownership key file
+        # until it resolves (proof the new build is serving) before submitting —
+        # otherwise IndexNow rejects the submission with 403 (key not found).
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "$SITE/$KEY.txt" >/dev/null 2>&1; then
+              echo "Key file live after ~$((i * 10))s."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::Key file $SITE/$KEY.txt did not resolve within 5 minutes."
+          exit 1
+      - name: Submit canonical URLs to IndexNow
+        working-directory: web
+        run: bun run indexnow
