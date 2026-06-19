@@ -37,18 +37,17 @@ export interface Env extends DashboardEnv {
 const DEFAULT_MINTLIFY_ORIGIN = 'tashfiq.mintlify.app';
 
 // Paths Mintlify owns when its site is proxied under this domain: the doc
-// sections (content), Mintlify's namespaced static assets (CSS/JS/favicons under
-// /mintlify-assets/), and the root-level LLM index files. Everything else is the
-// landing site.
+// sections (content) and Mintlify's namespaced static assets (CSS/JS/favicons
+// under /mintlify-assets/). Everything else is the landing site — which serves
+// the curated /llms.txt index and /robots.txt. (/llms-full.txt is handled
+// separately so its links can be host-rewritten to the public domain.)
 function isMintlifyPath(path: string): boolean {
   return (
     path.startsWith('/docs') ||
     path.startsWith('/cli') ||
     path.startsWith('/rules') ||
     path.startsWith('/changelog') ||
-    path.startsWith('/mintlify-assets') ||
-    path === '/llms.txt' ||
-    path === '/llms-full.txt'
+    path.startsWith('/mintlify-assets')
   );
 }
 
@@ -99,6 +98,20 @@ export default {
           'Content-Type': 'application/xml; charset=utf-8',
           'Cache-Control': 'public, max-age=3600',
         },
+      });
+    }
+
+    // /llms-full.txt is Mintlify's full concatenated docs corpus. Proxy it with
+    // the origin→public host rewrite so the AI-readable URLs are canonical
+    // (use-charter.dev), not the internal Mintlify origin. The curated /llms.txt
+    // index is served by the landing site.
+    if (path === '/llms-full.txt') {
+      const origin = env.MINTLIFY_ORIGIN || DEFAULT_MINTLIFY_ORIGIN;
+      const res = await fetch(`https://${origin}/llms-full.txt`, { headers: { Host: origin } });
+      const body = (await res.text()).split(`https://${origin}`).join(`https://${url.hostname}`);
+      return new Response(body, {
+        status: res.status,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
       });
     }
 
