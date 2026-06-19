@@ -5,13 +5,16 @@
 # CSP: fetch directives lock to 'self' except the Cloudflare Web Analytics
 # beacon — its loader script (static.cloudflareinsights.com) and its reporting
 # endpoint (cloudflareinsights.com) are the only third-party origins allowed.
-# script-src/style-src keep 'unsafe-inline' deliberately — a static host has no
-# per-request nonce, and the page relies on inline scripts plus inline styles
-# (syntax-highlight token colours and CSSOM-driven animations) that a hash-based
-# policy cannot cover. frame-ancestors + X-Frame-Options both block framing.
+# script-src carries the SHA-256 hashes of the two inline scripts in Base.astro
+# (theme-resolve and scroll-reveal) rather than 'unsafe-inline', so no injected
+# inline script can execute. The csp-hashes test recomputes these from source and
+# fails if Base.astro's inline scripts change without the hashes being updated.
+# style-src keeps 'unsafe-inline': the page writes inline style attributes at
+# runtime (CSSOM-driven meter/bar animations) whose values cannot be hashed.
+# frame-ancestors + X-Frame-Options both block framing.
 
 /*
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; manifest-src 'self'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' https://static.cloudflareinsights.com 'sha256-rZisSQ/ZcPiTX2W3iDvFLT7TMc33sWX9SmhlkElvfmU=' 'sha256-+4UmIHbdQicwKkPLjQf8UsU630/MaxCRO2DYYYUlVSo='; connect-src 'self' https://cloudflareinsights.com; manifest-src 'self'; upgrade-insecure-requests
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
   Cross-Origin-Opener-Policy: same-origin
   X-Frame-Options: DENY
