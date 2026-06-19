@@ -27,7 +27,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "audit": "bun audit"
+    "audit": "bun audit",
+    "indexnow": "bun scripts/indexnow.mts"
   },
   "dependencies": {
     "@astrojs/check": "0.9.9",
