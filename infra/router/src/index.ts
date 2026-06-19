@@ -54,9 +54,39 @@ function isMintlifyPath(path: string): boolean {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
-    const path = url.pathname;
 
-    // ACME / cert-validation challenges resolve at the edge, not at an origin.
+    // Force HTTPS at the edge: redirect any plaintext request to its https
+    // equivalent before doing any work. ACME http-01 challenges are excepted so
+    // certificate validation can still answer over http. The HSTS header set
+    // below makes compliant browsers skip this redirect after the first visit.
+    if (url.protocol === 'http:' && !url.pathname.startsWith('/.well-known/acme-challenge/')) {
+      url.protocol = 'https:';
+      return Response.redirect(url.href, 301);
+    }
+
+    // Run the router, then stamp the site-wide HSTS policy onto whatever it
+    // returns (proxied, redirect, or synthesized). Two-year max-age with
+    // includeSubDomains and preload — eligible for hstspreload.org submission.
+    const response = await route(request, env, ctx, url);
+    const headers = new Headers(response.headers);
+    headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  },
+} satisfies ExportedHandler<Env>;
+
+async function route(
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+  url: URL,
+): Promise<Response> {
+  const path = url.pathname;
+
+  // ACME / cert-validation challenges resolve at the edge, not at an origin.
     // Everything else under /.well-known/ (e.g. security.txt) falls through to
     // the landing-site proxy below.
     if (path.startsWith('/.well-known/acme-challenge/')) {
@@ -156,5 +186,4 @@ export default {
       'Charter — AI-agent readiness scanner.\nDocs: /docs/  Rules: /rules/',
       { status: 200, headers: { 'Content-Type': 'text/plain' } },
     );
-  },
-} satisfies ExportedHandler<Env>;
+}
