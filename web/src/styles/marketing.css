@@ -281,6 +281,15 @@ html.ck-html { scroll-behavior: smooth; }
 .ck-hsub { margin: 14px 0 0; max-width: 60ch; font-family: var(--font-body); font-size: 16.5px; line-height: 1.58; color: var(--ck-dim); }
 .ck-hsub code { font-family: var(--font-code); font-size: 14px; color: var(--ck-ink); }
 .ck-hsub b { color: var(--ck-ink); font-weight: 600; }
+/* Phones: stop forcing a full-height vertically-centred hero (it jams the kicker
+   under the bar) — flow from the top with breathing room, and trim the oversized
+   display type so it sits comfortably inside the gutter instead of hugging it. */
+@media (max-width: 560px) {
+  .ck-hero { padding: 0 22px 16px; }
+  .ck-hero__stage { min-height: 0; justify-content: flex-start; padding-top: 28px; gap: 18px; }
+  .ck-hh1 { font-size: clamp(32px, 8.6vw, 46px); line-height: 1; }
+  .ck-hsub { font-size: 15.5px; line-height: 1.55; }
+}
 .ck-hcta { display: flex; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
 .ck-hcta__note { font-family: var(--font-code); font-size: 12.5px; color: var(--ck-faint); }
 
