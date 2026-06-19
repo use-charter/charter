@@ -35,6 +35,7 @@ The nine rule categories are Context, Secrets, MCP Safety, Agent Config, Environ
 
 ## Optional
 - [Changelog](${url('/docs/changelog')}): Release notes and version history.
+- [Full documentation (llms-full.txt)](${url('/llms-full.txt')}): The entire documentation corpus as a single file.
 `;
 };
 

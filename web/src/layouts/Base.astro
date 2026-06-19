@@ -58,6 +58,9 @@ const STRUCTURED_DATA = {
       license: 'https://www.apache.org/licenses/LICENSE-2.0',
       codeRepository: REPO,
       downloadUrl: REPO,
+      softwareHelp: { '@type': 'CreativeWork', url: `${SITE}/docs` },
+      releaseNotes: `${SITE}/changelog`,
+      featureList: '18 readiness rules across 9 categories; deterministic offline 0–100 scoring; diff-first auto-fix; SARIF 2.1.0 output; GitHub Action CI gate.',
       isAccessibleForFree: true,
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       author: { '@id': `${SITE}/#organization` },
@@ -89,6 +92,7 @@ const STRUCTURED_DATA = {
   </script>
   <title>{title}</title>
   <meta name="description" content={description} />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <meta name="color-scheme" content="dark light" />
   <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)" />
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
