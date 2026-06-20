@@ -15,6 +15,7 @@ then hands you the exact fix for every gap. Offline, deterministic, no LLM in th
 <p>
   <a href="https://github.com/use-charter/charter/releases"><img alt="Release" src="https://img.shields.io/github/v/release/use-charter/charter?sort=semver&style=flat-square&color=5aa2f7&labelColor=0b0e14"></a>
   <a href="https://github.com/use-charter/charter/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/use-charter/charter/ci.yml?branch=main&style=flat-square&labelColor=0b0e14"></a>
+  <a href="https://github.com/marketplace/actions/charter-ai-agent-readiness"><img alt="GitHub Marketplace" src="https://img.shields.io/badge/Marketplace-Charter-5aa2f7?style=flat-square&logo=githubactions&logoColor=white&labelColor=0b0e14"></a>
   <a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-5aa2f7?style=flat-square&labelColor=0b0e14"></a>
   <img alt="Go" src="https://img.shields.io/badge/go-1.26-00ADD8?style=flat-square&logo=go&logoColor=white&labelColor=0b0e14">
   <img alt="SLSA Level 3" src="https://img.shields.io/badge/SLSA-level%203-45dd92?style=flat-square&labelColor=0b0e14">
