@@ -110,6 +110,25 @@ async function proxyRewriteCached(
 	});
 }
 
+// fetchResilient proxies a request and retries ONCE on a transient origin
+// failure (a 5xx response or a thrown fetch) — but only for idempotent methods.
+// During a Cloudflare Pages deploy swap or an origin cold-start the upstream can
+// briefly 5xx; a single retry turns that blip into a successful response instead
+// of a user-facing 504. Non-idempotent methods (e.g. POST /api/waitlist) are
+// never retried, so a request is never duplicated.
+async function fetchResilient(req: Request): Promise<Response> {
+	const retry =
+		req.method === "GET" || req.method === "HEAD" ? req.clone() : null;
+	try {
+		const res = await fetch(req);
+		if (res.status < 500 || !retry) return res;
+		return await fetch(retry);
+	} catch (err) {
+		if (!retry) throw err;
+		return await fetch(retry);
+	}
+}
+
 async function route(
 	request: Request,
 	env: Env,
@@ -192,7 +211,7 @@ async function route(
 		);
 		// Record analytics for proxied documentation HTML pages; non-HTML assets
 		// are filtered out by `qualifies`.
-		const response = await fetch(proxy);
+		const response = await fetchResilient(proxy);
 		record(request, response, env, ctx);
 		return response;
 	}
@@ -204,7 +223,7 @@ async function route(
 	if (landing) {
 		const dest = new URL(`https://${landing}${path}${url.search}`);
 		// Record analytics for landing-site HTML pages.
-		const response = await fetch(new Request(dest, request));
+		const response = await fetchResilient(new Request(dest, request));
 		record(request, response, env, ctx);
 		return response;
 	}
