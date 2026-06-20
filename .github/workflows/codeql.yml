@@ -55,7 +55,7 @@ jobs:
           go-version-file: go.mod
           cache: false
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@c35d1b164463ee62a100735382aaaa525c5d3496 # codeql-bundle-v2.25.6
+        uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
         with:
           languages: go
           build-mode: manual
@@ -64,6 +64,6 @@ jobs:
         # Go code for analysis.
         run: go build ./...
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@c35d1b164463ee62a100735382aaaa525c5d3496 # codeql-bundle-v2.25.6
+        uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
         with:
           category: "/language:go"

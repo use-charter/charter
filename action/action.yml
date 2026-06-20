@@ -59,7 +59,7 @@ runs:
   steps:
     - name: Install cosign
       if: inputs.verify == 'true'
-      uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+      uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
       with:
         cosign-release: "v3.0.6"
     - name: Download and verify Charter
@@ -143,7 +143,7 @@ runs:
         } >> "$GITHUB_OUTPUT"
     - name: Upload SARIF
       if: inputs.upload == 'true' && inputs.format == 'sarif'
-      uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
+      uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
       with:
         sarif_file: ${{ inputs.sarif-file }}
         category: ${{ inputs.category }}
