@@ -77,43 +77,37 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 // proxyRewriteCached serves a Mintlify-origin text/xml resource on this domain
-// with the origin→public host rewrite, edge-cached in caches.default. Repeat
-// fetches — legitimate crawlers or an abusive loop — are served from cache
-// without re-hitting Mintlify or re-running the rewrite, so the endpoint stays
-// cheap under load without ever challenging or blocking a bot. The cached copy
-// honours the response's one-hour max-age.
+// with the origin→public host rewrite. The Mintlify subrequest is edge-cached
+// (cf.cacheEverything + cacheTtlByStatus), so repeat fetches — legitimate
+// crawlers or an abusive loop — are served without re-hitting Mintlify: 2xx is
+// held for an hour, errors are never cached. No bot is challenged or blocked;
+// caching simply makes repeated reads cheap. (The eyeball response is generated
+// by this worker, so it carries no cf-cache-status of its own — the cache shields
+// the upstream, not the worker invocation.)
 async function proxyRewriteCached(
-	request: Request,
 	env: Env,
-	ctx: ExecutionContext,
 	url: URL,
 	originPath: string,
 	contentType: string,
 ): Promise<Response> {
-	const cache = caches.default;
-	const hit = await cache.match(request);
-	if (hit) return hit;
-
 	const origin = env.MINTLIFY_ORIGIN || DEFAULT_MINTLIFY_ORIGIN;
 	const res = await fetch(`https://${origin}${originPath}`, {
 		headers: { Host: origin },
+		cf: {
+			cacheEverything: true,
+			cacheTtlByStatus: { "200-299": 3600, "300-599": 0 },
+		},
 	});
 	const body = (await res.text())
 		.split(`https://${origin}`)
 		.join(`https://${url.hostname}`);
-	const out = new Response(body, {
+	return new Response(body, {
 		status: res.status,
 		headers: {
 			"Content-Type": contentType,
 			"Cache-Control": "public, max-age=3600",
 		},
 	});
-	// Cache only successful responses, and write off the response path so the
-	// first fetcher is never blocked on the cache store.
-	if (res.ok) {
-		ctx.waitUntil(cache.put(request, out.clone()));
-	}
-	return out;
 }
 
 async function route(
@@ -156,9 +150,7 @@ async function route(
 	// only the hostname needs rewriting.
 	if (path === "/docs/sitemap.xml") {
 		return proxyRewriteCached(
-			request,
 			env,
-			ctx,
 			url,
 			"/sitemap.xml",
 			"application/xml; charset=utf-8",
@@ -171,9 +163,7 @@ async function route(
 	// index is served by the landing site.
 	if (path === "/llms-full.txt") {
 		return proxyRewriteCached(
-			request,
 			env,
-			ctx,
 			url,
 			"/llms-full.txt",
 			"text/plain; charset=utf-8",

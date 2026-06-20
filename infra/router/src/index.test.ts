@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Env } from "./index";
 import worker from "./index";
 
@@ -22,13 +22,6 @@ function env(overrides: Partial<Env> = {}): Env {
 const call = (url: string, init?: RequestInit, e: Env = env()) =>
 	worker.fetch(new Request(url, init), e, ctx);
 
-// The proxied text endpoints read/write caches.default; default to a cache miss
-// so they fall through to the (stubbed) origin fetch. Individual tests override.
-beforeEach(() => {
-	vi.stubGlobal("caches", {
-		default: { match: async () => undefined, put: async () => {} },
-	});
-});
 afterEach(() => vi.unstubAllGlobals());
 
 describe("charter-router edge behaviour", () => {
@@ -99,30 +92,14 @@ describe("charter-router routing", () => {
 		expect(body).toBe("see https://use-charter.dev/llms-full.txt");
 	});
 
-	it("serves a cached copy of a proxied endpoint without re-fetching the origin", async () => {
-		const fetchMock = vi.fn();
-		vi.stubGlobal("fetch", fetchMock);
-		vi.stubGlobal("caches", {
-			default: {
-				match: async () => new Response("cached corpus"),
-				put: async () => {},
-			},
-		});
-		const res = await call("https://use-charter.dev/llms-full.txt");
-		expect(await res.text()).toBe("cached corpus");
-		expect(fetchMock).not.toHaveBeenCalled(); // served from edge cache
-	});
-
-	it("does not cache a failed origin response for a proxied endpoint", async () => {
-		const put = vi.fn(async () => {});
-		vi.stubGlobal("caches", { default: { match: async () => undefined, put } });
-		vi.stubGlobal(
-			"fetch",
-			vi.fn(async () => new Response("upstream down", { status: 502 })),
+	it("requests the cached Mintlify subrequest for proxied endpoints", async () => {
+		const fetchMock = vi.fn(
+			async (_input: string, _init?: { cf?: { cacheEverything?: boolean } }) =>
+				new Response("see https://origin.mintlify.app/llms-full.txt"),
 		);
-		const res = await call("https://use-charter.dev/docs/sitemap.xml");
-		expect(res.status).toBe(502);
-		expect(put).not.toHaveBeenCalled(); // non-2xx is not stored
+		vi.stubGlobal("fetch", fetchMock);
+		await call("https://use-charter.dev/llms-full.txt");
+		expect(fetchMock.mock.calls[0][1]?.cf?.cacheEverything).toBe(true); // subrequest marked cacheable
 	});
 
 	it("301-redirects the guessed /sitemap.xml to the real sitemap index", async () => {
