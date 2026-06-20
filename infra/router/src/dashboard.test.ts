@@ -126,8 +126,14 @@ describe("handleDashboardStats", () => {
 			latestTag: "v1.0.0",
 			totalDownloads: 42,
 		});
-		// Adopters exclude the project's own org.
-		expect(body.adoption.sampleAdopters).toEqual(["acme/widgets"]);
+		// Adoption counts distinct EXTERNAL repos: the search returns acme/widgets
+		// and use-charter/charter, so the self-reference is excluded and the count
+		// is 1 (not GitHub's total_count of 3).
+		expect(body.adoption).toMatchObject({
+			actionRepos: 1,
+			schemaRefs: 1,
+			sampleAdopters: ["acme/widgets"],
+		});
 		expect(body.community).toMatchObject({
 			openIssues: 5,
 			closedIssues: 5,

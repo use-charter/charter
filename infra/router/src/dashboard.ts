@@ -163,11 +163,19 @@ async function buildStats(token: string): Promise<unknown> {
 			count: p.count,
 		}));
 
-	const adopters = [
-		...(actionUse?.items ?? [])
-			.map((i) => i.repository?.full_name)
-			.filter((n): n is string => !!n && !n.startsWith("use-charter/")),
+	// Adoption counts distinct external repositories, not GitHub's raw
+	// total_count (which counts file matches and includes Charter's own repo
+	// referencing its action/schema). Both searches exclude the use-charter org
+	// so the signal reflects real third-party usage.
+	const externalRepos = (resp: SearchResp | null): string[] => [
+		...new Set(
+			(resp?.items ?? [])
+				.map((i) => i.repository?.full_name)
+				.filter((n): n is string => !!n && !n.startsWith("use-charter/")),
+		),
 	];
+	const actionAdopters = externalRepos(actionUse);
+	const schemaAdopters = externalRepos(schemaUse);
 
 	return {
 		generatedAt: new Date().toISOString(),
@@ -204,9 +212,9 @@ async function buildStats(token: string): Promise<unknown> {
 				})),
 			},
 		adoption: {
-			actionRepos: actionUse?.total_count ?? 0,
-			schemaRefs: schemaUse?.total_count ?? 0,
-			sampleAdopters: [...new Set(adopters)].slice(0, 8),
+			actionRepos: actionAdopters.length,
+			schemaRefs: schemaAdopters.length,
+			sampleAdopters: actionAdopters.slice(0, 8),
 		},
 		community: {
 			openIssues: openIssues?.total_count ?? 0,
