@@ -1,7 +1,7 @@
 // Renders the use-charter org cover banner — a minimal, centered brand hero
 // (wordmark, tagline, mission, capability footer) using the brand faces: Ruda
 // for display and Atkinson Hyperlegible Mono for the mono lines. Outputs both a
-// source copy under docs/internal/designs/brands and the served /charter-cover
+// source copy under docs/internal/designs/brand and the served /charter-cover
 // asset. Re-run after editing:  bun scripts/generate-cover.mts
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -54,8 +54,8 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${
 </svg>`;
 
 const png = new Resvg(svg, { font: { fontBuffers: [ruda, rudaR, mono], loadSystemFonts: true } }).render().asPng();
-const brands = resolve(web, '../docs/internal/designs/brands');
+const brands = resolve(web, '../docs/internal/designs/brand');
 writeFileSync(resolve(brands, 'charter-cover.png'), png);
 await sharp(png).webp({ quality: 92 }).toFile(resolve(brands, 'charter-cover.webp'));
 writeFileSync(resolve(web, 'public/charter-cover.png'), png); // served at /charter-cover.png
-console.log(`org cover ${W}x${H} @2x → docs/internal/designs/brands + web/public`);
+console.log(`org cover ${W}x${H} @2x → docs/internal/designs/brand + web/public`);
