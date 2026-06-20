@@ -76,6 +76,46 @@ export default {
 	},
 } satisfies ExportedHandler<Env>;
 
+// proxyRewriteCached serves a Mintlify-origin text/xml resource on this domain
+// with the origin→public host rewrite, edge-cached in caches.default. Repeat
+// fetches — legitimate crawlers or an abusive loop — are served from cache
+// without re-hitting Mintlify or re-running the rewrite, so the endpoint stays
+// cheap under load without ever challenging or blocking a bot. The cached copy
+// honours the response's one-hour max-age.
+async function proxyRewriteCached(
+	request: Request,
+	env: Env,
+	ctx: ExecutionContext,
+	url: URL,
+	originPath: string,
+	contentType: string,
+): Promise<Response> {
+	const cache = caches.default;
+	const hit = await cache.match(request);
+	if (hit) return hit;
+
+	const origin = env.MINTLIFY_ORIGIN || DEFAULT_MINTLIFY_ORIGIN;
+	const res = await fetch(`https://${origin}${originPath}`, {
+		headers: { Host: origin },
+	});
+	const body = (await res.text())
+		.split(`https://${origin}`)
+		.join(`https://${url.hostname}`);
+	const out = new Response(body, {
+		status: res.status,
+		headers: {
+			"Content-Type": contentType,
+			"Cache-Control": "public, max-age=3600",
+		},
+	});
+	// Cache only successful responses, and write off the response path so the
+	// first fetcher is never blocked on the cache store.
+	if (res.ok) {
+		ctx.waitUntil(cache.put(request, out.clone()));
+	}
+	return out;
+}
+
 async function route(
 	request: Request,
 	env: Env,
@@ -115,20 +155,14 @@ async function route(
 	// swapped to the request host — every listed path is proxied unchanged, so
 	// only the hostname needs rewriting.
 	if (path === "/docs/sitemap.xml") {
-		const origin = env.MINTLIFY_ORIGIN || DEFAULT_MINTLIFY_ORIGIN;
-		const res = await fetch(`https://${origin}/sitemap.xml`, {
-			headers: { Host: origin },
-		});
-		const body = (await res.text())
-			.split(`https://${origin}`)
-			.join(`https://${url.hostname}`);
-		return new Response(body, {
-			status: res.status,
-			headers: {
-				"Content-Type": "application/xml; charset=utf-8",
-				"Cache-Control": "public, max-age=3600",
-			},
-		});
+		return proxyRewriteCached(
+			request,
+			env,
+			ctx,
+			url,
+			"/sitemap.xml",
+			"application/xml; charset=utf-8",
+		);
 	}
 
 	// /llms-full.txt is Mintlify's full concatenated docs corpus. Proxy it with
@@ -136,20 +170,14 @@ async function route(
 	// (use-charter.dev), not the internal Mintlify origin. The curated /llms.txt
 	// index is served by the landing site.
 	if (path === "/llms-full.txt") {
-		const origin = env.MINTLIFY_ORIGIN || DEFAULT_MINTLIFY_ORIGIN;
-		const res = await fetch(`https://${origin}/llms-full.txt`, {
-			headers: { Host: origin },
-		});
-		const body = (await res.text())
-			.split(`https://${origin}`)
-			.join(`https://${url.hostname}`);
-		return new Response(body, {
-			status: res.status,
-			headers: {
-				"Content-Type": "text/plain; charset=utf-8",
-				"Cache-Control": "public, max-age=3600",
-			},
-		});
+		return proxyRewriteCached(
+			request,
+			env,
+			ctx,
+			url,
+			"/llms-full.txt",
+			"text/plain; charset=utf-8",
+		);
 	}
 
 	// Convenience 301: people and tools guess /sitemap.xml, but Astro's sitemap
