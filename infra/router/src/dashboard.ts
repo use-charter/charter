@@ -163,10 +163,9 @@ async function buildStats(token: string): Promise<unknown> {
 			count: p.count,
 		}));
 
-	// Adoption counts distinct external repositories, not GitHub's raw
-	// total_count (which counts file matches and includes Charter's own repo
-	// referencing its action/schema). Both searches exclude the use-charter org
-	// so the signal reflects real third-party usage.
+	// Adoption is the count of distinct repositories outside the use-charter org
+	// that reference Charter's action or schema — the signal of real third-party
+	// usage. Both searches share this filter.
 	const externalRepos = (resp: SearchResp | null): string[] => [
 		...new Set(
 			(resp?.items ?? [])

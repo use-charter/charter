@@ -126,9 +126,8 @@ describe("handleDashboardStats", () => {
 			latestTag: "v1.0.0",
 			totalDownloads: 42,
 		});
-		// Adoption counts distinct EXTERNAL repos: the search returns acme/widgets
-		// and use-charter/charter, so the self-reference is excluded and the count
-		// is 1 (not GitHub's total_count of 3).
+		// Adoption counts distinct external repos: the search returns acme/widgets
+		// and use-charter/charter, so only the external repo counts → 1.
 		expect(body.adoption).toMatchObject({
 			actionRepos: 1,
 			schemaRefs: 1,
