@@ -36,12 +36,13 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${
   <rect width="${W}" height="${H}" fill="${C.bg}"/>
   <rect width="${W}" height="${H}" fill="url(#glow)"/>
 
-  <!-- wordmark — the C carries a small baseline nudge to sit centered in the brackets -->
-  <text x="${cx}" y="224" text-anchor="middle" font-family="Ruda" font-weight="800" font-size="104" letter-spacing="-3">
+  <!-- wordmark — Ruda ExtraBold (the brand display weight); the C carries a small
+       baseline nudge to sit centered in the brackets -->
+  <text x="${cx}" y="224" text-anchor="middle" font-family="Ruda ExtraBold" font-size="104" letter-spacing="-3">
     <tspan fill="${C.blue}">[</tspan><tspan fill="${C.blue}" dy="7">C</tspan><tspan fill="${C.blue}" dy="-7">]</tspan><tspan fill="${C.ink}"> charter</tspan>
   </text>
 
-  <text x="${cx}" y="288" text-anchor="middle" font-family="${MONO}" font-size="25" letter-spacing="5" fill="${C.faint}">AI-AGENT READINESS, SCORED</text>
+  <text x="${cx}" y="288" text-anchor="middle" font-family="Ruda" font-size="25" letter-spacing="5" fill="${C.faint}">AI-AGENT READINESS, SCORED</text>
 
   <text x="${cx}" y="356" text-anchor="middle" font-family="Ruda" font-weight="400" font-size="26" fill="${C.faint}">Open-source tools that make any repository safe for AI coding agents.</text>
 
