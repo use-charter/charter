@@ -11,46 +11,46 @@
  *    initWaitlistForm()). Off everywhere else; the grid drops to four columns.
  *  - brandHref: where the footer brand lockup links (home uses '#top').
  */
-import { Icon } from 'astro-icon/components';
+import { Icon } from "astro-icon/components";
 
 interface Props {
-  subscribe?: boolean;
-  brandHref?: string;
+	subscribe?: boolean;
+	brandHref?: string;
 }
-const { subscribe = false, brandHref = '/' } = Astro.props;
+const { subscribe = false, brandHref = "/" } = Astro.props;
 
-const REPO = 'https://github.com/use-charter/charter';
-const DOCS = 'https://use-charter.dev/docs';
+const REPO = "https://github.com/use-charter/charter";
+const DOCS = "https://use-charter.dev/docs";
 const year = new Date().getFullYear();
 
 const FOOT_COLS = [
-  {
-    h: 'Developers',
-    links: [
-      ['Quickstart', `${DOCS}/quickstart`],
-      ['CLI reference', `${DOCS}/cli/overview`],
-      ['Rules overview', `${DOCS}/rules/overview`],
-      ['GitHub Action', `${DOCS}/ci/github-action`],
-    ],
-  },
-  {
-    h: 'Resources',
-    links: [
-      ['Documentation', DOCS],
-      ['Blog', '/blog'],
-      ['Changelog', 'https://use-charter.dev/changelog'],
-      ['Status', 'https://status.use-charter.dev/'],
-      ['llms.txt', '/llms.txt'],
-    ],
-  },
-  {
-    h: 'Legal',
-    links: [
-      ['Privacy', '/legal/privacy'],
-      ['Terms', '/legal/terms'],
-      ['License', '/legal/license'],
-    ],
-  },
+	{
+		h: "Developers",
+		links: [
+			["Quickstart", `${DOCS}/quickstart`],
+			["CLI reference", `${DOCS}/cli/overview`],
+			["Rules overview", `${DOCS}/rules/overview`],
+			["GitHub Action", `${DOCS}/ci/github-action`],
+		],
+	},
+	{
+		h: "Resources",
+		links: [
+			["Documentation", DOCS],
+			["Blog", "/blog"],
+			["Changelog", "https://use-charter.dev/changelog"],
+			["Status", "https://status.use-charter.dev/"],
+			["llms.txt", "/llms.txt"],
+		],
+	},
+	{
+		h: "Legal",
+		links: [
+			["Privacy", "/legal/privacy"],
+			["Terms", "/legal/terms"],
+			["License", "/legal/license"],
+		],
+	},
 ] as const;
 ---
 
@@ -103,6 +103,16 @@ const FOOT_COLS = [
           <form class="ck-sub__body" id="waitlist-form" novalidate>
             <div class="ck-sub__cmd"><span class="ch">❯ </span>charter subscribe <span class="fl">--updates</span></div>
             <div class="ck-sub__note">New rules and releases, straight to your inbox. No noise.</div>
+            {/* Honeypot: hidden from people, tempting to bots; a filled value is dropped server-side. */}
+            <input
+              id="waitlist-company"
+              name="company"
+              type="text"
+              tabindex="-1"
+              autocomplete="off"
+              aria-hidden="true"
+              style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"
+            />
             <div class="ck-sub__row">
               <label class="ck-sub__field">
                 <span class="pfx">@</span>

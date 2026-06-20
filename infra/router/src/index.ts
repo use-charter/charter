@@ -76,6 +76,59 @@ export default {
 	},
 } satisfies ExportedHandler<Env>;
 
+// proxyRewriteCached serves a Mintlify-origin text/xml resource on this domain
+// with the origin→public host rewrite. The Mintlify subrequest is edge-cached
+// (cf.cacheEverything + cacheTtlByStatus), so repeat fetches — legitimate
+// crawlers or an abusive loop — are served without re-hitting Mintlify: 2xx is
+// held for an hour, errors are never cached. No bot is challenged or blocked;
+// caching simply makes repeated reads cheap. (The eyeball response is generated
+// by this worker, so it carries no cf-cache-status of its own — the cache shields
+// the upstream, not the worker invocation.)
+async function proxyRewriteCached(
+	env: Env,
+	url: URL,
+	originPath: string,
+	contentType: string,
+): Promise<Response> {
+	const origin = env.MINTLIFY_ORIGIN || DEFAULT_MINTLIFY_ORIGIN;
+	const res = await fetch(`https://${origin}${originPath}`, {
+		headers: { Host: origin },
+		cf: {
+			cacheEverything: true,
+			cacheTtlByStatus: { "200-299": 3600, "300-599": 0 },
+		},
+	});
+	const body = (await res.text())
+		.split(`https://${origin}`)
+		.join(`https://${url.hostname}`);
+	return new Response(body, {
+		status: res.status,
+		headers: {
+			"Content-Type": contentType,
+			"Cache-Control": "public, max-age=3600",
+		},
+	});
+}
+
+// fetchResilient proxies a request and retries ONCE on a transient origin
+// failure (a 5xx response or a thrown fetch) — but only for idempotent methods.
+// During a Cloudflare Pages deploy swap or an origin cold-start the upstream can
+// briefly 5xx; a single retry turns that blip into a successful response instead
+// of a user-facing 504. Non-idempotent methods (e.g. POST /api/waitlist) are
+// never retried, so a request is never duplicated.
+async function fetchResilient(req: Request): Promise<Response> {
+	const retry =
+		req.method === "GET" || req.method === "HEAD" ? req.clone() : null;
+	try {
+		const res = await fetch(req);
+		if (res.status < 500 || !retry) return res;
+		return await fetch(retry);
+	} catch (err) {
+		if (!retry) throw err;
+		return await fetch(retry);
+	}
+}
+
 async function route(
 	request: Request,
 	env: Env,
@@ -115,20 +168,12 @@ async function route(
 	// swapped to the request host — every listed path is proxied unchanged, so
 	// only the hostname needs rewriting.
 	if (path === "/docs/sitemap.xml") {
-		const origin = env.MINTLIFY_ORIGIN || DEFAULT_MINTLIFY_ORIGIN;
-		const res = await fetch(`https://${origin}/sitemap.xml`, {
-			headers: { Host: origin },
-		});
-		const body = (await res.text())
-			.split(`https://${origin}`)
-			.join(`https://${url.hostname}`);
-		return new Response(body, {
-			status: res.status,
-			headers: {
-				"Content-Type": "application/xml; charset=utf-8",
-				"Cache-Control": "public, max-age=3600",
-			},
-		});
+		return proxyRewriteCached(
+			env,
+			url,
+			"/sitemap.xml",
+			"application/xml; charset=utf-8",
+		);
 	}
 
 	// /llms-full.txt is Mintlify's full concatenated docs corpus. Proxy it with
@@ -136,20 +181,12 @@ async function route(
 	// (use-charter.dev), not the internal Mintlify origin. The curated /llms.txt
 	// index is served by the landing site.
 	if (path === "/llms-full.txt") {
-		const origin = env.MINTLIFY_ORIGIN || DEFAULT_MINTLIFY_ORIGIN;
-		const res = await fetch(`https://${origin}/llms-full.txt`, {
-			headers: { Host: origin },
-		});
-		const body = (await res.text())
-			.split(`https://${origin}`)
-			.join(`https://${url.hostname}`);
-		return new Response(body, {
-			status: res.status,
-			headers: {
-				"Content-Type": "text/plain; charset=utf-8",
-				"Cache-Control": "public, max-age=3600",
-			},
-		});
+		return proxyRewriteCached(
+			env,
+			url,
+			"/llms-full.txt",
+			"text/plain; charset=utf-8",
+		);
 	}
 
 	// Convenience 301: people and tools guess /sitemap.xml, but Astro's sitemap
@@ -174,7 +211,7 @@ async function route(
 		);
 		// Record analytics for proxied documentation HTML pages; non-HTML assets
 		// are filtered out by `qualifies`.
-		const response = await fetch(proxy);
+		const response = await fetchResilient(proxy);
 		record(request, response, env, ctx);
 		return response;
 	}
@@ -186,7 +223,7 @@ async function route(
 	if (landing) {
 		const dest = new URL(`https://${landing}${path}${url.search}`);
 		// Record analytics for landing-site HTML pages.
-		const response = await fetch(new Request(dest, request));
+		const response = await fetchResilient(new Request(dest, request));
 		record(request, response, env, ctx);
 		return response;
 	}
