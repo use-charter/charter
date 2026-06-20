@@ -92,6 +92,16 @@ describe("charter-router routing", () => {
 		expect(body).toBe("see https://use-charter.dev/llms-full.txt");
 	});
 
+	it("requests the cached Mintlify subrequest for proxied endpoints", async () => {
+		const fetchMock = vi.fn(
+			async (_input: string, _init?: { cf?: { cacheEverything?: boolean } }) =>
+				new Response("see https://origin.mintlify.app/llms-full.txt"),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+		await call("https://use-charter.dev/llms-full.txt");
+		expect(fetchMock.mock.calls[0][1]?.cf?.cacheEverything).toBe(true); // subrequest marked cacheable
+	});
+
 	it("301-redirects the guessed /sitemap.xml to the real sitemap index", async () => {
 		const res = await call("https://use-charter.dev/sitemap.xml");
 		expect(res.status).toBe(301);
@@ -187,5 +197,77 @@ describe("charter-router routing", () => {
 			)
 		).text();
 		expect(body).toBe("at https://use-charter.dev/llms-full.txt");
+	});
+});
+
+describe("charter-router resilient origin fetch", () => {
+	it("retries a GET once when the origin returns a transient 5xx, then succeeds", async () => {
+		let n = 0;
+		const fetchMock = vi.fn(async (_input: Request | string) => {
+			n += 1;
+			return n === 1
+				? new Response("bad gateway", { status: 502 })
+				: new Response("landing ok", {
+						headers: { "content-type": "text/html" },
+					});
+		});
+		vi.stubGlobal("fetch", fetchMock);
+		const res = await call("https://use-charter.dev/");
+		expect(res.status).toBe(200);
+		expect(await res.text()).toBe("landing ok");
+		expect(fetchMock).toHaveBeenCalledTimes(2); // one retry
+	});
+
+	it("surfaces the 5xx if the retry also fails (no infinite loop)", async () => {
+		const fetchMock = vi.fn(
+			async () => new Response("still down", { status: 503 }),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+		const res = await call("https://use-charter.dev/docs/quickstart");
+		expect(res.status).toBe(503);
+		expect(fetchMock).toHaveBeenCalledTimes(2); // tried once + one retry, then gives up
+	});
+
+	it("retries a GET once when the origin fetch throws", async () => {
+		let n = 0;
+		const fetchMock = vi.fn(async () => {
+			n += 1;
+			if (n === 1) throw new Error("connection reset");
+			return new Response("recovered", {
+				headers: { "content-type": "text/html" },
+			});
+		});
+		vi.stubGlobal("fetch", fetchMock);
+		const res = await call("https://use-charter.dev/");
+		expect(await res.text()).toBe("recovered");
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+	});
+
+	it("does NOT retry a non-idempotent POST (no double submit)", async () => {
+		const fetchMock = vi.fn(
+			async () => new Response("upstream 5xx", { status: 502 }),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+		// /api/waitlist isn't a worker route → proxied to the landing origin, POST preserved.
+		const res = await call("https://use-charter.dev/api/waitlist", {
+			method: "POST",
+			body: "{}",
+		});
+		expect(res.status).toBe(502);
+		expect(fetchMock).toHaveBeenCalledTimes(1); // exactly once — never retried
+	});
+
+	it("propagates a thrown error for a non-idempotent POST without retrying", async () => {
+		const fetchMock = vi.fn(async () => {
+			throw new Error("origin unreachable");
+		});
+		vi.stubGlobal("fetch", fetchMock);
+		await expect(
+			call("https://use-charter.dev/api/waitlist", {
+				method: "POST",
+				body: "{}",
+			}),
+		).rejects.toThrow("origin unreachable");
+		expect(fetchMock).toHaveBeenCalledTimes(1);
 	});
 });

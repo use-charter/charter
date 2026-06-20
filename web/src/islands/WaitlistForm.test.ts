@@ -43,13 +43,27 @@ describe("submitWaitlist", () => {
 		});
 		vi.stubGlobal("fetch", fetchMock);
 
-		await submitWaitlist("user@example.com");
+		await submitWaitlist("user@example.com", "");
 
 		expect(fetchMock).toHaveBeenCalledWith("/api/waitlist", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ email: "user@example.com" }),
+			body: JSON.stringify({ email: "user@example.com", company: "" }),
 		});
+	});
+
+	it("carries a filled honeypot value through to the server", async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ({ success: true, message: "ok" }),
+		});
+		vi.stubGlobal("fetch", fetchMock);
+
+		await submitWaitlist("bot@spam.example", "ACME Corp");
+
+		expect(fetchMock.mock.calls[0][1].body).toBe(
+			JSON.stringify({ email: "bot@spam.example", company: "ACME Corp" }),
+		);
 	});
 
 	it("returns success result on HTTP 200", async () => {
@@ -125,6 +139,7 @@ describe("initWaitlistForm DOM", () => {
 		vi.restoreAllMocks();
 		document.body.innerHTML = `
       <form id="waitlist-form" novalidate>
+        <input id="waitlist-company" name="company" type="text" tabindex="-1" aria-hidden="true" />
         <div class="ck-foot__form-row">
           <label for="waitlist-email">Email address</label>
           <input type="email" id="waitlist-email" name="email" />
@@ -317,5 +332,31 @@ describe("initWaitlistForm guards", () => {
 	it("no-ops when required fields are missing", () => {
 		document.body.innerHTML = '<form id="waitlist-form"></form>';
 		expect(() => initWaitlistForm()).not.toThrow();
+	});
+
+	it("submits an empty honeypot when the field is absent from the form", async () => {
+		document.body.innerHTML = `
+			<form id="waitlist-form" novalidate>
+				<input type="email" id="waitlist-email" name="email" />
+				<button type="submit" id="waitlist-submit">Notify me</button>
+				<p class="ck-foot__success"><span class="ck-foot__success-text"></span></p>
+				<span id="email-error"></span>
+			</form>`;
+		initWaitlistForm();
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ({ success: true, message: "ok" }),
+		});
+		vi.stubGlobal("fetch", fetchMock);
+		(document.getElementById("waitlist-email") as HTMLInputElement).value =
+			"user@example.com";
+		(document.getElementById("waitlist-form") as HTMLFormElement).dispatchEvent(
+			new Event("submit", { bubbles: true, cancelable: true }),
+		);
+		await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+		expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+			email: "user@example.com",
+			company: "",
+		});
 	});
 });
