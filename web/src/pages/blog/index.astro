@@ -14,6 +14,7 @@ const [featured, ...rest] = posts;
 
 const fmtDate = (d: Date): string => d.toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' });
 const readTime = (body: string | undefined): number => Math.max(1, Math.round((body ?? '').split(/\s+/).filter(Boolean).length / 200));
+const padNo = (i: number): string => String(i).padStart(2, '0');
 
 const SITE = 'https://use-charter.dev';
 const blogSchema = {
@@ -36,57 +37,77 @@ const blogSchema = {
 };
 ---
 
-<Base title="Blog · Charter" description="Notes on AI-agent readiness, deterministic scoring, supply-chain safety, and building Charter." path="/blog" htmlClass="bl-html" bodyClass="bl-body">
+<Base
+  title="Charter blog — notes on AI-agent readiness"
+  description="Field notes on AI-agent readiness, deterministic scoring, supply-chain safety, and what we learn shipping Charter."
+  path="/blog"
+  htmlClass="ck-html"
+  bodyClass="ck-body"
+>
   <Fragment slot="head">
     <link rel="alternate" type="application/rss+xml" title="Charter Blog" href="/blog/rss.xml" />
     <script type="application/ld+json" is:inline set:html={JSON.stringify(blogSchema)} />
   </Fragment>
 
-  <SiteNav rss />
+  <div class="ck">
+    <SiteNav rss />
 
-  <main class="bl">
-    <div class="bl__masthead">
-      <span class="bl__eyebrow">The Charter blog</span>
-      <h1>Notes from the agent era</h1>
-      <p>Readiness, deterministic scoring, supply-chain safety — and what we learn shipping Charter.</p>
-    </div>
+    <main class="bx">
+      <header class="bx-head">
+        <span class="bx-head__kick">the charter blog</span>
+        <p class="bx-cmd"><span class="ch">❯ </span>charter blog <span class="fl">--list</span> <span class="out"># {posts.length} {posts.length === 1 ? 'note' : 'notes'}</span></p>
+        <h1 class="bx-head__title">Field notes from the agent era</h1>
+        <p class="bx-head__dek">Readiness, deterministic scoring, supply-chain safety — and what we learn shipping Charter.</p>
+      </header>
 
-    {featured && (
-      <a class="bl-feat" href={`/blog/${featured.id}`}>
-        <div class="bl-feat__body">
-          <div class="bl-feat__tags">{featured.data.tags.map((t) => <span class="bl-tag">{t}</span>)}</div>
-          <h2>{featured.data.title}</h2>
-          <p>{featured.data.description}</p>
-          <div class="bl-meta">
-            <span>{featured.data.author}</span><span class="bl-meta__dot">·</span>
-            <time datetime={featured.data.date.toISOString()}>{fmtDate(featured.data.date)}</time><span class="bl-meta__dot">·</span>
-            <span>{readTime(featured.body)} min read</span>
-          </div>
-        </div>
-        <span class="bl-feat__cta">Read the post<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-      </a>
-    )}
+      {featured && (
+        <a class="bx-lead" href={`/blog/${featured.id}`}>
+          <span class="bx-lead__top">
+            <span class="bx-lead__badge">latest</span>
+            <span class="bx-lead__file">{featured.id}.md</span>
+          </span>
+          <h2 class="bx-lead__title">{featured.data.title}</h2>
+          <p class="bx-lead__dek">{featured.data.description}</p>
+          <span class="bx-tags">{featured.data.tags.map((t) => <span class="bx-tag">#{t}</span>)}</span>
+          <span class="bx-foot">
+            <span class="bx-meta">
+              <time datetime={featured.data.date.toISOString()}>{fmtDate(featured.data.date)}</time>
+              <span class="bx-meta__sep">·</span>{readTime(featured.body)} min<span class="bx-meta__sep">·</span>{featured.data.author}
+            </span>
+            <span class="bx-go">read the note<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          </span>
+        </a>
+      )}
 
-    {rest.length > 0 && (
-      <div class="bl-grid">
-        {rest.map((p) => (
-          <a class="bl-card" href={`/blog/${p.id}`}>
-            <div class="bl-card__tags">{p.data.tags.map((t) => <span class="bl-tag">{t}</span>)}</div>
-            <h3>{p.data.title}</h3>
-            <p>{p.data.description}</p>
-            <div class="bl-meta">
-              <time datetime={p.data.date.toISOString()}>{fmtDate(p.data.date)}</time><span class="bl-meta__dot">·</span>
-              <span>{readTime(p.body)} min</span>
-            </div>
-          </a>
-        ))}
-      </div>
-    )}
+      {rest.length > 0 && (
+        <section class="bx-arch" aria-label="More posts">
+          <h2 class="bx-arch__h"><span class="bx-arch__hash">##</span> more notes</h2>
+          <ol class="bx-list">
+            {rest.map((p, i) => (
+              <li>
+                <a class="bx-row" href={`/blog/${p.id}`}>
+                  <span class="bx-row__n">{padNo(i + 1)}</span>
+                  <span class="bx-row__main">
+                    <h3 class="bx-row__title">{p.data.title}</h3>
+                    <p class="bx-row__dek">{p.data.description}</p>
+                    <span class="bx-tags">{p.data.tags.map((t) => <span class="bx-tag">#{t}</span>)}</span>
+                  </span>
+                  <span class="bx-row__meta">
+                    <time datetime={p.data.date.toISOString()}>{fmtDate(p.data.date)}</time>
+                    <span>{readTime(p.body)} min</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
-    {posts.length === 0 && <p class="bl__empty">No posts yet — first one's coming.</p>}
-  </main>
+      {posts.length === 0 && <p class="bx-empty">No notes published yet — the first one is coming.</p>}
+    </main>
 
-  <SiteFooter />
+    <SiteFooter />
+  </div>
 
   <script>
     import { initThemeSwitch } from '../../islands/theme';
