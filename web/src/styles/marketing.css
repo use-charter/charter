@@ -75,10 +75,10 @@ body.ck-body { background: #06080c; margin: 0; }
   --ck-dim: #4d5867;
   --ck-faint: #646d79;
   --ck-faintest: #aab2be;
-  --ck-blue: #2f6fdb;
+  --ck-blue: #2a64c8;
   --ck-blue-deep: #1f56b0;
   --ck-blue-bright: #1f63d6;
-  --ck-green: #138a52;
+  --ck-green: #0e7a47;
   --ck-green-deep: #0e6e41;
   --ck-amber: #a9750f;
   --ck-red: #cf3b3b;
@@ -254,7 +254,6 @@ html.ck-html { scroll-behavior: smooth; }
   .ck-hsub,
   .ck-hcta,
   .ck-hcta__note,
-  .ck-sess,
   .ck-agents,
   .ck-hero__metrics {
     animation: ckHeroRise 720ms var(--ease-spring) both;
@@ -264,7 +263,6 @@ html.ck-html { scroll-behavior: smooth; }
   .ck-hsub          { animation-delay: 200ms; }
   .ck-hcta          { animation-delay: 290ms; }
   .ck-hcta__note    { animation-delay: 360ms; }
-  .ck-sess          { animation-delay: 220ms; }
   .ck-agents        { animation-delay: 440ms; }
   .ck-hero__metrics { animation-delay: 520ms; }
 }

@@ -139,13 +139,18 @@ function initBootHero(): void {
     return;
   }
 
-  const run = (): void => {
+  // The score is the largest element on the page. On first paint it keeps its
+  // rendered value and stays visible while the command, scan feed, meter, and
+  // bars animate in; a manual rerun (animateNum) replays the count from zero.
+  const run = (animateNum: boolean): void => {
     bag.clear();
     cmdEl.textContent = '';
     caret.hidden = false;
     scan.innerHTML = '&nbsp;';
-    numEl.textContent = '0';
-    if (statusNum) statusNum.textContent = '0';
+    if (animateNum) {
+      numEl.textContent = '0';
+      if (statusNum) statusNum.textContent = '0';
+    }
     meter.style.width = '0%';
     bars.forEach((b) => { b.style.width = '0%'; });
 
@@ -158,8 +163,10 @@ function initBootHero(): void {
         const p = Math.min(1, (ts - start) / dur);
         const eased = 1 - Math.pow(1 - p, 3);
         const v = Math.round(TARGET_SCORE * eased);
-        numEl.textContent = String(v);
-        if (statusNum) statusNum.textContent = String(v);
+        if (animateNum) {
+          numEl.textContent = String(v);
+          if (statusNum) statusNum.textContent = String(v);
+        }
         meter.style.width = TARGET_SCORE * eased + '%';
         if (p < 1) bag.raf(tick);
       };
@@ -193,12 +200,13 @@ function initBootHero(): void {
       }, 42);
     }, 360);
 
-    // safety net — settle if anything stalls
-    bag.timeout(settleFinal, 6000);
+    // Settle a replay if it stalls. First paint shows the final score already,
+    // so it needs no settle timer.
+    if (animateNum) bag.timeout(settleFinal, 6000);
   };
 
-  run();
-  rerun?.addEventListener('click', run);
+  run(false);
+  rerun?.addEventListener('click', () => run(true));
 }
 
 /** Generic tab/panel switcher used by the rule catalog and the command surface. */

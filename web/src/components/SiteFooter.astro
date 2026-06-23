@@ -88,7 +88,7 @@ const FOOT_COLS = [
       </div>
       {FOOT_COLS.map((col) => (
         <div>
-          <h4>{col.h}</h4>
+          <h3>{col.h}</h3>
           <ul>{col.links.map((l) => <li><a href={l[1]} {...(l[1].startsWith('http') || l[1].endsWith('.txt') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{l[0]}</a></li>)}</ul>
         </div>
       ))}

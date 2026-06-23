@@ -41,17 +41,14 @@ export default defineConfig({
       },
     }),
   ],
-  // Astro 7 changed the compressHTML default to 'jsx', which strips whitespace
-  // between inline elements (`<span>a</span> <em>b</em>` would render as `ab`).
-  // Pin the v6 lossless behaviour so the whitespace policy stays in this one
-  // config seam instead of leaking `{" "}` markers into every component.
+  // Collapse insignificant whitespace losslessly while preserving the single
+  // space between inline elements that the layout depends on. One config seam
+  // owns the whitespace policy rather than scattering spacers across components.
   compressHTML: true,
   markdown: {
     // No Shiki: it injects an inline dark theme on code blocks that ignores our
     // theme tokens (dark block on a light page, unreadable). Fenced code renders
     // as plain <pre><code>, styled theme-aware by .lg-doc__body pre.
-    // Astro 7 renders Markdown with Sätteri by default (GFM + SmartyPants, as
-    // before); we use no remark/rehype plugins, so no processor override needed.
     syntaxHighlight: false,
   },
   build: {
