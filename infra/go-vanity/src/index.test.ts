@@ -38,4 +38,13 @@ describe("go-vanity worker", () => {
 		expect(body).toContain("https://pkg.go.dev/go.use-charter.dev/charter");
 		expect(body).not.toContain("charter//");
 	});
+
+	it("serves the RFC 9116 security.txt as text/plain", async () => {
+		const res = await get("https://go.use-charter.dev/.well-known/security.txt");
+		const body = await res.text();
+		expect(res.status).toBe(200);
+		expect(res.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
+		expect(body).toContain("Contact: https://github.com/use-charter/charter/security/advisories/new");
+		expect(body).toContain("Canonical: https://use-charter.dev/.well-known/security.txt");
+	});
 });

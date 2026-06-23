@@ -11,6 +11,17 @@ const MODULE_ROOT = 'go.use-charter.dev/charter';
 const REPO = 'https://github.com/use-charter/charter';
 const VCS = 'git';
 
+// RFC 9116 security contact, mirrored from web/public/.well-known/security.txt so
+// this host is covered too; Canonical names the apex as the authoritative copy.
+// Keep the Expires date in sync with that file when it is renewed.
+const SECURITY_TXT = `# Security contact for use-charter.dev (RFC 9116).
+Contact: https://github.com/use-charter/charter/security/advisories/new
+Expires: 2027-06-12T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://use-charter.dev/.well-known/security.txt
+Policy: https://github.com/use-charter/charter/security/policy
+`;
+
 const META = [
   `<meta name="go-import" content="${MODULE_ROOT} ${VCS} ${REPO}">`,
   `<meta name="go-source" content="${MODULE_ROOT} ${REPO} ${REPO}/tree/main{/dir} ${REPO}/blob/main{/dir}/{file}#L{line}">`,
@@ -32,6 +43,11 @@ const html = (body: string): Response =>
 export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+
+    // Security contact for researchers hitting this host directly.
+    if (url.pathname === '/.well-known/security.txt') {
+      return new Response(SECURITY_TXT, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    }
 
     // The go tool always appends ?go-get=1; answer it with the meta tags only.
     if (url.searchParams.get('go-get') === '1') {
