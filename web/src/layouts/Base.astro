@@ -137,7 +137,9 @@ const STRUCTURED_DATA = {
   </div>
   <div class="ck-grain" aria-hidden="true"></div>
   <script is:inline>
-    // Scroll reveal — rAF animate --rv 0→1.4 per [data-reveal] section
+    // Scroll reveal — animate --rv 0→1.4 per [data-reveal] section as it scrolls
+    // into view. IntersectionObserver keeps the work off the main thread: no
+    // scroll handler and no geometry reads, so revealing never forces a reflow.
     if (document.documentElement.classList.contains('reveals-armed')) {
       var secs = Array.from(document.querySelectorAll('[data-reveal]'));
       secs.forEach(function(s) { s.style.setProperty('--rv', '0'); });
@@ -156,34 +158,21 @@ const STRUCTURED_DATA = {
         };
         requestAnimationFrame(tick);
       }
-      var raf = 0;
-      function checkReveal() {
-        var vh = window.innerHeight;
-        var rem = 0;
-        secs.forEach(function(s) {
-          if (s.dataset.revealed) return;
-          var r = s.getBoundingClientRect();
-          if (r.top < vh * 0.86 && r.bottom > 0) runReveal(s);
-          else rem++;
-        });
-        return rem;
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function(entries) {
+          entries.forEach(function(e) {
+            if (e.isIntersecting) { io.unobserve(e.target); runReveal(e.target); }
+          });
+        }, { rootMargin: '0px 0px -14% 0px' });
+        secs.forEach(function(s) { io.observe(s); });
+      } else {
+        secs.forEach(runReveal);
       }
-      function onScroll() {
-        if (raf) return;
-        raf = requestAnimationFrame(function() { raf = 0; if (checkReveal() === 0) detach(); });
-      }
-      function detach() {
-        window.removeEventListener('scroll', onScroll);
-        window.removeEventListener('resize', onScroll);
-      }
-      checkReveal();
-      window.addEventListener('scroll', onScroll, { passive: true });
-      window.addEventListener('resize', onScroll);
+      // safety net — reveal anything still hidden after 5s
       setTimeout(function() {
         secs.forEach(function(s) {
           if (!s.dataset.revealed) { s.style.setProperty('--rv', '1.4'); s.dataset.revealed = '1'; }
         });
-        detach();
       }, 5000);
     }
   </script>
