@@ -4,7 +4,7 @@ description: "Record a governed suppression in .charter-suppress.yml."
 icon: "eye-off"
 ---
 
-`charter suppress` writes a suppression entry to `.charter-suppress.yml`. Use it when a finding is a confirmed false positive or an accepted risk that still needs an audit trail. Suppressed findings disappear from the active score and are listed separately in scan output.
+`charter suppress <RULE-ID>` writes a suppression entry to `.charter-suppress.yml`. Use it when a finding is a confirmed false positive or an accepted risk that still needs an audit trail. The rule ID is positional. Suppressed findings disappear from the active score and are listed separately in scan output.
 
 ## Usage
 
@@ -18,6 +18,7 @@ icon: "eye-off"
   ```bash Permanent suppression (requires approver)
   charter suppress AE-TEST-001 \
     --reason "Backend-only repo; no test framework applies" \
+    --expires permanent \
     --approver "@tashfiqul"
   ```
 
@@ -30,45 +31,18 @@ icon: "eye-off"
   <img src="/images/screenshots/suppress-output.webp" alt="charter suppress dry run output" />
 </Frame>
 
-## What Gets Written
-
-`charter suppress` updates `.charter-suppress.yml` in the target repository. Each entry records:
-
-```yaml
-suppressions:
-  - rule: AE-CC-001
-    reason: "Claude config lives in the infra repo"
-    expires: "2026-09-07"
-    added: "2026-06-09"
-```
-
-For a permanent suppression with an approver:
-
-```yaml
-suppressions:
-  - rule: AE-TEST-001
-    reason: "Backend-only repo; no test framework applies"
-    expires: permanent
-    approver: "@tashfiqul"
-    added: "2026-06-09"
-```
-
-<Warning>
-  Permanent suppressions (no `--expires`, or `--expires permanent`) require an `--approver` field. Without it, `AE-SUPPRESS-002` fires as a High finding on every subsequent scan.
-</Warning>
-
 ## Flags
 
 <ResponseField name="--reason" type="string" required>
-  Human-readable explanation of why this finding is acceptable. Required — a suppression without a reason triggers `AE-SUPPRESS-001`.
+  Human-readable explanation of why this finding is acceptable. Required — a suppression without a reason triggers [`AE-SUPPRESS-001`](/rules/AE-SUPPRESS-001).
 </ResponseField>
 
 <ResponseField name="--expires" type="string">
-  Time-to-live for the suppression. Accepts a duration (`30d`, `90d`, `1y`), an ISO date (`2026-12-31`), or `permanent`. Defaults to `90d`.
+  Time-to-live for the suppression. Accepts a day duration (`30d`, `90d`), an ISO date (`2026-12-31`), or `permanent`. Durations are stored as an absolute `YYYY-MM-DD` date. Defaults to `90d`.
 </ResponseField>
 
 <ResponseField name="--approver" type="string">
-  Approver handle. Required for permanent suppressions — without it, `AE-SUPPRESS-002` fires as a High finding.
+  Approver handle. Required for a `permanent` waiver to be honored — without it, [`AE-SUPPRESS-002`](/rules/AE-SUPPRESS-002) fires as a High finding.
 </ResponseField>
 
 <ResponseField name="--path" type="string">
@@ -79,18 +53,68 @@ suppressions:
   Print the suppression entry that would be written without modifying `.charter-suppress.yml`.
 </ResponseField>
 
+<ResponseField name="--color" type="auto | always | never">
+  Color output mode for text rendering. Defaults to `auto`.
+</ResponseField>
+
+<ResponseField name="--no-color" type="boolean">
+  Disable color. Equivalent to `--color=never` and wins over `--color` when both are set.
+</ResponseField>
+
+## What Gets Written
+
+`charter suppress` updates `.charter-suppress.yml` in the target repository. Each entry records:
+
+```yaml
+suppressions:
+  - rule: AE-CC-001
+    reason: "Claude config lives in the infra repo"
+    expires: "2026-09-07"
+```
+
+For a permanent suppression with an approver:
+
+```yaml
+suppressions:
+  - rule: AE-TEST-001
+    reason: "Backend-only repo; no test framework applies"
+    expires: permanent
+    approver: "@tashfiqul"
+```
+
+An optional `path` field scopes an entry to a specific file or glob.
+
+<Warning>
+  Permanent suppressions (`--expires permanent`) require an `--approver` field to be honored. Without it, [`AE-SUPPRESS-002`](/rules/AE-SUPPRESS-002) fires as a High finding on every subsequent scan.
+</Warning>
+
 ## Governance Rules
 
-<AccordionGroup>
-  <Accordion title="What happens to suppressions at scan time">
-    Three governance rules run on every `charter doctor` scan to keep the suppression file honest:
+Three governance rules run on every `charter doctor` scan to keep the suppression file honest:
 
-    **`AE-SUPPRESS-001`** (Medium) — fires if any suppression entry is missing a `reason` field. Every suppression must carry a human-readable justification.
+- [`AE-SUPPRESS-001`](/rules/AE-SUPPRESS-001) (Medium) — fires if any suppression entry is missing a `reason` field. Every suppression must carry a human-readable justification.
+- [`AE-SUPPRESS-002`](/rules/AE-SUPPRESS-002) (High) — fires if any permanent suppression has no `approver` field. Permanent waivers require an explicit owner on record.
+- [`AE-SUPPRESS-003`](/rules/AE-SUPPRESS-003) (Informational) — fires when the suppression rate across the repository is high. This is a signal-only finding and does not deduct from the score. It surfaces when a large proportion of findings are suppressed rather than fixed.
 
-    **`AE-SUPPRESS-002`** (High) — fires if any permanent suppression has no `approver` field. Permanent waivers require an explicit owner on record.
+These rules cannot themselves be suppressed without triggering further governance findings.
 
-    **`AE-SUPPRESS-003`** (Informational) — fires when the suppression rate across the repository is high. This is a signal-only finding and does not deduct from the score. It surfaces when a large proportion of findings are suppressed rather than fixed.
+## Exit codes
 
-    These rules cannot themselves be suppressed without triggering further governance findings.
-  </Accordion>
-</AccordionGroup>
+| Code | Meaning | When |
+|------|---------|------|
+| `0` | Pass | The suppression entry was written, or a `--dry-run` preview rendered without error |
+| `2` | Error | A missing `--reason`, an unknown rule ID, an invalid `--expires` value, a write failure, or a malformed `.charter-suppress.yml` |
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Suppression governance" icon="gavel" href="/docs/concepts/suppression-governance">
+    How the suppression file is policed and why waivers expire.
+  </Card>
+  <Card title="Suppress a finding" icon="eye-off" href="/docs/how-to/suppress-a-finding">
+    The end-to-end workflow for accepting a risk on the record.
+  </Card>
+  <Card title="AE-SUPPRESS-001" icon="shield" href="/rules/AE-SUPPRESS-001">
+    The rule that requires every suppression to carry a reason.
+  </Card>
+</CardGroup>

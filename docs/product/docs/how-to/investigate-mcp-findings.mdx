@@ -3,7 +3,7 @@ title: "Investigate MCP Findings"
 description: "Understand what each MCP safety rule is flagging and how to resolve it."
 ---
 
-Use this guide when `charter doctor` reports one of the three MCP safety rules. MCP findings are often the highest-signal findings in a repo because they touch dependency integrity, origin trust, and remote authentication.
+Use this guide when `charter doctor` reports one of the three MCP safety rules — [`AE-MCP-001`](/rules/AE-MCP-001), [`AE-MCP-002`](/rules/AE-MCP-002), or [`AE-MCP-003`](/rules/AE-MCP-003). MCP findings are often the highest-signal findings in a repo because they touch dependency integrity, origin trust, and remote authentication. For the reasoning behind each rule, see the [MCP Safety Model](/docs/concepts/mcp-safety-model).
 
 ```bash
 charter explain AE-MCP-001   # compact rule metadata + link to full docs
@@ -195,3 +195,20 @@ Suppress only when:
 - you have a real reason and, for permanent suppressions, an approver
 
 See [Suppress a Finding](/docs/how-to/suppress-a-finding) for the full suppression workflow.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="MCP Safety Model" icon="plug" href="/docs/concepts/mcp-safety-model">
+    Why pinning, trusted remotes, and auth declaration are first-class readiness signals.
+  </Card>
+  <Card title="charter.yaml Reference" icon="settings" href="/docs/config/charter-yaml">
+    Declare reviewed remote hosts with `mcp.trustedRemotes`.
+  </Card>
+  <Card title="Use charter fix Safely" icon="shield-check" href="/docs/how-to/use-charter-fix-safely">
+    Apply the AE-MCP-001 pin bump without surprises.
+  </Card>
+  <Card title="Suppress a Finding" icon="ban" href="/docs/how-to/suppress-a-finding">
+    Record a reviewed MCP exception when one is justified.
+  </Card>
+</CardGroup>

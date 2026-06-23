@@ -9,6 +9,7 @@ A policy profile is a named threshold preset stored in `charter.yaml`. Configuri
 
 | Profile | Threshold | When to use |
 |---------|-----------|-------------|
+| `relaxed` | 60 | Repos early in agent adoption that want a gate to clear today and ratchet up over time. |
 | `standard` | 80 | Default for most repos. A solid baseline for active development projects progressively adopting agent tooling. |
 | `strict` | 90 | Security-sensitive repos, production services, or teams that have resolved the common findings and want to hold the line. |
 
@@ -49,7 +50,7 @@ When multiple threshold sources are present, Charter applies them from highest t
 
 1. `--threshold` flag on the command line
 2. `policy.threshold` in `charter.yaml`
-3. The default for the configured `policy.profile` (80 for `standard`, 90 for `strict`)
+3. The default for the configured `policy.profile` (60 for `relaxed`, 80 for `standard`, 90 for `strict`)
 4. Built-in default: **80** (when `charter.yaml` is absent or has no policy section)
 
 ## Command-line override
@@ -66,8 +67,19 @@ charter doctor --threshold 90
 
 This is useful for CI jobs that need a different gate than the repo default, or for one-off checks during development.
 
-## See also
+## Next steps
 
-- [charter.yaml Reference](/docs/config/charter-yaml)
-- [Run in GitHub Actions](/docs/how-to/run-in-github-actions)
-- [GitHub Action](/docs/ci/github-action)
+<CardGroup cols={2}>
+  <Card title="charter.yaml Reference" icon="settings" href="/docs/config/charter-yaml">
+    The full configuration file, fields, and validation rules.
+  </Card>
+  <Card title="Run Charter in GitHub Actions" icon="git-branch" href="/docs/how-to/run-in-github-actions">
+    Apply a profile-backed gate to every pull request.
+  </Card>
+  <Card title="GitHub Action" icon="puzzle" href="/docs/ci/github-action">
+    How the `threshold` input interacts with profiles.
+  </Card>
+  <Card title="Scoring and Caps" icon="calculator" href="/docs/concepts/scoring-and-caps">
+    What the threshold is gating against.
+  </Card>
+</CardGroup>

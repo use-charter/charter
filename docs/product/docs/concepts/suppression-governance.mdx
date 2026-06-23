@@ -16,7 +16,7 @@ An unbounded suppression mechanism creates two problems fast: teams stop fixing 
     Generate an entry using `charter suppress`:
 
     ```bash
-    charter suppress --rule AE-CC-001 --reason "Claude config lives in the infra repo" --expires 90d --approver "@tashfiqul"
+    charter suppress AE-CC-001 --reason "Claude config lives in the infra repo" --expires 90d --approver "@tashfiqul"
     ```
 
     This writes a structured entry to `.charter-suppress.yml`:
@@ -34,21 +34,19 @@ An unbounded suppression mechanism creates two problems fast: teams stop fixing 
     Optional `path` field scopes the suppression to a specific file or glob, reducing the blast radius.
   </Tab>
   <Tab title="Inline directive (charter:ignore)">
-    Inline suppressions use a `charter:ignore` directive placed on the line **directly above** the triggering content.
+    Inline suppressions use a `charter:ignore` directive placed in a comment on the **same line** as the triggering content. The comment leader can be `#`, `//`, or `<!-- -->`.
 
     ```yaml
-    # charter:ignore AE-ENV-001 reason="mise managed externally for this workspace"
-    MISE_GLOBAL_CONFIG_FILE: /shared/workspace/.mise.toml
+    MISE_GLOBAL_CONFIG_FILE: /shared/workspace/.mise.toml  # charter:ignore AE-ENV-001 reason="mise managed externally for this workspace"
     ```
 
     ```json
-    // charter:ignore AE-MCP-001 reason="vendored test fixture, not a real server config"
-    { "args": ["npx", "-y", "mcp-server-test@latest"] }
+    { "args": ["npx", "-y", "mcp-server-test@latest"] }  // charter:ignore AE-MCP-001 reason="vendored test fixture, not a real server config"
     ```
 
-    Charter only discovers inline suppressions at a finding location. It does **not** scan the whole repo for comments that merely mention the syntax. Documentation pages, READMEs, and examples will never be misread as suppressions.
+    Charter only reads a directive when it sits on a finding's own line. It does **not** scan the whole repo for comments that merely mention the syntax — documentation, READMEs, and examples are never misread as suppressions.
 
-    Inline suppressions cannot carry `expires` or `approver` fields. For permanent waivers or approver attribution, use `.charter-suppress.yml`.
+    Inline directives can also carry `expires=` and `approver=` fields — `expires=2026-12-31`, `expires=permanent`, or `approver="@handle"`. For a central, reviewable ledger across many findings, prefer `.charter-suppress.yml`.
   </Tab>
 </Tabs>
 
@@ -58,9 +56,9 @@ Every scan audits suppressions through three dedicated rules:
 
 | Rule | Severity | When it fires |
 |---|---|---|
-| `AE-SUPPRESS-001` | Medium | Any suppression entry is missing a `reason:` field |
-| `AE-SUPPRESS-002` | High | A permanent suppression (`expires: permanent`) has no `approver:` field |
-| `AE-SUPPRESS-003` | Informational | Suppression rate exceeds 30% of all findings (signal only, no score deduction) |
+| [`AE-SUPPRESS-001`](/rules/AE-SUPPRESS-001) | Medium | Any suppression entry is missing a `reason:` field |
+| [`AE-SUPPRESS-002`](/rules/AE-SUPPRESS-002) | High | A permanent suppression (`expires: permanent`) has no `approver:` field |
+| [`AE-SUPPRESS-003`](/rules/AE-SUPPRESS-003) | Informational | Suppression rate exceeds 30% of all findings (signal only, no score deduction) |
 
 `AE-SUPPRESS-001` is the simplest rule in the model. Every suppression must explain itself. "False positive" alone is usually not enough. "Vendored test fixture" or "lives in a separate infra repo" is much better — it gives a future reviewer the context they would otherwise have to rediscover.
 
@@ -102,22 +100,21 @@ Do **not** use suppression as a substitute for fixing the issue when:
 - The fix is straightforward and low-risk → fix it manually
 - The finding is new and not yet understood → investigate first
 
-A healthy suppression workflow:
+A healthy suppression confirms the finding, records a meaningful reason, sets a bounded expiry, and adds an approver for any permanent waiver. `AE-SUPPRESS-001` and `AE-SUPPRESS-002` then keep the ledger honest on every scan — they are not optional. For the exact commands, see [Suppress a Finding](/docs/how-to/suppress-a-finding).
 
-<Steps>
-  <Step title="Confirm the finding">
-    Read the finding detail with `charter explain <RULE-ID>`. Verify that the finding is a real false positive or genuinely accepted risk in this repo — not just inconvenient.
-  </Step>
-  <Step title="Suppress with a meaningful reason">
-    Run `charter suppress --rule <ID> --reason "..."`. The reason should tell a future reviewer what is being accepted and why it is safe or necessary in this context.
-  </Step>
-  <Step title="Set a bounded expiry">
-    Accept the default 90-day expiry unless you have a specific reason to change it. Permanent waivers are the exception, not the default.
-  </Step>
-  <Step title="Add an approver for permanent waivers">
-    If `expires: permanent` is truly justified, add `--approver "@handle"`. This is enforced by `AE-SUPPRESS-002` — without it, the suppression is rejected and the finding stays active.
-  </Step>
-  <Step title="Let governance rules keep it honest">
-    `AE-SUPPRESS-001` and `AE-SUPPRESS-002` run on every scan. They are not optional. They exist to ensure the suppression ledger stays trustworthy over time, not just at the moment of creation.
-  </Step>
-</Steps>
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Suppress a Finding" icon="ban" href="/docs/how-to/suppress-a-finding">
+    The recipe for recording a governed suppression with a reason and expiry.
+  </Card>
+  <Card title="AE-SUPPRESS-001" icon="shield" href="/rules/AE-SUPPRESS-001">
+    The reason-required rule, in full detail.
+  </Card>
+  <Card title="AE-SUPPRESS-002" icon="shield-lock" href="/rules/AE-SUPPRESS-002">
+    Why permanent waivers must name an approver.
+  </Card>
+  <Card title="Scoring and Caps" icon="calculator" href="/docs/concepts/scoring-and-caps">
+    How suppressed findings drop out of the base score.
+  </Card>
+</CardGroup>

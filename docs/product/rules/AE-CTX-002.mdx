@@ -7,7 +7,7 @@ description: "Agent context file must match the actual repo state — stack, com
 
 ## Why this rule
 
-An agent that reads a context file describing the wrong stack makes confident mistakes — wrong build commands, wrong test paths, wrong edit scope. A drifted context file is often more dangerous than no file at all: it provides authoritative-looking guidance that is simply wrong.
+An agent that reads a context file describing the wrong stack makes confident mistakes — wrong build commands, wrong test paths, wrong edit scope. Drift is uniquely corrosive: the file still reads as authoritative, so the agent trusts a stack, command, or boundary that no longer matches the repo and acts on it without hesitation.
 
 ## What triggers it
 
@@ -16,10 +16,6 @@ Charter compares the context file's stated tech stack and commands against manif
 - The stated stack names a language or framework but no corresponding manifest exists (`package.json`, `go.mod`, `Gemfile`, `pyproject.toml`, `Cargo.toml`, etc.)
 - The stated verification command does not appear in any task runner config Charter can find (`moon.yml`, `Makefile`, `package.json` scripts, `Justfile`)
 - Declared off-limits paths reference directories that do not exist in the repo
-
-<Note>
-  An old date alone is not enough to fail this rule. AE-CTX-002 fires on factual mismatches — stack claims with no manifest evidence, commands that don't exist, paths that aren't real — not on timestamp staleness.
-</Note>
 
 ## Examples
 
@@ -64,19 +60,20 @@ Charter compares the context file's stated tech stack and commands against manif
 
 Review each mismatch listed in the finding evidence and update the context file to reflect repo reality.
 
-<AccordionGroup>
-  <Accordion title="Stack mismatch">
-    Update the stack declaration to match what manifests are actually present. If you removed a language, remove it from the context file. If you added one, add it. Charter looks for `go.mod`, `package.json`, `pyproject.toml`, `Gemfile`, `Cargo.toml`, and similar.
-  </Accordion>
-  <Accordion title="Verification command mismatch">
+<Steps>
+  <Step title="Fix a stack mismatch">
+    Update the stack declaration to match what manifests are actually present. If you removed a language, remove it from the context file; if you added one, add it. Charter looks for `go.mod`, `package.json`, `pyproject.toml`, `Gemfile`, `Cargo.toml`, and similar.
+  </Step>
+  <Step title="Fix a verification command mismatch">
     Confirm the stated command runs successfully from the repo root. Update it to match the actual task runner entry — or add the task to your runner config if it is genuinely missing.
-  </Accordion>
-  <Accordion title="Off-limits path mismatch">
+  </Step>
+  <Step title="Fix an off-limits path mismatch">
     Remove references to paths that no longer exist, or create the directory if the boundary is still intended. Phantom off-limits declarations confuse agents rather than protecting anything.
-  </Accordion>
-</AccordionGroup>
-
-Run `charter doctor` after any update to confirm the finding clears.
+  </Step>
+  <Step title="Confirm the finding clears">
+    Run [`charter explain`](/cli/explain) with `AE-CTX-002` (or `charter doctor`) after any update to verify the mismatch no longer appears.
+  </Step>
+</Steps>
 
 <Tip>
   Treat `AGENTS.md` like a living document — update it whenever you add or remove a language, change your test runner, rename directories, or modify edit-scope boundaries. Drift happens silently; Charter surfaces it before the agent reaches it.
@@ -84,13 +81,25 @@ Run `charter doctor` after any update to confirm the finding clears.
 
 ## Score impact
 
-Medium severity: −4 to the base score. No hard cap (caps are reserved for Blocker and secret findings).
+`Medium` (−4 per finding). No hard cap — caps are reserved for raw-secret and Blocker findings. See [Scoring and caps](/docs/concepts/scoring-and-caps).
+
+## Edge cases
+
+An old date alone never fires this rule. AE-CTX-002 fires on factual mismatches — stack claims with no manifest evidence, commands absent from any task runner config, off-limits paths that map to no real directory — not on timestamp staleness.
 
 ## Related rules
 
-- [AE-CTX-001](/rules/AE-CTX-001) — context file must exist and be within budget
-- [AE-AUTO-001](/rules/AE-AUTO-001) — verification command must be discoverable
-- [AE-CTX-006](/rules/AE-CTX-006) — emphatic directive density
+<CardGroup cols={2}>
+  <Card title="AE-CTX-001" icon="file-text" href="/rules/AE-CTX-001">
+    Context file must exist and be within budget.
+  </Card>
+  <Card title="AE-AUTO-001" icon="player-play" href="/rules/AE-AUTO-001">
+    Verification command must be discoverable.
+  </Card>
+  <Card title="AE-CTX-006" icon="chart-bar" href="/rules/AE-CTX-006">
+    Emphatic directive density degrades adherence.
+  </Card>
+</CardGroup>
 
 ## CLI
 

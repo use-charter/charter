@@ -29,7 +29,7 @@ Charter's score is intentionally simple enough to understand, stable enough to g
 | Informational | 0 | Signal only; listed in output, not scored |
 
 <Info>
-  Informational findings (`AE-CTX-006`, `AE-SUPPRESS-003`) are listed in `charter doctor` output and the HTML report, but contribute zero to the score. They are signals, not penalties — they surface patterns worth knowing without changing the gate result.
+  Informational findings ([`AE-CTX-006`](/rules/AE-CTX-006), [`AE-SUPPRESS-003`](/rules/AE-SUPPRESS-003)) are listed in `charter doctor` output and the HTML report, but contribute zero to the score. They are signals, not penalties — they surface patterns worth knowing without changing the gate result.
 </Info>
 
 ## Score zones
@@ -51,7 +51,7 @@ These zones are descriptive, not magical. A repo at 80 and a repo at 98 are both
 
 | Condition | Cap |
 |---|---:|
-| Raw secret detected (`AE-SEC-001` or `AE-SEC-002`) | ≤ 49 |
+| Raw secret detected ([`AE-SEC-001`](/rules/AE-SEC-001) or [`AE-SEC-002`](/rules/AE-SEC-002)) | ≤ 49 |
 | Any Blocker finding present | ≤ 59 |
 
 Two consequences follow directly from this design:
@@ -120,8 +120,21 @@ New rules can be added in minor releases, but they enter through the same scorin
 
 ## What the score is not
 
-The score is not measuring code quality, product quality, or developer talent. It answers one narrower question:
+The score is not measuring code quality, product quality, or developer talent — only repository readiness for agent-assisted work. The [Agent Readiness Model](/docs/concepts/agent-readiness-model) explains what that readiness means and why the model is structured around three axes.
 
-**How ready is this repo for safe, verifiable use by coding agents?**
+## Next steps
 
-If you want the reasoning behind the model structure, continue to [Agent Readiness Model](/docs/concepts/agent-readiness-model).
+<CardGroup cols={2}>
+  <Card title="Agent Readiness Model" icon="compass" href="/docs/concepts/agent-readiness-model">
+    The three axes the score measures and why readiness is a repo property.
+  </Card>
+  <Card title="Suppression Governance" icon="scale" href="/docs/concepts/suppression-governance">
+    How suppressed findings are excluded from the base score and audited.
+  </Card>
+  <Card title="charter doctor" icon="stethoscope" href="/cli/doctor">
+    The command that computes the score and emits findings.
+  </Card>
+  <Card title="Rules Reference" icon="shield" href="/rules/overview">
+    All 18 rules and the severity each carries into the formula.
+  </Card>
+</CardGroup>

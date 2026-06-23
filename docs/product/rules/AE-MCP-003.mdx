@@ -7,7 +7,7 @@ description: "Remote MCP servers must declare authentication metadata. A non-loc
 
 ## Why this rule
 
-A public remote MCP server with no declared auth boundary accepts tool calls from any agent that can reach it. Charter checks whether the config declares that auth is required — the minimum signal that the server was configured with access control in mind. Without this declaration, there is no evidence that tool calls to the server are gated at all.
+A public remote MCP server with no declared auth boundary accepts tool calls from any agent that can reach it. Charter checks whether the config declares that auth is required — the minimum signal that the server was configured with access control in mind. Without this declaration, there is no evidence that tool calls to the server are gated at all. See the [MCP safety model](/docs/concepts/mcp-safety-model) for how the auth check fits the broader trust boundary.
 
 ## What triggers it
 
@@ -100,12 +100,12 @@ Add a `headers` block to the remote MCP server entry with an auth header that re
 If the server uses a different auth mechanism, use the appropriate header name (`X-Api-Key`, `Api-Key`, or `X-Auth-Token`) with the same env-reference pattern.
 
 <Warning>
-  Use env var references for header values — never literal credentials. A literal credential in an auth header triggers AE-SEC-002 (Blocker, score cap ≤ 49).
+  Use env var references for header values — never literal credentials. A literal credential in an auth header triggers AE-SEC-002 (Blocker, raw-secret cap ≤49).
 </Warning>
 
 ## Score impact
 
-Each finding is `High` (−10). No hard cap (caps are reserved for raw-secret findings).
+`High` (−10 per finding). No hard cap — caps are reserved for raw-secret and Blocker findings. See [Scoring and caps](/docs/concepts/scoring-and-caps).
 
 ## Edge cases
 
@@ -113,9 +113,17 @@ Local and internal origins never fire. Catalog OAuth vendor hosts never fire. An
 
 ## Related rules
 
-- [AE-MCP-001](/rules/AE-MCP-001) — MCP servers must be pinned to exact versions
-- [AE-MCP-002](/rules/AE-MCP-002) — remote MCP server origins must be trusted
-- [AE-SEC-002](/rules/AE-SEC-002) — no raw secrets in MCP config files
+<CardGroup cols={2}>
+  <Card title="AE-MCP-001" icon="shield" href="/rules/AE-MCP-001">
+    MCP servers must be pinned to exact versions.
+  </Card>
+  <Card title="AE-MCP-002" icon="shield" href="/rules/AE-MCP-002">
+    Remote MCP server origins must be trusted.
+  </Card>
+  <Card title="AE-SEC-002" icon="lock" href="/rules/AE-SEC-002">
+    No raw secrets in MCP config files.
+  </Card>
+</CardGroup>
 
 ## CLI
 

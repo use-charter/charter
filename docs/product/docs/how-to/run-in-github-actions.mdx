@@ -90,12 +90,7 @@ Omit the `threshold` input to let the action defer to whatever `policy.threshold
 
 </Tabs>
 
-**Threshold precedence** (highest to lowest):
-
-1. `threshold` workflow input
-2. `policy.threshold` in `charter.yaml`
-3. `policy.profile` default in `charter.yaml`
-4. Built-in default: **80**
+The `threshold` workflow input wins over anything in `charter.yaml`, which wins over the built-in default of **80**. For the full precedence ladder, see [Policy Profiles](/docs/config/policy-profiles#threshold-precedence).
 
 </Step>
 
@@ -159,3 +154,20 @@ Check that the `use-charter/charter-action@v1` ref is published and reachable. O
 </Accordion>
 
 </AccordionGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="GitHub Action" icon="puzzle" href="/docs/ci/github-action">
+    Full input, output, and gate-semantics reference for the composite action.
+  </Card>
+  <Card title="Policy Profiles" icon="adjustments-horizontal" href="/docs/config/policy-profiles">
+    Set a consistent threshold once instead of per-run.
+  </Card>
+  <Card title="charter.yaml Reference" icon="settings" href="/docs/config/charter-yaml">
+    Configure policy and the MCP allowlist at the repo root.
+  </Card>
+  <Card title="Use Charter in a Pre-Commit Hook" icon="git-commit" href="/docs/how-to/pre-commit-hook">
+    Match the CI gate locally so commits and CI agree.
+  </Card>
+</CardGroup>

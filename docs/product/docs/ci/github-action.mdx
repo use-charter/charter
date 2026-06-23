@@ -162,8 +162,19 @@ GitHub-hosted runners are the intended baseline. For self-hosted runners, ensure
 - Checksum tools: `sha256sum` or `shasum`
 - `jq` (optional — used for score extraction; falls back to `grep` if absent)
 
-## See also
+## Next steps
 
-- [Run in GitHub Actions](/docs/how-to/run-in-github-actions)
-- [charter.yaml Reference](/docs/config/charter-yaml)
-- [Policy Profiles](/docs/config/policy-profiles)
+<CardGroup cols={2}>
+  <Card title="Run Charter in GitHub Actions" icon="git-branch" href="/docs/how-to/run-in-github-actions">
+    The step-by-step setup recipe for a PR gate.
+  </Card>
+  <Card title="charter.yaml Reference" icon="settings" href="/docs/config/charter-yaml">
+    Configure the policy the action reads.
+  </Card>
+  <Card title="Policy Profiles" icon="adjustments-horizontal" href="/docs/config/policy-profiles">
+    Set the threshold once and the full precedence ladder.
+  </Card>
+  <Card title="Use Charter in a Pre-Commit Hook" icon="git-commit" href="/docs/how-to/pre-commit-hook">
+    Match the CI gate locally.
+  </Card>
+</CardGroup>

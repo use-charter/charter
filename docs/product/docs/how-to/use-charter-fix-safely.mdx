@@ -36,7 +36,7 @@ Creates `AGENTS.md` using a template populated with your detected language, CI p
 </Accordion>
 
 <Accordion title="AE-CTX-004 — .gitignore entries">
-Appends agent artifact patterns to your `.gitignore` (`.charter/`, `.claude/`, common cache directories). Review before committing to confirm no existing entries conflict and no paths you intend to track are being excluded.
+Appends agent artifact patterns to your `.gitignore` (`.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/`). Review before committing to confirm no existing entries conflict and no paths you intend to track are being excluded.
 </Accordion>
 
 <Accordion title="AE-CI-002 — Charter GitHub Actions workflow">
@@ -117,7 +117,7 @@ If you applied a fix and want to revert, Charter's backups are in `.charter/back
 ls .charter/backups/
 
 # Restore a specific file
-cp .charter/backups/2026-06-10T07:42:00Z/AGENTS.md ./AGENTS.md
+cp .charter/backups/20260610T074200Z/AGENTS.md ./AGENTS.md
 ```
 
 You can also use `git checkout` if the change has been staged but not committed:
@@ -151,3 +151,20 @@ charter fix --dry-run
 charter fix
 charter doctor
 ```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Fix Engine" icon="settings" href="/docs/concepts/fix-engine">
+    Why only four rules have fixers, and why secrets never do.
+  </Card>
+  <Card title="charter fix" icon="wrench" href="/cli/fix">
+    Every flag the fix command accepts.
+  </Card>
+  <Card title="Suppress a Finding" icon="ban" href="/docs/how-to/suppress-a-finding">
+    When a finding can't be fixed, record a governed exception.
+  </Card>
+  <Card title="Add Charter to an Existing Repo" icon="rocket" href="/docs/how-to/adopt-in-existing-repo">
+    The full adoption loop from first scan to committed baseline.
+  </Card>
+</CardGroup>

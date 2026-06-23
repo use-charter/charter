@@ -7,14 +7,14 @@ description: "Every remote MCP server origin must be known — present in the re
 
 ## Why this rule
 
-A coding agent should not be pointed at arbitrary remote infrastructure without a team review. Unknown public MCP origins are a supply-chain and data-exfiltration risk — tool calls travel to infrastructure outside the team's visibility, and there is no way to audit what the server receives or returns.
+A coding agent should not be pointed at arbitrary remote infrastructure without a team review. Unknown public MCP origins are a supply-chain and data-exfiltration risk — tool calls travel to infrastructure outside the team's visibility, and there is no way to audit what the server receives or returns. See the [MCP safety model](/docs/concepts/mcp-safety-model) for the trust boundary Charter enforces.
 
 ## What triggers it
 
 Charter scans MCP configuration files for server entries that use a remote `url`, Gemini CLI's `httpUrl` (streamable HTTP), or a transport type of `http` or `sse`. For each remote server, Charter extracts the URL host and compares it against two sources:
 
 1. The built-in catalog of vendor-operated hosts (known, reviewed third-party MCP providers)
-2. The repo's `charter.yaml` `mcp.trustedRemotes` list
+2. The repo's [`charter.yaml`](/docs/config/charter-yaml) `mcp.trustedRemotes` list
 
 Any public host not present in either source fires High.
 
@@ -95,12 +95,22 @@ There is no auto-fixer for this rule — the trust decision requires a human rev
 
 ## Score impact
 
-Each finding is `High` (−10). No hard cap (caps are reserved for raw-secret findings).
+`High` (−10 per finding). No hard cap — caps are reserved for raw-secret and Blocker findings. See [Scoring and caps](/docs/concepts/scoring-and-caps).
+
+## Edge cases
+
+Local and internal origins are always exempt without any listing — loopback (`localhost`, `127.0.0.1`, `::1`), RFC 1918 private ranges, link-local addresses, and internal TLDs (`*.localhost`, `*.local`, `*.internal`). A dynamic `${VAR}` URL has no parseable host and is skipped. Allowlist matching is host-only — no scheme or path component is compared.
 
 ## Related rules
 
-- [AE-MCP-001](/rules/AE-MCP-001) — MCP servers must be pinned to exact versions
-- [AE-MCP-003](/rules/AE-MCP-003) — remote MCP servers must declare auth
+<CardGroup cols={2}>
+  <Card title="AE-MCP-001" icon="shield" href="/rules/AE-MCP-001">
+    MCP servers must be pinned to exact versions.
+  </Card>
+  <Card title="AE-MCP-003" icon="shield" href="/rules/AE-MCP-003">
+    Remote MCP servers must declare auth.
+  </Card>
+</CardGroup>
 
 ## CLI
 

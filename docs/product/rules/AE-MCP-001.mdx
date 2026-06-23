@@ -3,7 +3,7 @@ title: "AE-MCP-001"
 description: "Every MCP server entry in a repo's MCP configuration must be pinned to an exact version or digest. Floating references — `@latest`, missing versions, dist-tags, semver ranges, and branch/commit-less git sources — are a supply-chain risk (OWASP MCP Top 10 beta, MCP04 Software Supply Chain Attacks & Dependency Tampering)."
 ---
 
-**Rule ID:** AE-MCP-001 · **Severity:** <Badge color="orange">High</Badge> · **Category:** MCP Safety · **Auto-fixable:** Yes (partial) — `charter fix --rule AE-MCP-001`
+**Rule ID:** AE-MCP-001 · **Severity:** <Badge color="orange">High</Badge> · **Category:** MCP Safety · **Auto-fixable:** Yes (partial)
 
 <Note>
   AE-MCP-001 is **partially** auto-fixable. Charter can bump unpinned or behind-stable packages to the catalog's stable version. Deprecated or archived packages require manual migration — Charter provides the successor package name in the finding evidence, but will not rewrite the entry automatically.
@@ -11,7 +11,7 @@ description: "Every MCP server entry in a repo's MCP configuration must be pinne
 
 ## Why this rule
 
-An MCP server at `@latest` can change behavior between runs without any change to the repo. A package can be deprecated, archived, or found to contain a known vulnerability after a repo first passed Charter. Pinning to an exact version ties the tool definition to a reviewable artifact — every tool-call behavior is deterministic across machines and runs.
+An MCP server at `@latest` can change behavior between runs without any change to the repo. A package can be deprecated, archived, or found to contain a known vulnerability after a repo first passed Charter. Pinning to an exact version ties the tool definition to a reviewable artifact — every tool-call behavior is deterministic across machines and runs. See the [MCP safety model](/docs/concepts/mcp-safety-model) for how Charter reasons about MCP supply chain.
 
 ## What triggers it
 
@@ -100,13 +100,13 @@ The finding ladder based on signal type:
   ```
 </CodeGroup>
 
-For unpinned or behind-stable packages, the auto-fixer updates the package spec to the catalog's stable version as a diff-first preview before writing anything.
+For unpinned or behind-stable packages, [`charter fix`](/cli/fix) updates the package spec to the catalog's stable version as a diff-first preview before writing anything.
 
 For **deprecated or archived packages**, migration is manual — the finding evidence includes the recommended successor package name. Update the entry to use the successor at its current stable version.
 
 ## Score impact
 
-Deprecated, unpinned, or advisory-covered findings are `High` (−10 each). The behind-stable-only nudge is Informational (0). No hard cap applies to MCP findings — caps are reserved for raw-secret findings.
+Deprecated, unpinned, or advisory-covered findings are `High` (−10 per finding). The behind-stable-only nudge is Informational (0). No hard cap — caps are reserved for raw-secret and Blocker findings. See [Scoring and caps](/docs/concepts/scoring-and-caps).
 
 ## Edge cases
 
@@ -114,9 +114,17 @@ Package specs are resolved only for direct runners (`npx`, `bunx`, `uvx`) and th
 
 ## Related rules
 
-- [AE-MCP-002](/rules/AE-MCP-002) — remote MCP server origins must be trusted
-- [AE-MCP-003](/rules/AE-MCP-003) — remote MCP servers must declare auth
-- [AE-SEC-002](/rules/AE-SEC-002) — no raw secrets in MCP config files
+<CardGroup cols={2}>
+  <Card title="AE-MCP-002" icon="shield" href="/rules/AE-MCP-002">
+    Remote MCP server origins must be trusted.
+  </Card>
+  <Card title="AE-MCP-003" icon="shield" href="/rules/AE-MCP-003">
+    Remote MCP servers must declare auth.
+  </Card>
+  <Card title="AE-SEC-002" icon="lock" href="/rules/AE-SEC-002">
+    No raw secrets in MCP config files.
+  </Card>
+</CardGroup>
 
 ## CLI
 

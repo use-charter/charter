@@ -27,9 +27,7 @@ Charter scans git-tracked agent-visible files for high-confidence credential pat
 
 **Scanned files:** `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, `.windsurfrules`, `.github/copilot-instructions.md`, `opencode.md`, `codex.md`, `DESIGN.md`, `SKILL.md`.
 
-**Neutralized (never fire):** Environment variable references (`${VAR}`, `$VAR`) and the placeholder string `your-api-key-here` are explicitly excluded. Only literal credential values trigger the finding. Detected values are redacted in Charter output (first 4 characters followed by `…`).
-
-**Out of scope by design:** Uncommitted local files are never scanned. Only git-tracked files are in scope.
+Only literal credential values trigger the finding. Detected values are redacted in Charter output (first 4 characters followed by `…`).
 
 ## Examples
 
@@ -83,13 +81,24 @@ Charter scans git-tracked agent-visible files for high-confidence credential pat
 ## Score impact
 
 <Warning>
-  Secret findings apply a hard cap: the final Charter score is held at **≤ 49** while AE-SEC-001 or AE-SEC-002 is active. This overrides the base formula and all other scoring — the repo cannot reach 50 or above until the finding is resolved.
+  `Blocker` (−20 per finding) with a raw-secret cap: the final [score](/docs/concepts/scoring-and-caps) is held at **≤49** while AE-SEC-001 or AE-SEC-002 is active. This overrides the base formula — the repo cannot reach 50 or above until the finding is resolved. Caps are reserved for raw-secret and Blocker findings.
 </Warning>
+
+## Edge cases
+
+- **Neutralized values never fire.** Environment variable references (`${VAR}`, `$VAR`) and the placeholder string `your-api-key-here` are explicitly excluded — only literal credential values trigger the finding.
+- **Only git-tracked files are in scope.** Uncommitted local files are never scanned.
 
 ## Related rules
 
-- [AE-SEC-002](/rules/AE-SEC-002) — same patterns applied to MCP config files
-- [AE-CTX-001](/rules/AE-CTX-001) — context file must exist and be within budget
+<CardGroup cols={2}>
+  <Card title="AE-SEC-002" icon="lock" href="/rules/AE-SEC-002">
+    Same patterns applied to MCP config files.
+  </Card>
+  <Card title="AE-CTX-001" icon="file-text" href="/rules/AE-CTX-001">
+    Context file must exist and be within budget.
+  </Card>
+</CardGroup>
 
 ## CLI
 

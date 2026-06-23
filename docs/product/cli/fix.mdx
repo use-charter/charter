@@ -16,13 +16,13 @@ icon: "tool"
 
 | Rule | What the fixer does |
 |------|---------------------|
-| `AE-CTX-001` | Creates `AGENTS.md` from a minimal template |
-| `AE-CTX-004` | Creates or appends `.gitignore` with agent artifact patterns |
-| `AE-CI-002` | Creates the Charter CI workflow at `.github/workflows/charter.yaml` |
-| `AE-MCP-001` | Bumps an MCP server package to the catalog's stable version |
+| [`AE-CTX-001`](/rules/AE-CTX-001) | Creates `AGENTS.md` from a minimal template |
+| [`AE-CTX-004`](/rules/AE-CTX-004) | Creates or appends `.gitignore` with agent artifact patterns |
+| [`AE-CI-002`](/rules/AE-CI-002) | Creates the Charter CI workflow at `.github/workflows/charter.yaml` |
+| [`AE-MCP-001`](/rules/AE-MCP-001) | Bumps an MCP server package to the catalog's stable version |
 
 <Warning>
-  Secrets (`AE-SEC-001`, `AE-SEC-002`) and dangerous-command findings (`AE-CC-001`) are never auto-fixed. Charter shows evidence and remediation guidance for these but requires manual action. If you target a rule with no registered fixer, Charter reports that it is not auto-fixable.
+  Secrets ([`AE-SEC-001`](/rules/AE-SEC-001), [`AE-SEC-002`](/rules/AE-SEC-002)) and dangerous-command findings ([`AE-CC-001`](/rules/AE-CC-001)) are never auto-fixed. Charter shows evidence and remediation guidance for these but requires manual action. If you target a rule with no registered fixer, Charter reports that it is not auto-fixable.
 </Warning>
 
 ## Usage
@@ -58,7 +58,7 @@ icon: "tool"
     ```bash
     charter fix
     ```
-    Originals are backed up to `.charter/backups/<timestamp>/` before any write. Pure creates (new files) have no prior content to back up.
+    Originals are backed up to `.charter/backups/<ts>/` before any write. Pure creates (new files) have no prior content to back up.
   </Step>
   <Step title="Verify the score improved">
     ```bash
@@ -92,18 +92,36 @@ icon: "tool"
 
 ## Backup Mechanism
 
-<AccordionGroup>
-  <Accordion title="How backups work">
-    Before replacing or updating an existing file, Charter copies the previous version into `.charter/backups/<timestamp>/` where the timestamp is ISO 8601 UTC (for example, `2026-06-10T07:42:00Z`). The original file's relative path is preserved inside the backup directory.
+Before replacing or updating an existing file, Charter copies the previous version into `.charter/backups/<ts>/`, where `<ts>` is a compact UTC timestamp such as `20260610T074200Z`. The original file's relative path is preserved inside the backup directory.
 
-    Pure creates — fixes that write a brand new file where none existed — do not produce a backup because there is no prior content to save.
+Pure creates — fixes that write a brand new file where none existed — do not produce a backup because there is no prior content to save.
 
-    Charter never deletes backup directories automatically. They accumulate across runs and serve as a local audit trail of every mutation `fix` has applied.
+Charter never deletes backup directories automatically. They accumulate across runs and serve as a local audit trail of every mutation `fix` has applied.
 
-    To recover a backed-up file:
+To recover a backed-up file:
 
-    ```bash
-    cp .charter/backups/2026-06-10T07:42:00Z/AGENTS.md ./AGENTS.md
-    ```
-  </Accordion>
-</AccordionGroup>
+```bash
+cp .charter/backups/20260610T074200Z/AGENTS.md ./AGENTS.md
+```
+
+## Exit codes
+
+| Code | Meaning | When |
+|------|---------|------|
+| `0` | Pass | Fixes applied successfully, or a `--dry-run` preview rendered without error |
+| `1` | Fail | `--rule` matched a finding that has no registered fixer |
+| `2` | Error | Invalid flags, an unknown rule ID, a write failure, or a malformed `charter.yaml` |
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Use charter fix safely" icon="shield-check" href="/docs/how-to/use-charter-fix-safely">
+    The diff-first workflow and what fix will never touch.
+  </Card>
+  <Card title="Fix engine" icon="tool" href="/docs/concepts/fix-engine">
+    How fixers are registered and how backups are written.
+  </Card>
+  <Card title="doctor" icon="stethoscope" href="/cli/doctor">
+    Re-score the repo to confirm the fixed rules cleared.
+  </Card>
+</CardGroup>

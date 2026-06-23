@@ -9,7 +9,7 @@ description: "Every suppression must carry a human-readable reason so that an ac
 
 A suppression without a reason is indistinguishable from accident. When a finding re-surfaces after a security review or team rotation, there is no record of why it was acceptable or who decided.
 
-Suppressions are a legitimate tool for managing accepted risk — but only when the decision is documented. A reason-less suppression creates a silent blind spot that grows harder to audit over time.
+Suppressions are a legitimate tool for managing accepted risk — but only when the decision is documented. A reason-less suppression creates a silent blind spot that grows harder to audit over time. See [Suppression governance](/docs/concepts/suppression-governance) for the full model.
 
 ## What triggers it
 
@@ -71,13 +71,13 @@ For each applied suppression, Charter checks whether a `reason` field is present
 
 <Steps>
   <Step title="Find reason-less suppressions">
-    Run `charter explain AE-SUPPRESS-001` — Charter names the suppressed rule and its source file (YAML entry or inline comment location) in the finding evidence.
+    Run [`charter explain`](/cli/explain) with `AE-SUPPRESS-001` — Charter names the suppressed rule and its source file (YAML entry or inline comment location) in the finding evidence.
   </Step>
   <Step title="Add a meaningful reason">
     For YAML entries, add a `reason:` field. For inline comments, add `reason="…"` after the rule ID. Use plain language — a sentence is enough.
   </Step>
   <Step title="Use charter suppress for new entries">
-    The `charter suppress` command always writes the reason for you when you provide `--reason`:
+    The [`charter suppress`](/cli/suppress) command always writes the reason for you when you provide `--reason`. The rule ID is positional:
 
     ```bash
     charter suppress AE-MCP-001 \
@@ -93,7 +93,7 @@ For each applied suppression, Charter checks whether a `reason` field is present
 
 ## Score impact
 
-`Medium` (−4); no hard cap. One finding per reason-less suppression entry.
+`Medium` (−4 per finding). No hard cap — caps are reserved for raw-secret and Blocker findings. One finding per reason-less suppression entry. See [Scoring and caps](/docs/concepts/scoring-and-caps).
 
 ## Edge cases
 
@@ -115,7 +115,7 @@ For each applied suppression, Charter checks whether a `reason` field is present
 ## Related rules
 
 <CardGroup cols={2}>
-  <Card title="AE-SUPPRESS-002" icon="user-shield" href="/rules/AE-SUPPRESS-002">
+  <Card title="AE-SUPPRESS-002" icon="shield-lock" href="/rules/AE-SUPPRESS-002">
     Requires an approver on permanent suppressions — the accountability companion to this rule.
   </Card>
   <Card title="AE-SUPPRESS-003" icon="chart-bar" href="/rules/AE-SUPPRESS-003">

@@ -17,13 +17,16 @@ Charter's v1 rule set evaluates whether a repository is safe, understandable, an
   <Card title="MCP Safety" icon="shield" href="/rules/AE-MCP-001">
     3 rules — MCP servers are pinned to exact versions, sourced from trusted origins, and protected by declared auth.
   </Card>
-  <Card title="Agent Config" icon="bot" href="/rules/AE-CC-001">
+  <Card title="Agent Config" icon="robot" href="/rules/AE-CC-001">
     2 rules — hook configurations are safe, and the agent edit scope is explicit so agents know what they can and cannot touch.
   </Card>
-  <Card title="Environment & CI" icon="wrench" href="/rules/AE-ENV-001">
-    2 rules — a reproducible toolchain and Charter running in CI so every pull request gets scored automatically.
+  <Card title="Environment" icon="tool" href="/rules/AE-ENV-001">
+    1 rule — a reproducible toolchain so an agent installs the right runtime and self-verifies against it.
   </Card>
-  <Card title="Testing" icon="flask-conical" href="/rules/AE-TEST-001">
+  <Card title="CI" icon="git-pull-request" href="/rules/AE-CI-002">
+    1 rule — Charter runs in CI so every pull request gets scored automatically and regressions surface immediately.
+  </Card>
+  <Card title="Testing" icon="flask" href="/rules/AE-TEST-001">
     1 rule — every active language in the repo has automated tests the agent can run to verify its own changes.
   </Card>
   <Card title="Autonomy" icon="route" href="/rules/AE-AUTO-001">
@@ -39,7 +42,9 @@ Charter's v1 rule set evaluates whether a repository is safe, understandable, an
 <Note>
   **Score formula:** `score = max(0, 100 − B×20 − H×10 − M×4 − L×1)` where B = Blocker findings, H = High, M = Medium, L = Low.
 
-  **Hard caps:** Any active Blocker holds the final score at ≤ 59. Any active secret finding (AE-SEC-001 or AE-SEC-002) holds the final score at ≤ 49. Caps apply after the base formula.
+  **Hard caps:** Any raw-secret finding holds the final score at ≤49. Any Blocker finding holds the final score at ≤59. Caps are reserved for raw-secret and Blocker findings only, and apply after the base formula.
+
+  Full model: [Scoring and caps](/docs/concepts/scoring-and-caps).
 </Note>
 
 ## All 18 Rules

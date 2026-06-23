@@ -17,11 +17,11 @@ The finding doesn't reflect a real problem in your repo — Charter's detection 
 The risk is real but intentionally accepted, documented, and has an owner and a time horizon.
 </Card>
 
-<Card title="Genuine issue not yet addressed" icon="xmark">
+<Card title="Genuine issue not yet addressed" icon="x">
 Don't suppress findings you just haven't gotten around to fixing. Fix them, or leave them in the active findings list until you do.
 </Card>
 
-<Card title="Score inflation" icon="xmark">
+<Card title="Score inflation" icon="x">
 Don't suppress to hit a threshold. A suppressed finding still represents real repo state — suppressions don't make problems go away.
 </Card>
 
@@ -147,11 +147,11 @@ Charter audits every suppression on each scan:
 
 | Rule | What it checks |
 |------|---------------|
-| `AE-SUPPRESS-001` | Suppression is missing a reason |
-| `AE-SUPPRESS-002` | Permanent suppression has no approver |
-| `AE-SUPPRESS-003` | Suppression rate across the repo is high |
+| [`AE-SUPPRESS-001`](/rules/AE-SUPPRESS-001) | Suppression is missing a reason |
+| [`AE-SUPPRESS-002`](/rules/AE-SUPPRESS-002) | Permanent suppression has no approver |
+| [`AE-SUPPRESS-003`](/rules/AE-SUPPRESS-003) | Suppression rate across the repo is high |
 
-A high suppression rate (`AE-SUPPRESS-003`) is informational — it tells you the repo may be muting more than it's fixing.
+A high suppression rate (`AE-SUPPRESS-003`) is informational — it tells you the repo may be muting more than it's fixing. For why suppressions are governed this way and how they affect the score, see [Suppression Governance](/docs/concepts/suppression-governance).
 
 ## Good suppression hygiene
 
@@ -160,3 +160,20 @@ A high suppression rate (`AE-SUPPRESS-003`) is informational — it tells you th
 - Write reasons that explain the decision, not just `"false positive"`
 - Add `--approver` for any long-lived accepted risk
 - Review `.charter-suppress.yml` periodically — don't let it grow silently
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Suppression Governance" icon="scale" href="/docs/concepts/suppression-governance">
+    Why suppressions are audited and how they change the score.
+  </Card>
+  <Card title="AE-SUPPRESS-002" icon="shield-lock" href="/rules/AE-SUPPRESS-002">
+    The approver requirement for permanent waivers.
+  </Card>
+  <Card title="charter suppress" icon="ban" href="/cli/suppress">
+    Every flag the suppress command accepts.
+  </Card>
+  <Card title="Use charter fix Safely" icon="shield-check" href="/docs/how-to/use-charter-fix-safely">
+    Prefer a real fix over a suppression when one is available.
+  </Card>
+</CardGroup>

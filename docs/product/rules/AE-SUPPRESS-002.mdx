@@ -9,7 +9,7 @@ description: "An explicit permanent waiver (expires: permanent) must name an app
 
 A permanent suppression with no expiry and no approver is an unbounded waiver. It silently removes a finding from the score indefinitely with no human accountability attached.
 
-Unlike a time-bounded suppression — which expires and forces a re-evaluation — a permanent waiver with no approver can survive security reviews, team rotations, and architectural changes without ever being questioned. Charter refuses to honor it until a named approver accepts the risk.
+Unlike a time-bounded suppression — which expires and forces a re-evaluation — a permanent waiver with no approver can survive security reviews, team rotations, and architectural changes without ever being questioned. Charter refuses to honor it until a named approver accepts the risk. See [Suppression governance](/docs/concepts/suppression-governance) for how waivers are evaluated.
 
 ## What triggers it
 
@@ -83,7 +83,7 @@ Suppressions with a future `expires` date, or with no `expires` at all (which ap
 
 <Steps>
   <Step title="Identify unapproved permanent waivers">
-    Run `charter explain AE-SUPPRESS-002` — Charter lists every permanent waiver missing an approver, including the file location and the rule being suppressed.
+    Run [`charter explain`](/cli/explain) with `AE-SUPPRESS-002` — Charter lists every permanent waiver missing an approver, including the file location and the rule being suppressed.
   </Step>
   <Step title="Add an approver or convert to time-bounded">
     Choose one of two paths:
@@ -96,7 +96,7 @@ Suppressions with a future `expires` date, or with no `expires` at all (which ap
       approver: "@tashfiqul"   # ← add this
     ```
 
-    **Option B — Convert to time-bounded** (eliminate the permanent waiver):
+    **Option B — Convert to time-bounded** (eliminate the permanent waiver). The rule ID is positional on [`charter suppress`](/cli/suppress):
     ```bash
     charter suppress AE-TEST-001 \
       --reason "Backend-only repo" \
@@ -114,7 +114,7 @@ Suppressions with a future `expires` date, or with no `expires` at all (which ap
 
 ## Score impact
 
-`High` (−10); no hard cap. The underlying finding also remains active and contributes its own deduction, since the unapproved permanent waiver is not honored.
+`High` (−10 per finding). No hard cap — caps are reserved for raw-secret and Blocker findings. The underlying finding also remains active and contributes its own deduction, since the unapproved permanent waiver is not honored. See [Scoring and caps](/docs/concepts/scoring-and-caps).
 
 ## Edge cases
 
@@ -126,7 +126,7 @@ Suppressions with a future `expires` date, or with no `expires` at all (which ap
     A `approver:` field containing only whitespace counts as missing and fires the finding.
   </Accordion>
   <Accordion title="Secret rule suppressions">
-    Secrets are suppressible like any rule. An unapproved permanent `AE-SEC-001` or `AE-SEC-002` suppression fires this rule and is not honored — the ≤ 49 score cap for secrets remains in effect. An approved permanent secret suppression lifts the cap.
+    Secrets are suppressible like any rule. An unapproved permanent `AE-SEC-001` or `AE-SEC-002` suppression fires this rule and is not honored — the ≤49 raw-secret score cap remains in effect. An approved permanent secret suppression lifts the cap.
   </Accordion>
   <Accordion title="Both AE-SUPPRESS-001 and AE-SUPPRESS-002 can fire together">
     An entry that is both reason-less and a permanent waiver without an approver fires both AE-SUPPRESS-001 (Medium, −4) and AE-SUPPRESS-002 (High, −10) independently.
@@ -136,7 +136,7 @@ Suppressions with a future `expires` date, or with no `expires` at all (which ap
 ## Related rules
 
 <CardGroup cols={2}>
-  <Card title="AE-SUPPRESS-001" icon="file-pen" href="/rules/AE-SUPPRESS-001">
+  <Card title="AE-SUPPRESS-001" icon="file-pencil" href="/rules/AE-SUPPRESS-001">
     Requires a reason on every suppression — the documentation companion to this rule.
   </Card>
   <Card title="AE-SUPPRESS-003" icon="chart-bar" href="/rules/AE-SUPPRESS-003">

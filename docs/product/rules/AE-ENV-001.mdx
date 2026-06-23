@@ -61,11 +61,26 @@ Charter checks three things independently. Any one of them can fire the finding:
 
 <Tabs>
   <Tab title="Failing">
-    A Node.js repo with `package.json` but no `.nvmrc`, no `engines` field, and no `package-lock.json` committed — the runtime is floating and the dependency graph is not reproducible.
+    A Node.js repo with a `package.json` but no pinned runtime and no committed lockfile — the runtime is floating and the dependency graph is not reproducible:
 
-    A Go repo with `go.mod` but no `go.sum` committed — the lockfile is missing.
+    ```text repo tree
+    my-app/
+    ├── package.json
+    ├── src/
+    │   └── index.ts
+    # no .nvmrc / engines field → no toolchain declaration
+    # no package-lock.json      → no lockfile
+    # no hk.pkl / .husky/        → no hook manager config
+    ```
 
-    A repo with CI and tests but no committed hook manager config — local hook behavior is unverifiable.
+    A Go repo with `go.mod` but no `go.sum` committed fires on the missing lockfile alone:
+
+    ```text repo tree
+    my-service/
+    ├── go.mod
+    └── main.go
+    # no go.sum → lockfile missing
+    ```
   </Tab>
   <Tab title="Passing">
     A repo with `mise.toml` pinning Go and Node versions, `go.sum` and `package-lock.json` committed, and `hk.pkl` declaring pre-commit hooks:
@@ -126,7 +141,7 @@ Charter checks three things independently. Any one of them can fire the finding:
 
 ## Score impact
 
-`Medium` (−4); no hard cap. Each sub-check (toolchain, lockfile, hook config) is a separate finding instance, so a repo missing all three can incur −12 points from this rule alone.
+`Medium` (−4 per finding). No hard cap — caps are reserved for raw-secret and Blocker findings. Each sub-check (toolchain, lockfile, hook config) is a separate finding instance, so a repo missing all three can incur −12 points from this rule alone. See [Scoring and caps](/docs/concepts/scoring-and-caps).
 
 ## Edge cases
 
@@ -145,7 +160,7 @@ Charter checks three things independently. Any one of them can fire the finding:
   <Card title="AE-CI-002" icon="circle-check" href="/rules/AE-CI-002">
     Requires Charter to run in CI so the reproducible environment is verified on every PR.
   </Card>
-  <Card title="AE-AUTO-001" icon="play" href="/rules/AE-AUTO-001">
+  <Card title="AE-AUTO-001" icon="player-play" href="/rules/AE-AUTO-001">
     Requires a discoverable test command — meaningless without a reproducible runtime.
   </Card>
 </CardGroup>

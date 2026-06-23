@@ -1,38 +1,19 @@
 ---
-title: "The Fix Engine"
+title: "Fix Engine"
 description: "How charter fix works: diff-first, backup-before-write, and why some rules are intentionally not auto-fixable."
 ---
 
 Charter never mutates a file silently. Every fix goes through diff → review → apply — in that order, always. The alternative was a one-shot apply that minimizes output noise, but that removes the last human checkpoint between the scanner's judgment and your codebase.
 
-## The three-step loop
+## The diff-first loop
 
-<Steps>
-  <Step title="Scan">
-    Run `charter doctor` to identify fixable findings. Charter marks each finding with a `fixable` indicator when a deterministic remediation exists. Findings without a fixer — secrets, dangerous hook configurations — are flagged but not offered as automated fixes.
+Every fix moves through the same three stages, in this order, always:
 
-    ```bash
-    charter doctor --path .
-    ```
-  </Step>
-  <Step title="Preview">
-    Run `charter fix --dry-run` to see the unified diff for every proposed change. Nothing is written. The command exits with the same success or failure code that the apply step would produce, so you can use it in review scripts.
+- **Scan** — `charter doctor` marks each finding with a `fixable` indicator when a deterministic remediation exists. Findings without a fixer (secrets, dangerous hook configurations) are flagged but never offered as automated fixes.
+- **Preview** — `charter fix --dry-run` prints the unified diff for every proposed change and writes nothing. It exits with the same code the apply step would, so it slots into review scripts.
+- **Apply** — `charter fix` copies each original file to `.charter/backups/<ts>/` before writing, then applies the diff.
 
-    ```bash
-    charter fix --dry-run
-    ```
-
-    Every file the fixer would touch gets a before/after diff block. If you see something unexpected, stop here.
-  </Step>
-  <Step title="Apply">
-    Run `charter fix` without `--dry-run`. Before writing a single byte, Charter copies the original file to `.charter/backups/<ISO-timestamp>/`. Then it writes the fix. After the run, re-scan to confirm the score improved.
-
-    ```bash
-    charter fix
-    charter doctor  # verify
-    ```
-  </Step>
-</Steps>
+For the exact commands, recovery steps, and a reviewer's checklist, see [Use charter fix Safely](/docs/how-to/use-charter-fix-safely).
 
 <Frame caption="charter fix --dry-run — unified diff before applying">
   <img src="/images/screenshots/fix-dry-run.webp" alt="charter fix dry run showing unified diff for each proposed change" />
@@ -42,48 +23,32 @@ Charter never mutates a file silently. Every fix goes through diff → review �
 
 | Rule | Fixer action | Safety class |
 |---|---|---|
-| `AE-CTX-001` | Creates `AGENTS.md` from a standard template if the file is absent | ✅ Create-only — never overwrites |
-| `AE-CTX-004` | Creates or appends `.gitignore` with agent artifact patterns (`.aider/`, `.claude/`, `.cursor/`, etc.) | ✅ Append-only — never removes existing entries |
-| `AE-CI-002` | Creates `.github/workflows/charter.yaml` with the standard scan workflow | ✅ Create-only — never overwrites |
-| `AE-MCP-001` | Updates an MCP server package reference to the catalog's current stable version | ✅ Token replace — single version string, full diff shown |
+| [`AE-CTX-001`](/rules/AE-CTX-001) | Creates `AGENTS.md` from a standard template if the file is absent | ✅ Create-only — never overwrites |
+| [`AE-CTX-004`](/rules/AE-CTX-004) | Creates or appends `.gitignore` with agent artifact patterns (`.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/`) | ✅ Append-only — never removes existing entries |
+| [`AE-CI-002`](/rules/AE-CI-002) | Creates `.github/workflows/charter.yaml` with the standard scan workflow | ✅ Create-only — never overwrites |
+| [`AE-MCP-001`](/rules/AE-MCP-001) | Updates an MCP server package reference to the catalog's current stable version | ✅ Token replace — single version string, full diff shown |
 
 These fixers are safe to automate because the correct output is fully determined by the rule specification. There is no ambiguity and no judgment call required. That is why these four — and only these four — have automated fixers in v1.
 
 ## Why secrets are never auto-fixed
 
 <Warning>
-  `AE-SEC-001` and `AE-SEC-002` are never auto-fixed. A fix that only removes the literal value from a file without rotating the credential is not a remediation — it is a false sense of resolution. The secret is still active, still in git history if committed, and still in any system that cached it. Charter shows you the file path and line number (never the raw value), and tells you exactly what to do. The rotation and removal steps are yours to execute.
+  [`AE-SEC-001`](/rules/AE-SEC-001) and [`AE-SEC-002`](/rules/AE-SEC-002) are never auto-fixed. A fix that only removes the literal value from a file without rotating the credential is not a remediation — it is a false sense of resolution. The secret is still active, still in git history if committed, and still in any system that cached it. Charter shows you the file path and line number (never the raw value), and tells you exactly what to do. The rotation and removal steps are yours to execute.
 </Warning>
 
-The same logic applies to dangerous hook configurations (`AE-CC-001`). Rules that flag unrestricted shell execution or broad glob allowlists in agent configs require a human to evaluate the intent behind the configuration and decide on a safer alternative. Charter cannot know whether the hook is a legitimate use case that needs a narrow permission or an oversight that should be removed entirely. These are deliberate boundaries, not gaps to fill in a future release.
+The same logic applies to dangerous hook configurations ([`AE-CC-001`](/rules/AE-CC-001)). Rules that flag unrestricted shell execution or broad glob allowlists in agent configs require a human to evaluate the intent behind the configuration and decide on a safer alternative. Charter cannot know whether the hook is a legitimate use case that needs a narrow permission or an oversight that should be removed entirely. These are deliberate boundaries, not gaps to fill in a future release.
 
 ## Backup mechanism
 
-<AccordionGroup>
-  <Accordion title="How backups work">
-    Before every write, Charter copies the original file to:
+Before every write, Charter copies the original file to `.charter/backups/<ts>/<relative-path>`, where `<ts>` is a compact UTC timestamp such as `20260601T143022Z`. If the fixer modifies `.github/workflows/ci.yml`, the original is preserved at:
 
-    ```
-    .charter/backups/<ISO-timestamp>/<relative-path>
-    ```
+```
+.charter/backups/20260601T143022Z/.github/workflows/ci.yml
+```
 
-    For example, if the fixer modifies `.github/workflows/ci.yml`, the original is preserved at:
+The backup directory is created fresh for each `charter fix` invocation. Charter **never deletes backup directories** and never truncates existing ones — they accumulate until you remove them, so the AE-CTX-004 fixer adds `.charter/` to `.gitignore` to keep them local.
 
-    ```
-    .charter/backups/20260601T143022Z/.github/workflows/ci.yml
-    ```
-
-    The backup directory is created fresh for each `charter fix` invocation, keyed by a UTC timestamp. Charter **never deletes backup directories** and never truncates existing ones. They accumulate until you choose to remove them.
-
-    Add `.charter/backups/` to `.gitignore` to keep them local:
-
-    ```bash
-    echo ".charter/backups/" >> .gitignore
-    ```
-
-    If a fixer produces an unexpected result, the original is always recoverable from the most recent backup directory.
-  </Accordion>
-</AccordionGroup>
+If a fixer produces an unexpected result, the original is always recoverable from the most recent backup directory.
 
 ## MCP catalog-aware pin bumps
 
@@ -93,22 +58,19 @@ The `AE-MCP-001` fixer has special logic for the three distinct cases it may enc
 - **Unpinned or behind catalog stable** → bumps to the catalog's `stableVersion` for that package.
 - **Deprecated or archived package** → NOT auto-fixed. The package requires migration to a successor, which is a manual step. Charter provides the successor package name in the finding detail.
 
-## Usage reference
+## Next steps
 
-<CodeGroup>
-```bash Preview all fixes
-charter fix --dry-run
-```
-```bash Fix a specific rule only
-charter fix --rule AE-CTX-001
-```
-```bash Apply all available fixes
-charter fix
-```
-```bash Target a specific directory
-charter fix --path ./my-repo
-```
-```bash Verify score after fixing
-charter doctor
-```
-</CodeGroup>
+<CardGroup cols={2}>
+  <Card title="Use charter fix Safely" icon="shield-check" href="/docs/how-to/use-charter-fix-safely">
+    The full recipe: dry-run, review, apply, re-scan, and recover.
+  </Card>
+  <Card title="charter fix" icon="wrench" href="/cli/fix">
+    Every flag the fix command accepts.
+  </Card>
+  <Card title="Scoring and Caps" icon="calculator" href="/docs/concepts/scoring-and-caps">
+    How a successful fix moves the score.
+  </Card>
+  <Card title="MCP Safety Model" icon="plug" href="/docs/concepts/mcp-safety-model">
+    Why the AE-MCP-001 fixer bumps to catalog versions, not the latest release.
+  </Card>
+</CardGroup>

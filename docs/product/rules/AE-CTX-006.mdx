@@ -21,10 +21,6 @@ Charter counts emphatic directive words in the context file — `IMPORTANT`, `NE
 
 The finding reports the exact count and density so you can judge how far over the threshold the file sits.
 
-<Note>
-  This rule only fires when a context file exists. A missing context file is AE-CTX-001's concern, not AE-CTX-006's.
-</Note>
-
 ## Examples
 
 <Tabs>
@@ -67,26 +63,36 @@ The finding reports the exact count and density so you can judge how far over th
 
 Review the context file for stacked imperatives and convert routine guidance to plain declarative sentences.
 
-<AccordionGroup>
-  <Accordion title="Replace imperative stacks with declarative sentences">
+<Steps>
+  <Step title="Replace imperative stacks with declarative sentences">
     Instead of `IMPORTANT: Always run tests before committing`, write `Run tests before committing` or just list the verification command. The instruction is the same; the emphatic wrapper adds no information.
-  </Accordion>
-  <Accordion title="Reserve emphatic words for genuine exceptions">
+  </Step>
+  <Step title="Reserve emphatic words for genuine exceptions">
     Keep `NEVER` and `CRITICAL` for constraints where a violation would cause real, hard-to-reverse harm — deleting user data, committing credentials, bypassing security controls. Use them for one or two things, not for every routine convention.
-  </Accordion>
-  <Accordion title="Rewrite as structured sections">
+  </Step>
+  <Step title="Rewrite as structured sections">
     A short "Hard constraints" section with three plain bullet points is more scannable — and more adherence-inducing — than ten `IMPORTANT:` lines scattered through the file.
-  </Accordion>
-</AccordionGroup>
+  </Step>
+</Steps>
 
 ## Score impact
 
-Informational: **0 points deducted**. The finding appears in `charter doctor` output and re-surfaces on each run, but it does not affect the numeric score.
+Informational (0 points deducted). The finding surfaces in [`charter explain`](/cli/explain) and `charter doctor` output and re-surfaces on each run, but does not affect the numeric [score](/docs/concepts/scoring-and-caps) or engage any cap.
+
+## Edge cases
+
+This rule only fires when a context file exists. A missing context file is AE-CTX-001's concern, not AE-CTX-006's.
 
 ## Related rules
 
-- [AE-CTX-001](/rules/AE-CTX-001) — context file must exist and be within budget
-- [AE-CTX-002](/rules/AE-CTX-002) — context file must match repo reality
+<CardGroup cols={2}>
+  <Card title="AE-CTX-001" icon="file-text" href="/rules/AE-CTX-001">
+    Context file must exist and be within budget.
+  </Card>
+  <Card title="AE-CTX-002" icon="file-text" href="/rules/AE-CTX-002">
+    Context file must match repo reality.
+  </Card>
+</CardGroup>
 
 ## CLI
 

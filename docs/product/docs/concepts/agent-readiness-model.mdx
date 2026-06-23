@@ -3,7 +3,7 @@ title: "Agent Readiness Model"
 description: "What AI-agent readiness means and how Charter evaluates it across three axes."
 ---
 
-Repos don't fail agents because the model is bad — they fail because the operating environment is broken. Charter's readiness model exists to make that environment measurable.
+Teams adopting coding agents don't fail because the model is bad — they fail because the repo isn't ready. Charter's readiness model exists to make that readiness measurable.
 
 Charter treats agent readiness as a **repository property**, not a model property. A strong model still performs poorly in a repo that gives it weak instructions, unsafe tool configuration, or no way to verify its own work. The model is outside your control; the repo is entirely within it.
 
@@ -18,7 +18,7 @@ Charter treats agent readiness as a **repository property**, not a model propert
     - Explicit edit boundaries and off-limits paths declared
     - Token-budget-friendly, non-fragile instructions
 
-    Covered by: `AE-CTX-001`, `AE-CTX-002`, `AE-CTX-004`, `AE-CTX-006`, `AE-CC-002`
+    Covered by: [`AE-CTX-001`](/rules/AE-CTX-001), [`AE-CTX-002`](/rules/AE-CTX-002), [`AE-CTX-004`](/rules/AE-CTX-004), [`AE-CTX-006`](/rules/AE-CTX-006), [`AE-CC-002`](/rules/AE-CC-002)
   </Card>
   <Card title="Safety" icon="shield">
     **Risk boundaries** — are the guardrails in place?
@@ -28,7 +28,7 @@ Charter treats agent readiness as a **repository property**, not a model propert
     - Remote MCP origins explicitly trusted
     - No dangerous hook commands with unconstrained shell access
 
-    Covered by: `AE-SEC-001`, `AE-SEC-002`, `AE-MCP-001`, `AE-MCP-002`, `AE-MCP-003`, `AE-CC-001`
+    Covered by: [`AE-SEC-001`](/rules/AE-SEC-001), [`AE-SEC-002`](/rules/AE-SEC-002), [`AE-MCP-001`](/rules/AE-MCP-001), [`AE-MCP-002`](/rules/AE-MCP-002), [`AE-MCP-003`](/rules/AE-MCP-003), [`AE-CC-001`](/rules/AE-CC-001)
   </Card>
   <Card title="Operability" icon="cpu">
     **Verifiability** — can the agent check its own work?
@@ -38,21 +38,21 @@ Charter treats agent readiness as a **repository property**, not a model propert
     - Reproducible toolchain with lockfile and version constraints
     - CI gate that exercises the intended quality path
 
-    Covered by: `AE-TEST-001`, `AE-AUTO-001`, `AE-ENV-001`, `AE-CI-002`
+    Covered by: [`AE-TEST-001`](/rules/AE-TEST-001), [`AE-AUTO-001`](/rules/AE-AUTO-001), [`AE-ENV-001`](/rules/AE-ENV-001), [`AE-CI-002`](/rules/AE-CI-002)
   </Card>
 </CardGroup>
 
 ## Governance: the cross-cutting layer
 
 <Note>
-  Governance isn't a fourth axis. It wraps the other three — auditing suppressions, ensuring exceptions have reasons, and surfacing when the score is being systematically bypassed. Rules `AE-SUPPRESS-001`, `AE-SUPPRESS-002`, and `AE-SUPPRESS-003` enforce this contract on every scan.
+  Governance isn't a fourth axis. It wraps the other three — auditing suppressions, ensuring exceptions have reasons, and surfacing when the score is being systematically bypassed. Rules [`AE-SUPPRESS-001`](/rules/AE-SUPPRESS-001), [`AE-SUPPRESS-002`](/rules/AE-SUPPRESS-002), and [`AE-SUPPRESS-003`](/rules/AE-SUPPRESS-003) enforce this contract on every scan.
 </Note>
 
 A suppression changes the trust model of the entire scan. That is why Charter requires suppressions to be visible in source control, attributable with a reason, and time-bounded by default. Governance findings are reported separately and listed in the HTML report and SARIF output — they don't replace the three core axes, they audit how honestly the three axes are being applied.
 
 ## Why repo, not model
 
-Model capability is outside your control. You can choose a model, but you cannot change how it reasons, what it was trained on, or how it handles ambiguous instructions. The repo configuration is entirely within your control — and it determines how much of that model capability you actually get.
+You can choose a model, but you cannot change how it reasons or how it handles ambiguous instructions. The repo configuration is what determines how much of that capability you actually get.
 
 An excellent model in a poorly configured repo will:
 - guess at commands instead of running documented ones
@@ -110,4 +110,19 @@ A low score is not a judgment on the codebase quality. It is a signal that scaff
 
 The score answers one narrow question: **how ready is this repo for safe, verifiable use by a coding agent?**
 
-If you want the exact math, caps, and score zones, continue to [Scoring and Caps](/docs/concepts/scoring-and-caps).
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Scoring and Caps" icon="calculator" href="/docs/concepts/scoring-and-caps">
+    The exact math, the hard caps, and what each score zone means.
+  </Card>
+  <Card title="Fix Engine" icon="wrench" href="/docs/concepts/fix-engine">
+    How Charter repairs findings diff-first, and why some rules are never auto-fixed.
+  </Card>
+  <Card title="Add Charter to an Existing Repo" icon="rocket" href="/docs/how-to/adopt-in-existing-repo">
+    Baseline a scan, fix what is safe, and commit Charter in under 10 minutes.
+  </Card>
+  <Card title="Rules Reference" icon="shield" href="/rules/overview">
+    All 18 rules — what each checks and how to remediate it.
+  </Card>
+</CardGroup>

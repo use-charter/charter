@@ -124,7 +124,7 @@ Add a minimal test file for each active language that Charter flags. The test do
 
 ## Score impact
 
-`High` (−10); no hard cap. If multiple active languages all lack tests, each fires a separate finding instance.
+`High` (−10 per finding). No hard cap — caps are reserved for raw-secret and Blocker findings. If multiple active languages all lack tests, each fires a separate finding instance. See [Scoring and caps](/docs/concepts/scoring-and-caps).
 
 ## Edge cases
 
@@ -146,7 +146,7 @@ Add a minimal test file for each active language that Charter flags. The test do
 ## Related rules
 
 <CardGroup cols={2}>
-  <Card title="AE-AUTO-001" icon="play" href="/rules/AE-AUTO-001">
+  <Card title="AE-AUTO-001" icon="player-play" href="/rules/AE-AUTO-001">
     Requires a discoverable command to run the tests that this rule checks for.
   </Card>
   <Card title="AE-CI-002" icon="circle-check" href="/rules/AE-CI-002">

@@ -69,7 +69,7 @@ icon: "stethoscope"
 </ResponseField>
 
 <ResponseField name="-i, --interactive" type="boolean">
-  Open the interactive TUI. Requires a real terminal — exits with code `2` if stdin is not a TTY.
+  Open the interactive TUI. Requires a real terminal.
 </ResponseField>
 
 ## Output Formats
@@ -150,10 +150,24 @@ The TUI supports filter and search, drill-in on individual findings, rule-focuse
   `-i` requires a real TTY. It exits with code `2` if stdin is not a terminal.
 </Note>
 
-## Exit Codes
+## Exit codes
 
 | Code | Meaning | When |
 |------|---------|------|
 | `0` | Pass | Score ≥ threshold, or `--rule` view found no matching findings |
 | `1` | Fail | Score < threshold, or `--rule` view found at least one matching finding |
-| `2` | Error | Invalid `--format`, unknown rule ID in `--rule`, `--interactive` on non-TTY, malformed `charter.yaml`, unreadable files |
+| `2` | Error | Invalid `--format`, unknown rule ID in `--rule`, `--interactive` on a non-TTY, malformed `charter.yaml`, or unreadable files |
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="GitHub Action" icon="brand-github" href="/docs/ci/github-action">
+    Gate pull requests on the Charter score in CI.
+  </Card>
+  <Card title="Scoring and caps" icon="calculator" href="/docs/concepts/scoring-and-caps">
+    How the 0–100 score and severity caps are computed.
+  </Card>
+  <Card title="fix" icon="tool" href="/cli/fix">
+    Apply diff-first auto-repair for supported findings.
+  </Card>
+</CardGroup>

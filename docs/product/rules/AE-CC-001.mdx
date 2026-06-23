@@ -5,9 +5,9 @@ description: "Agent hook configurations must not contain dangerous shell command
 
 **Rule ID:** AE-CC-001 · **Severity:** <Badge color="red">Blocker</Badge> · **Category:** Agent Config · **Auto-fixable:** No
 
-<Warning>
-  AE-CC-001 is never auto-fixed. Dangerous hook commands require human review — Charter shows the evidence and guidance but will not rewrite hook configurations automatically.
-</Warning>
+<Note>
+  AE-CC-001 is a Blocker. While it is active, the final Charter score is held at **≤59**. It is never auto-fixed — dangerous hook commands require human review, so Charter shows the evidence and guidance but will not rewrite hook configurations automatically.
+</Note>
 
 ## Why this rule
 
@@ -88,7 +88,7 @@ Charter quotes the offending command in the finding evidence so you can locate i
 
 <Steps>
   <Step title="Locate the flagged hook">
-    Run `charter explain AE-CC-001` to see the finding evidence. Charter identifies the config file and the offending command pattern.
+    Run [`charter explain`](/cli/explain) with `AE-CC-001` to see the finding evidence. Charter identifies the config file and the offending command pattern.
   </Step>
   <Step title="Replace the dangerous pattern">
     Substitute destructive or injection-vulnerable commands with explicit, scoped, non-destructive alternatives. Prefer array-form execution (`args`) over shell strings to avoid expansion.
@@ -107,7 +107,9 @@ Charter quotes the offending command in the finding evidence so you can locate i
 
 ## Score impact
 
-`Blocker` — engages the hard blocker score cap. The final score is capped at **≤ 59** whenever any Blocker finding is present, regardless of other findings.
+<Note>
+  `Blocker` (−20 per finding). This finding engages the Blocker cap — the final [score](/docs/concepts/scoring-and-caps) is held at **≤59** while it is active. Caps are reserved for raw-secret and Blocker findings.
+</Note>
 
 ## Edge cases
 
@@ -126,7 +128,7 @@ Charter quotes the offending command in the finding evidence so you can locate i
 ## Related rules
 
 <CardGroup cols={2}>
-  <Card title="AE-CC-002" icon="shield-halved" href="/rules/AE-CC-002">
+  <Card title="AE-CC-002" icon="shield-half" href="/rules/AE-CC-002">
     Requires explicit edit-scope boundaries in the agent context file.
   </Card>
   <Card title="AE-SEC-001" icon="key" href="/rules/AE-SEC-001">

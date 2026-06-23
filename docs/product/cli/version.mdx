@@ -26,6 +26,16 @@ icon: "tag"
   <img src="/images/screenshots/version-output.webp" alt="charter version output" />
 </Frame>
 
+## Flags
+
+<ResponseField name="--short" type="boolean">
+  Print only the version number. Bypasses format rendering entirely — `--format` is ignored when `--short` is set.
+</ResponseField>
+
+<ResponseField name="--format" type="text | json">
+  Output format. Defaults to `text`. Ignored when `--short` is set.
+</ResponseField>
+
 ## Example Output
 
 ```text
@@ -48,19 +58,20 @@ platform  darwin/arm64
 }
 ```
 
-## Flags
+## Exit codes
 
-<ResponseField name="--short" type="boolean">
-  Print only the version number. Bypasses format rendering entirely — `--format` is ignored when `--short` is set.
-</ResponseField>
+| Code | Meaning | When |
+|------|---------|------|
+| `0` | Pass | Version output rendered successfully |
+| `2` | Error | A usage error — for example, an unknown `--format` value when `--short` is not set |
 
-<ResponseField name="--format" type="text | json">
-  Output format. Defaults to `text`. Ignored when `--short` is set.
-</ResponseField>
+## Related
 
-## Exit Codes
-
-| Code | Meaning |
-|------|---------|
-| `0` | Version output rendered successfully |
-| `2` | Usage error — for example, an unknown `--format` value when `--short` is not set |
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/docs/installation">
+    Install or upgrade the Charter binary.
+  </Card>
+  <Card title="doctor" icon="stethoscope" href="/cli/doctor">
+    The primary command once the binary is installed.
+  </Card>
+</CardGroup>

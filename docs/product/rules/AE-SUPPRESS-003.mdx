@@ -11,7 +11,7 @@ description: "High suppression rate — surfaces when suppressions account for m
 
 ## Why this rule
 
-A high suppression rate is a signal that either the tool is misconfigured for this repo or the team is systematically bypassing its controls. Both patterns are worth surfacing explicitly so teams self-correct rather than silently diverge from the score.
+A high suppression rate is a signal that either the tool is misconfigured for this repo or the team is systematically bypassing its controls. Both patterns are worth surfacing explicitly so teams self-correct rather than silently diverge from the score. See [Suppression governance](/docs/concepts/suppression-governance) for how the rate fits the wider model.
 
 A suppression rate above 30% doesn't automatically mean something is wrong — a freshly migrated repo may legitimately carry many accepted findings during initial calibration. The point is intentional suppression, not the absence of it.
 
@@ -27,14 +27,25 @@ Governance findings like AE-SUPPRESS-003 itself are excluded from the denominato
 
 ## Examples
 
-### Triggers
+<Tabs>
+  <Tab title="Failing">
+    ```text
+    3 active findings + 6 suppressions
+    rate = 6 / (3 + 6) = 67%  → exceeds 30% threshold → fires Informational
+    ```
 
-A repo with 3 active findings and 6 suppressions has a rate of 67% — AE-SUPPRESS-003 is reported. The score is unchanged. The 3 active findings still deduct normally; the 6 suppressions are already excluded from the base score.
+    The score is unchanged. The 3 active findings still deduct normally; the 6 suppressions are already excluded from the base score.
+  </Tab>
+  <Tab title="Passing">
+    ```text
+    10 active findings + 1 suppression
+    rate = 1 / (10 + 1) = 9%  → below 30% threshold → no finding
 
-### Does not trigger
-
-- A repo with 10 active findings and 1 suppression: rate = 9% — below threshold, no finding.
-- A repo with zero suppressions: zero denominator — never fires.
+    any active findings + 0 suppressions
+    rate = 0 / N = 0%         → zero denominator contribution → never fires
+    ```
+  </Tab>
+</Tabs>
 
 ## How to fix
 
@@ -57,7 +68,7 @@ This finding is a prompt to review, not a defect to silence.
 
 ## Score impact
 
-None. AE-SUPPRESS-003 is excluded from the severity tally and all caps. It appears in output and in the HTML report as an informational notice, but does not affect the numeric score or gate result.
+Informational (0 points deducted). AE-SUPPRESS-003 is excluded from the severity tally and all caps. It appears in output and in the HTML report as an informational notice, but does not affect the numeric [score](/docs/concepts/scoring-and-caps) or gate result.
 
 ## Edge cases
 
@@ -72,8 +83,14 @@ None. AE-SUPPRESS-003 is excluded from the severity tally and all caps. It appea
 
 ## Related rules
 
-- [AE-SUPPRESS-001](/rules/AE-SUPPRESS-001) — suppression missing `reason:` field
-- [AE-SUPPRESS-002](/rules/AE-SUPPRESS-002) — permanent suppression missing `approver:` field
+<CardGroup cols={2}>
+  <Card title="AE-SUPPRESS-001" icon="file-pencil" href="/rules/AE-SUPPRESS-001">
+    Suppression missing a `reason:` field.
+  </Card>
+  <Card title="AE-SUPPRESS-002" icon="shield-lock" href="/rules/AE-SUPPRESS-002">
+    Permanent suppression missing an `approver:` field.
+  </Card>
+</CardGroup>
 
 ## CLI
 

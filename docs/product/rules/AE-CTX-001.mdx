@@ -3,11 +3,15 @@ title: "AE-CTX-001"
 description: "Agent context file must exist, be meaningful, and fit budget."
 ---
 
-**Rule ID:** AE-CTX-001 · **Severity:** <Badge color="red">Blocker</Badge> · **Category:** Context · **Auto-fixable:** Yes — `charter fix --rule AE-CTX-001`
+**Rule ID:** AE-CTX-001 · **Severity:** <Badge color="red">Blocker</Badge> · **Category:** Context · **Auto-fixable:** Yes
+
+<Note>
+  AE-CTX-001 is a Blocker. While it is active, the final Charter score is held at **≤59** — the repo cannot reach a passing score until a context file exists.
+</Note>
 
 ## Why this rule
 
-Agents operate from what they can read in the repo. A missing or empty context file means the agent starts every session with no orientation — it guesses at the stack, invents build commands, and may edit files it should leave alone. A context file that exceeds the token budget gets truncated, which is often worse than no file at all because the agent receives partial, misleading instructions.
+Agents operate from what they can read in the repo. A missing or empty context file means the agent starts every session with no orientation — it guesses at the stack, invents build commands, and may edit files it should leave alone. A context file that exceeds the token budget gets truncated, so the agent receives an arbitrary prefix and silently loses the constraints that fell past the cutoff.
 
 ## What triggers it
 
@@ -64,7 +68,7 @@ The finding fires when:
 
 <Steps>
   <Step title="Preview the scaffolded file">
-    Run `charter fix --rule AE-CTX-001 --dry-run` to see what Charter will create before writing anything.
+    Run [`charter fix`](/cli/fix) with `--rule AE-CTX-001 --dry-run` to see what Charter will create before writing anything.
   </Step>
   <Step title="Create the context file">
     Run `charter fix --rule AE-CTX-001` to scaffold a minimal `AGENTS.md` at the repo root.
@@ -80,7 +84,7 @@ The finding fires when:
 ## Score impact
 
 <Note>
-  Blocker severity: −20 to the base score. The hard cap at ≤ 59 applies while this finding is active — the repo cannot reach a passing score until AE-CTX-001 is resolved.
+  `Blocker` (−20 per finding). This finding engages the Blocker cap — the final [score](/docs/concepts/scoring-and-caps) is held at **≤59** while it is active. Caps are reserved for raw-secret and Blocker findings.
 </Note>
 
 ## Edge cases
@@ -89,10 +93,20 @@ A repo using `CLAUDE.md`, `DESIGN.md`, or `SKILL.md` instead of `AGENTS.md` pass
 
 ## Related rules
 
-- [AE-CTX-002](/rules/AE-CTX-002) — context file must stay consistent with the actual repo state
-- [AE-CTX-004](/rules/AE-CTX-004) — agent session artifacts must be gitignored
-- [AE-CTX-006](/rules/AE-CTX-006) — emphatic directive density
-- [AE-CC-002](/rules/AE-CC-002) — edit scope must be declared
+<CardGroup cols={2}>
+  <Card title="AE-CTX-002" icon="file-text" href="/rules/AE-CTX-002">
+    Context file must stay consistent with the actual repo state.
+  </Card>
+  <Card title="AE-CTX-004" icon="box" href="/rules/AE-CTX-004">
+    Agent session artifacts must be gitignored.
+  </Card>
+  <Card title="AE-CTX-006" icon="chart-bar" href="/rules/AE-CTX-006">
+    Emphatic directive density degrades adherence.
+  </Card>
+  <Card title="AE-CC-002" icon="shield-half" href="/rules/AE-CC-002">
+    Edit scope must be declared explicitly.
+  </Card>
+</CardGroup>
 
 ## CLI
 

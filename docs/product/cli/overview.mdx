@@ -4,10 +4,10 @@ description: "Reference for Charter's command surface, exit codes, and shared CL
 icon: "apps"
 ---
 
-Charter is a single-binary, offline-first Go CLI for scoring a repository's AI-agent readiness. It makes no network calls and never sends your code anywhere.
+Charter is a single-binary, offline-first Go CLI for scoring a repository's AI-agent readiness.
 
 <Note>
-  All commands are offline-first. Charter makes no network calls and never sends your code anywhere.
+  Every command runs offline. Charter makes no network calls and never sends your code anywhere.
 </Note>
 
 ## Commands
@@ -70,25 +70,20 @@ These flags are shared across most commands.
 
 ## Typical Workflows
 
-<Tabs>
-  <Tab title="Local development">
-    ```bash
-    charter doctor --path . --threshold 80
-    ```
-  </Tab>
-  <Tab title="CI gate">
-    ```bash
-    charter doctor --quiet --threshold 80
-    ```
-  </Tab>
-  <Tab title="SARIF upload">
-    ```bash
-    charter doctor --format sarif --out charter.sarif
-    ```
-  </Tab>
-  <Tab title="Shareable report">
-    ```bash
-    charter report --out charter-report.html --open
-    ```
-  </Tab>
-</Tabs>
+<CodeGroup>
+  ```bash Local development
+  charter doctor --path . --threshold 80
+  ```
+
+  ```bash CI gate
+  charter doctor --quiet --threshold 80
+  ```
+
+  ```bash SARIF upload
+  charter doctor --format sarif --out charter.sarif
+  ```
+
+  ```bash Shareable report
+  charter report --out charter-report.html --open
+  ```
+</CodeGroup>

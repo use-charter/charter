@@ -3,7 +3,7 @@ title: "AE-CTX-004"
 description: "`.gitignore` should exclude common agent and local artifact noise."
 ---
 
-**Rule ID:** AE-CTX-004 · **Severity:** <Badge color="yellow">Medium</Badge> · **Category:** Context · **Auto-fixable:** Yes — `charter fix --rule AE-CTX-004`
+**Rule ID:** AE-CTX-004 · **Severity:** <Badge color="yellow">Medium</Badge> · **Category:** Context · **Auto-fixable:** Yes
 
 ## Why this rule
 
@@ -21,10 +21,6 @@ Charter checks whether `.gitignore` excludes the following agent session artifac
 | `.cursor/cache/` | Cursor IDE agent cache |
 
 The finding also fires if any of these patterns are **already tracked in git** — a `.gitignore` entry alone does not remove a file that was previously committed.
-
-<Note>
-  Team-owned config files such as `.cursor/rules`, `.claude/settings.json`, and `hk.pkl` should stay committed. AE-CTX-004 targets local cache and session state, not shared configuration.
-</Note>
 
 ## Examples
 
@@ -60,7 +56,7 @@ The finding also fires if any of these patterns are **already tracked in git** �
 
 <Steps>
   <Step title="Preview the changes">
-    Run `charter fix --rule AE-CTX-004 --dry-run` to see which `.gitignore` entries will be added.
+    Run [`charter fix`](/cli/fix) with `--rule AE-CTX-004 --dry-run` to see which `.gitignore` entries will be added.
   </Step>
   <Step title="Apply the fix">
     Run `charter fix --rule AE-CTX-004` to append the missing patterns to `.gitignore`.
@@ -80,11 +76,19 @@ The finding also fires if any of these patterns are **already tracked in git** �
 
 ## Score impact
 
-Medium severity: −4 to the base score. No hard cap.
+`Medium` (−4 per finding). No hard cap — caps are reserved for raw-secret and Blocker findings. See [Scoring and caps](/docs/concepts/scoring-and-caps).
+
+## Edge cases
+
+Team-owned config files such as `.cursor/rules`, `.claude/settings.json`, and `hk.pkl` should stay committed. AE-CTX-004 targets local cache and session state, not shared configuration — those paths never fire the finding.
 
 ## Related rules
 
-- [AE-CTX-001](/rules/AE-CTX-001) — context file must exist and be within budget
+<CardGroup cols={2}>
+  <Card title="AE-CTX-001" icon="file-text" href="/rules/AE-CTX-001">
+    Context file must exist and be within budget.
+  </Card>
+</CardGroup>
 
 ## CLI
 

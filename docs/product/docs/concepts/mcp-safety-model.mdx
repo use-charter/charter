@@ -15,21 +15,21 @@ Charter's MCP model asks three practical questions on every scan, all answerable
 
     A floating reference installs a different package tomorrow than it installed today. Charter checks every MCP server reference for a pinned, reviewable version.
 
-    Rule: `AE-MCP-001`
+    Rule: [`AE-MCP-001`](/rules/AE-MCP-001)
   </Card>
   <Card title="Is the remote trusted?" icon="network">
     **Shadow server risk**
 
     An agent should not be pointed at arbitrary remote infrastructure without review. Charter compares remote origins against an effective allowlist of trusted hosts.
 
-    Rule: `AE-MCP-002`
+    Rule: [`AE-MCP-002`](/rules/AE-MCP-002)
   </Card>
   <Card title="Is auth declared?" icon="lock">
     **Unauthorized access prevention**
 
     A public remote with no declared authentication boundary is an open door. Charter checks for the presence of auth metadata on non-local remotes.
 
-    Rule: `AE-MCP-003`
+    Rule: [`AE-MCP-003`](/rules/AE-MCP-003)
   </Card>
 </CardGroup>
 
@@ -133,3 +133,20 @@ Two design choices keep the catalog honest:
 **Exact-match version logic.** The catalog does not try to compare arbitrary version strings across semver, CalVer, or custom schemes. Charter only makes strong claims when it has exact knowledge of the version in use. A stale catalog under-reports rather than misreports — conservative by design.
 
 **One finding per server.** For a given server, `AE-MCP-001` reports the single most important signal following the precedence ladder: deprecated → unpinned → advisory → behind-stable → clean. Output stays focused on the most important next action.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Investigate MCP Findings" icon="search" href="/docs/how-to/investigate-mcp-findings">
+    The step-by-step recipe for resolving each of the three MCP rules.
+  </Card>
+  <Card title="charter.yaml Reference" icon="settings" href="/docs/config/charter-yaml">
+    Declare reviewed remote hosts with `mcp.trustedRemotes`.
+  </Card>
+  <Card title="Fix Engine" icon="wrench" href="/docs/concepts/fix-engine">
+    How the AE-MCP-001 fixer applies catalog-aware version bumps.
+  </Card>
+  <Card title="Rules Reference" icon="shield" href="/rules/overview">
+    Full detail on AE-MCP-001, AE-MCP-002, and AE-MCP-003.
+  </Card>
+</CardGroup>

@@ -19,7 +19,7 @@ Charter is opinionated by design. These aren't guidelines — they're constraint
     The alternative — using an LLM to generate richer fix suggestions or natural-language explanations — would introduce non-determinism and require an API key you may not want to provide. Determinism makes scores comparable across runs, auditable in CI, and trustworthy as a policy gate. A gate that gives different answers on different days is not a gate you can rely on.
   </Accordion>
   <Accordion title="3. We never delete a user file">
-    Charter's fix engine creates, appends, and replaces files. It does not delete, rename, or move files outside of `.charter/backups/`. The original is always preserved before any write.
+    Charter's [fix engine](/docs/concepts/fix-engine) creates, appends, and replaces files. It does not delete, rename, or move files outside of `.charter/backups/`. The original is always preserved before any write.
 
     The alternative — overwriting in place without backup — is faster but unrecoverable if a fixer has a bug. We chose the slower path that leaves you in control. The backup directory accumulates until you decide to clear it; Charter never does it for you.
   </Accordion>
@@ -62,21 +62,7 @@ Charter is opinionated by design. These aren't guidelines — they're constraint
 
 ## What Charter is not
 
-<Note>
-  These are explicit non-goals. Building any of them would require violating commitments above — specifically determinism, offline execution, or scope discipline. We list them not to deprecate the tools that do them well, but to be clear about where Charter's boundaries are.
-</Note>
-
-**Not a code reviewer.** Charter does not analyze logic, detect bugs, or assess code quality. Doing that at scale requires either symbolic analysis (a compiler-grade effort per language) or LLM inference — both of which conflict with Charter's determinism and offline commitments.
-
-**Not a code style linter.** Charter does not check formatting, naming conventions, or language idioms. ESLint, Ruff, golangci-lint, and their equivalents already do this. Charter scans for AI-agent readiness signals, which are a distinct surface area.
-
-**Not a package vulnerability scanner.** Charter does not cross-reference your dependency tree against CVE databases. Snyk, Dependabot, and OSV Scanner are purpose-built for that problem and maintain live advisory feeds that a static binary cannot replicate.
-
-**Not a runtime agent monitor.** Charter scores the repo at a point in time. It does not observe what agents do when they actually run — no hook interception, no syscall tracing, no network monitoring. Runtime observability is a separate discipline.
-
-**Not a secrets vault.** Charter finds secrets in your repo; it does not store, rotate, or manage them. That is the domain of HashiCorp Vault, AWS Secrets Manager, or 1Password Secrets Automation.
-
-**Not a git history scanner.** Charter analyzes the current working tree. It does not walk commits to find secrets that were added and later removed. Tools like Gitleaks and TruffleHog cover that surface.
+These commitments imply a set of explicit non-goals — code review, style linting, dependency-CVE scanning, runtime monitoring, secrets management, and git-history scanning. Each would require violating determinism, offline execution, or scope discipline. The [Introduction](/docs/introduction#what-charter-is-not) lists each non-goal and the purpose-built tools that cover it.
 
 ## Why determinism
 
@@ -84,4 +70,4 @@ Charter is opinionated by design. These aren't guidelines — they're constraint
   Determinism isn't a constraint — it's the product. A CI gate you can't reproduce locally isn't a gate you can trust. When Charter gives a score of 74 in your terminal and 74 in CI and 74 in a colleague's terminal on the same commit, the number means something. That's the foundation everything else is built on.
 </Tip>
 
-A scoring formula you cannot inspect is a black box you are being asked to comply with. Publishing the formula — weights, caps, and all — means you can verify that Charter's output matches its specification, build equivalent logic into your own tooling if needed, and hold us accountable when a release changes anything we haven't documented. Governance trust requires transparency, not just a claim of fairness.
+A scoring formula you cannot inspect is a black box you are being asked to comply with. Publishing the formula — weights, caps, and all — means you can verify that Charter's output matches its specification, build equivalent logic into your own tooling if needed, and hold us accountable when a release changes anything we haven't documented. Governance trust requires transparency, not just a claim of fairness. See [Scoring and Caps](/docs/concepts/scoring-and-caps) for the full formula and the reasoning behind each weight.

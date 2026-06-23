@@ -11,7 +11,7 @@ description: "No raw secret patterns in MCP or adjacent config files — .mcp.js
 
 ## Why this rule
 
-MCP configurations are read by the agent runtime before tools execute. Unlike source code that may only be read occasionally, MCP configs are intentionally agent-visible by design — every tool invocation passes through them. A raw credential here is exposed to every model, every session, and every tool-call log that processes this context.
+MCP configurations are read by the agent runtime before tools execute. Unlike source code that may only be read occasionally, MCP configs are intentionally agent-visible by design — every tool invocation passes through them (see the [MCP safety model](/docs/concepts/mcp-safety-model)). A raw credential here is exposed to every model, every session, and every tool-call log that processes this context.
 
 ## What triggers it
 
@@ -27,7 +27,7 @@ Charter scans tracked MCP configuration files for the same high-confidence crede
 
 **Scanned files:** `.mcp.json`, `mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`, `.claude/settings.json`, `claude_desktop_config.json`, `cline_mcp_settings.json`, and any `*.pkl` file whose path contains `mcp` or `config`.
 
-**Neutralized (never fire):** Environment variable references (`${VAR}`, `$VAR`) and placeholder strings (`your-api-key-here`) are explicitly excluded. Only literal credential values trigger the finding. Detected values are redacted in Charter output (first 4 characters followed by `…`).
+Only literal credential values trigger the finding. Detected values are redacted in Charter output (first 4 characters followed by `…`).
 
 ## Examples
 
@@ -91,18 +91,30 @@ Charter scans tracked MCP configuration files for the same high-confidence crede
 ## Score impact
 
 <Warning>
-  Secret findings apply a hard cap: the final Charter score is held at **≤ 49** while AE-SEC-001 or AE-SEC-002 is active. This overrides the base formula and all other scoring.
+  `Blocker` (−20 per finding) with a raw-secret cap: the final [score](/docs/concepts/scoring-and-caps) is held at **≤49** while AE-SEC-001 or AE-SEC-002 is active. This overrides the base formula. Caps are reserved for raw-secret and Blocker findings.
 </Warning>
 
 <Tip>
   Use env var references in MCP auth headers. Most MCP runtimes resolve environment variables at tool invocation time — the credential never needs to live in the config file itself.
 </Tip>
 
+## Edge cases
+
+Environment variable references (`${VAR}`, `$VAR`) and placeholder strings (`your-api-key-here`) are explicitly excluded — only literal credential values trigger the finding. Only git-tracked files are in scope.
+
 ## Related rules
 
-- [AE-SEC-001](/rules/AE-SEC-001) — same patterns applied to agent context files
-- [AE-MCP-001](/rules/AE-MCP-001) — MCP servers must be pinned to exact versions
-- [AE-MCP-003](/rules/AE-MCP-003) — remote MCP servers must declare auth
+<CardGroup cols={2}>
+  <Card title="AE-SEC-001" icon="lock" href="/rules/AE-SEC-001">
+    Same patterns applied to agent context files.
+  </Card>
+  <Card title="AE-MCP-001" icon="shield" href="/rules/AE-MCP-001">
+    MCP servers must be pinned to exact versions.
+  </Card>
+  <Card title="AE-MCP-003" icon="shield" href="/rules/AE-MCP-003">
+    Remote MCP servers must declare auth.
+  </Card>
+</CardGroup>
 
 ## CLI
 

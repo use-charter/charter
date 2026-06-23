@@ -11,14 +11,12 @@ Teams adopting coding agents don't fail because the model is bad — they fail b
 
 ## Score zones
 
-<Note>
-  | Score | Zone | Meaning |
-  |-------|------|---------|
-  | 🟢 80–100 | **Ship-ready** | Repo is well-configured for agent-assisted work |
-  | 🟡 60–79 | **Needs work** | Active findings that limit agent effectiveness |
-  | 🔴 50–59 | **Blocked** | One or more Blocker-severity findings present |
-  | 🔴 0–49 | **Critical** | Raw secret detected in an agent-visible location |
-</Note>
+| Score | Zone | Meaning |
+|-------|------|---------|
+| 🟢 80–100 | **Ship-ready** | Repo is well-configured for agent-assisted work |
+| 🟡 60–79 | **Needs work** | Active findings that limit agent effectiveness |
+| 🔴 50–59 | **Blocked** | One or more Blocker-severity findings present |
+| 🔴 0–49 | **Critical** | Raw secret detected in an agent-visible location |
 
 The score formula is public: `max(0, 100 − B×20 − H×10 − M×4 − L×1)`, where B/H/M/L are Blocker, High, Medium, and Low finding counts. Hard caps override the formula: any secret finding locks the score at ≤49; any blocker finding locks it at ≤59.
 
@@ -69,16 +67,16 @@ The score, the formula, and the rule set are all public and stable within a majo
 ## Start here
 
 <CardGroup cols={2}>
-  <Card title="Quickstart" icon="rocket" href="/quickstart">
+  <Card title="Quickstart" icon="rocket" href="/docs/quickstart">
     Get a real Charter score on your repo in under 5 minutes.
   </Card>
-  <Card title="How Charter Works" icon="compass" href="/concepts/agent-readiness-model">
+  <Card title="How Charter Works" icon="compass" href="/docs/concepts/agent-readiness-model">
     The three readiness axes, the scoring formula, and the fix engine.
   </Card>
   <Card title="Rules Reference" icon="shield" href="/rules/overview">
     All 18 rules — what each checks and how to remediate it.
   </Card>
-  <Card title="GitHub Action" icon="git-branch" href="/ci/github-action">
+  <Card title="GitHub Action" icon="git-branch" href="/docs/ci/github-action">
     Run Charter in CI and gate pull requests on agent-readiness.
   </Card>
 </CardGroup>

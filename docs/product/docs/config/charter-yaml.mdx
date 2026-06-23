@@ -30,6 +30,7 @@ Named threshold preset. Accepted values:
 
 | Value | Threshold | When to use |
 |-------|-----------|-------------|
+| `relaxed` | 60 | Repos still ramping up agent-readiness |
 | `standard` | 80 | Default for most repos |
 | `strict` | 90 | Security-sensitive or production repos |
 
@@ -82,8 +83,19 @@ Charter fails fast on invalid configuration:
 The full JSON Schema is published at **`https://use-charter.dev/schema/charter.schema.json`**. Reference it with the `# yaml-language-server: $schema=…` header shown above for editor validation and autocomplete. Source: `web/public/schema/charter.schema.json`.
 </Tip>
 
-## See also
+## Next steps
 
-- [Policy Profiles](/docs/config/policy-profiles)
-- [GitHub Action](/docs/ci/github-action)
-- [Investigate MCP Findings](/docs/how-to/investigate-mcp-findings)
+<CardGroup cols={2}>
+  <Card title="Policy Profiles" icon="adjustments-horizontal" href="/docs/config/policy-profiles">
+    The named threshold presets and how precedence resolves.
+  </Card>
+  <Card title="GitHub Action" icon="puzzle" href="/docs/ci/github-action">
+    How the action reads `charter.yaml` policy in CI.
+  </Card>
+  <Card title="Investigate MCP Findings" icon="search" href="/docs/how-to/investigate-mcp-findings">
+    Resolve the rules that `mcp.trustedRemotes` governs.
+  </Card>
+  <Card title="MCP Safety Model" icon="plug" href="/docs/concepts/mcp-safety-model">
+    Why the allowlist exists and what it protects against.
+  </Card>
+</CardGroup>

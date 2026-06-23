@@ -68,3 +68,22 @@ The HTML report is a single-file artifact with the following guarantees:
 - **Offline-first** — opens from `file://` with no network dependency
 - **Zero network calls** — nothing is fetched at render or view time
 - **WCAG 2.2 AA** — meets accessibility contrast and interaction requirements
+
+## Exit codes
+
+`charter report` is not a gate — it always exits `0` on a successful write, regardless of the score.
+
+| Code | Meaning | When |
+|------|---------|------|
+| `0` | Pass | The report was written successfully, regardless of the underlying score |
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="doctor" icon="stethoscope" href="/cli/doctor">
+    The gating command that produces the same scan `report` renders.
+  </Card>
+  <Card title="GitHub Action" icon="brand-github" href="/docs/ci/github-action">
+    Publish a report artifact from a CI run.
+  </Card>
+</CardGroup>

@@ -4,7 +4,7 @@ description: "Look up a Charter rule by ID and print its catalog metadata."
 icon: "book"
 ---
 
-`charter explain <RULE-ID>` is the rule lookup command. It prints catalog metadata for a single rule: ID, name, category, severity, description, and docs URL. Use it when you already have a rule ID from a scan result and want the fastest CLI explanation.
+`charter explain <RULE-ID>` is the rule lookup command. It prints catalog metadata for a single rule: ID, name, category, severity, description, and docs URL.
 
 ## Usage
 
@@ -22,6 +22,12 @@ icon: "book"
   <img src="/images/screenshots/explain-output.webp" alt="charter explain output showing rule metadata" />
 </Frame>
 
+## Flags
+
+<ResponseField name="--format" type="text | json">
+  Output format. Defaults to `text`.
+</ResponseField>
+
 ## Example Output
 
 ```text
@@ -33,30 +39,28 @@ Description: Agent context file must exist, be meaningful, and fit budget.
 Docs:        https://use-charter.dev/rules/AE-CTX-001
 ```
 
-## Flags
+## When to Use It
 
-<ResponseField name="--format" type="text | json">
-  Output format. Defaults to `text`.
-</ResponseField>
-
-## Exit Codes
-
-| Code | Meaning |
-|------|---------|
-| `0` | Rule found and rendered successfully |
-| `2` | Unknown rule ID, invalid `--format`, or other usage error |
+Use `charter explain` when you already have a rule ID — from `charter doctor` output, `charter report` findings, CI logs, or a GitHub Code Scanning result — and want the fastest explanation without leaving the terminal. Follow the linked docs URL for the full rationale and remediation guidance.
 
 <Tip>
   Every rule reference page on this site corresponds to `charter explain <RULE-ID>` — same data, richer presentation with full rationale, remediation guidance, and OWASP mapping.
 </Tip>
 
-## When to Use It
+## Exit codes
 
-Use `charter explain` when you are already looking at a rule ID from:
+| Code | Meaning | When |
+|------|---------|------|
+| `0` | Pass | The rule was found and rendered successfully |
+| `2` | Error | Unknown rule ID, an invalid `--format` value, or another usage error |
 
-- `charter doctor` output
-- `charter report` findings
-- CI logs
-- a GitHub Code Scanning result
+## Related
 
-The command gives you the rule entry point immediately. Follow the linked docs URL for the full rationale and remediation guidance.
+<CardGroup cols={2}>
+  <Card title="Rules overview" icon="list" href="/rules/overview">
+    The full catalog of Charter rules and categories.
+  </Card>
+  <Card title="doctor" icon="stethoscope" href="/cli/doctor">
+    The scan that surfaces the rule IDs you look up here.
+  </Card>
+</CardGroup>

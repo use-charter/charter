@@ -99,7 +99,7 @@ Generates an `AGENTS.md` template populated with your detected language, toolcha
 </Accordion>
 
 <Accordion title="AE-CTX-004 — Appends .gitignore entries">
-Adds agent artifact patterns (`.charter/`, `.claude/`, common cache paths) to your `.gitignore`. Review before committing to make sure no existing entries conflict.
+Adds agent artifact patterns (`.charter/`, `*.charter-session`, `.claude/local/`, `.cursor/cache/`) to your `.gitignore`. Review before committing to make sure no existing entries conflict.
 </Accordion>
 
 <Accordion title="AE-CI-002 — Creates the Charter GitHub Actions workflow">
@@ -134,7 +134,7 @@ Remove the secret, rotate the credential, and replace it with an environment var
 Add a test suite. Charter looks for evidence of a test runner in your toolchain config and CI — a test file or `package.json` script is enough to pass.
 </Card>
 
-<Card title="AE-ENV-001" icon="gear">
+<Card title="AE-ENV-001" icon="settings">
 Add a toolchain file (`mise.toml`, `.tool-versions`, or a language-native equivalent) so the repo's runtime versions are reproducible.
 </Card>
 
@@ -162,7 +162,7 @@ This writes a governed entry to `.charter-suppress.yml` with the rule ID, your r
 Suppress only when the repo state is intentionally accepted. If the underlying problem is real, fix it — don't suppress it. Suppression is an audit trail, not a mute button.
 </Warning>
 
-Permanent suppressions require `--approver`. Without it, `AE-SUPPRESS-002` fires as a High finding on every scan.
+Permanent suppressions require `--approver`. Without it, [`AE-SUPPRESS-002`](/rules/AE-SUPPRESS-002) fires as a High finding on every scan.
 
 </Step>
 
@@ -194,3 +194,20 @@ charter fix --dry-run
 charter fix
 charter doctor
 ```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Use charter fix Safely" icon="shield-check" href="/docs/how-to/use-charter-fix-safely">
+    Review and apply auto-fixes without surprises.
+  </Card>
+  <Card title="Run Charter in GitHub Actions" icon="git-branch" href="/docs/how-to/run-in-github-actions">
+    Gate every pull request on the agent-readiness score.
+  </Card>
+  <Card title="Use Charter in a Pre-Commit Hook" icon="git-commit" href="/docs/how-to/pre-commit-hook">
+    Catch regressions before they reach CI.
+  </Card>
+  <Card title="Agent Readiness Model" icon="compass" href="/docs/concepts/agent-readiness-model">
+    What the score measures and why it is a repo property.
+  </Card>
+</CardGroup>

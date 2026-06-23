@@ -63,7 +63,7 @@ Charter inspects `.github/workflows/` for three things:
 
 ## How to fix
 
-AE-CI-002 is the only CI rule that Charter can fix automatically:
+AE-CI-002 is the only CI rule that [`charter fix`](/cli/fix) can resolve automatically:
 
 <CodeGroup>
 ```bash Dry run
@@ -85,7 +85,7 @@ For unpinned actions in existing workflows, the fix updates each `uses:` referen
 
 ## Score impact
 
-`Low` (−1); no hard cap.
+`Low` (−1 per finding). No hard cap — caps are reserved for raw-secret and Blocker findings. See [Scoring and caps](/docs/concepts/scoring-and-caps).
 
 ## Edge cases
 
@@ -104,7 +104,7 @@ For unpinned actions in existing workflows, the fix updates each `uses:` referen
   <Card title="AE-ENV-001" icon="box" href="/rules/AE-ENV-001">
     Reproducible toolchain — a prerequisite for meaningful CI runs.
   </Card>
-  <Card title="AE-AUTO-001" icon="play" href="/rules/AE-AUTO-001">
+  <Card title="AE-AUTO-001" icon="player-play" href="/rules/AE-AUTO-001">
     Discoverable test command — what CI actually runs.
   </Card>
 </CardGroup>
