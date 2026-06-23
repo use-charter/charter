@@ -1,7 +1,7 @@
 import type { APIContext } from "astro";
 import { describe, expect, it } from "vitest";
-import { GET as llms } from "./pages/llms.txt";
-import { GET as robots } from "./pages/robots.txt";
+import { GET as llms } from "../src/pages/llms.txt";
+import { GET as robots } from "../src/pages/robots.txt";
 
 // The route handlers only read `site`; a partial context is enough.
 const ctx = (site?: string) =>

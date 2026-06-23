@@ -37,7 +37,7 @@ function scriptSrcHashes(headers: string): string[] {
 
 describe("CSP script-src hashes", () => {
 	const headers = read("../public/_headers");
-	const bodies = inlineScriptBodies(read("./layouts/Base.astro"));
+	const bodies = inlineScriptBodies(read("../src/layouts/Base.astro"));
 	const allowed = scriptSrcHashes(headers);
 
 	it("finds the inline scripts and their allow-listed hashes", () => {
