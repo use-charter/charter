@@ -1,6 +1,6 @@
 import { glob } from 'astro/loaders';
 import { defineCollection } from 'astro:content';
-import { z } from 'astro:schema';
+import { z } from 'astro/zod';
 
 // Blog content collection (Astro 6 content layer). Posts are Markdown in
 // src/content/blog/*.md; files prefixed with `_` are ignored (drafts/wip).

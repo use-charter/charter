@@ -67,7 +67,7 @@ export function initThemeSwitch(): void {
       pill.querySelectorAll<HTMLButtonElement>('[data-theme-seg]'),
     );
     const activeIndex = MODES.indexOf(mode);
-    segs.forEach((seg, i) => {
+    segs.forEach((seg) => {
       const on = seg.dataset.themeSeg === mode;
       seg.setAttribute('aria-checked', on ? 'true' : 'false');
       seg.tabIndex = on ? 0 : -1;

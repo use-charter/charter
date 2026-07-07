@@ -29,14 +29,14 @@
     "deploy": "bun run deploy:router && bun run deploy:go-vanity"
   },
   "dependencies": {
-    "isbot": "^5.1.44"
+    "isbot": "^5.2.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260623.1",
-    "@vitest/coverage-v8": "4",
+    "@cloudflare/workers-types": "^5.20260707.1",
+    "@vitest/coverage-v8": "^4.1.10",
     "typescript": "6.0.3",
-    "vitest": "4.1.9",
-    "wrangler": "^4.104.0"
+    "vitest": "4.1.10",
+    "wrangler": "^4.107.0"
   },
   "overrides": {
     "esbuild": ">=0.28.1"

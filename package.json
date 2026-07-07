@@ -19,10 +19,10 @@
   "packageManager": "bun@1.3.14",
   "devDependencies": {
     "@types/bun": "1.3.14",
-    "@types/node": "24.12.4",
+    "@types/node": "26.1.0",
     "marked": "18.0.5",
-    "playwright": "1.60.0",
-    "sharp": "0.34.5",
+    "playwright": "1.61.1",
+    "sharp": "0.35.3",
     "typescript": "6.0.3"
   }
 }
