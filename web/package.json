@@ -31,20 +31,20 @@
     "indexnow": "bun scripts/indexnow.mts"
   },
   "dependencies": {
-    "@astrojs/check": "0.9.9",
+    "@astrojs/check": "0.9.10",
     "@astrojs/sitemap": "3.7.3",
     "@iconify-json/ph": "1.2.2",
     "@resvg/resvg-js": "2.6.2",
     "astro": "^7.0.6",
-    "astro-icon": "1.1.5",
-    "satori": "0.26.0",
+    "astro-icon": "1.2.0",
+    "satori": "0.29.0",
     "typescript": "6.0.3"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "4.1.10",
+    "@vitest/coverage-v8": "4.1.11",
     "jsdom": "29.1.1",
     "playwright": "^1.61.1",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   },
   "overrides": {
     "yaml": ">=2.8.3",
